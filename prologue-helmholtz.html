@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The wave equation and Helmholtz &middot; Transmission Line Theory</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="mast"><div class="in">
+  <a class="home" href="index.html">Transmission Line Theory</a>
+  <span class="sep"></span>
+  <span class="ch">Prologue &middot; Wave equation &amp; Helmholtz</span>
+  <span class="nav"><a href="prologue-maxwell.html" title="Previous">‹</a><a href="waves-phasors.html" title="Next">›</a></span>
+</div></header>
+
+<div class="wrap">
+
+<div class="hero">
+  <p class="kicker">Prologue &middot; part two of two</p>
+  <h1>The wave equation and Helmholtz</h1>
+  <p class="lead">Chapter 01 argued in words that the two curl laws feed each other. Here that argument is made algebraically: take the curl of one, substitute the other, and the coupled pair collapses into a single equation whose solutions travel at a speed fixed entirely by the medium.</p>
+</div>
+
+<section class="blk" id="decouple">
+  <h2>Decoupling the two curl equations</h2>
+  <p class="t">The obstacle is that $\vE$ and $\vH$ appear in both equations at once. Faraday gives $\vE$ in terms of $\vH$; Amp&egrave;re gives $\vH$ in terms of $\vE$. Neither can be solved alone.</p>
+  <p class="t">The trick is to <b>take the curl a second time</b>. Doing so on Faraday's law produces a term in $\curl\vH$, which Amp&egrave;re's law lets you replace &mdash; and $\vH$ vanishes from the problem entirely.</p>
+
+  <p class="t">In a source-free region ($\rho_v = 0$, $\vJ = 0$) the result is:</p>
+
+  <div class="eq box">
+    $$\nabla^2 \vE = \mu\varepsilon\,\frac{\partial^2 \vE}{\partial t^2}$$
+    <span class="note">the vector wave equation &mdash; and an identical one holds for $\vH$</span>
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; curl twice and substitute</summary>
+    <div class="body">
+      <p>Start from Faraday's law and take the curl of both sides:</p>
+      <div class="eq">$$\curl(\curl \vE) = \curl\left(-\frac{\partial \vB}{\partial t}\right) = -\mu\,\frac{\partial}{\partial t}(\curl \vH)$$</div>
+      <p>The time derivative and the curl commute because they act on different variables, which is what lets them be swapped. Now substitute Amp&egrave;re&ndash;Maxwell with no conduction current, $\curl \vH = \varepsilon\,\partial\vE/\partial t$:</p>
+      <div class="eq">$$\curl(\curl \vE) = -\mu\varepsilon\,\frac{\partial^2 \vE}{\partial t^2}$$</div>
+      <p><b>$\vH$ is gone.</b> Now expand the left side with the standard vector identity</p>
+      <div class="eq">$$\curl(\curl \vA) = \nabla(\dive \vA) - \nabla^2 \vA$$</div>
+      <p>In a source-free region Gauss's law gives $\dive \vD = 0$, and with $\varepsilon$ uniform that means $\dive \vE = 0$, so the first term vanishes:</p>
+      <div class="eq">$$-\nabla^2 \vE = -\mu\varepsilon\,\frac{\partial^2 \vE}{\partial t^2} \quad\Longrightarrow\quad \nabla^2 \vE = \mu\varepsilon\,\frac{\partial^2 \vE}{\partial t^2}$$</div>
+      <p>The same steps starting from Amp&egrave;re's law instead give the identical equation for $\vH$. Note where the assumptions entered: <i>source-free</i> killed the gradient term, and <i>homogeneous</i> let $\varepsilon$ and $\mu$ pass through the derivatives. In a medium whose properties vary with position, the $\nabla(\dive\vE)$ term survives and the two field components stay coupled.</p>
+    </div>
+  </details>
+
+  <p class="t">Compare it against the standard form of a wave equation, $\nabla^2 f = \dfrac{1}{u^2}\dfrac{\partial^2 f}{\partial t^2}$, and the propagation speed reads off immediately:</p>
+
+  <div class="eq box">
+    $$u = \frac{1}{\sqrt{\mu\varepsilon}}$$
+    <span class="note">in free space, $\mu_0 = 4\pi\times10^{-7}$ H/m and $\varepsilon_0 \approx 8.854\times10^{-12}$ F/m give $u \approx 2.998\times10^8$ m/s</span>
+  </div>
+
+  <div class="key">
+    <span class="lab">The historical moment</span>
+    <p>That number was already known &mdash; it was the measured speed of light. Two constants from benchtop electrostatics and magnetostatics experiments, combined, predicted it. That is what identified light as an electromagnetic wave.</p>
+  </div>
+</section>
+
+<section class="blk" id="phasor">
+  <h2>Dropping to the phasor domain</h2>
+  <p class="t">The wave equation still carries two derivatives in time. Almost everything in RF is <b>time-harmonic</b> &mdash; driven at a single frequency $\omega$ &mdash; and for that case the time dependence can be removed entirely.</p>
+  <p class="t">Write each field as a complex amplitude carrying an $e^{j\omega t}$ factor that we agree to keep implicit:</p>
+
+  <div class="eq box">
+    $$\vE(x,y,z,t) = \operatorname{Re}\left\{ \tilde{\vE}(x,y,z)\,e^{j\omega t} \right\}$$
+    <span class="note">the tilde marks a phasor: a complex amplitude with the time dependence factored out</span>
+  </div>
+
+  <p class="t">Every time derivative now becomes a multiplication, because $\dfrac{\partial}{\partial t}e^{j\omega t} = j\omega e^{j\omega t}$:</p>
+
+  <div class="eq">$$\frac{\partial}{\partial t} \;\longrightarrow\; j\omega \qquad\qquad \frac{\partial^2}{\partial t^2} \;\longrightarrow\; -\omega^2$$</div>
+
+  <p class="t">Substituting into the wave equation turns a partial differential equation in four variables into one in three:</p>
+
+  <div class="eq box">
+    $$\nabla^2 \tilde{\vE} + \omega^2\mu\varepsilon\,\tilde{\vE} = 0 \qquad\text{or}\qquad \nabla^2 \tilde{\vE} - \gamma^2 \tilde{\vE} = 0$$
+    <span class="note">the <b>Helmholtz equation</b>, with $\gamma^2 = -\omega^2\mu\varepsilon$ in a lossless medium</span>
+  </div>
+
+  <p class="t">This is the single most useful move in the subject, and it is worth being clear about what it costs. You give up the ability to describe transients &mdash; switching a source on, a pulse, a step. What you gain is that every equation becomes algebraic in $j\omega$, and impedance becomes a meaningful concept. The whole of transmission-line theory lives in this domain.</p>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; including a lossy medium</summary>
+    <div class="body">
+      <p>If the medium has conductivity $\sigma$, a conduction current $\vJ = \sigma\vE$ flows wherever there is a field, and Amp&egrave;re's law keeps that term:</p>
+      <div class="eq">$$\curl \tilde{\vH} = \sigma\tilde{\vE} + j\omega\varepsilon\tilde{\vE} = (\sigma + j\omega\varepsilon)\,\tilde{\vE}$$</div>
+      <p>Repeating the double-curl derivation with this right-hand side gives</p>
+      <div class="eq">$$\nabla^2\tilde{\vE} = j\omega\mu(\sigma + j\omega\varepsilon)\,\tilde{\vE}$$</div>
+      <p>so the propagation constant in general is</p>
+      <div class="eq">$$\gamma = \sqrt{j\omega\mu(\sigma + j\omega\varepsilon)} = \alpha + j\beta$$</div>
+      <p>It is complex, and both parts have a job. The real part $\alpha$ is the <b>attenuation constant</b> in nepers per metre &mdash; how fast the amplitude decays. The imaginary part $\beta$ is the <b>phase constant</b> in radians per metre &mdash; how fast the phase advances. Setting $\sigma = 0$ recovers the lossless case, where $\alpha = 0$ and $\beta = \omega\sqrt{\mu\varepsilon}$.</p>
+      <p>Keep the shape of this result in view. When the telegrapher's equations arrive in chapter 04 they produce $\gamma = \sqrt{(R + j\omega L)(G + j\omega C)}$ &mdash; the same structure, with circuit quantities in place of material ones. That is not a coincidence, and the parallel is the point of the next few chapters.</p>
+    </div>
+  </details>
+</section>
+
+<section class="blk" id="plane">
+  <h2>The simplest solution</h2>
+  <p class="t">Take a wave travelling in $+z$ with its electric field along $x$. Helmholtz reduces to an ordinary differential equation in one variable:</p>
+
+  <div class="eq">$$\frac{d^2 \tilde{E}_x}{dz^2} - \gamma^2 \tilde{E}_x = 0 \qquad\Longrightarrow\qquad \tilde{E}_x(z) = E^+ e^{-\gamma z} + E^- e^{+\gamma z}$$</div>
+
+  <p class="t">Two exponentials: one decaying in $+z$, one in $-z$. <b>A forward wave and a backward wave.</b> Every result in the rest of this site is a consequence of those two terms and what happens where they meet a boundary.</p>
+
+  <p class="t">In the lossless case $\gamma = j\beta$, and restoring the time factor turns the forward term into</p>
+
+  <div class="eq">$$E_x(z,t) = \operatorname{Re}\left\{E^+ e^{-j\beta z}e^{j\omega t}\right\} = |E^+|\cos(\omega t - \beta z + \phi)$$</div>
+
+  <p class="t">A point of constant phase satisfies $\omega t - \beta z = \text{const}$, so it moves at $z = \omega t/\beta$ &mdash; giving the phase velocity $u_p = \omega/\beta$ and the wavelength $\lambda = 2\pi/\beta$.</p>
+
+  <figure class="fig">
+    <canvas id="planefig" style="height:300px"></canvas>
+    <div class="legend">
+      <span><i style="border-color:var(--e)"></i>electric field E<sub>x</sub></span>
+      <span><i style="border-color:var(--h)"></i>magnetic field H<sub>y</sub></span>
+    </div>
+    <div class="rail">
+      <div class="ctl"><label for="alpha">attenuation &alpha;</label><input type="range" id="alpha" min="0" max="0.9" step="0.01" value="0"><output id="alphav">0.00</output></div>
+      <div class="ctl"><label for="freq">&beta; (rad/m)</label><input type="range" id="freq" min="0.6" max="3" step="0.05" value="1.4"><output id="freqv">1.40</output></div>
+    </div>
+    <div class="btns">
+      <button data-a="0" data-b="1.4">lossless</button>
+      <button data-a="0.25" data-b="1.4">low loss</button>
+      <button data-a="0.7" data-b="1.4">lossy</button>
+    </div>
+    <figcaption class="cap">E and H are perpendicular to each other and to the direction of travel, and peak at the same instant. Their vertical scales here are independent &mdash; the true ratio is &eta; &asymp; 377 &Omega; in free space, far too large to draw on one axis.</figcaption>
+  </figure>
+
+  <p class="t">Two features of that picture are worth naming, because both carry into transmission lines unchanged. The fields are <b>mutually perpendicular and both transverse</b> to the direction of travel &mdash; a TEM wave. And in a lossless medium they are <b>exactly in phase</b>, their ratio being a real constant:</p>
+
+  <div class="eq box">
+    $$\eta = \frac{\tilde{E}_x}{\tilde{H}_y} = \sqrt{\frac{\mu}{\varepsilon}}
+    \qquad\qquad \eta_0 = \sqrt{\frac{\mu_0}{\varepsilon_0}} \approx 377\ \Omega$$
+    <span class="note">the intrinsic impedance of the medium &mdash; a property of the material, not of the wave</span>
+  </div>
+
+  <div class="key">
+    <span class="lab">Remember this shape</span>
+    <p>A ratio of field quantities, fixed by the medium, with units of ohms, and the same for every wave travelling through it. When $Z_0 = \sqrt{L/C}$ appears on a transmission line in chapter 05, it is this same idea wearing circuit clothing &mdash; and it is why a line has a characteristic impedance at all.</p>
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; where &eta; comes from</summary>
+    <div class="body">
+      <p>Take the forward wave $\tilde{\vE} = \hat{x}\,E^+e^{-j\beta z}$ and feed it through Faraday's law in phasor form, $\curl\tilde{\vE} = -j\omega\mu\tilde{\vH}$. For a field with only an $x$ component varying only in $z$, the curl has a single surviving term:</p>
+      <div class="eq">$$\curl \tilde{\vE} = \hat{y}\,\frac{\partial \tilde{E}_x}{\partial z} = -\hat{y}\,j\beta E^+ e^{-j\beta z}$$</div>
+      <p>Setting that equal to $-j\omega\mu\tilde{\vH}$ gives</p>
+      <div class="eq">$$\tilde{H}_y = \frac{\beta}{\omega\mu}E^+e^{-j\beta z}$$</div>
+      <p>The magnetic field points along $\hat{y}$ &mdash; perpendicular to $\vE$ and to the direction of travel, exactly as claimed. Now substitute $\beta = \omega\sqrt{\mu\varepsilon}$:</p>
+      <div class="eq">$$\frac{\tilde{E}_x}{\tilde{H}_y} = \frac{\omega\mu}{\beta} = \frac{\omega\mu}{\omega\sqrt{\mu\varepsilon}} = \sqrt{\frac{\mu}{\varepsilon}} = \eta$$</div>
+      <p>Because $\eta$ came out <b>real</b>, the two fields peak at the same instant. In a lossy medium $\gamma = \alpha + j\beta$ makes $\eta$ complex, the fields fall out of phase, and the wave carries less real power than their product would suggest &mdash; the same bookkeeping as a reactive load in a circuit.</p>
+    </div>
+  </details>
+</section>
+
+<section class="blk" id="check">
+  <div class="check">
+    <h3>Self-check</h3>
+    <p class="t" style="margin-top:6px">Three questions on what the derivation actually assumed.</p>
+
+    <div class="q">
+      <p class="qt">1. In the double-curl derivation, the term $\nabla(\dive \vE)$ was dropped. What justified that?</p>
+      <div class="opts">
+        <button class="opt">It is always zero &mdash; the divergence of any curl vanishes identically</button>
+        <button class="opt" data-ok="1">The region was taken to be source-free and the medium homogeneous, so $\dive\vE = 0$ there</button>
+        <button class="opt">It is negligible compared with the second time derivative at radio frequencies</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>It was an assumption, not an identity. Gauss's law gives $\dive\vD = \rho_v$, so only with no free charge <i>and</i> uniform $\varepsilon$ does $\dive\vE$ vanish. Inside a medium whose permittivity varies with position that term survives and the field components remain coupled &mdash; which is why graded-index and inhomogeneous problems are much harder.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">2. What is genuinely given up by moving to the phasor domain?</p>
+      <div class="opts">
+        <button class="opt">Accuracy &mdash; phasor results are an approximation to the true fields</button>
+        <button class="opt">The ability to handle lossy media, since $\gamma$ must be purely imaginary</button>
+        <button class="opt" data-ok="1">Transient behaviour &mdash; it describes only the steady state at a single frequency</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>For a steady sinusoid the phasor result is exact, not approximate, and loss is handled fine by letting $\gamma$ be complex. What is lost is everything before steady state: switch-on, pulses, steps. Those need either the time-domain equations or a superposition of many frequencies.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">3. The intrinsic impedance of free space is about 377 &Omega;. What does that number describe?</p>
+      <div class="opts">
+        <button class="opt">The resistance a wave encounters as it propagates, which dissipates its energy</button>
+        <button class="opt" data-ok="1">The fixed ratio of electric to magnetic field amplitude in any wave travelling through that medium</button>
+        <button class="opt">The impedance an antenna must present in order to radiate efficiently</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>It is a ratio of field quantities, $E/H$, which happens to carry units of ohms. It dissipates nothing &mdash; free space is lossless, and $\eta$ being real is precisely the statement that E and H stay in phase. Antenna impedance is a related but distinct idea, and the 377 &Omega; figure is a property of the medium alone.</p>
+    </div>
+  </div>
+</section>
+
+<nav class="pager">
+  <a href="prologue-maxwell.html"><span class="dir">Previous</span><span class="ttl">Maxwell's equations</span></a>
+  <a class="nx" href="waves-phasors.html"><span class="dir">Chapter 01</span><span class="ttl">Waves, phasors and complex numbers</span></a>
+</nav>
+
+<footer class="site">
+  Prologue, part two. Source-free, linear, isotropic, homogeneous medium unless stated otherwise.
+  <span class="cr">&copy; 2026 Elie Hachem &middot; free to share and use for teaching</span>
+</footer>
+
+</div>
+
+<script src="assets/site.js"></script>
+<script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
+<script>
+(function(){
+  var cv = document.getElementById('planefig');
+  if(!cv) return;
+  var al = 0, be = 1.4;
+  var aEl = document.getElementById('alpha'), bEl = document.getElementById('freq');
+  var aOut = document.getElementById('alphav'), bOut = document.getElementById('freqv');
+  function sync(){ aOut.textContent = al.toFixed(2); bOut.textContent = be.toFixed(2); }
+  aEl.addEventListener('input', function(){ al = +this.value; sync(); });
+  bEl.addEventListener('input', function(){ be = +this.value; sync(); });
+  Array.prototype.forEach.call(document.querySelectorAll('.btns button[data-a]'), function(b){
+    b.addEventListener('click', function(){
+      al = +b.getAttribute('data-a'); be = +b.getAttribute('data-b');
+      aEl.value = al; bEl.value = be; sync();
+    });
+  });
+  sync();
+
+  EM.register(function(C, t){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    var M = 'IBM Plex Mono, monospace';
+    var L = 42, R = 18, T = 18, B = 34;
+    var zmax = 10, sx = (W-L-R)/zmax;
+    var mid = T + (H-T-B)/2, sy = (H-T-B)/2/1.25;
+    c.clearRect(0,0,W,H);
+
+    function env(z){ return Math.exp(-al*z); }
+    function px(z){ return L + z*sx; }
+
+    /* decay envelope — only meaningful when there is loss to show */
+    if(al > 0.005){
+      c.fillStyle = C.accfill;
+      c.beginPath();
+      for(var i=0;i<=240;i++){ var z=i/240*zmax; c.lineTo(px(z), mid - env(z)*sy); }
+      for(var j=240;j>=0;j--){ var z2=j/240*zmax; c.lineTo(px(z2), mid + env(z2)*sy); }
+      c.closePath(); c.fill();
+      c.strokeStyle = C.acc; c.lineWidth = 1; c.globalAlpha = .6;
+      c.beginPath();
+      for(var q=0;q<=240;q++){ var z3=q/240*zmax; c.lineTo(px(z3), mid - env(z3)*sy); }
+      c.stroke();
+      c.globalAlpha = 1;
+    }
+
+    /* axes */
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L, mid+.5); c.lineTo(W-R, mid+.5);
+    c.moveTo(L+.5, T); c.lineTo(L+.5, H-B); c.stroke();
+
+    /* E and H: same phase, H drawn at 0.55 scale to read as a distinct trace */
+    function wave(scale, col, lw){
+      c.strokeStyle = col; c.lineWidth = lw;
+      c.beginPath();
+      for(var i=0;i<=300;i++){
+        var z = i/300*zmax;
+        c.lineTo(px(z), mid - env(z)*Math.cos(t - be*z)*sy*scale);
+      }
+      c.stroke();
+    }
+    wave(0.55, C.h, 1.8);
+    wave(1, C.e, 2.4);
+
+    /* wavelength marker */
+    var lam = EM.TAU/be;
+    if(lam < zmax*0.92){
+      var z1 = (t % EM.TAU)/be, z2b = z1 + lam;
+      if(z2b < zmax){
+        var y = H - B + 14;
+        c.strokeStyle = C.ink3; c.lineWidth = 1;
+        c.beginPath(); c.moveTo(px(z1), y); c.lineTo(px(z2b), y);
+        c.moveTo(px(z1), y-5); c.lineTo(px(z1), y+5);
+        c.moveTo(px(z2b), y-5); c.lineTo(px(z2b), y+5); c.stroke();
+        var lab = 'λ = 2π/β';
+        c.font = '11px ' + M; c.textAlign = 'center';
+        var w = c.measureText(lab).width + 10;
+        c.fillStyle = C.sunk; c.fillRect((px(z1)+px(z2b))/2 - w/2, y-8, w, 16);
+        c.fillStyle = C.ink; c.fillText(lab, (px(z1)+px(z2b))/2, y+4);
+      }
+    }
+
+    c.fillStyle = C.ink3; c.font = '11.5px ' + M;
+    c.textAlign = 'left';
+    c.fillText(al > 0.005 ? ('α = ' + al.toFixed(2) + ' Np/m') : 'lossless (α = 0)', L + 7, T + 12);
+    c.fillText('z = 0', L, H - B + 14);
+    c.textAlign = 'right'; c.fillText('propagation z →', W-R, T + 12);
+  }, true);
+})();
+</script>
+</body>
+</html>

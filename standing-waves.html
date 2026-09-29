@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Standing waves &middot; Transmission Line Theory</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="mast"><div class="in">
+  <a class="home" href="index.html">Transmission Line Theory</a>
+  <span class="sep"></span>
+  <span class="ch">07 &middot; Standing waves</span>
+  <span class="nav"><a href="reflection.html" title="Previous">‹</a><a href="input-impedance.html" title="Next">›</a></span>
+</div></header>
+
+<div class="wrap">
+
+<div class="hero">
+  <p class="kicker">Chapter 07</p>
+  <h1>Standing waves</h1>
+  <p class="lead">A standing wave is not a kind of wave. It is the two travelling waves of the last chapter, caught in the act of adding up. Everything about minima, maxima and SWR follows from that, and from one observation: their relative phase depends on where you stand, never on when you look.</p>
+  <p class="t" style="margin-top:20px"><b>Assumes:</b> chapter 06 &mdash; $\Gamma$, and $\Gamma(l) = \Gamma_L e^{-j2\beta l}$.</p>
+</div>
+
+<section class="blk" id="sum">
+  <h2>Two waves, one line</h2>
+  <p class="t">Measure distance $l$ back from the load. The total phasor voltage is the sum of the two waves, and one factoring step does all the work:</p>
+
+  <div class="eq">$$\tilde{V}(l) = V_0^+\left(e^{j\beta l} + \Gamma e^{-j\beta l}\right) = V_0^+e^{j\beta l}\left(1 + \Gamma e^{-j2\beta l}\right)$$</div>
+
+  <p class="t">The first factor has magnitude one, so it contributes nothing measurable. What is left is the whole subject:</p>
+
+  <div class="eq box">
+    $$|V(l)| = |V_0^+|\;\bigl|1 + \Gamma e^{-j2\beta l}\bigr|$$
+    <span class="note">one, plus a rotating vector of length $|\Gamma|$ &mdash; that is the entire standing wave</span>
+  </div>
+
+  <p class="t">Picture it in the complex plane: a fixed unit vector, and a second vector of length $|\Gamma|$ whose angle depends on where you stand. When they point the same way the lengths add; when they oppose, they subtract.</p>
+
+  <div class="eq">$$|V|_{\max} = |V_0^+|\left(1 + |\Gamma|\right) \qquad\qquad |V|_{\min} = |V_0^+|\left(1 - |\Gamma|\right)$$</div>
+
+  <p class="t"><b>Crucially, this depends only on $l$, never on $t$.</b> The pattern is fixed in space. Each point on the line simply oscillates at its own fixed amplitude.</p>
+
+  <figure class="fig">
+    <canvas id="mainfig" style="height:330px"></canvas>
+    <div class="legend">
+      <span><i style="border-color:var(--e);border-top-style:dashed"></i>incident</span>
+      <span><i style="border-color:var(--h);border-top-style:dashed"></i>reflected</span>
+      <span><i style="border-color:var(--ink);border-top-width:3px"></i>total</span>
+      <span><i style="border-color:var(--acc)"></i>envelope &mdash; what a detector reads</span>
+    </div>
+    <div class="rail">
+      <div class="ctl"><label for="gm">|&Gamma;|</label><input type="range" id="gm" min="0" max="1" step="0.01" value="0.5"><output id="gmv">0.50</output></div>
+      <div class="ctl"><label for="gpp">&theta;<sub>r</sub></label><input type="range" id="gpp" min="-180" max="180" step="1" value="-90"><output id="gpv">&minus;90&deg;</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>SWR</dt><dd id="o-s">3.00</dd></div>
+      <div class="rd"><dt>First min</dt><dd id="o-mn">0.125&lambda;</dd></div>
+      <div class="rd"><dt>First max</dt><dd id="o-mx">0.375&lambda;</dd></div>
+      <div class="rd"><dt>Z<sub>L</sub> on 50 &#937;</dt><dd id="o-zl">30 &minus; j40</dd></div>
+    </dl>
+    <div class="btns">
+      <button data-g="0" data-p="0">matched</button>
+      <button data-g="0.5" data-p="-90">&Gamma; = &minus;j0.5</button>
+      <button data-g="1" data-p="180">short</button>
+      <button data-g="1" data-p="0">open</button>
+    </div>
+    <figcaption class="cap">move your pointer across the trace to probe the envelope, the way a detector slides along a slotted line</figcaption>
+  </figure>
+</section>
+
+<section class="blk" id="standing">
+  <h2>Standing, travelling, and in between</h2>
+  <p class="t">Every point on the line oscillates. What distinguishes the three cases is whether the <i>pattern</i> translates.</p>
+
+  <div class="three">
+    <div class="mini">
+      <h3>Pure travelling</h3>
+      <p class="sub">|&Gamma;| = 0</p>
+      <canvas id="m0" style="height:150px;display:block;width:100%;background:var(--sunk);border-block:1px solid var(--line)"></canvas>
+      <div class="verdict">Nothing returns. The envelope is <b>flat</b> and every point sees the same amplitude. All power is absorbed.</div>
+    </div>
+    <div class="mini">
+      <h3>Partially standing</h3>
+      <p class="sub">|&Gamma;| = 0.5</p>
+      <canvas id="m1" style="height:150px;display:block;width:100%;background:var(--sunk);border-block:1px solid var(--line)"></canvas>
+      <div class="verdict">The envelope is fixed and ripples, but the wave still drifts and the minima <b>never reach zero</b>. Part travelling, part standing.</div>
+    </div>
+    <div class="mini">
+      <h3>Pure standing</h3>
+      <p class="sub">|&Gamma;| = 1</p>
+      <canvas id="m2" style="height:150px;display:block;width:100%;background:var(--sunk);border-block:1px solid var(--line)"></canvas>
+      <div class="verdict">Everything reflects. True <b>nodes</b> sit still at zero for all time while the bellies breathe in place. No net power reaches the load.</div>
+    </div>
+  </div>
+
+  <p class="t">The triangles mark the instantaneous zero crossings. In the first two panels they march; in the third they are pinned. Split the total into a travelling part of amplitude $1-|\Gamma|$ and a standing part of amplitude $2|\Gamma|$: the first carries the power that reaches the load, the second is what bounced. Only at $|\Gamma| = 1$ does the travelling part vanish, and anything in between is a <b>partially standing wave</b>.</p>
+</section>
+
+<section class="blk" id="why">
+  <h2>Why the pattern holds still</h2>
+  <p class="t">Stand at one fixed position and watch. Both waves oscillate at the same $\omega$, so they are two phasors spinning together at the same rate. Their individual phases change constantly &mdash; that is what oscillating means &mdash; but their <b>difference</b> does not:</p>
+
+  <div class="eq box">
+    $$\text{incident phase} - \text{reflected phase} = (\omega t + \beta l) - (\omega t - \beta l + \theta_r) = 2\beta l - \theta_r$$
+    <span class="note">the $\omega t$ cancels &mdash; both hands of the clock spin, the angle between them does not</span>
+  </div>
+
+  <p class="t">So every position on the line carries a permanent verdict about how the two waves get along there, and that verdict is baked into the geometry. It cannot move. That is the whole mystery of why a standing wave stands.</p>
+
+  <details class="deriv">
+    <summary>A common objection &mdash; but the gap between the curves does change</summary>
+    <div class="body">
+      <p>It does, and it is worth being precise about why that is not a contradiction. <b>Phase difference is a horizontal relationship</b> &mdash; how long after one wave peaks the other peaks. The vertical gap between two curves is a difference of two heights, and both heights are oscillating, so the gap oscillates too.</p>
+      <p>Test it at a voltage maximum, say $l = 0.375\lambda$ with $\theta_r = -90°$. There $\beta l = 135°$, so the reflected wave is $0.5\cos(\omega t - 225°)$ &mdash; and $-225°$ is the same angle as $+135°$. The two waves are <i>exactly in phase</i>, which is why that point is a maximum:</p>
+      <div class="eq">$$v^+ = \cos(\omega t + 135°) \qquad v^- = 0.5\cos(\omega t + 135°) = \tfrac{1}{2}v^+$$</div>
+      <p>Yet the gap $v^+ - v^-= \tfrac12 v^+$ swings from $+0.5$ through $0$ to $-0.5$ across a cycle. Two perfectly in-phase waves, and the vertical gap still moves.</p>
+      <p>Look at the <b>ratio</b> instead: it is $0.5$, always. And horizontally, both curves cross zero at the same instants and peak at the same instants, forever. In general the difference of two same-frequency sinusoids is itself a sinusoid of amplitude $\sqrt{1+|\Gamma|^2 - 2|\Gamma|\cos\Delta\phi}$ &mdash; so what is constant is the <i>amplitude</i> of the gap, never the gap itself.</p>
+      <p>The analogy that settles it: two runners on a hilly track, same pace, one ten metres ahead. Their separation <i>along the track</i> never changes &mdash; that is the phase. Their difference in <i>altitude</i> changes constantly as they crest hills and drop into dips.</p>
+    </div>
+  </details>
+
+  <p class="t">The factor of two in $2\beta l$ also hands you the quarter-wave rule for free. It is the <b>round trip</b>: the reflected wave covers each step out and back, so the relative phase slips at twice the rate of a single wave. Step a quarter wavelength and it flips a full half turn:</p>
+
+  <div class="eq">$$2\beta\cdot\frac{\lambda}{4} = 2\left(\frac{2\pi}{\lambda}\right)\frac{\lambda}{4} = \pi = 180°$$</div>
+
+  <div class="tw"><table>
+    <tr><th>Relative phase</th><th>The two waves</th><th>Amplitude</th></tr>
+    <tr><td>$2n\pi$</td><td>parallel &mdash; add in step</td><td>$1 + |\Gamma|$, a maximum</td></tr>
+    <tr><td>$(2n+1)\pi$</td><td>antiparallel &mdash; cancel as far as they can</td><td>$1 - |\Gamma|$, a minimum</td></tr>
+  </table></div>
+
+  <p class="t">Everything between interpolates smoothly, by the law of cosines:</p>
+
+  <div class="eq box">
+    $$|V| = |V_0^+|\sqrt{1 + |\Gamma|^2 + 2|\Gamma|\cos\left(\theta_r - 2\beta l\right)}$$
+    <span class="note">that single square root <i>is</i> the envelope &mdash; the conditions above are just where the cosine hits $\pm1$</span>
+  </div>
+</section>
+
+<section class="blk" id="swr">
+  <h2>Standing wave ratio</h2>
+  <p class="t">Nobody can measure $|V_0^+|$ directly. A ratio cancels it, which is why SWR is the number every lab reports:</p>
+
+  <div class="eq box">
+    $$S = \frac{|V|_{\max}}{|V|_{\min}} = \frac{1 + |\Gamma|}{1 - |\Gamma|} \qquad\Longleftrightarrow\qquad |\Gamma| = \frac{S-1}{S+1}$$
+    <span class="note">real, positive, needs no phase reference and no absolute calibration</span>
+  </div>
+
+  <div class="tw"><table>
+    <tr><th></th><th>$|\Gamma|$</th><th>$S$</th><th>Power reflected</th></tr>
+    <tr><td>Matched</td><td>0</td><td>1</td><td>0 %</td></tr>
+    <tr><td>Mild</td><td>0.2</td><td>1.5</td><td>4 %</td></tr>
+    <tr><td>Half</td><td>0.5</td><td>3</td><td>25 %</td></tr>
+    <tr><td>Total</td><td>1</td><td>$\infty$</td><td>100 %</td></tr>
+  </table></div>
+
+  <p class="t">Note that $S$ carries only $|\Gamma|$ &mdash; the phase is thrown away. Two quite different loads can have identical SWR, which is exactly why a single SWR reading cannot identify a load, and why the position of a minimum has to be measured too.</p>
+</section>
+
+<section class="blk" id="reading">
+  <h2>Reading a line backwards</h2>
+  <p class="t">A detector cannot follow the carrier; it reads the envelope. That is enough, because the envelope's shape encodes $\Gamma$ completely. This figure is the one to keep in front of you.</p>
+
+  <figure class="fig">
+    <canvas id="anat" class="static" style="height:320px"></canvas>
+    <figcaption class="cap">successive minima are &lambda;/2 apart; a minimum and its neighbouring maximum are &lambda;/4 apart</figcaption>
+  </figure>
+
+  <p class="t">Maxima occur where the rotating vector has zero net phase, minima where it is exactly opposed:</p>
+
+  <div class="eq">$$\theta_r - 2\beta l_{\max} = 2n\pi \qquad\qquad \theta_r - 2\beta l_{\min} = \pm(2n+1)\pi$$</div>
+
+  <p class="t">Which gives four steps that never change:</p>
+
+  <ol class="steps">
+    <li><div><b>Spacing gives $\lambda$.</b> Successive minima are $\lambda/2$ apart; a minimum and its neighbouring maximum are $\lambda/4$ apart. Read the question carefully &mdash; this is where most marks are lost. Then $\beta = 2\pi/\lambda$.</div></li>
+    <li><div><b>Ratio gives $|\Gamma|$.</b> $|\Gamma| = (S-1)/(S+1)$.</div></li>
+    <li><div><b>Position gives the phase.</b> Anchor on a <i>minimum</i>: $\theta_r = 2\beta l_{\min} - \pi$. Minima are sharp and deep; maxima are broad and flat, so their position is far less certain. Every slotted-line procedure is written around $l_{\min}$.</div></li>
+    <li><div><b>Un-map to the load.</b> $Z_L = Z_0\dfrac{1+\Gamma}{1-\Gamma}$.</div></li>
+  </ol>
+
+  <p class="t">A closed form for step 4 that avoids complex division under exam pressure:</p>
+
+  <div class="eq">$$Z_L = Z_0\,\frac{\left(1 - |\Gamma|^2\right) + j\,2|\Gamma|\sin\theta_r}{1 - 2|\Gamma|\cos\theta_r + |\Gamma|^2}$$</div>
+
+  <p class="t">And a check worth teaching: <b>at a voltage minimum the impedance looking toward the load is purely real and equals $Z_0/S$</b>; at a maximum it is $S\,Z_0$. Any answer can be verified in seconds with that &mdash; and chapter 08 derives why.</p>
+
+  <div class="key">
+    <span class="lab">One picture holds the whole method</span>
+    <p>Moving along the line rotates $\Gamma$ clockwise about the origin, one lap per $\lambda/2$. A maximum is where you cross the positive real axis, a minimum where you cross the negative one &mdash; half a lap apart, hence $\lambda/4$. That is the Smith chart in embryo, and once the rotation is automatic these problems stop being algebra.</p>
+  </div>
+</section>
+
+<section class="blk" id="check">
+  <div class="check">
+    <h3>Self-check</h3>
+    <p class="t" style="margin-top:6px">Three questions on the pattern.</p>
+
+    <div class="q">
+      <p class="qt">1. Two loads give the same SWR of 3. Are they the same load?</p>
+      <div class="opts">
+        <button class="opt">Yes &mdash; SWR determines $\Gamma$, and $\Gamma$ determines $Z_L$</button>
+        <button class="opt" data-ok="1">No &mdash; SWR fixes only $|\Gamma|$, and any phase $\theta_r$ gives the same ratio</button>
+        <button class="opt">Only if both are purely resistive</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>$S$ depends on $|\Gamma|$ alone. Every load on the circle $|\Gamma| = 0.5$ &mdash; an infinite family &mdash; gives $S = 3$. To pin down which one, you need the <i>phase</i>, and the standard way to get it is the position of a voltage minimum. This is why slotted-line measurements always record both.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">2. At $|\Gamma| = 0.5$, do the minima reach zero?</p>
+      <div class="opts">
+        <button class="opt">Yes &mdash; minima are always nulls, by definition</button>
+        <button class="opt" data-ok="1">No &mdash; they bottom out at $1 - |\Gamma| = 0.5$ of the incident amplitude</button>
+        <button class="opt">Only at the load; further along they rise</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>The minimum is $|V_0^+|(1-|\Gamma|)$, which is zero only when $|\Gamma| = 1$. At $|\Gamma| = 0.5$ the envelope dips to half the incident amplitude and no lower. True nulls require total reflection &mdash; a short, an open, or a pure reactance.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">3. A slotted line shows successive minima 14 cm and 24 cm from the load. What is $\lambda$?</p>
+      <div class="opts">
+        <button class="opt">40 cm &mdash; the spacing is a quarter wavelength</button>
+        <button class="opt" data-ok="1">20 cm &mdash; successive minima are half a wavelength apart</button>
+        <button class="opt">10 cm &mdash; the spacing is the wavelength itself</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>Like extrema repeat every $\lambda/2$, so the 10 cm spacing gives $\lambda = 20$ cm. The $\lambda/4$ rule applies between a minimum and its <i>neighbouring maximum</i>, which are unlike. Mixing these up is the single most common error in slotted-line problems &mdash; always check which pair you were handed.</p>
+    </div>
+  </div>
+</section>
+
+<nav class="pager">
+  <a href="reflection.html"><span class="dir">Previous</span><span class="ttl">Reflection at a load</span></a>
+  <a class="nx" href="input-impedance.html"><span class="dir">Chapter 08</span><span class="ttl">Input impedance</span></a>
+</nav>
+
+<footer class="site">
+  Chapter 07 of eleven. Lossless line; distances measured from the load in wavelengths.
+  <span class="cr">&copy; 2026 Elie Hachem &middot; free to share and use for teaching</span>
+</footer>
+
+</div>
+
+<script src="assets/site.js"></script>
+<script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
+<script>
+var MONO = 'IBM Plex Mono, monospace';
+var TAU2 = Math.PI*2, D2R = Math.PI/180;
+var g = 0.5, ph = -90, probe = null;
+function norm(v){ v = v % 0.5; return v < 0 ? v + 0.5 : v; }
+function envOf(x, m, a){ var p = a - 2*TAU2*x; return Math.hypot(1 + m*Math.cos(p), m*Math.sin(p)); }
+function inc(x,t){ return Math.cos(t + TAU2*x); }
+function ref(x,t,gg){ return gg*Math.cos(t - TAU2*x + ph*D2R); }
+function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
+
+(function(){
+  var cv = document.getElementById('mainfig');
+  if(!cv) return;
+  var XL = 1.25, PADL = 50, PADR = 20, PADT = 20, PADB = 38;
+  function sync(){
+    document.getElementById('gmv').textContent = g.toFixed(2);
+    document.getElementById('gpv').innerHTML = (ph<0?'−':'') + Math.abs(ph) + '&deg;';
+    document.getElementById('o-s').textContent = g >= 0.999 ? '∞' : ((1+g)/(1-g)).toFixed(2);
+    if(g < 0.005){
+      document.getElementById('o-mn').textContent = '—';
+      document.getElementById('o-mx').textContent = '—';
+    } else {
+      document.getElementById('o-mn').innerHTML = norm((ph+180)/720).toFixed(3) + '&lambda;';
+      document.getElementById('o-mx').innerHTML = norm(ph/720).toFixed(3) + '&lambda;';
+    }
+    var c0 = Math.cos(ph*D2R), s0 = Math.sin(ph*D2R), den = 1 - 2*g*c0 + g*g, Z0 = 50;
+    var txt;
+    if(den < 1e-6) txt = '→ ∞';
+    else {
+      var re = Z0*(1-g*g)/den, im = Z0*(2*g*s0)/den;
+      var rs = Math.abs(re) < 0.5 ? '0' : re.toFixed(0);
+      var is = Math.abs(im) < 0.5 ? '0' : Math.abs(im).toFixed(0);
+      txt = (is === '0') ? rs : rs + (im < 0 ? ' − j' : ' + j') + is;
+    }
+    document.getElementById('o-zl').innerHTML = txt + ' Ω';
+  }
+  document.getElementById('gm').addEventListener('input', function(){ g = +this.value; sync(); });
+  document.getElementById('gpp').addEventListener('input', function(){ ph = +this.value; sync(); });
+  Array.prototype.forEach.call(document.querySelectorAll('.btns button[data-g]'), function(b){
+    b.addEventListener('click', function(){
+      g = +b.getAttribute('data-g'); ph = +b.getAttribute('data-p');
+      document.getElementById('gm').value = g;
+      document.getElementById('gpp').value = ph;
+      sync();
+    });
+  });
+  cv.addEventListener('pointermove', function(e){
+    var r = cv.getBoundingClientRect(), sx = (cv._w-PADL-PADR)/XL;
+    var x = (e.clientX - r.left - PADL)/sx;
+    probe = (x >= 0 && x <= XL) ? x : null;
+  });
+  cv.addEventListener('pointerleave', function(){ probe = null; });
+  sync();
+
+  EM.register(function(C, t){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    var sx = (W-PADL-PADR)/XL, y0 = PADT + (H-PADT-PADB)/2, sy = (H-PADT-PADB)/2/2.15;
+    function px(x){ return PADL + x*sx; }
+    function envM(x){ return envOf(x, g, ph*D2R); }
+    c.clearRect(0,0,W,H);
+
+    c.fillStyle = C.accfill; c.beginPath();
+    for(var i=0;i<=340;i++){ var x=i/340*XL; c.lineTo(px(x), y0-envM(x)*sy); }
+    for(var j=340;j>=0;j--){ var xb=j/340*XL; c.lineTo(px(xb), y0+envM(xb)*sy); }
+    c.closePath(); c.fill();
+    c.strokeStyle = C.acc; c.lineWidth = 1; c.globalAlpha = .6;
+    c.beginPath();
+    for(var k=0;k<=340;k++){ var xc=k/340*XL; c.lineTo(px(xc), y0-envM(xc)*sy); } c.stroke();
+    c.beginPath();
+    for(var k2=0;k2<=340;k2++){ var xd=k2/340*XL; c.lineTo(px(xd), y0+envM(xd)*sy); } c.stroke();
+    c.globalAlpha = 1;
+
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(PADL,y0+.5); c.lineTo(W-PADR,y0+.5);
+    c.moveTo(PADL+.5,PADT); c.lineTo(PADL+.5,H-PADB); c.stroke();
+
+    c.font = '11px ' + MONO; c.textAlign = 'center';
+    if(g > 0.005){
+      var mn = norm((ph+180)/720), mx = norm(ph/720);
+      c.setLineDash([2,4]);
+      for(var n=0;n<3;n++){ mark(mn+n*0.5,'min'); mark(mx+n*0.5,'max'); }
+      c.setLineDash([]);
+    }
+    function mark(x,lab){
+      if(x >= XL || x < 0) return;
+      c.strokeStyle = C.ink3; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(px(x),PADT); c.lineTo(px(x),H-PADB); c.stroke();
+      c.fillStyle = C.ink3; c.fillText(lab, px(x), H-PADB+14);
+    }
+
+    c.setLineDash([5,5]); c.lineWidth = 1.4;
+    c.strokeStyle = C.e; c.beginPath();
+    for(var a=0;a<=340;a++){ var xa=a/340*XL; c.lineTo(px(xa), y0-inc(xa,t)*sy); } c.stroke();
+    c.strokeStyle = C.h; c.beginPath();
+    for(var b2=0;b2<=340;b2++){ var xe=b2/340*XL; c.lineTo(px(xe), y0-ref(xe,t,g)*sy); } c.stroke();
+    c.setLineDash([]);
+
+    c.strokeStyle = C.ink; c.lineWidth = 2.4; c.beginPath();
+    for(var d=0;d<=340;d++){ var xf=d/340*XL; c.lineTo(px(xf), y0-tot(xf,t,g)*sy); } c.stroke();
+
+    if(probe !== null){
+      var e = envM(probe);
+      c.strokeStyle = C.ink; c.lineWidth = 1; c.setLineDash([1,3]);
+      c.beginPath(); c.moveTo(px(probe),PADT); c.lineTo(px(probe),H-PADB); c.stroke();
+      c.setLineDash([]);
+      c.fillStyle = C.acc;
+      c.beginPath(); c.arc(px(probe), y0-e*sy, 3.5, 0, TAU2); c.fill();
+      c.beginPath(); c.arc(px(probe), y0+e*sy, 3.5, 0, TAU2); c.fill();
+      var lab = 'l = ' + probe.toFixed(3) + 'λ   |V| = ' + e.toFixed(2);
+      c.font = '11.5px ' + MONO; c.textAlign = 'left';
+      var tw = c.measureText(lab).width;
+      var bx = Math.min(Math.max(px(probe)-tw/2-7, PADL), Math.max(PADL, W-PADR-tw-14));
+      c.fillStyle = C.sunk; c.fillRect(bx, PADT-1, tw+14, 20);
+      c.strokeStyle = C.line2; c.lineWidth = 1; c.strokeRect(bx+.5, PADT-.5, tw+14, 20);
+      c.fillStyle = C.ink; c.fillText(lab, bx+7, PADT+13);
+    }
+
+    c.fillStyle = C.ink3; c.font = '11.5px ' + MONO;
+    c.textAlign = 'left'; c.fillText('load', PADL, H-PADB+29);
+    c.textAlign = 'right'; c.fillText('toward generator →  l/λ', W-PADR, H-PADB+29);
+    c.fillText('v', PADL-9, y0-sy*1.75);
+  }, true);
+})();
+
+/* three regimes */
+(function(){
+  var XL = 1.25;
+  [['m0',0],['m1',0.5],['m2',1]].forEach(function(pair){
+    var cv = document.getElementById(pair[0]), gg = pair[1];
+    if(!cv) return;
+    var fresh = true;
+    EM.register(function(C, t){
+      if(EM.fit(cv)) fresh = true;
+      var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+      var L=14, R=14, T=14, B=20, y0 = T+(H-T-B)/2, sy = (H-T-B)/2/2.15;
+      var sx = (W-L-R)/XL;
+      function px(x){ return L + x*sx; }
+      if(fresh){ c.fillStyle = C.sunk; c.fillRect(0,0,W,H); fresh = false; }
+      else { c.globalAlpha = .12; c.fillStyle = C.sunk; c.fillRect(0,0,W,H); c.globalAlpha = 1; }
+      c.strokeStyle = C.line2; c.lineWidth = 1; c.globalAlpha = .7;
+      c.beginPath(); c.moveTo(L,y0+.5); c.lineTo(W-R,y0+.5); c.stroke(); c.globalAlpha = 1;
+      c.strokeStyle = C.ink; c.lineWidth = 1.9; c.beginPath();
+      for(var i=0;i<=200;i++){ var x=i/200*XL; c.lineTo(px(x), y0-tot(x,t,gg)*sy); }
+      c.stroke();
+      var prev = tot(0,t,gg);
+      for(var k=1;k<=200;k++){
+        var x2 = k/200*XL, v = tot(x2,t,gg);
+        if((prev<0) !== (v<0)){
+          var xz = x2 - (v/(v-prev))*(XL/200);
+          c.fillStyle = gg >= 0.999 ? C.e : C.h;
+          c.beginPath();
+          c.moveTo(px(xz), H-B+2); c.lineTo(px(xz)-4, H-B+9); c.lineTo(px(xz)+4, H-B+9);
+          c.closePath(); c.fill();
+        }
+        prev = v;
+      }
+    }, true);
+  });
+})();
+
+/* anatomy reference figure */
+(function(){
+  var cv = document.getElementById('anat');
+  if(!cv) return;
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    var narrow = W < 580;
+    var L = 46, RM = narrow ? 18 : 148, T = 26, B = 78, XL2 = 0.7;
+    var m = 0.5, a = -0.6*Math.PI;
+    var sx = (W-L-RM)/XL2, base = H-B, sy = (H-T-B)/1.72;
+    function px(x){ return L + x*sx; }
+    function py(e){ return base - e*sy; }
+    c.clearRect(0,0,W,H);
+    c.font = '11.5px ' + MONO;
+    c.setLineDash([3,4]); c.lineWidth = 1; c.strokeStyle = C.line2;
+    c.beginPath(); c.moveTo(L,py(1.5)); c.lineTo(W-RM,py(1.5)); c.stroke();
+    c.beginPath(); c.moveTo(L,py(0.5)); c.lineTo(W-RM,py(0.5)); c.stroke();
+    c.setLineDash([]);
+    c.beginPath(); c.moveTo(px(0),base);
+    for(var i=0;i<=240;i++){ var x=i/240*XL2; c.lineTo(px(x),py(envOf(x,m,a))); }
+    c.lineTo(px(XL2),base); c.closePath(); c.fillStyle = C.accfill; c.fill();
+    c.strokeStyle = C.acc; c.lineWidth = 2.4; c.beginPath();
+    for(var j=0;j<=240;j++){ var x2=j/240*XL2; c.lineTo(px(x2),py(envOf(x2,m,a))); } c.stroke();
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L,base+.5); c.lineTo(W-RM,base+.5);
+    c.moveTo(L+.5,T); c.lineTo(L+.5,base); c.stroke();
+    var xmn1 = 0.1, xmx = 0.35, xmn2 = 0.6;
+    c.textAlign = 'center';
+    c.fillStyle = C.e; c.beginPath(); c.arc(px(xmn1),py(0.5),4.2,0,TAU2); c.fill();
+    c.fillText('1st min', px(xmn1), py(0.5)+19);
+    c.fillStyle = C.h; c.beginPath(); c.arc(px(xmx),py(1.5),4.2,0,TAU2); c.fill();
+    c.fillText('1st max', px(xmx), py(1.5)-11);
+    c.fillStyle = C.e; c.beginPath(); c.arc(px(xmn2),py(0.5),4.2,0,TAU2); c.fill();
+    c.fillText('2nd min', px(xmn2), py(0.5)+19);
+    dim(px(xmn1), px(xmx), base+22, 'λ/4');
+    dim(px(xmn1), px(xmn2), base+48, 'λ/2');
+    function dim(x1,x2,y,lab){
+      c.strokeStyle = C.ink3; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(x1,y); c.lineTo(x2,y);
+      c.moveTo(x1,y-5); c.lineTo(x1,y+5);
+      c.moveTo(x2,y-5); c.lineTo(x2,y+5); c.stroke();
+      var w = c.measureText(lab).width + 10, mx2 = (x1+x2)/2;
+      c.fillStyle = C.sunk; c.fillRect(mx2-w/2, y-8, w, 16);
+      c.fillStyle = C.ink; c.textAlign = 'center'; c.fillText(lab, mx2, y+4);
+    }
+    c.fillStyle = C.ink3; c.textAlign = 'left';
+    c.fillText('load', L, base+70);
+    c.textAlign = 'right'; c.fillText('distance from load →', W-RM, base+70);
+    c.fillText('|V|', L-8, T+10);
+    if(narrow){
+      c.textAlign = 'left'; c.fillStyle = C.h;
+      c.fillText('V max = (1+|Γ|)·V₀⁺', L+6, py(1.5)-9);
+      c.fillStyle = C.e;
+      c.fillText('V min = (1−|Γ|)·V₀⁺', L+6, py(0.5)-9);
+    } else {
+      var lx = W-RM+14;
+      c.textAlign = 'left';
+      c.fillStyle = C.h; c.font = '13px ' + MONO; c.fillText('V max', lx, py(1.5)-3);
+      c.fillStyle = C.ink3; c.font = '11.5px ' + MONO; c.fillText('= (1+|Γ|)·V₀⁺', lx, py(1.5)+14);
+      c.fillStyle = C.e; c.font = '13px ' + MONO; c.fillText('V min', lx, py(0.5)-3);
+      c.fillStyle = C.ink3; c.font = '11.5px ' + MONO; c.fillText('= (1−|Γ|)·V₀⁺', lx, py(0.5)+14);
+      c.fillStyle = C.ink; c.font = '13px ' + MONO; c.fillText('S = Vmax/Vmin', lx, base+4);
+      c.fillStyle = C.ink3; c.font = '11.5px ' + MONO; c.fillText('= (1+|Γ|)/(1−|Γ|)', lx, base+21);
+    }
+  }, false);
+})();
+</script>
+</body>
+</html>

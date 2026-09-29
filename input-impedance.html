@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Input impedance &middot; Transmission Line Theory</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="mast"><div class="in">
+  <a class="home" href="index.html">Transmission Line Theory</a>
+  <span class="sep"></span>
+  <span class="ch">08 &middot; Input impedance</span>
+  <span class="nav"><a href="standing-waves.html" title="Previous">‹</a><a href="line-lengths.html" title="Next">›</a></span>
+</div></header>
+
+<div class="wrap">
+
+<div class="hero">
+  <p class="kicker">Chapter 08</p>
+  <h1>Input impedance</h1>
+  <p class="lead">A generator driving a line does not see the load. It sees the load <i>through</i> the line, and what arrives at its terminals depends on how far away the load is. This is the chapter where a length of cable stops being a connection and becomes a component in its own right.</p>
+  <p class="t" style="margin-top:20px"><b>Assumes:</b> chapter 06 &mdash; $\Gamma$ and its rotation; chapter 07 for the standing-wave connection.</p>
+</div>
+
+<section class="blk" id="setup">
+  <h2>What the generator sees</h2>
+  <p class="t">Chapter 04 warned that on a line carrying two waves, the ratio of total voltage to total current is <b>not</b> $Z_0$. Now we work out what it actually is. Standing a distance $d$ back from the load:</p>
+
+  <div class="eq">$$\tilde{V}(d) = V_0^+\left(e^{j\beta d} + \Gamma e^{-j\beta d}\right) \qquad \tilde{I}(d) = \frac{V_0^+}{Z_0}\left(e^{j\beta d} - \Gamma e^{-j\beta d}\right)$$</div>
+
+  <p class="t">Their ratio is the <b>input impedance</b> at that point: whatever a source connected there would measure.</p>
+
+  <div class="eq box">
+    $$Z_{\text{in}}(d) = \frac{\tilde{V}(d)}{\tilde{I}(d)} = Z_0\,\frac{1 + \Gamma e^{-j2\beta d}}{1 - \Gamma e^{-j2\beta d}} = Z_0\,\frac{1 + \Gamma(d)}{1 - \Gamma(d)}$$
+    <span class="note">the same map from $\Gamma$ to impedance as at the load &mdash; only now $\Gamma$ has rotated</span>
+  </div>
+
+  <p class="t">That form is worth pausing on, because it says something structural. The relationship between $\Gamma$ and impedance is <b>always the same function</b>. What changes along the line is not the rule, only the value of $\Gamma$ being fed into it &mdash; and chapter 06 already told us how that value moves: same magnitude, angle turning at $2\beta$.</p>
+
+  <div class="key">
+    <span class="lab">Two facts you already have, combined</span>
+    <p>$\Gamma$ rotates on a circle of fixed radius, one lap per $\lambda/2$. Impedance is a fixed function of $\Gamma$. Therefore <b>$Z_{\text{in}}$ must also repeat every half wavelength</b>, and must trace a closed curve. That is the entire behaviour of this chapter, derived without touching a trigonometric identity.</p>
+  </div>
+</section>
+
+<section class="blk" id="tan">
+  <h2>The standard form</h2>
+  <p class="t">Substituting $\Gamma = (Z_L - Z_0)/(Z_L + Z_0)$ and grinding through the exponentials gives the expression you will actually use:</p>
+
+  <div class="eq box">
+    $$Z_{\text{in}}(d) = Z_0\,\frac{Z_L + jZ_0\tan\beta d}{Z_0 + jZ_L\tan\beta d}$$
+    <span class="note">lossless line; $\beta d$ is the electrical length of chapter 02, in radians</span>
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; from exponentials to the tangent</summary>
+    <div class="body">
+      <p>Start from the ratio and substitute $\Gamma$:</p>
+      <div class="eq">$$Z_{\text{in}} = Z_0\,\frac{(Z_L+Z_0)e^{j\beta d} + (Z_L-Z_0)e^{-j\beta d}}{(Z_L+Z_0)e^{j\beta d} - (Z_L-Z_0)e^{-j\beta d}}$$</div>
+      <p>Expand the products and gather the $Z_L$ terms separately from the $Z_0$ terms. In the numerator:</p>
+      <div class="eq">$$Z_L\left(e^{j\beta d} + e^{-j\beta d}\right) + Z_0\left(e^{j\beta d} - e^{-j\beta d}\right)$$</div>
+      <p>Those two brackets are exactly the Euler forms $2\cos\beta d$ and $2j\sin\beta d$. The denominator gathers the other way round. So</p>
+      <div class="eq">$$Z_{\text{in}} = Z_0\,\frac{2Z_L\cos\beta d + 2jZ_0\sin\beta d}{2Z_0\cos\beta d + 2jZ_L\sin\beta d}$$</div>
+      <p>Cancel the twos and divide top and bottom by $\cos\beta d$:</p>
+      <div class="eq">$$Z_{\text{in}} = Z_0\,\frac{Z_L + jZ_0\tan\beta d}{Z_0 + jZ_L\tan\beta d}$$</div>
+      <p>The tangent is where the $\lambda/2$ periodicity becomes visible, since $\tan$ has period $\pi$ and $\beta d = \pi$ means $d = \lambda/2$. It also explains the singularities: at $\beta d = \pi/2$ the tangent blows up, and the expression collapses to $Z_0^2/Z_L$ &mdash; the quarter-wave result of the next chapter.</p>
+      <p>For a <b>lossy</b> line the same derivation with $\gamma$ in place of $j\beta$ replaces every tangent with a hyperbolic one:</p>
+      <div class="eq">$$Z_{\text{in}} = Z_0\,\frac{Z_L + Z_0\tanh\gamma d}{Z_0 + Z_L\tanh\gamma d}$$</div>
+    </div>
+  </details>
+
+  <p class="t">Everything you need follows by putting particular values into that one expression.</p>
+
+  <div class="tw"><table>
+    <tr><th>Case</th><th>$Z_{\text{in}}$</th><th>Meaning</th></tr>
+    <tr><td>$Z_L = Z_0$</td><td>$Z_0$, at every $d$</td><td>a matched line is invisible &mdash; length does not matter</td></tr>
+    <tr><td>Short, $Z_L = 0$</td><td>$jZ_0\tan\beta d$</td><td>purely reactive, and it sweeps every value</td></tr>
+    <tr><td>Open, $Z_L = \infty$</td><td>$-jZ_0\cot\beta d$</td><td>purely reactive, the short's behaviour shifted by $\lambda/4$</td></tr>
+    <tr><td>$d = \lambda/2$</td><td>$Z_L$</td><td>a half-wave line repeats the load exactly</td></tr>
+    <tr><td>$d = \lambda/4$</td><td>$Z_0^2 / Z_L$</td><td>inverted &mdash; the subject of chapter 09</td></tr>
+  </table></div>
+
+  <p class="t">The first row deserves emphasis because it is the goal of all matching work. When $Z_L = Z_0$ there is no reflected wave, $\Gamma$ is zero and has nothing to rotate, so <b>the line's length stops mattering entirely</b>. That is the only condition under which a cable behaves like the ideal wire of first-year circuits.</p>
+</section>
+
+<section class="blk" id="explore">
+  <h2>Watching it rotate</h2>
+  <p class="t">Set a load and walk back along the line. The left panel is the $\Gamma$ plane from chapter 06; the right is $Z_{\text{in}}$ resolved into resistance and reactance as you move.</p>
+
+  <figure class="fig">
+    <div style="display:flex;flex-wrap:wrap;gap:0;background:var(--sunk)">
+      <canvas id="zplane" style="width:100%;max-width:250px;height:250px;flex:0 1 250px;background:var(--sunk);margin-inline:auto"></canvas>
+      <canvas id="ztrace" style="flex:1 1 300px;min-width:0;height:250px;background:var(--sunk)"></canvas>
+    </div>
+    <div class="rail">
+      <div class="ctl"><label for="zr">R<sub>L</sub> &Omega;</label><input type="range" id="zr" min="0" max="250" step="1" value="25"><output id="zrv">25</output></div>
+      <div class="ctl"><label for="zx">X<sub>L</sub> &Omega;</label><input type="range" id="zx" min="-200" max="200" step="1" value="0"><output id="zxv">0</output></div>
+    </div>
+    <div class="rail" style="border-top:0;padding-top:0">
+      <div class="ctl"><label for="zd">d / &lambda;</label><input type="range" id="zd" min="0" max="0.5" step="0.002" value="0"><output id="zdv">0.000</output></div>
+      <button id="zrun">Sweep</button>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>Z<sub>in</sub></dt><dd id="z-zin">25 + j0</dd></div>
+      <div class="rd"><dt>|&Gamma;|</dt><dd id="z-gm">0.50</dd></div>
+      <div class="rd"><dt>SWR</dt><dd id="z-swr">3.00</dd></div>
+      <div class="rd"><dt>&beta;d</dt><dd id="z-bd">0&deg;</dd></div>
+    </dl>
+    <div class="btns">
+      <button data-z="25,0">R<sub>L</sub> = Z&#8320;/2</button>
+      <button data-z="50,0">matched</button>
+      <button data-z="0,0">short</button>
+      <button id="zopen">open</button>
+      <button data-z="0,80">pure reactance</button>
+      <button data-z="30,-60">30 &minus; j60</button>
+    </div>
+    <figcaption class="cap">Z&#8320; = 50 &#937; throughout &middot; the marker on the circle and the marker on the traces are the same point on the line</figcaption>
+  </figure>
+
+  <p class="t">Three things to notice while sweeping. The $\Gamma$ dot travels <b>clockwise</b> and returns to its start after $d = \lambda/2$, which is why the traces on the right are periodic with that period, not $\lambda$. The resistance and reactance both swing wildly even though the load is fixed &mdash; a 25 &Omega; resistor seen through a line can look like almost anything. And the trace crosses the <b>real axis</b> twice per half wavelength: those two crossings are the voltage minimum and maximum of chapter 07.</p>
+</section>
+
+<section class="blk" id="minmax">
+  <h2>Why the minimum trick works</h2>
+  <p class="t">Chapter 07 offered a check without proof: at a voltage minimum the impedance looking toward the load is purely real and equals $Z_0/S$. That falls out immediately now.</p>
+
+  <p class="t">A voltage minimum is where $\Gamma(d)$ points along the <b>negative real axis</b>, so $\Gamma(d) = -|\Gamma|$. Substituting into the boxed expression:</p>
+
+  <div class="eq box">
+    $$Z_{\text{in}}\big|_{\min} = Z_0\,\frac{1 - |\Gamma|}{1 + |\Gamma|} = \frac{Z_0}{S}$$
+    <span class="note">real, because $\Gamma$ there is real and negative</span>
+  </div>
+
+  <p class="t">And at a maximum $\Gamma(d) = +|\Gamma|$, giving the mirror result:</p>
+
+  <div class="eq">$$Z_{\text{in}}\big|_{\max} = Z_0\,\frac{1 + |\Gamma|}{1 - |\Gamma|} = S\,Z_0$$</div>
+
+  <p class="t">So the standing-wave extrema are not merely places where the envelope peaks &mdash; they are the two points per half wavelength where <b>the line looks like a pure resistance</b>. That is why slotted-line measurements target them, and it is the fact every stub-matching procedure in chapter 11 is built on.</p>
+
+  <div class="key">
+    <span class="lab">A bridge worth making explicit</span>
+    <p>$S$, $|\Gamma|$ and $Z_{\text{in}}$ at the extrema are three names for one quantity. Measure any of them and you have the other two: $S = Z_0/Z_{\min} = (1+|\Gamma|)/(1-|\Gamma|)$.</p>
+  </div>
+</section>
+
+<section class="blk" id="circuit">
+  <h2>Folding the line into a circuit</h2>
+  <p class="t">The practical payoff of $Z_{\text{in}}$ is that it lets you <b>delete the line</b>. A generator of open-circuit voltage $\tilde{V}_g$ and internal impedance $Z_g$, driving a length of line into a load, becomes an ordinary two-element divider:</p>
+
+  <figure class="fig">
+    <canvas id="ckt" class="static" style="height:350px"></canvas>
+    <figcaption class="cap">everything to the right of the input plane collapses into a single impedance</figcaption>
+  </figure>
+
+  <div class="eq box">
+    $$\tilde{V}_{\text{in}} = \tilde{V}_g\,\frac{Z_{\text{in}}}{Z_g + Z_{\text{in}}} \qquad\qquad \tilde{I}_{\text{in}} = \frac{\tilde{V}_g}{Z_g + Z_{\text{in}}}$$
+    <span class="note">ordinary lumped circuit analysis, valid because $Z_{\text{in}}$ already contains the whole line</span>
+  </div>
+
+  <p class="t">That gives conditions at the input. To get back to the wave amplitudes &mdash; and hence to conditions anywhere along the line &mdash; evaluate the general solution at $z = -l$ and solve for $V_0^+$:</p>
+
+  <div class="eq">$$\tilde{V}_{\text{in}} = V_0^+\left(e^{j\beta l} + \Gamma e^{-j\beta l}\right) \quad\Longrightarrow\quad V_0^+ = \frac{\tilde{V}_{\text{in}}}{e^{j\beta l} + \Gamma e^{-j\beta l}}$$</div>
+
+  <p class="t">With $V_0^+$ known, every quantity in the problem is determined: the voltage and current at any point, the power delivered, the standing-wave pattern. The full recipe, in order:</p>
+
+  <ol class="steps">
+    <li><div><b>Find $\Gamma$</b> at the load from $Z_L$ and $Z_0$.</div></li>
+    <li><div><b>Find $Z_{\text{in}}$</b> at the input using the tangent formula, or by rotating $\Gamma$ through $2\beta l$.</div></li>
+    <li><div><b>Solve the lumped circuit</b> for $\tilde{V}_{\text{in}}$ and $\tilde{I}_{\text{in}}$ with a voltage divider.</div></li>
+    <li><div><b>Back out $V_0^+$</b>, and from it anything else you need along the line.</div></li>
+  </ol>
+
+  <p class="t">Step 2 is the only one that involves transmission-line theory at all. Steps 1, 3 and 4 are algebra. That compression &mdash; an entire distributed structure reduced to one complex number &mdash; is what makes the subject workable.</p>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; power delivered, and the conjugate match</summary>
+    <div class="body">
+      <p>The average power delivered into the input plane, and on a lossless line therefore into the load, is</p>
+      <div class="eq">$$P = \tfrac{1}{2}\operatorname{Re}\left\{\tilde{V}_{\text{in}}\tilde{I}_{\text{in}}^{\,*}\right\} = \tfrac{1}{2}\left|\tilde{I}_{\text{in}}\right|^2 \operatorname{Re}\{Z_{\text{in}}\}$$</div>
+      <p>Substituting the divider result gives the power in terms of the generator alone:</p>
+      <div class="eq">$$P = \frac{1}{2}\,\frac{\left|\tilde{V}_g\right|^2 R_{\text{in}}}{\left|Z_g + Z_{\text{in}}\right|^2}$$</div>
+      <p>Maximising this over $Z_{\text{in}}$ gives the <b>conjugate match</b> condition $Z_{\text{in}} = Z_g^*$, which is the standard maximum-power-transfer result of circuit theory &mdash; here reached through a transmission line rather than a pair of wires.</p>
+      <p>It is worth being clear that this is a <i>different</i> condition from $Z_L = Z_0$. The first maximises power out of a given generator; the second eliminates the reflected wave. They coincide only when $Z_g = Z_0$, which is the usual arrangement in RF systems precisely because it makes the two goals agree. When they do not coincide, you must decide which one you actually want &mdash; and in a system with a long feed line, eliminating the reflection is almost always the right answer.</p>
+    </div>
+  </details>
+</section>
+
+<section class="blk" id="check">
+  <div class="check">
+    <h3>Self-check</h3>
+    <p class="t" style="margin-top:6px">Three questions on what the line does to a load.</p>
+
+    <div class="q">
+      <p class="qt">1. A 50 &Omega; line is terminated in 50 &Omega;. Does its length matter?</p>
+      <div class="opts">
+        <button class="opt">Yes &mdash; longer lines always transform the impedance more</button>
+        <button class="opt" data-ok="1">No &mdash; with $\Gamma = 0$ there is nothing to rotate, so $Z_{\text{in}} = Z_0$ at every $d$</button>
+        <button class="opt">Only if the length is a multiple of $\lambda/4$</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>A matched line has no reflected wave. $\Gamma$ is zero, and rotating zero leaves zero, so $Z_{\text{in}} = Z_0$ regardless of length. This is the only case where a cable behaves like an ideal wire, and it is why matching is worth the trouble &mdash; it removes length from the problem entirely.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">2. Why is $Z_{\text{in}}$ periodic in $\lambda/2$ rather than $\lambda$?</p>
+      <div class="opts">
+        <button class="opt">Because voltage and current each contribute half a period</button>
+        <button class="opt" data-ok="1">Because $\Gamma$ rotates at $2\beta$ &mdash; the round trip &mdash; so a full lap takes only $\lambda/2$ of travel</button>
+        <button class="opt">Because the tangent function has period $\pi$, which is a coincidence of the algebra</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>The reflected wave covers each step out <i>and</i> back, so the relative phase advances at twice the rate of one wave. $\Gamma(d) = \Gamma_L e^{-j2\beta d}$ completes a full $2\pi$ when $d = \lambda/2$. The tangent's period of $\pi$ is not a coincidence but the same fact wearing different notation.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">3. At a voltage minimum, $Z_{\text{in}} = Z_0/S$. Why is this purely real?</p>
+      <div class="opts">
+        <button class="opt">Because the voltage is smallest there, so reactive energy storage is at a minimum</button>
+        <button class="opt" data-ok="1">Because $\Gamma$ there lies on the negative real axis, and a real $\Gamma$ maps to a real impedance</button>
+        <button class="opt">Because the minimum only occurs on lines terminated in a resistance</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>A minimum is precisely where the rotating $\Gamma$ crosses the negative real axis. Feeding a real $\Gamma$ through $Z_0(1+\Gamma)/(1-\Gamma)$ gives a real result. It holds for <i>any</i> load, reactive ones included &mdash; the minimum's position moves, but wherever it lands the impedance there is a pure resistance of $Z_0/S$.</p>
+    </div>
+  </div>
+</section>
+
+<nav class="pager">
+  <a href="standing-waves.html"><span class="dir">Previous</span><span class="ttl">Standing waves</span></a>
+  <a class="nx" href="line-lengths.html"><span class="dir">Chapter 09</span><span class="ttl">Line lengths and transformers</span></a>
+</nav>
+
+<footer class="site">
+  Chapter 08 of eleven. Lossless line; $d$ measured back from the load.
+  <span class="cr">&copy; 2026 Elie Hachem &middot; free to share and use for teaching</span>
+</footer>
+
+</div>
+
+<script src="assets/site.js"></script>
+<script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
+<script>
+var MONO = 'IBM Plex Mono, monospace';
+(function(){
+  var zp = document.getElementById('zplane'), zt = document.getElementById('ztrace');
+  if(!zp) return;
+  var RL = 25, XL = 0, D = 0, Z0 = 50, sweeping = false, isOpen = false;
+
+  /* an open circuit is R -> infinity, which no slider can express, so it gets
+     its own flag: the load reflects fully and in phase, Gamma = +1. */
+  function gamL(){
+    if(isOpen) return [1, 0];
+    var nr = RL-Z0, ni = XL, dr = RL+Z0, di = XL, dd = dr*dr + di*di;
+    if(dd < 1e-9) return [0,0];
+    return [(nr*dr + ni*di)/dd, (ni*dr - nr*di)/dd];
+  }
+  function gamAt(d){
+    var g = gamL(), a = -2*EM.TAU*d;
+    return [g[0]*Math.cos(a) - g[1]*Math.sin(a), g[0]*Math.sin(a) + g[1]*Math.cos(a)];
+  }
+  function zinAt(d){
+    var g = gamAt(d);
+    var nr = 1+g[0], ni = g[1], dr = 1-g[0], di = -g[1];
+    var dd = dr*dr + di*di;
+    if(dd < 1e-9) return [1e9, 0];
+    return [Z0*(nr*dr + ni*di)/dd, Z0*(ni*dr - nr*di)/dd];
+  }
+  function fmt(z){
+    if(Math.abs(z[0]) > 9e5) return '→ ∞';
+    /* tiny residuals from the rotation must not print as "-0.0" */
+    var r = Math.abs(z[0]) < 0.05 ? '0' : z[0].toFixed(Math.abs(z[0]) < 100 ? 1 : 0);
+    var x = z[1];
+    if(Math.abs(x) < 0.05) return r + ' + j0';        /* never show a negative zero */
+    return r + (x < 0 ? ' − j' : ' + j') + Math.abs(x).toFixed(Math.abs(x) < 100 ? 1 : 0);
+  }
+  function sync(){
+    document.getElementById('zrv').innerHTML = isOpen ? '∞' : RL;
+    document.getElementById('zxv').innerHTML = isOpen ? '—' : ((XL<0?'−':'') + Math.abs(XL));
+    document.getElementById('zdv').textContent = D.toFixed(3);
+    var g = gamL(), m = Math.hypot(g[0],g[1]);
+    document.getElementById('z-zin').textContent = fmt(zinAt(D)) + ' Ω';
+    document.getElementById('z-gm').textContent = m.toFixed(3);
+    document.getElementById('z-swr').textContent = m >= 0.999 ? '∞' : ((1+m)/(1-m)).toFixed(2);
+    document.getElementById('z-bd').innerHTML = Math.round(360*D) + '&deg;';
+  }
+  document.getElementById('zr').addEventListener('input', function(){ RL = +this.value; isOpen = false; sync(); });
+  document.getElementById('zx').addEventListener('input', function(){ XL = +this.value; isOpen = false; sync(); });
+  document.getElementById('zd').addEventListener('input', function(){ D = +this.value; sweeping = false; sync(); });
+  Array.prototype.forEach.call(document.querySelectorAll('.btns button[data-z]'), function(b){
+    b.addEventListener('click', function(){
+      var v = b.getAttribute('data-z').split(',');
+      RL = +v[0]; XL = +v[1]; isOpen = false;
+      document.getElementById('zr').value = RL;
+      document.getElementById('zx').value = XL;
+      sync();
+    });
+  });
+  document.getElementById('zopen').addEventListener('click', function(){
+    isOpen = true; XL = 0; document.getElementById('zx').value = 0; sync();
+  });
+  var rb = document.getElementById('zrun');
+  rb.addEventListener('click', function(){
+    sweeping = !sweeping;
+    rb.textContent = sweeping ? 'Stop' : 'Sweep';
+  });
+  sync();
+
+  EM.register(function(C){
+    if(sweeping){
+      D += 0.0016; if(D > 0.5) D = 0;
+      document.getElementById('zd').value = D;
+      sync();
+    }
+    /* gamma plane */
+    EM.fit(zp);
+    var c = zp.getContext('2d'), W = zp._w, H = zp._h;
+    var cx = W/2, cy = H/2, Rr = Math.min(W,H)/2 - 26;
+    c.clearRect(0,0,W,H);
+    c.strokeStyle = C.line2; c.lineWidth = 1.2;
+    c.beginPath(); c.arc(cx,cy,Rr,0,EM.TAU); c.stroke();
+    c.strokeStyle = C.line;
+    c.beginPath(); c.moveTo(cx-Rr,cy); c.lineTo(cx+Rr,cy);
+    c.moveTo(cx,cy-Rr); c.lineTo(cx,cy+Rr); c.stroke();
+    var gl = gamL(), m = Math.hypot(gl[0],gl[1]);
+    if(m > 0.004){
+      c.setLineDash([3,4]); c.strokeStyle = C.acc; c.lineWidth = 1.2;
+      c.beginPath(); c.arc(cx,cy,Rr*m,0,EM.TAU); c.stroke(); c.setLineDash([]);
+    }
+    /* travelled arc, load to current point, clockwise */
+    if(m > 0.004 && D > 0.001){
+      c.strokeStyle = C.h; c.lineWidth = 3; c.globalAlpha = .5;
+      var a0 = Math.atan2(gl[1], gl[0]);
+      c.beginPath(); c.arc(cx, cy, Rr*m, -a0, -a0 + 2*EM.TAU*D, false); c.stroke();
+      c.globalAlpha = 1;
+    }
+    var gd = gamAt(D);
+    c.fillStyle = C.ink3;
+    c.beginPath(); c.arc(cx+Rr*gl[0], cy-Rr*gl[1], 3.6, 0, EM.TAU); c.fill();
+    c.strokeStyle = C.e; c.lineWidth = 2.2;
+    c.beginPath(); c.moveTo(cx,cy); c.lineTo(cx+Rr*gd[0], cy-Rr*gd[1]); c.stroke();
+    c.fillStyle = C.e;
+    c.beginPath(); c.arc(cx+Rr*gd[0], cy-Rr*gd[1], 5, 0, EM.TAU); c.fill();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3;
+    c.textAlign = 'center'; c.fillText('Γ plane', cx, cy+Rr+16);
+    c.textAlign = 'left'; c.fillText('load', cx+Rr*gl[0]+8, cy-Rr*gl[1]+4);
+  }, true);
+
+  EM.register(function(C){
+    EM.fit(zt);
+    var c = zt.getContext('2d'), W = zt._w, H = zt._h;
+    var L = 44, R = 16, T = 20, B = 34;
+    var yMax = 200, yMin = -200;
+    function px(d){ return L + (d/0.5)*(W-L-R); }
+    function py(v){ return (H-B) - ((Math.max(yMin,Math.min(yMax,v))-yMin)/(yMax-yMin))*(H-T-B); }
+    c.clearRect(0,0,W,H);
+    c.strokeStyle = C.line; c.lineWidth = 1; c.setLineDash([2,4]);
+    c.beginPath(); c.moveTo(L, py(0)); c.lineTo(W-R, py(0)); c.stroke();
+    c.setLineDash([]);
+    c.strokeStyle = C.line2;
+    c.beginPath(); c.moveTo(L, H-B+.5); c.lineTo(W-R, H-B+.5);
+    c.moveTo(L+.5, T); c.lineTo(L+.5, H-B); c.stroke();
+
+    function trace(idx, col){
+      c.strokeStyle = col; c.lineWidth = 2.2; c.beginPath();
+      var pen = false;
+      for(var i=0;i<=260;i++){
+        var d = i/260*0.5, v = zinAt(d)[idx];
+        if(Math.abs(v) > 1e5){ pen = false; continue; }
+        var X = px(d), Y = py(v);
+        if(pen) c.lineTo(X,Y); else { c.moveTo(X,Y); pen = true; }
+      }
+      c.stroke();
+    }
+    trace(0, C.e);
+    trace(1, C.h);
+
+    var z = zinAt(D);
+    c.strokeStyle = C.ink; c.lineWidth = 1; c.setLineDash([1,3]);
+    c.beginPath(); c.moveTo(px(D), T); c.lineTo(px(D), H-B); c.stroke();
+    c.setLineDash([]);
+    if(Math.abs(z[0]) < 1e5){
+      c.fillStyle = C.e; c.beginPath(); c.arc(px(D), py(z[0]), 4.5, 0, EM.TAU); c.fill();
+      c.fillStyle = C.h; c.beginPath(); c.arc(px(D), py(z[1]), 4.5, 0, EM.TAU); c.fill();
+    }
+    c.font = '11px ' + MONO;
+    c.fillStyle = C.ink3; c.textAlign = 'right';
+    c.fillText('+200', L-6, py(200)+4);
+    c.fillText('0', L-6, py(0)+4);
+    c.fillText('−200', L-6, py(-200)+4);
+    c.textAlign = 'left'; c.fillStyle = C.e; c.fillText('R', L+7, T+11);
+    c.fillStyle = C.h; c.fillText('X', L+22, T+11);
+    c.fillStyle = C.ink3; c.textAlign = 'right';
+    c.fillText('d/λ →  0.5', W-R, H-B+16);
+  }, true);
+})();
+
+/* ---- collapsing the line into one impedance ---- */
+(function(){
+  var cv = document.getElementById('ckt');
+  if(!cv) return;
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d');
+    c.clearRect(0,0,cv._w,cv._h);
+    EM.design(c, cv, 560, 350);
+    /* vertical budget, checked against 350: upper rails 62/164, arrow 196-216,
+       lower rails 238/300, deepest ink at 300 + generator radius = 320. */
+    var top = 62, bot = 164, t2 = 238, b2 = 300;
+
+    function source(x, yt, yb, r){
+      var mid = (yt+yb)/2;
+      c.strokeStyle = C.ink2; c.lineWidth = 2;
+      c.beginPath(); c.arc(x, mid, r, 0, EM.TAU); c.stroke();
+      c.beginPath();
+      for(var i=0;i<=24;i++){
+        var u = -r*0.45 + i*(r*0.9/24);
+        c.lineTo(x+u, mid - Math.sin(i/24*EM.TAU)*r*0.36);
+      }
+      c.stroke();
+      c.beginPath(); c.moveTo(x, mid-r); c.lineTo(x, yt);
+      c.moveTo(x, mid+r); c.lineTo(x, yb); c.stroke();
+    }
+    function box(x, y, w, h, label, col){
+      c.fillStyle = C.surface; c.fillRect(x, y, w, h);
+      c.strokeStyle = col; c.lineWidth = 2; c.strokeRect(x, y, w, h);
+      if(label){
+        c.fillStyle = col; c.font = '14px ' + MONO; c.textAlign = 'center';
+        c.fillText(label, x + w/2, y + h/2 + 5);
+      }
+    }
+    function wire(){
+      c.strokeStyle = C.ink2; c.lineWidth = 2; c.beginPath();
+      for(var i=0;i<arguments.length;i+=4){
+        c.moveTo(arguments[i], arguments[i+1]); c.lineTo(arguments[i+2], arguments[i+3]);
+      }
+      c.stroke();
+    }
+
+    /* --- upper: generator, Zg, line, load --- */
+    source(48, top, bot, 21);
+    wire(48, top, 104, top,  158, top, 214, top,  48, bot, 214, bot);
+    box(104, top-15, 54, 30, 'Zg', C.ink2);
+
+    c.fillStyle = C.accfill;
+    c.fillRect(214, top-4, 236, 8); c.fillRect(214, bot-4, 236, 8);
+    c.strokeStyle = C.acc; c.lineWidth = 1.5;
+    c.strokeRect(214, top-4, 236, 8); c.strokeRect(214, bot-4, 236, 8);
+    c.fillStyle = C.acc; c.font = '13px ' + MONO; c.textAlign = 'center';
+    c.fillText('line, Z₀, length l', 332, (top+bot)/2 - 5);
+    c.fillText('electrical length βl', 332, (top+bot)/2 + 14);
+
+    wire(450, top, 486, top,  450, bot, 486, bot);
+    box(486, top-16, 52, (bot-top)+32, 'Zₗ', C.ink2);
+
+    /* input plane */
+    c.strokeStyle = C.h; c.lineWidth = 1; c.setLineDash([4,4]);
+    c.beginPath(); c.moveTo(214, top-36); c.lineTo(214, bot+22); c.stroke();
+    c.setLineDash([]);
+    c.fillStyle = C.h; c.font = '12px ' + MONO; c.textAlign = 'center';
+    c.fillText('input plane', 214, top-44);
+
+    /* --- the collapse --- */
+    c.strokeStyle = C.ink3; c.fillStyle = C.ink3; c.lineWidth = 1.6;
+    EM.arrow(c, 214, 196, 214, 216, 7);
+    c.font = '12px ' + MONO; c.textAlign = 'left';
+    c.fillText('everything right of the plane becomes one impedance', 232, 212);
+
+    /* --- lower: the equivalent lumped circuit --- */
+    source(48, t2, b2, 19);
+    wire(48, t2, 104, t2,  158, t2, 214, t2,  48, b2, 214, b2);
+    box(104, t2-15, 54, 30, 'Zg', C.ink2);
+    box(188, t2, 52, b2-t2, 'Z in', C.e);
+    c.restore();
+  }, false);
+})();
+</script>
+</body>
+</html>

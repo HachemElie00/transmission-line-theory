@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>When a circuit becomes a line &middot; Transmission Line Theory</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="mast"><div class="in">
+  <a class="home" href="index.html">Transmission Line Theory</a>
+  <span class="sep"></span>
+  <span class="ch">02 &middot; When a circuit becomes a line</span>
+  <span class="nav"><a href="waves-phasors.html" title="Previous">‹</a><a href="telegraphers.html" title="Next">›</a></span>
+</div></header>
+
+<div class="wrap">
+
+<div class="hero">
+  <p class="kicker">Chapter 02</p>
+  <h1>When a circuit becomes a line</h1>
+  <p class="lead">Kirchhoff's laws are not laws. They are an approximation with a stated domain of validity, and that domain has a sharp and computable edge. Finding the edge tells you exactly when a piece of wire stops being a connection and starts being a component.</p>
+  <p class="t" style="margin-top:20px"><b>Assumes:</b> chapter 01 &mdash; wavelength, phase constant, phasors.</p>
+</div>
+
+<section class="blk" id="assumption">
+  <h2>The assumption nobody states</h2>
+  <p class="t">Kirchhoff's voltage law says the potentials around a loop sum to zero. Kirchhoff's current law says the currents into a node sum to zero. Both are used as though they hold at every instant &mdash; and buried in that word <b>instant</b> is the whole problem.</p>
+
+  <p class="t">If you change the voltage at one end of a wire, when does the other end find out? Not immediately. The change propagates at the phase velocity of the medium, so it arrives after a delay</p>
+
+  <div class="eq box">
+    $$t_d = \frac{l}{u_p}$$
+    <span class="note">$l$ the physical length, $u_p$ the phase velocity &mdash; roughly $2\times10^8$ m/s in ordinary cable</span>
+  </div>
+
+  <p class="t">Lumped circuit theory is what you get by declaring $t_d = 0$. Every node has one voltage, shared everywhere along it, at every moment. That is not a claim about wires being perfect; it is a claim about the delay being <b>negligible compared with how fast the signal changes</b>.</p>
+
+  <div class="key">
+    <span class="lab">So the question is never "is this wire long?"</span>
+    <p>It is "is this delay short compared with one period?" A metre of cable is enormous at 10 GHz and invisible at 60 Hz. Length alone tells you nothing.</p>
+  </div>
+</section>
+
+<section class="blk" id="electrical">
+  <h2>Electrical length</h2>
+  <p class="t">Compare the delay with the period of the signal and something clean happens. The delay is $t_d = l/u_p$, the period is $T = 1/f$, and their ratio is</p>
+
+  <div class="eq">$$\frac{t_d}{T} = \frac{l f}{u_p} = \frac{l}{\lambda}$$</div>
+
+  <p class="t">The physical length and the velocity both cancel out. What survives is a single dimensionless number: <b>how many wavelengths long the thing is</b>. That number is the electrical length, and it is usually quoted as a phase:</p>
+
+  <div class="eq box">
+    $$\beta l = \frac{2\pi}{\lambda}\,l \quad\text{radians} \qquad\text{or}\qquad 360^\circ \times \frac{l}{\lambda}$$
+    <span class="note">the phase a wave accumulates crossing the thing &mdash; the only length that matters in this subject</span>
+  </div>
+
+  <p class="t">From here on, lengths are quoted in wavelengths almost without exception. A "quarter-wave transformer" is not 3&nbsp;cm long; it is $\lambda/4$ long, and what that is in centimetres depends on the frequency and the dielectric.</p>
+
+  <p class="t">Drag the electrical length below and watch the voltage profile along one piece of wire. The wire occupies the same screen width throughout &mdash; only how much of a wavelength fits inside it changes.</p>
+
+  <figure class="fig">
+    <canvas id="lenfig" style="height:290px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="ell">l / &lambda;</label><input type="range" id="ell" min="0.002" max="0.6" step="0.002" value="0.02"><output id="ellv">0.020</output></div>
+    </div>
+    <div class="readout" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));border-top:1px solid var(--line)">
+      <div style="padding:13px 17px;border-right:1px solid var(--line)">
+        <div style="font-family:var(--f-mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px">Electrical length</div>
+        <div id="o-deg" style="font-family:var(--f-mono);font-size:19px">7&deg;</div></div>
+      <div style="padding:13px 17px;border-right:1px solid var(--line)">
+        <div style="font-family:var(--f-mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px">End-to-end error</div>
+        <div id="o-err" style="font-family:var(--f-mono);font-size:19px">13 %</div></div>
+      <div style="padding:13px 17px">
+        <div style="font-family:var(--f-mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px">Verdict</div>
+        <div id="o-ver" style="font-family:var(--f-mono);font-size:19px">lumped ok</div></div>
+    </div>
+    <div class="btns">
+      <button data-l="0.002">60 Hz mains, 1 m</button>
+      <button data-l="0.05">&lambda;/20</button>
+      <button data-l="0.1">&lambda;/10</button>
+      <button data-l="0.25">&lambda;/4</button>
+    </div>
+    <figcaption class="cap">the two dots are the ends of the same wire; the dashed line is what lumped theory predicts for the far end, and the vertical bar is the gap it says cannot exist</figcaption>
+  </figure>
+
+  <p class="t">At very small electrical length the profile is visibly flat: both ends really do sit at the same voltage, and calling it a single node costs nothing. As the electrical length grows the profile starts to tilt, then to curve, and at $\lambda/4$ the two ends can be at <b>opposite polarity at the same instant</b>. No amount of care with lumped components will reproduce that.</p>
+</section>
+
+<section class="blk" id="howmuch">
+  <h2>How much error, exactly</h2>
+  <p class="t">The two ends carry $\cos(\omega t)$ and $\cos(\omega t - \beta l)$. Their difference is itself a sinusoid, and a standard identity gives its amplitude:</p>
+
+  <div class="eq box">
+    $$\cos(\omega t) - \cos(\omega t - \beta l) = -2\sin\!\left(\omega t - \frac{\beta l}{2}\right)\sin\!\left(\frac{\beta l}{2}\right)$$
+    $$\text{peak discrepancy} = 2\left|\sin\frac{\beta l}{2}\right|$$
+    <span class="note">as a fraction of the signal amplitude &mdash; this is the error lumped theory commits by calling both ends one node</span>
+  </div>
+
+  <div class="tw"><table>
+    <tr><th>Length</th><th>$\beta l$</th><th>Peak discrepancy</th><th>In practice</th></tr>
+    <tr><td>$\lambda/1000$</td><td>0.36&deg;</td><td>0.6 %</td><td>Lumped theory is exact for any purpose.</td></tr>
+    <tr><td>$\lambda/100$</td><td>3.6&deg;</td><td>6 %</td><td>Fine for most work.</td></tr>
+    <tr><td>$\lambda/20$</td><td>18&deg;</td><td>31 %</td><td>The usual conservative cutoff.</td></tr>
+    <tr><td>$\lambda/10$</td><td>36&deg;</td><td>62 %</td><td>The usual permissive cutoff. Already large.</td></tr>
+    <tr><td>$\lambda/4$</td><td>90&deg;</td><td>141 %</td><td>Hopeless. The ends can have opposite sign.</td></tr>
+    <tr><td>$\lambda/2$</td><td>180&deg;</td><td>200 %</td><td>The ends are always exactly out of phase.</td></tr>
+  </table></div>
+
+  <p class="t">Notice that the familiar $\lambda/10$ rule of thumb already tolerates a 62&nbsp;% discrepancy between the ends of a supposedly equipotential node. It is a rule for rough work, not a guarantee. And notice there is <b>no threshold anywhere in that table</b> &mdash; nothing switches off, no regime changes. The error grows smoothly from nothing, and where you draw the line depends entirely on what you can tolerate.</p>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; putting real numbers on it</summary>
+    <div class="body">
+      <p>Take a signal at frequency $f$ on a line with phase velocity $u_p = c/\sqrt{\varepsilon_{\text{eff}}}$. The wavelength is $\lambda = u_p/f$, so a piece of hardware of length $l$ has electrical length</p>
+      <div class="eq">$$\frac{l}{\lambda} = \frac{l f \sqrt{\varepsilon_{\text{eff}}}}{c}$$</div>
+      <p><b>A 1 m mains cable at 60 Hz.</b> With $u_p \approx 2\times10^8$ m/s, $\lambda = 2\times10^8/60 \approx 3300$ km. So $l/\lambda \approx 3\times10^{-7}$ and $\beta l \approx 0.0001^\circ$. Lumped theory is exact to more digits than you can measure.</p>
+      <p><b>A 2 cm board trace at 5 GHz</b>, on FR-4 with $\varepsilon_{\text{eff}} \approx 3.5$. Then $u_p \approx 1.6\times10^8$ m/s, $\lambda \approx 3.2$ cm, and</p>
+      <div class="eq">$$\frac{l}{\lambda} = \frac{2}{3.2} = 0.63 \quad\Longrightarrow\quad \beta l \approx 225^\circ$$</div>
+      <p>More than half a wavelength. That trace is not a connection between two components &mdash; it <b>is</b> a component, with its own impedance, and treating it as a wire will give an answer that is not merely imprecise but qualitatively wrong.</p>
+      <p>Same physical object, same equations, thirteen orders of magnitude between the two cases. The only thing that changed is $l/\lambda$.</p>
+    </div>
+  </details>
+</section>
+
+<section class="blk" id="fix">
+  <h2>The way out</h2>
+  <p class="t">If the failure is that a single lumped element cannot represent something whose voltage varies along its length, there is an obvious repair: <b>use more elements</b>. Chop the line into short pieces, each short enough for lumped theory to hold inside it, and chain them.</p>
+
+  <p class="t">Each little piece needs four things to represent what a real pair of conductors does:</p>
+
+  <div class="tw"><table>
+    <tr><th>Effect</th><th>Element</th><th>Why it is there</th></tr>
+    <tr><td>Conductors have resistance</td><td>series $R'$</td><td>the metal is not perfect</td></tr>
+    <tr><td>Current makes a magnetic field</td><td>series $L'$</td><td>energy stored between the conductors</td></tr>
+    <tr><td>The insulator leaks</td><td>shunt $G'$</td><td>dielectric is not perfect</td></tr>
+    <tr><td>Voltage makes an electric field</td><td>shunt $C'$</td><td>the pair is a capacitor along its whole length</td></tr>
+  </table></div>
+
+  <p class="t">The primes mark these as <b>per unit length</b> &mdash; ohms per metre, henries per metre, and so on &mdash; because a piece twice as long has twice as much of each. That single convention is what makes the model work for a line of any length.</p>
+
+  <p class="t">Then take the pieces to be infinitesimally short and let calculus handle the limit. That is the next chapter, and the result is a pair of coupled differential equations that govern every transmission line there is.</p>
+
+  <div class="key">
+    <span class="lab">What has actually changed</span>
+    <p>Nothing about the physics. Kirchhoff's laws are still used &mdash; they are simply applied over a length short enough for their assumption to hold, rather than over the whole cable at once. The distributed model is not a replacement for circuit theory; it is circuit theory applied honestly.</p>
+  </div>
+</section>
+
+<section class="blk" id="check">
+  <div class="check">
+    <h3>Self-check</h3>
+    <p class="t" style="margin-top:6px">Three questions on where the boundary really sits.</p>
+
+    <div class="q">
+      <p class="qt">1. Two identical 10 cm cables carry different signals: one at 1 kHz, one at 3 GHz. Which needs transmission-line treatment?</p>
+      <div class="opts">
+        <button class="opt">Both &mdash; the cable is the same physical object in each case</button>
+        <button class="opt" data-ok="1">Only the 3 GHz one, because electrical length depends on frequency, not on centimetres</button>
+        <button class="opt">Neither &mdash; 10 cm is short by any standard</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>At 1 kHz the wavelength is hundreds of kilometres, so 10 cm is around $10^{-6}\lambda$ and utterly lumped. At 3 GHz in cable the wavelength is roughly 7 cm, so the same 10 cm is over a full wavelength. Identical hardware, opposite verdicts &mdash; which is why the question is always $l/\lambda$ and never $l$.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">2. What exactly does the lumped approximation assume?</p>
+      <div class="opts">
+        <button class="opt">That wires have no resistance</button>
+        <button class="opt">That the signal is a pure sinusoid with no harmonics</button>
+        <button class="opt" data-ok="1">That signals propagate instantaneously, so every point on a node shares one voltage at each moment</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>Lumped models handle resistance perfectly well &mdash; that is what a resistor is. The assumption is zero propagation delay, which is what allows "a node" to have a single voltage. Once the delay is a noticeable fraction of a period, different points on the same node genuinely differ and no lumped element can express that.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">3. Is there a frequency above which circuit theory stops working?</p>
+      <div class="opts">
+        <button class="opt">Yes &mdash; conventionally around 1 GHz, where distributed effects begin</button>
+        <button class="opt" data-ok="1">No &mdash; the error grows continuously with $l/\lambda$, and where you draw the line is a tolerance decision</button>
+        <button class="opt">Yes &mdash; at the frequency where the wavelength equals the circuit's largest dimension</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>Nothing switches off at any frequency. The discrepancy $2|\sin(\beta l/2)|$ rises smoothly from zero, and the commonly quoted cutoffs of $\lambda/10$ or $\lambda/20$ are engineering conventions about acceptable error, not physical boundaries. A tiny circuit at 100 GHz can be perfectly lumped; a long one at 1 MHz may not be.</p>
+    </div>
+  </div>
+</section>
+
+<nav class="pager">
+  <a href="waves-phasors.html"><span class="dir">Previous</span><span class="ttl">Waves, phasors and complex numbers</span></a>
+  <a class="nx" href="telegraphers.html"><span class="dir">Chapter 03</span><span class="ttl">The transmission line model</span></a>
+</nav>
+
+<footer class="site">
+  Chapter 02 of eleven.
+  <span class="cr">&copy; 2026 Elie Hachem &middot; free to share and use for teaching</span>
+</footer>
+
+</div>
+
+<script src="assets/site.js"></script>
+<script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
+<script>
+var MONO = 'IBM Plex Mono, monospace';
+(function(){
+  var cv = document.getElementById('lenfig');
+  if(!cv) return;
+  var eL = 0.02;
+  var sl = document.getElementById('ell'), out = document.getElementById('ellv');
+  function sync(){
+    out.textContent = eL.toFixed(3);
+    var deg = 360*eL;
+    document.getElementById('o-deg').innerHTML = deg.toFixed(deg < 10 ? 1 : 0) + '&deg;';
+    var err = 2*Math.abs(Math.sin(Math.PI*eL))*100;
+    document.getElementById('o-err').textContent = err.toFixed(err < 10 ? 1 : 0) + ' %';
+    var v = document.getElementById('o-ver');
+    if(eL <= 0.01){ v.textContent = 'lumped ok'; v.style.color = 'var(--ok)'; }
+    else if(eL <= 0.05){ v.textContent = 'borderline'; v.style.color = 'var(--ink)'; }
+    else { v.textContent = 'needs a line'; v.style.color = 'var(--warn)'; }
+  }
+  sl.addEventListener('input', function(){ eL = +this.value; sync(); });
+  Array.prototype.forEach.call(document.querySelectorAll('.btns button[data-l]'), function(b){
+    b.addEventListener('click', function(){ eL = +b.getAttribute('data-l'); sl.value = eL; sync(); });
+  });
+  sync();
+
+  EM.register(function(C, t){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    var L = 46, R = 46, T = 26, B = 58;
+    var mid = T + (H-T-B)/2, sy = (H-T-B)/2/1.2;
+    c.clearRect(0,0,W,H);
+    function px(u){ return L + u*(W-L-R); }          /* u = fraction along the wire */
+    function v(u){ return Math.cos(t - EM.TAU*eL*u); }
+
+    /* the wire itself, drawn under the plot */
+    var wy = H - B + 20;
+    c.strokeStyle = C.ink2; c.lineWidth = 3; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(px(0), wy); c.lineTo(px(1), wy); c.stroke();
+    c.fillStyle = C.ink3; c.font = '11.5px ' + MONO;
+    c.textAlign = 'center';
+    c.fillText('one wire, length l', (px(0)+px(1))/2, wy + 20);
+
+    /* zero line and frame */
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L, mid+.5); c.lineTo(W-R, mid+.5); c.stroke();
+    c.setLineDash([2,4]); c.strokeStyle = C.line2;
+    c.beginPath(); c.moveTo(px(0), T); c.lineTo(px(0), H-B);
+    c.moveTo(px(1), T); c.lineTo(px(1), H-B); c.stroke();
+    c.setLineDash([]);
+
+    /* voltage profile along the wire */
+    c.strokeStyle = C.e; c.lineWidth = 2.6; c.beginPath();
+    for(var i=0;i<=260;i++){ var u=i/260; c.lineTo(px(u), mid - v(u)*sy); }
+    c.stroke();
+
+    /* the two ends */
+    var y0 = mid - v(0)*sy, y1 = mid - v(1)*sy;
+    c.fillStyle = C.h;
+    c.beginPath(); c.arc(px(0), y0, 5.5, 0, EM.TAU); c.fill();
+    c.beginPath(); c.arc(px(1), y1, 5.5, 0, EM.TAU); c.fill();
+
+    /* what lumped theory predicts: the far end equal to the near end */
+    c.strokeStyle = C.ink3; c.lineWidth = 1; c.globalAlpha = .7;
+    c.setLineDash([4,4]);
+    c.beginPath(); c.moveTo(px(0), y0); c.lineTo(px(1), y0); c.stroke();
+    c.setLineDash([]); c.globalAlpha = 1;
+    /* and the gap it says cannot exist */
+    if(Math.abs(y1-y0) > 2){
+      c.strokeStyle = C.h; c.lineWidth = 2.5;
+      c.beginPath(); c.moveTo(px(1), y0); c.lineTo(px(1), y1); c.stroke();
+    }
+
+    c.fillStyle = C.ink3; c.font = '11.5px ' + MONO;
+    c.textAlign = 'center';
+    c.fillText('near end', px(0), T - 10);
+    c.fillText('far end', px(1), T - 10);
+    c.textAlign = 'left';
+    c.fillStyle = C.e;
+    c.fillText('v(z,t) along the wire', L + 6, H - B - 6);
+  }, true);
+})();
+</script>
+</body>
+</html>

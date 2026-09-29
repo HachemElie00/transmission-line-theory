@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Waves, phasors and complex numbers &middot; Transmission Line Theory</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="mast"><div class="in">
+  <a class="home" href="index.html">Transmission Line Theory</a>
+  <span class="sep"></span>
+  <span class="ch">01 &middot; Waves, phasors, complex numbers</span>
+  <span class="nav"><a href="prologue-helmholtz.html" title="Previous">‹</a><a href="circuit-to-line.html" title="Next">›</a></span>
+</div></header>
+
+<div class="wrap">
+
+<div class="hero">
+  <p class="kicker">Chapter 01</p>
+  <h1>Waves, phasors and complex numbers</h1>
+  <p class="lead">Everything that follows is written in one notation, and it is worth earning that notation properly rather than meeting it as a convention. A wave depends on two variables; a phasor removes one of them. What that costs, and what it buys, decides the shape of the whole subject.</p>
+  <p class="t" style="margin-top:20px"><b>Assumes:</b> sine and cosine, and that $j^2 = -1$. Nothing else.</p>
+</div>
+
+<section class="blk" id="wave">
+  <h2>What makes something a wave</h2>
+  <p class="t">A quantity that varies in time alone is an oscillation. A quantity that varies in space alone is a pattern. A <b>wave</b> is what you get when the two are locked together, so that the pattern in space shifts as time passes:</p>
+
+  <div class="eq box">
+    $$v(z,t) = A\cos(\omega t - \beta z + \phi)$$
+    <span class="note">$A$ amplitude &middot; $\omega$ angular frequency, rad/s &middot; $\beta$ phase constant, rad/m &middot; $\phi$ a fixed head start</span>
+  </div>
+
+  <p class="t">The two terms inside the cosine carry different units and different meanings, and keeping them straight is most of the battle. $\omega t$ is <b>how far through the cycle you are</b>. $\beta z$ is <b>how far along you are standing</b>. Their combination is what travels.</p>
+
+  <p class="t">To see why, track a point of constant phase &mdash; a particular crest. Constant phase means $\omega t - \beta z$ does not change, so as $t$ advances, $z$ must advance with it:</p>
+
+  <div class="eq">$$\omega t - \beta z = \text{constant} \quad\Longrightarrow\quad z = \frac{\omega}{\beta}t + \text{const} \quad\Longrightarrow\quad u_p = \frac{\omega}{\beta}$$</div>
+
+  <p class="t">That is the <b>phase velocity</b>: the speed at which a crest moves. And the minus sign is the whole story of direction. A $-\beta z$ makes the crest move toward $+z$; flip it to $+\beta z$ and the crest moves backwards. Those two signs are the forward and reverse waves that every later chapter is built on.</p>
+
+  <figure class="fig">
+    <canvas id="wavefig" style="height:300px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="beta">&beta;</label><input type="range" id="beta" min="0.5" max="3" step="0.05" value="1.3"><output id="betav">1.30</output></div>
+      <div class="ctl"><label for="dir">direction</label><select id="dir">
+        <option value="1">forward (&minus;&beta;z)</option>
+        <option value="-1">reverse (+&beta;z)</option>
+      </select></div>
+    </div>
+    <figcaption class="cap">one crest is tracked in colour &mdash; wavelength is the distance between repeats, period is the time between them</figcaption>
+  </figure>
+
+  <p class="t">Two periodicities, one wave. In <b>space</b> the pattern repeats every wavelength; in <b>time</b> it repeats every period. They are tied together by the speed:</p>
+
+  <div class="tw"><table>
+    <tr><th>Quantity</th><th>Definition</th><th>Relation</th></tr>
+    <tr><td>Wavelength $\lambda$</td><td>distance per cycle</td><td>$\lambda = 2\pi/\beta$</td></tr>
+    <tr><td>Period $T$</td><td>time per cycle</td><td>$T = 2\pi/\omega$</td></tr>
+    <tr><td>Frequency $f$</td><td>cycles per second</td><td>$f = 1/T = \omega/2\pi$</td></tr>
+    <tr><td>Phase velocity $u_p$</td><td>speed of a crest</td><td>$u_p = \omega/\beta = f\lambda$</td></tr>
+  </table></div>
+
+  <div class="key">
+    <span class="lab">The relation that decides everything later</span>
+    <p>$\lambda = u_p / f$. At 50 Hz a wavelength is thousands of kilometres, so no laboratory wire is an appreciable fraction of one. At 5 GHz in a typical dielectric it is a few centimetres, and a connector lead is. Chapter 02 is entirely about that comparison.</p>
+  </div>
+</section>
+
+<section class="blk" id="complex">
+  <h2>Complex numbers, quickly</h2>
+  <p class="t">Only one property of complex numbers actually matters here, and it is Euler's identity:</p>
+
+  <div class="eq box">
+    $$e^{j\theta} = \cos\theta + j\sin\theta$$
+    <span class="note">so $\cos\theta = \operatorname{Re}\{e^{j\theta}\}$, which is the bridge to everything below</span>
+  </div>
+
+  <p class="t">Read geometrically, $e^{j\theta}$ is a <b>unit vector at angle $\theta$</b> in the complex plane. Multiplying by $Ae^{j\phi}$ stretches it by $A$ and rotates it by $\phi$. That single picture &mdash; a number as an arrow with a length and an angle &mdash; is why complex notation suits waves so well: a wave also has a size and a phase, and nothing else.</p>
+
+  <div class="tw"><table>
+    <tr><th>Form</th><th>Written</th><th>Good for</th></tr>
+    <tr><td>Rectangular</td><td>$z = x + jy$</td><td>adding and subtracting</td></tr>
+    <tr><td>Polar</td><td>$z = |z|e^{j\theta}$</td><td>multiplying, dividing, powers, roots</td></tr>
+    <tr><td>Converting</td><td>$|z| = \sqrt{x^2+y^2}$, $\theta = \tan^{-1}(y/x)$</td><td colspan="1">check the quadrant &mdash; use atan2</td></tr>
+  </table></div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; the identities worth having fluent</summary>
+    <div class="body">
+      <p>Multiplication in polar form multiplies magnitudes and <b>adds</b> angles:</p>
+      <div class="eq">$$z_1 z_2 = |z_1||z_2|\,e^{j(\theta_1+\theta_2)} \qquad \frac{z_1}{z_2} = \frac{|z_1|}{|z_2|}e^{j(\theta_1-\theta_2)}$$</div>
+      <p>This is why reflection coefficients are so much easier in polar form: moving along a line multiplies $\Gamma$ by a unit-magnitude factor, which leaves $|\Gamma|$ untouched and only turns the angle.</p>
+      <p>Special values worth recognising instantly, since they appear constantly as phase shifts:</p>
+      <div class="eq">$$e^{j\pi/2} = j \qquad e^{j\pi} = -1 \qquad e^{-j\pi/2} = -j \qquad e^{j2\pi} = 1$$</div>
+      <p>So multiplying by $j$ is a quarter turn anticlockwise, and multiplying by $-1$ is a half turn &mdash; which is exactly the 180&deg; flip a short circuit applies to a reflected wave.</p>
+      <p>The complex conjugate reflects across the real axis, $z^* = x - jy = |z|e^{-j\theta}$, and gives the magnitude through</p>
+      <div class="eq">$$z z^* = |z|^2$$</div>
+      <p>which is the trick behind rationalising every $\dfrac{1+\Gamma}{1-\Gamma}$ you will meet from chapter 06 onwards: multiply top and bottom by the conjugate of the denominator and the denominator becomes real.</p>
+    </div>
+  </details>
+</section>
+
+<section class="blk" id="phasor">
+  <h2>The phasor</h2>
+  <p class="t">Here is the problem phasors solve. Write out a circuit equation for a sinusoid and you are differentiating cosines, which turn into sines, which turn into negative cosines. The algebra grows, and none of it is the physics &mdash; it is bookkeeping on a time dependence that is the same everywhere in the circuit.</p>
+
+  <p class="t">So factor it out. Every quantity in a <b>time-harmonic</b> problem &mdash; one driven at a single frequency &mdash; can be written as</p>
+
+  <div class="eq box">
+    $$v(z,t) = \operatorname{Re}\left\{ \tilde{V}(z)\,e^{j\omega t} \right\}$$
+    <span class="note">$\tilde{V}$ is the phasor: a complex number holding amplitude and phase, with the time dependence removed</span>
+  </div>
+
+  <p class="t">For the travelling wave at the top of this page, that means:</p>
+
+  <div class="eq">$$v(z,t) = A\cos(\omega t - \beta z + \phi) \quad\Longleftrightarrow\quad \tilde{V}(z) = A e^{j\phi} e^{-j\beta z}$$</div>
+
+  <p class="t">The payoff is immediate. Because $\dfrac{\partial}{\partial t}e^{j\omega t} = j\omega e^{j\omega t}$, differentiation in time stops being calculus and becomes multiplication:</p>
+
+  <div class="eq box">
+    $$\frac{\partial}{\partial t} \;\longrightarrow\; j\omega \qquad\qquad \int dt \;\longrightarrow\; \frac{1}{j\omega}$$
+    <span class="note">every differential equation in time becomes an algebraic equation in $j\omega$</span>
+  </div>
+
+  <p class="t">That substitution is what makes <b>impedance</b> possible. An inductor's $v = L\,di/dt$ becomes $\tilde{V} = j\omega L\,\tilde{I}$, so it has an impedance $j\omega L$ &mdash; a single complex number relating voltage to current, exactly as a resistor has $R$. Without phasors there is no such thing as impedance, and without impedance there is no characteristic impedance, no $\Gamma$, and no Smith chart.</p>
+
+  <figure class="fig">
+    <canvas id="phfig" style="height:250px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="amp">amplitude A</label><input type="range" id="amp" min="0.3" max="1" step="0.01" value="0.8"><output id="ampv">0.80</output></div>
+      <div class="ctl"><label for="phi">phase &phi;</label><input type="range" id="phi" min="-180" max="180" step="1" value="0"><output id="phiv">0&deg;</output></div>
+    </div>
+    <figcaption class="cap">the phasor is the arrow; the waveform is its shadow on the real axis as it turns &mdash; length sets amplitude, starting angle sets phase</figcaption>
+  </figure>
+
+  <div class="key">
+    <span class="lab">What it costs</span>
+    <p>Phasors describe the <b>steady state at one frequency</b> and nothing else. Switch-on, pulses, steps and anything transient are outside their reach &mdash; those need the time-domain equations or a superposition of many frequencies. For a driven sinusoid, though, the phasor answer is exact, not approximate.</p>
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; why taking Re at the end is legitimate</summary>
+    <div class="body">
+      <p>The move looks suspicious: we drop $\operatorname{Re}\{\cdot\}$, do all the algebra on complex quantities, then reinstate it at the end. That is valid, but only because of a specific property.</p>
+      <p>Taking the real part is a <b>linear</b> operation. For any complex $z_1, z_2$ and any <i>real</i> constants $a, b$:</p>
+      <div class="eq">$$\operatorname{Re}\{a z_1 + b z_2\} = a\operatorname{Re}\{z_1\} + b\operatorname{Re}\{z_2\}$$</div>
+      <p>So it commutes with addition, with scaling by real numbers, and with differentiation and integration in time. Any equation built only from those operations can be solved in the complex domain and have its real part taken at the very end.</p>
+      <p><b>Where it breaks.</b> It does not commute with multiplication of two time-varying quantities, because</p>
+      <div class="eq">$$\operatorname{Re}\{z_1\}\cdot\operatorname{Re}\{z_2\} \neq \operatorname{Re}\{z_1 z_2\}$$</div>
+      <p>which matters the moment you compute <b>power</b>, since power is $v \times i$. That is exactly why average power carries its own formula with a conjugate and a factor of one half,</p>
+      <div class="eq">$$P_{av} = \tfrac{1}{2}\operatorname{Re}\{\tilde{V}\tilde{I}^{\,*}\}$$</div>
+      <p>rather than simply being the product of the two phasors. It is also why nonlinear devices &mdash; mixers, diodes, amplifiers driven into compression &mdash; cannot be analysed with phasors at all: they generate frequencies that were not in the input, and a single-frequency description has nowhere to put them.</p>
+    </div>
+  </details>
+</section>
+
+<section class="blk" id="spectrum">
+  <h2>Where the numbers land</h2>
+  <p class="t">The same equations describe the entire electromagnetic spectrum; only the numbers change. What changes with them is which approximations survive.</p>
+
+  <div class="tw"><table>
+    <tr><th>Band</th><th>Frequency</th><th>&lambda; in air</th><th>What it implies</th></tr>
+    <tr><td>Mains power</td><td>50&ndash;60 Hz</td><td>~6000 km</td><td>Every wire is short. Circuit theory is exact enough.</td></tr>
+    <tr><td>AM radio</td><td>1 MHz</td><td>300 m</td><td>Antennas get large; feed lines still short.</td></tr>
+    <tr><td>FM / VHF</td><td>100 MHz</td><td>3 m</td><td>Cable length starts to matter.</td></tr>
+    <tr><td>Wi-Fi, radar</td><td>2.4&ndash;10 GHz</td><td>12&ndash;3 cm</td><td>A connector lead is a sizeable fraction of &lambda;.</td></tr>
+    <tr><td>mm-wave, 5G</td><td>30&ndash;300 GHz</td><td>10&ndash;1 mm</td><td>A solder joint is a transmission line.</td></tr>
+    <tr><td>Visible light</td><td>~500 THz</td><td>~500 nm</td><td>Same equations; we call it optics.</td></tr>
+  </table></div>
+
+  <p class="t">Two cautions on that table. Wavelength shortens inside a dielectric by $\sqrt{\varepsilon_r}$, so a 12&nbsp;cm free-space wave is nearer 6&nbsp;cm on ordinary circuit board &mdash; which is why the numbers in chapter 05 come out smaller than intuition suggests. And <b>nothing physical changes at any row of that table.</b> There is no frequency at which circuit theory switches off. What changes is only the ratio of your hardware to $\lambda$, which is a continuous quantity, and the next chapter is about where in that continuum the error becomes intolerable.</p>
+</section>
+
+<section class="blk" id="check">
+  <div class="check">
+    <h3>Self-check</h3>
+    <p class="t" style="margin-top:6px">Three questions on the notation rather than the arithmetic.</p>
+
+    <div class="q">
+      <p class="qt">1. Two waves are written $\cos(\omega t - \beta z)$ and $\cos(\omega t + \beta z)$. What differs?</p>
+      <div class="opts">
+        <button class="opt">The second has a shorter wavelength, since the signs add rather than cancel</button>
+        <button class="opt" data-ok="1">They travel in opposite directions &mdash; the first toward $+z$, the second toward $-z$</button>
+        <button class="opt">The second is the first delayed by half a period</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>Follow a point of constant phase. For the first, $\omega t - \beta z$ constant needs $z$ to <i>increase</i> as $t$ does. For the second, $\omega t + \beta z$ constant needs $z$ to <i>decrease</i>. Same $\beta$, so the same wavelength; only the direction of travel differs. Those two signs become the incident and reflected waves in chapter 06.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">2. Why can't phasors be used to analyse a mixer or a diode?</p>
+      <div class="opts">
+        <button class="opt">Because those devices are too fast for the steady-state assumption to hold</button>
+        <button class="opt" data-ok="1">Because they create frequencies that were not in the input, and a phasor describes exactly one frequency</button>
+        <button class="opt">Because their impedance is complex and phasors require real impedances</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>A phasor is shorthand for "amplitude and phase <i>at frequency</i> $\omega$". Nonlinear devices produce output at frequencies absent from the input &mdash; harmonics, sum and difference products &mdash; and a single-frequency description has nowhere to represent them. Complex impedance is not the problem; phasors handle that routinely.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">3. Average power is $\frac{1}{2}\operatorname{Re}\{\tilde{V}\tilde{I}^{\,*}\}$ rather than simply $\tilde{V}\tilde{I}$. Why the extra machinery?</p>
+      <div class="opts">
+        <button class="opt">Because power is measured in RMS rather than peak, and the half converts between them</button>
+        <button class="opt" data-ok="1">Because taking the real part commutes with addition and differentiation, but not with multiplying two time-varying quantities</button>
+        <button class="opt">Because voltage and current are never exactly in phase in a real circuit</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>The whole phasor method rests on $\operatorname{Re}\{\cdot\}$ being linear, which lets you postpone it to the end. Multiplication breaks that: $\operatorname{Re}\{z_1\}\operatorname{Re}\{z_2\} \neq \operatorname{Re}\{z_1z_2\}$. Power is a product of two time-varying quantities, so it needs its own correctly derived formula. The factor of one half does happen to encode the peak-to-RMS conversion, but that is a consequence, not the reason.</p>
+    </div>
+  </div>
+</section>
+
+<nav class="pager">
+  <a href="index.html"><span class="dir">Back to</span><span class="ttl">Contents</span></a>
+  <a class="nx" href="circuit-to-line.html"><span class="dir">Chapter 02</span><span class="ttl">When a circuit becomes a line</span></a>
+</nav>
+
+<footer class="site">
+  Chapter 01 of eleven. The prologue derives where this notation ultimately comes from; nothing in this chapter depends on it.
+  <span class="cr">&copy; 2026 Elie Hachem &middot; free to share and use for teaching</span>
+</footer>
+
+</div>
+
+<script src="assets/site.js"></script>
+<script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
+<script>
+var MONO = 'IBM Plex Mono, monospace';
+
+/* ---- travelling wave with a tracked crest ---- */
+(function(){
+  var cv = document.getElementById('wavefig');
+  if(!cv) return;
+  var be = 1.3, dir = 1;
+  var bEl = document.getElementById('beta'), bOut = document.getElementById('betav');
+  bEl.addEventListener('input', function(){ be = +this.value; bOut.textContent = be.toFixed(2); });
+  document.getElementById('dir').addEventListener('change', function(){ dir = +this.value; });
+
+  EM.register(function(C, t){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    var L = 40, R = 18, T = 20, B = 40;
+    var zmax = 12, sx = (W-L-R)/zmax, mid = T + (H-T-B)/2, sy = (H-T-B)/2/1.2;
+    c.clearRect(0,0,W,H);
+    function px(z){ return L + z*sx; }
+
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L, mid+.5); c.lineTo(W-R, mid+.5);
+    c.moveTo(L+.5, T); c.lineTo(L+.5, H-B); c.stroke();
+
+    c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
+    for(var i=0;i<=320;i++){
+      var z = i/320*zmax;
+      c.lineTo(px(z), mid - Math.cos(t - dir*be*z)*sy);
+    }
+    c.stroke();
+
+    /* the tracked crest: phase zero, i.e. z = dir*t/beta, wrapped into view */
+    var lam = EM.TAU/be;
+    var zc = dir*t/be;
+    zc = zc - Math.floor(zc/lam)*lam;
+    if(dir < 0) zc = zc;
+    while(zc < 0) zc += lam;
+    while(zc > zmax) zc -= lam;
+    if(zc >= 0 && zc <= zmax){
+      c.strokeStyle = C.h; c.lineWidth = 1; c.setLineDash([2,3]);
+      c.beginPath(); c.moveTo(px(zc), mid - sy); c.lineTo(px(zc), mid + sy*0.7); c.stroke();
+      c.setLineDash([]);
+      c.fillStyle = C.h;
+      c.beginPath(); c.arc(px(zc), mid - sy, 5.5, 0, EM.TAU); c.fill();
+    }
+
+    /* wavelength bracket */
+    if(lam < zmax*0.9){
+      var a = 0.6, b = a + lam, y = H - B + 16;
+      c.strokeStyle = C.ink3; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(px(a), y); c.lineTo(px(b), y);
+      c.moveTo(px(a), y-5); c.lineTo(px(a), y+5);
+      c.moveTo(px(b), y-5); c.lineTo(px(b), y+5); c.stroke();
+      c.font = '11.5px ' + MONO; c.textAlign = 'center';
+      var lab = 'λ = 2π/β';
+      var w = c.measureText(lab).width + 10;
+      c.fillStyle = C.sunk; c.fillRect((px(a)+px(b))/2 - w/2, y-8, w, 16);
+      c.fillStyle = C.ink; c.fillText(lab, (px(a)+px(b))/2, y+4);
+    }
+
+    c.fillStyle = C.ink3; c.font = '11.5px ' + MONO;
+    c.textAlign = 'left'; c.fillText('v(z,t)', L + 6, T + 12);
+    c.textAlign = 'right'; c.fillText(dir > 0 ? 'travels →' : '← travels', W-R, T + 12);
+  }, true);
+})();
+
+/* ---- phasor dial and its shadow ---- */
+(function(){
+  var cv = document.getElementById('phfig');
+  if(!cv) return;
+  var A = 0.8, ph = 0;
+  var aEl = document.getElementById('amp'), pEl = document.getElementById('phi');
+  aEl.addEventListener('input', function(){ A = +this.value; document.getElementById('ampv').textContent = A.toFixed(2); });
+  pEl.addEventListener('input', function(){
+    ph = +this.value;
+    document.getElementById('phiv').innerHTML = (ph<0?'−':'') + Math.abs(ph) + '&deg;';
+  });
+
+  EM.register(function(C, t){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0,0,W,H);
+    var dialW = Math.min(W*0.4, H*1.05);
+    var cx = dialW/2, cy = H/2, Rr = Math.min(dialW, H)/2 - 22;
+    var ang = t + ph*Math.PI/180;
+
+    /* dial */
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.arc(cx, cy, Rr, 0, EM.TAU); c.stroke();
+    c.strokeStyle = C.line;
+    c.beginPath(); c.moveTo(cx-Rr, cy); c.lineTo(cx+Rr, cy);
+    c.moveTo(cx, cy-Rr); c.lineTo(cx, cy+Rr); c.stroke();
+
+    var vx = Math.cos(ang)*Rr*A, vy = Math.sin(ang)*Rr*A;
+    /* projection onto the real axis */
+    c.strokeStyle = C.h; c.lineWidth = 1; c.setLineDash([2,3]);
+    c.beginPath(); c.moveTo(cx+vx, cy-vy); c.lineTo(cx+vx, cy); c.stroke();
+    c.setLineDash([]);
+    c.fillStyle = C.h;
+    c.beginPath(); c.arc(cx+vx, cy, 4, 0, EM.TAU); c.fill();
+
+    c.strokeStyle = C.e; c.lineWidth = 2.4;
+    c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx+vx, cy-vy); c.stroke();
+    c.fillStyle = C.e;
+    c.beginPath(); c.arc(cx+vx, cy-vy, 4.5, 0, EM.TAU); c.fill();
+
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'center';
+    c.fillText('Re', cx + Rr - 8, cy + 15);
+
+    /* waveform to the right, newest at the left edge of the trace */
+    var PL = dialW + 26, PR = 16, T2 = 18, B2 = 24;
+    var y0 = H/2, sy = (H-T2-B2)/2/1.15;
+    if(W - PL - PR > 60){
+      c.strokeStyle = C.line2; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(PL, y0+.5); c.lineTo(W-PR, y0+.5); c.stroke();
+      c.strokeStyle = C.h; c.lineWidth = 2.2; c.beginPath();
+      for(var i=0;i<=220;i++){
+        var tt = t + (i/220)*3*Math.PI;
+        c.lineTo(PL + (i/220)*(W-PL-PR), y0 - A*Math.cos(tt + ph*Math.PI/180)*sy);
+      }
+      c.stroke();
+      c.fillStyle = C.h;
+      c.beginPath(); c.arc(PL, y0 - A*Math.cos(ang)*sy, 4, 0, EM.TAU); c.fill();
+      c.fillStyle = C.ink3; c.font = '11px ' + MONO;
+      c.textAlign = 'left'; c.fillText('now', PL, H - 8);
+      c.textAlign = 'right'; c.fillText('time →', W-PR, H - 8);
+    }
+  }, true);
+})();
+</script>
+</body>
+</html>

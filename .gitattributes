@@ -1,0 +1,7 @@
+# Every source file in this repo is LF. Keep it that way: a Windows editor
+# that quietly rewrites a file as CRLF would otherwise show up as a diff
+# against every line of it.
+* text=auto eol=lf
+
+# Fonts are binary. Never touch them.
+*.woff2 binary

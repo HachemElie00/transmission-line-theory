@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reflection at a load &middot; Transmission Line Theory</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="mast"><div class="in">
+  <a class="home" href="index.html">Transmission Line Theory</a>
+  <span class="sep"></span>
+  <span class="ch">06 &middot; Reflection at a load</span>
+  <span class="nav"><a href="microstrip.html" title="Previous">‹</a><a href="standing-waves.html" title="Next">›</a></span>
+</div></header>
+
+<div class="wrap">
+
+<div class="hero">
+  <p class="kicker">Chapter 06</p>
+  <h1>Reflection at a load</h1>
+  <p class="lead">A line supports one wave in each direction. Until now the backward one has had no reason to exist. Put something on the end that the forward wave alone cannot satisfy, and it appears &mdash; not as a defect, but because the algebra has no other solution.</p>
+  <p class="t" style="margin-top:20px"><b>Assumes:</b> chapter 04 &mdash; the two-wave solution, and $\tilde V^\pm/\tilde I^\pm = \pm Z_0$.</p>
+</div>
+
+<section class="blk" id="why">
+  <h2>Why a wave comes back</h2>
+  <p class="t">Chapter 04 gave the general solution on a lossless line. Put the load at $z = 0$, with the line running off in the $-z$ direction toward the generator:</p>
+
+  <div class="eq">$$\tilde{V}(z) = V_0^+e^{-j\beta z} + V_0^-e^{+j\beta z} \qquad \tilde{I}(z) = \frac{V_0^+}{Z_0}e^{-j\beta z} - \frac{V_0^-}{Z_0}e^{+j\beta z}$$</div>
+
+  <p class="t">At the load, $z = 0$, both exponentials become 1:</p>
+
+  <div class="eq">$$\tilde{V}(0) = V_0^+ + V_0^- \qquad\qquad \tilde{I}(0) = \frac{V_0^+ - V_0^-}{Z_0}$$</div>
+
+  <p class="t">The load imposes one condition and one only: <b>the ratio of voltage to current at that point must equal $Z_L$.</b> Nothing else about the load matters.</p>
+
+  <div class="eq">$$Z_L = \frac{\tilde{V}(0)}{\tilde{I}(0)} = Z_0\,\frac{V_0^+ + V_0^-}{V_0^+ - V_0^-}$$</div>
+
+  <p class="t">Now look at what that demands. Suppose $V_0^- = 0$ &mdash; only a forward wave. Then the ratio is forced to be $Z_0$ exactly, whatever the load happens to be. So <b>unless $Z_L = Z_0$, a single wave cannot satisfy the boundary condition</b>, and the only remaining freedom is $V_0^-$. It takes whatever value makes the equation true.</p>
+
+  <div class="key">
+    <span class="lab">The same argument as the prologue</span>
+    <p>In chapter 01 of the prologue, a single travelling wave forced $V/I = Z_0$ and the load demanded something else, so a second wave had to exist. This is that argument again with the field quantities replaced by circuit ones &mdash; and the minus sign in the current is once more what makes the escape possible.</p>
+  </div>
+</section>
+
+<section class="blk" id="gamma">
+  <h2>The reflection coefficient</h2>
+  <p class="t">Solve that equation for the ratio of the two waves and the result is compact:</p>
+
+  <div class="eq box">
+    $$\Gamma = \frac{V_0^-}{V_0^+} = \frac{Z_L - Z_0}{Z_L + Z_0}$$
+    <span class="note">complex in general &mdash; a load can shift phase as well as shrink amplitude</span>
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; three lines of algebra</summary>
+    <div class="body">
+      <p>Start from the boundary condition and cross-multiply:</p>
+      <div class="eq">$$Z_L(V_0^+ - V_0^-) = Z_0(V_0^+ + V_0^-)$$</div>
+      <p>Collect the forward terms on one side and the backward terms on the other:</p>
+      <div class="eq">$$V_0^+(Z_L - Z_0) = V_0^-(Z_L + Z_0)$$</div>
+      <p>Divide:</p>
+      <div class="eq">$$\frac{V_0^-}{V_0^+} = \frac{Z_L - Z_0}{Z_L + Z_0} = \Gamma$$</div>
+      <p>Two remarks. First, dividing by $Z_L + Z_0$ is safe for any passive load, since both have non-negative real parts and cannot sum to zero. Second, the expression is often cleaner in <b>normalised</b> form. Writing $z_L = Z_L/Z_0$ and dividing top and bottom by $Z_0$:</p>
+      <div class="eq">$$\Gamma = \frac{z_L - 1}{z_L + 1} \qquad\Longleftrightarrow\qquad z_L = \frac{1+\Gamma}{1-\Gamma}$$</div>
+      <p>That pair is a <b>M&ouml;bius transformation</b> between the impedance plane and the $\Gamma$ plane, and it is invertible: every impedance has exactly one $\Gamma$ and vice versa. The Smith chart in chapter 10 is nothing more than this map drawn out.</p>
+    </div>
+  </details>
+
+  <p class="t">Read the formula as a comparison. The numerator is <b>how far the load is from the line</b>; the denominator normalises it. A load equal to $Z_0$ gives zero. A load very different from $Z_0$ gives something approaching unit magnitude.</p>
+
+  <div class="tw"><table>
+    <tr><th>Load</th><th>$\Gamma$</th><th>What happens at the load</th></tr>
+    <tr><td>$Z_L = Z_0$</td><td>$0$</td><td>nothing reflects; the line is matched</td></tr>
+    <tr><td>Short, $Z_L = 0$</td><td>$-1$</td><td>full reflection, voltage inverted; $V = 0$ forced</td></tr>
+    <tr><td>Open, $Z_L = \infty$</td><td>$+1$</td><td>full reflection, voltage doubled; $I = 0$ forced</td></tr>
+    <tr><td>$R_L > Z_0$</td><td>real, $0 < \Gamma < 1$</td><td>partial, in phase &mdash; a voltage maximum sits at the load</td></tr>
+    <tr><td>$R_L < Z_0$</td><td>real, $-1 < \Gamma < 0$</td><td>partial, inverted &mdash; a voltage minimum sits at the load</td></tr>
+    <tr><td>Purely reactive</td><td>$|\Gamma| = 1$</td><td>full reflection with an arbitrary phase shift</td></tr>
+  </table></div>
+
+  <p class="t">The last row is worth dwelling on. A capacitor or inductor <b>cannot absorb average power</b>, so it must send every watt back &mdash; hence $|\Gamma| = 1$, exactly as for a short or an open. What distinguishes them is only the phase, and that phase is what shifts the pattern along the line.</p>
+</section>
+
+<section class="blk" id="explore">
+  <h2>Γ on the complex plane</h2>
+  <p class="t">Because $|\Gamma| \le 1$ for any passive load, every possible $\Gamma$ lives inside the unit circle. That disc is the natural home of this subject, and it is where the Smith chart will be built.</p>
+
+  <figure class="fig">
+    <div style="display:flex;flex-wrap:wrap;gap:0;background:var(--sunk)">
+      <canvas id="gplane" style="width:100%;max-width:250px;height:250px;flex:0 1 250px;background:var(--sunk);margin-inline:auto"></canvas>
+      <canvas id="gbars" style="flex:1 1 280px;min-width:0;height:250px;background:var(--sunk)"></canvas>
+    </div>
+    <div class="rail">
+      <div class="ctl"><label for="rl">R<sub>L</sub> &Omega;</label><input type="range" id="rl" min="0" max="300" step="1" value="90"><output id="rlv">90</output></div>
+      <div class="ctl"><label for="xl">X<sub>L</sub> &Omega;</label><input type="range" id="xl" min="-250" max="250" step="1" value="-120"><output id="xlv">&minus;120</output></div>
+      <select id="z0sel" aria-label="Characteristic impedance">
+        <option value="50">Z&#8320; = 50 &#937;</option>
+        <option value="75">Z&#8320; = 75 &#937;</option>
+        <option value="150" selected>Z&#8320; = 150 &#937;</option>
+      </select>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>|&Gamma;|</dt><dd id="r-gm">0.50</dd></div>
+      <div class="rd"><dt>&theta;<sub>r</sub></dt><dd id="r-ga">&minus;90&deg;</dd></div>
+      <div class="rd"><dt>Power reflected</dt><dd id="r-pw">25 %</dd></div>
+      <div class="rd"><dt>Return loss</dt><dd id="r-rl">6.0 dB</dd></div>
+    </dl>
+    <div class="btns">
+      <button data-g="150,0,150">matched</button>
+      <button data-g="0,0,150">short</button>
+      <button id="gopen">open</button>
+      <button data-g="0,120,150">pure inductor</button>
+      <button data-g="90,-120,150">90 &minus; j120</button>
+    </div>
+    <figcaption class="cap">left: &Gamma; inside the unit circle. right: how the incident wave splits into reflected and delivered power.</figcaption>
+  </figure>
+
+  <p class="t">Move the load around and note which regions of the disc it reaches. Purely resistive loads land on the <b>real axis</b>: those greater than $Z_0$ to the right of the origin, those smaller to the left. Purely reactive loads land on the <b>unit circle itself</b> &mdash; full reflection, phase set by how reactive. Everything else fills the interior.</p>
+</section>
+
+<section class="blk" id="power">
+  <h2>Power, and what reflection costs</h2>
+  <p class="t">Power in a travelling wave goes as amplitude squared, so the fraction reflected is $|\Gamma|^2$ and the fraction delivered is whatever is left:</p>
+
+  <div class="eq box">
+    $$\frac{P_{\text{refl}}}{P_{\text{inc}}} = |\Gamma|^2 \qquad\qquad \frac{P_{\text{deliv}}}{P_{\text{inc}}} = 1 - |\Gamma|^2$$
+    <span class="note">on a lossless line, with no loss the two must account for everything</span>
+  </div>
+
+  <p class="t">Engineers usually quote this logarithmically, as <b>return loss</b>: how far below the incident wave the reflected one sits.</p>
+
+  <div class="eq">$$\text{RL} = -20\log_{10}|\Gamma| \quad\text{dB}$$</div>
+
+  <div class="tw"><table>
+    <tr><th>$|\Gamma|$</th><th>Power reflected</th><th>Return loss</th><th>Reading</th></tr>
+    <tr><td>0</td><td>0 %</td><td>$\infty$</td><td>perfect match</td></tr>
+    <tr><td>0.1</td><td>1 %</td><td>20 dB</td><td>a good match in practice</td></tr>
+    <tr><td>0.316</td><td>10 %</td><td>10 dB</td><td>usually the minimum acceptable</td></tr>
+    <tr><td>0.5</td><td>25 %</td><td>6 dB</td><td>poor</td></tr>
+    <tr><td>1</td><td>100 %</td><td>0 dB</td><td>nothing gets in</td></tr>
+  </table></div>
+
+  <p class="t">Note that a <b>larger</b> return loss in dB means a <b>better</b> match, which reads backwards until you remember it is a loss suffered by the reflected wave. A 20 dB return loss means the reflection is a hundredth of the incident power.</p>
+</section>
+
+<section class="blk" id="moving">
+  <h2>Looking from further up the line</h2>
+  <p class="t">$\Gamma$ was defined at the load. Stand a distance $l$ back toward the generator and the two waves have travelled different distances to reach you &mdash; the reflected one has gone out and come back, an extra $2l$. Chapter 02 showed why only that difference matters, and it gives:</p>
+
+  <div class="eq box">
+    $$\Gamma(l) = \Gamma_L\,e^{-j2\beta l}$$
+    <span class="note">the magnitude never changes on a lossless line; only the angle turns</span>
+  </div>
+
+  <p class="t">Three consequences follow immediately, and all three shape everything after this chapter.</p>
+
+  <div class="tw"><table>
+    <tr><th>Because</th><th>It follows that</th></tr>
+    <tr><td>$|e^{-j2\beta l}| = 1$</td><td>$|\Gamma|$ is the same everywhere on a lossless line, so SWR is a property of the whole line</td></tr>
+    <tr><td>the angle turns at rate $2\beta$</td><td>a full lap takes $2\beta l = 2\pi$, that is $l = \lambda/2$ &mdash; everything repeats every half wavelength</td></tr>
+    <tr><td>the rotation is clockwise</td><td>moving toward the generator decreases the angle of $\Gamma$</td></tr>
+  </table></div>
+
+  <p class="t">On a <b>lossy</b> line the picture changes in one way only: $\Gamma(l) = \Gamma_L e^{-2\gamma l}$ carries a real part too, so the magnitude shrinks as you move back. The locus spirals inward instead of circling. A long enough lossy line looks matched from the input regardless of what is on the end &mdash; which is true, and is why a badly terminated long cable can still measure well.</p>
+
+  <div class="key">
+    <span class="lab">This is the Smith chart</span>
+    <p>A point inside the unit disc, moving clockwise round a circle of fixed radius as you walk back along the line, one lap per half wavelength. Chapter 10 adds the impedance grid on top; the motion is already fully determined here.</p>
+  </div>
+</section>
+
+<section class="blk" id="check">
+  <div class="check">
+    <h3>Self-check</h3>
+    <p class="t" style="margin-top:6px">Three questions on what Γ encodes.</p>
+
+    <div class="q">
+      <p class="qt">1. Why does a purely reactive load give $|\Gamma| = 1$?</p>
+      <div class="opts">
+        <button class="opt">Because reactive components have infinite impedance at some frequency</button>
+        <button class="opt" data-ok="1">Because they absorb no average power, so all incident power must return</button>
+        <button class="opt">Because $\Gamma$ is only defined for resistive loads, so reactive ones saturate the formula</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>An ideal inductor or capacitor stores energy and gives it all back over a cycle. With no dissipation the reflected power must equal the incident power, so $|\Gamma|^2 = 1$. What distinguishes a capacitor from an inductor from a short is purely the <i>phase</i> of $\Gamma$ &mdash; and that phase determines where the standing-wave pattern sits.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">2. A load gives $|\Gamma| = 0.316$. How much power reaches it?</p>
+      <div class="opts">
+        <button class="opt">About 68 %, since 31.6 % is reflected</button>
+        <button class="opt" data-ok="1">90 %, because power goes as $|\Gamma|^2 = 0.1$</button>
+        <button class="opt">Cannot say without knowing the phase of $\Gamma$</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>$|\Gamma|$ is an <i>amplitude</i> ratio; power goes as its square. $0.316^2 = 0.1$, so 10 % reflects and 90 % is delivered &mdash; a 10 dB return loss. The phase does not enter: it controls where the standing-wave maxima sit, not how much power gets through.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">3. Moving back along a lossless line, what changes about $\Gamma$?</p>
+      <div class="opts">
+        <button class="opt">Its magnitude shrinks steadily as the wave attenuates</button>
+        <button class="opt" data-ok="1">Only its angle, turning clockwise, completing a lap every half wavelength</button>
+        <button class="opt">Both magnitude and angle, since the load is further away</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>$\Gamma(l) = \Gamma_L e^{-j2\beta l}$, and the exponential has unit magnitude, so $|\Gamma|$ is constant everywhere on a lossless line. The angle decreases at rate $2\beta$, giving a full rotation when $2\beta l = 2\pi$, that is $l = \lambda/2$. On a lossy line the magnitude <i>does</i> shrink and the locus spirals inward &mdash; but that is loss, not distance as such.</p>
+    </div>
+  </div>
+</section>
+
+<nav class="pager">
+  <a href="microstrip.html"><span class="dir">Previous</span><span class="ttl">Microstrip and real lines</span></a>
+  <a class="nx" href="standing-waves.html"><span class="dir">Chapter 07</span><span class="ttl">Standing waves</span></a>
+</nav>
+
+<footer class="site">
+  Chapter 06 of eleven. Lossless line unless stated otherwise; load at $z=0$ with the generator toward $-z$.
+  <span class="cr">&copy; 2026 Elie Hachem &middot; free to share and use for teaching</span>
+</footer>
+
+</div>
+
+<script src="assets/site.js"></script>
+<script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
+<script>
+var MONO = 'IBM Plex Mono, monospace';
+(function(){
+  var gp = document.getElementById('gplane'), gb = document.getElementById('gbars');
+  if(!gp) return;
+  var R = 90, X = -120, Z0 = 150, isOpen = false;
+  function gam(){
+    if(isOpen) return {re:1, im:0, m:1, a:0};
+    var nr = R-Z0, ni = X, dr = R+Z0, di = X, d = dr*dr + di*di;
+    if(d < 1e-9) return {re:0, im:0, m:0, a:0};
+    var re = (nr*dr + ni*di)/d, im = (ni*dr - nr*di)/d;
+    return {re:re, im:im, m:Math.hypot(re,im), a:Math.atan2(im,re)};
+  }
+  function sync(){
+    var g = gam(), deg = Math.round(g.a*180/Math.PI);
+    document.getElementById('rlv').textContent = isOpen ? '∞' : R;
+    document.getElementById('xlv').innerHTML = (X<0?'−':'') + Math.abs(X);
+    document.getElementById('r-gm').textContent = g.m.toFixed(3);
+    document.getElementById('r-ga').innerHTML = (deg<0?'−':'') + Math.abs(deg) + '&deg;';
+    document.getElementById('r-pw').textContent = (g.m*g.m*100).toFixed(1) + ' %';
+    document.getElementById('r-rl').textContent = g.m < 1e-4 ? '∞' : (-20*Math.log10(g.m)).toFixed(1) + ' dB';
+    EM.redrawStatic();
+  }
+  document.getElementById('rl').addEventListener('input', function(){ R = +this.value; isOpen = false; sync(); });
+  document.getElementById('xl').addEventListener('input', function(){ X = +this.value; isOpen = false; sync(); });
+  document.getElementById('z0sel').addEventListener('change', function(){ Z0 = +this.value; sync(); });
+  Array.prototype.forEach.call(document.querySelectorAll('.btns button[data-g]'), function(b){
+    b.addEventListener('click', function(){
+      var v = b.getAttribute('data-g').split(',');
+      R = +v[0]; X = +v[1]; Z0 = +v[2]; isOpen = false;
+      document.getElementById('rl').value = R;
+      document.getElementById('xl').value = X;
+      document.getElementById('z0sel').value = Z0;
+      sync();
+    });
+  });
+  document.getElementById('gopen').addEventListener('click', function(){
+    isOpen = true; X = 0; document.getElementById('xl').value = 0; sync();
+  });
+
+  EM.register(function(C){
+    EM.fit(gp);
+    var c = gp.getContext('2d'), W = gp._w, H = gp._h;
+    var cx = W/2, cy = H/2, Rr = Math.min(W,H)/2 - 28, g = gam();
+    c.clearRect(0,0,W,H);
+    c.strokeStyle = C.line2; c.lineWidth = 1.2;
+    c.beginPath(); c.arc(cx,cy,Rr,0,EM.TAU); c.stroke();
+    c.strokeStyle = C.line;
+    c.beginPath(); c.moveTo(cx-Rr,cy); c.lineTo(cx+Rr,cy);
+    c.moveTo(cx,cy-Rr); c.lineTo(cx,cy+Rr); c.stroke();
+    if(g.m > 0.004){
+      c.setLineDash([3,4]); c.strokeStyle = C.acc; c.lineWidth = 1.1;
+      c.beginPath(); c.arc(cx,cy,Rr*g.m,0,EM.TAU); c.stroke(); c.setLineDash([]);
+    }
+    c.strokeStyle = C.e; c.lineWidth = 2.2;
+    c.beginPath(); c.moveTo(cx,cy); c.lineTo(cx+Rr*g.re, cy-Rr*g.im); c.stroke();
+    c.fillStyle = C.e;
+    c.beginPath(); c.arc(cx+Rr*g.re, cy-Rr*g.im, 5, 0, EM.TAU); c.fill();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3;
+    c.textAlign = 'right'; c.fillText('Re Γ', cx+Rr-3, cy-8);
+    c.textAlign = 'left'; c.fillText('Im Γ', cx+9, cy-Rr+15);
+    c.textAlign = 'center'; c.fillText('|Γ| = 1', cx, cy+Rr+16);
+    c.fillStyle = C.ink3; c.textAlign = 'left';
+    c.fillText('short', cx-Rr+2, cy+15);
+    c.textAlign = 'right'; c.fillText('open', cx+Rr-2, cy+15);
+  }, false);
+
+  EM.register(function(C){
+    EM.fit(gb);
+    var c = gb.getContext('2d'), W = gb._w, H = gb._h;
+    c.clearRect(0,0,W,H);
+    var g = gam(), refl = g.m*g.m, del = 1 - refl;
+    var L = 24, Rm = 24, T = 42, barH = 34, gap = 30;
+    var full = W - L - Rm;
+    if(full < 80) return;
+    c.font = '12px ' + MONO; c.textAlign = 'left';
+
+    c.fillStyle = C.ink3; c.fillText('incident power', L, T - 12);
+    c.fillStyle = C.accfill; c.fillRect(L, T, full, barH);
+    c.strokeStyle = C.line2; c.lineWidth = 1; c.strokeRect(L+.5, T+.5, full-1, barH-1);
+    c.fillStyle = C.ink; c.textAlign = 'center';
+    c.fillText('100 %', L + full/2, T + barH/2 + 4);
+
+    var y2 = T + barH + gap + 14;
+    c.textAlign = 'left'; c.fillStyle = C.ink3;
+    c.fillText('splits into', L, y2 - 12);
+    var wd = full*del;
+    c.fillStyle = C.e; c.globalAlpha = .82; c.fillRect(L, y2, wd, barH); c.globalAlpha = 1;
+    c.fillStyle = C.h; c.globalAlpha = .82; c.fillRect(L + wd, y2, full - wd, barH); c.globalAlpha = 1;
+    c.strokeStyle = C.line2; c.strokeRect(L+.5, y2+.5, full-1, barH-1);
+
+    c.textAlign = 'center'; c.font = '12px ' + MONO;
+    if(wd > 62){ c.fillStyle = '#fff'; c.fillText('delivered ' + (del*100).toFixed(0) + '%', L + wd/2, y2 + barH/2 + 4); }
+    if(full - wd > 58){ c.fillStyle = '#fff'; c.fillText('reflected ' + (refl*100).toFixed(0) + '%', L + wd + (full-wd)/2, y2 + barH/2 + 4); }
+
+    c.fillStyle = C.ink3; c.textAlign = 'left'; c.font = '11.5px ' + MONO;
+    c.fillText('reflected fraction = |Γ|²', L, y2 + barH + 26);
+  }, false);
+
+  sync();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1783 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Smith chart workbench &middot; Transmission Line Theory</title>
+<link rel="stylesheet" href="assets/site.css">
+<style>
+:root{ --col: min(100% - 32px, 1320px); --bleed: 0px; }
+
+/* ---- workbench shell ---- */
+.wb{margin:26px 0 0;background:var(--surface);border:1px solid var(--line);
+  border-radius:7px;overflow:hidden}
+.wb .grid{display:grid;grid-template-columns:minmax(0,1fr)}
+.wb .chartcol{background:var(--sunk);padding-bottom:8px}
+@media(min-width:1000px){ .wb .grid{grid-template-columns:minmax(0,1fr) 336px} }
+.wb .panel{border-top:1px solid var(--line);min-width:0}
+@media(min-width:1000px){ .wb .panel{border-top:0;border-left:1px solid var(--line)} }
+
+canvas#chart{display:block;width:100%;max-width:min(1000px, 96vh);height:auto;aspect-ratio:1/1;
+  margin-inline:auto;background:var(--sunk);touch-action:none;cursor:crosshair}
+canvas#nomo{display:block;width:100%;max-width:min(1000px, 96vh);height:300px;
+  margin-inline:auto;background:var(--sunk)}
+canvas#ckt{display:block;width:100%;height:248px;background:var(--sunk);
+  border-top:1px solid var(--line)}
+@media(max-width:560px){ canvas#nomo{height:282px} canvas#ckt{height:236px} }
+
+/* ---- control panel ---- */
+.grp{padding:15px 17px;border-bottom:1px solid var(--line)}
+.grp:last-child{border-bottom:0}
+.grp h4{margin:0 0 11px;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--ink3);font-weight:400}
+.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.row+.row{margin-top:9px}
+.fld{display:flex;align-items:center;gap:7px;flex:1 1 120px;min-width:0}
+.fld label{font-family:var(--f-mono);font-size:11.5px;color:var(--ink2);
+  white-space:nowrap;flex:none}
+.fld input[type=number]{flex:1;min-width:0;width:100%;font-family:var(--f-mono);
+  font-size:13px;color:var(--ink);background:var(--raise);border:1px solid var(--line2);
+  border-radius:4px;padding:6px 8px}
+.fld input[type=number]:focus{border-color:var(--acc)}
+.seg{display:flex;gap:0;flex-wrap:nowrap}
+.seg button{border-radius:0;flex:1 1 0;min-width:0;padding:7px 6px;
+  border-right-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg button:first-child{border-radius:4px 0 0 4px}
+.seg button:last-child{border-radius:0 4px 4px 0;border-right-width:1px}
+.mini{font-size:11.5px;padding:6px 9px}
+.hint{font-family:var(--f-mono);font-size:11px;color:var(--ink3);margin-top:9px;line-height:1.5}
+
+/* ---- results ---- */
+.sols{display:grid;grid-template-columns:repeat(auto-fit,minmax(246px,1fr));
+  border-top:1px solid var(--line)}
+.sol{padding:14px 17px;border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);min-width:0}
+.sol .hd{display:flex;align-items:baseline;gap:9px;margin-bottom:9px}
+.sol .tag{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--acc)}
+.sol .use{margin-left:auto}
+.sol dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;margin:0;
+  font-family:var(--f-mono);font-size:12.5px}
+.sol dt{color:var(--ink3);white-space:nowrap}
+.sol dd{margin:0;color:var(--ink);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.sol .none{font-family:var(--f-mono);font-size:12px;color:var(--ink3);line-height:1.6}
+
+.big{display:grid;grid-template-columns:repeat(auto-fit,minmax(156px,1fr));
+  border-top:1px solid var(--line)}
+.big div{padding:11px 15px;border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);min-width:0}
+.big dt{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.05em;color:var(--ink3);
+  margin:0 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.big dd{margin:0;font-family:var(--f-mono);font-size:14.5px;color:var(--ink);
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+@media(max-width:420px){
+  .big{grid-template-columns:repeat(auto-fit,minmax(138px,1fr))}
+  .big dd{font-size:13px} .big div{padding:10px 12px}
+}
+</style>
+</head>
+<body>
+
+<header class="mast"><div class="in">
+  <a class="home" href="index.html">Transmission Line Theory</a>
+  <span class="sep"></span>
+  <span class="ch">Workbench &middot; Smith chart</span>
+  <span class="nav"><a href="matching.html" title="Previous">&lsaquo;</a><a class="off" href="#" title="Next" aria-hidden="true">&rsaquo;</a></span>
+</div></header>
+
+<div class="wrap">
+
+<div class="hero">
+  <p class="kicker">Workbench</p>
+  <h1>The Smith chart</h1>
+  <p class="lead">Both grids, the scales round the rim, and the radially scaled parameters underneath. Enter a load to read it off, or let the solver design the match and draw the construction as the arcs you would draw by hand.</p>
+  <p class="t" style="margin-top:20px"><b>Assumes:</b> chapters 10 and 11, where the chart is built and the matching methods derived.</p>
+</div>
+
+<section class="blk" id="tool">
+
+<div class="wb">
+  <div class="grid">
+    <div class="chartcol">
+      <canvas id="chart" class="static" width="780" height="780"
+              aria-label="Interactive Smith chart"></canvas>
+      <canvas id="nomo" class="static" width="900" height="246"
+              aria-label="Radially scaled parameters"></canvas>
+    </div>
+
+    <div class="panel">
+
+      <div class="grp">
+        <h4>Load</h4>
+        <div class="row">
+          <span class="fld"><label for="i-r">R&nbsp;&Omega;</label><input id="i-r" type="number" value="25" step="any"></span>
+          <span class="fld"><label for="i-x">X&nbsp;&Omega;</label><input id="i-x" type="number" value="-30" step="any"></span>
+        </div>
+        <div class="row">
+          <span class="fld"><label for="i-z0">Z&#8320;&nbsp;&Omega;</label><input id="i-z0" type="number" value="50" step="any" min="1"></span>
+          <span class="fld"><label for="i-f">f&nbsp;MHz</label><input id="i-f" type="number" value="1000" step="any" min="0"></span>
+        </div>
+        <div class="row">
+          <span class="fld"><label for="i-ee">&epsilon;<sub>eff</sub></label><input id="i-ee" type="number" value="1" step="any" min="1"></span>
+          <span class="fld" style="justify-content:flex-end"><span class="hint" style="margin:0" id="lam">&lambda; = 300.0 mm</span></span>
+        </div>
+        <div class="row" style="margin-top:11px">
+          <button class="mini" data-preset="short">short</button>
+          <button class="mini" data-preset="open">open</button>
+          <button class="mini" data-preset="match">matched</button>
+          <button class="mini" data-preset="ex">example</button>
+        </div>
+        <p class="hint">Drag on the chart to place the load by hand.</p>
+      </div>
+
+      <div class="grp">
+        <h4>Grids</h4>
+        <div class="seg" role="group" aria-label="Which grid to show">
+          <button data-grid="z">impedance</button>
+          <button data-grid="y">admittance</button>
+          <button data-grid="zy">both</button>
+        </div>
+        <div class="row" style="margin-top:9px">
+          <button class="mini" id="b-rings" aria-pressed="true">outer scales</button>
+          <button class="mini" id="b-dense" aria-pressed="true">fine grid</button>
+        </div>
+      </div>
+
+      <div class="grp">
+        <h4>Zoom</h4>
+        <div class="row">
+          <button class="mini" id="z-out" aria-label="Zoom out">&minus;</button>
+          <button class="mini" id="z-rst">1:1</button>
+          <button class="mini" id="z-in" aria-label="Zoom in">+</button>
+          <output id="z-val" style="font-family:var(--f-mono);font-size:12px;
+            color:var(--ink2);margin-left:auto">&times;1.0</output>
+        </div>
+        <p class="hint">Hold <b>shift</b> and drag to move around while zoomed.
+          Dragging without shift still places the load.</p>
+      </div>
+
+      <div class="grp">
+        <h4>Move along the line</h4>
+        <div class="ctl" style="padding:0">
+          <label for="i-d">d&nbsp;&rarr;gen</label>
+          <input id="i-d" type="range" min="0" max="0.5" step="0.001" value="0">
+          <output id="o-d">0.000&lambda;</output>
+        </div>
+        <p class="hint">Toward the generator is clockwise. The point rides the constant-SWR circle; only its angle changes.</p>
+      </div>
+
+      <div class="grp">
+        <h4>Match it</h4>
+        <div class="seg" role="group" aria-label="Matching method">
+          <button data-m="shunt">shunt stub</button>
+          <button data-m="series">series stub</button>
+        </div>
+        <div class="seg" style="margin-top:7px" role="group" aria-label="Matching method">
+          <button data-m="qwt">&lambda;/4 transf.</button>
+          <button data-m="lnet">L-network</button>
+        </div>
+        <div class="seg" style="margin-top:7px" role="group" aria-label="Matching method">
+          <button data-m="dstub">double stub</button>
+        </div>
+        <div class="row" style="margin-top:9px">
+          <button class="mini" id="b-term" aria-pressed="false">stub: shorted</button>
+          <button class="mini" id="b-clear">clear</button>
+        </div>
+        <div class="row" style="margin-top:9px">
+          <span class="fld"><label for="i-dd">spacing</label>
+            <select id="i-dd" style="flex:1;min-width:0">
+              <option value="0.125">&lambda;/8</option>
+              <option value="0.25">&lambda;/4</option>
+              <option value="0.375">3&lambda;/8</option>
+            </select></span>
+        </div>
+        <p class="hint">Spacing applies to the double-stub tuner only. Picking a method
+          brings up the grid it is worked on &mdash; admittance for shunt stubs,
+          impedance for series ones. Override it above at any time.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="sols"></div>
+
+  <canvas id="ckt" class="static" width="1000" height="248"
+          aria-label="The circuit the solution describes"></canvas>
+
+  <dl class="big" id="big"></dl>
+
+  <div class="legend" id="leg"></div>
+</div>
+
+</section>
+
+<section class="blk" id="reading">
+  <h2>Reading the outer scales</h2>
+  <p class="t">The three rings around the chart are the part people skip, and they are the part that makes the chart usable without a calculator. From the inside out:</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Ring</th><th>What it reads</th><th>Where zero sits</th></tr></thead>
+    <tbody>
+      <tr><td><b>Angle of $\Gamma$</b></td><td>the phase of the reflection coefficient, in degrees</td><td>$0^\circ$ at the right-hand point (open circuit); $\pm180^\circ$ at the left (short)</td></tr>
+      <tr><td><b>Wavelengths toward load</b></td><td>distance travelled from the generator back toward the load</td><td>$0$ at the left; increases <b>counter-clockwise</b></td></tr>
+      <tr><td><b>Wavelengths toward generator</b></td><td>distance travelled from the load toward the source</td><td>$0$ at the left; increases <b>clockwise</b></td></tr>
+    </tbody>
+  </table></div>
+
+  <p class="t">Both wavelength rings run from $0$ to $0.5$ and then start again, because $\Gamma(d) = \Gamma_L e^{-j2\beta d}$ turns through a full $360^\circ$ every half wavelength. That is the same $\lambda/2$ repeat chapter 09 derived, printed on the rim.</p>
+
+  <p class="t">To use them the way you would on paper: find your load, read its position on the <b>toward generator</b> ring, add the distance you are travelling, and read the new position back off the same ring. The difference between two readings is a distance; the readings themselves are arbitrary until you subtract them.</p>
+
+  <div class="key">
+    <span class="lab">The one sign convention that matters</span>
+    <p>Toward the generator is <b>clockwise</b>. Every arc on this page that walks along a line walks clockwise, and the two arrows in the corners of the chart say so. If a construction ever seems to come out half a wavelength wrong, this is almost always why.</p>
+  </div>
+</section>
+
+<section class="blk" id="nomograph">
+  <h2>The scales under the chart</h2>
+  <p class="t">Everything on the strip below the chart is a function of one number: $|\Gamma|$, the distance from the centre. That is why a real chart prints them as a ruler rather than as curves &mdash; measure the radius of your point with a compass, lay it on the ruler, and read all six at once.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Quantity</th><th>From $|\Gamma|$</th><th>Reads</th></tr></thead>
+    <tbody>
+      <tr><td>SWR</td><td>$\dfrac{1+|\Gamma|}{1-|\Gamma|}$</td><td>the voltage ratio on the line</td></tr>
+      <tr><td>SWR in dB</td><td>$20\log_{10} S$</td><td>the same thing, logarithmically</td></tr>
+      <tr><td>Return loss</td><td>$-20\log_{10}|\Gamma|$</td><td>how far down the reflection is</td></tr>
+      <tr><td>Mismatch loss</td><td>$-10\log_{10}\!\left(1-|\Gamma|^2\right)$</td><td>power lost to the reflection</td></tr>
+      <tr><td>Reflected power</td><td>$|\Gamma|^2$</td><td>fraction of incident power turned back</td></tr>
+    </tbody>
+  </table></div>
+
+  <p class="t">The transmission coefficient $\tau = 1 + \Gamma$ is <b>not</b> on the ruler, and the reason is worth saying out loud: it depends on the angle of $\Gamma$, not only its magnitude, so it is not a radial quantity at all. It is in the readout row instead, where it belongs.</p>
+</section>
+
+<section class="blk" id="methods">
+  <h2>What the solver does</h2>
+  <p class="t">Five methods. Each returns every solution rather than the first one found, and draws the circuit it produces underneath, with lengths in wavelengths and in millimetres at your frequency.</p>
+
+  <p class="t">Pozar's chapter on matching also covers <b>binomial</b> and <b>Chebyshev</b> multisection transformers and <b>tapered</b> lines. Those are not here, and not because they are hard: they are broadband designs built by choosing a set of section impedances from a polynomial, and there is nothing for the chart to construct. They belong with the algebra, not the geometry.</p>
+
+  <h3>Shunt stub</h3>
+  <p class="t">Travel until the admittance is $y = 1 + jb$, then cancel $b$ with a stub in parallel. The constant-SWR circle crosses the $g = 1$ circle twice, so there are always exactly two answers, and the second is often the more practical one.</p>
+
+  <h3>Series stub</h3>
+  <p class="t">The same idea in impedance. Travel until $z = 1 + jx$, then cancel $x$ with a stub in series. Two solutions again, for the same reason. Series stubs are awkward in microstrip &mdash; you have to break the line &mdash; but natural in coax and in slotline.</p>
+
+  <h3>Double stub</h3>
+  <p class="t">The single stub has a practical flaw: its position $d$ depends on the load, so the tuner has to be built again for every load. The double-stub tuner fixes the positions instead &mdash; stub 1 at the load, stub 2 a fixed distance $d$ away &mdash; and adjusts only the two lengths. That is what makes it a <b>tuner</b> rather than a one-off matching network.</p>
+
+  <p class="t">The construction turns on one fact: stub 1 changes $b$ but not $g$, so the point after it is still somewhere on the $g = g_L$ circle. The spacing then rotates that point, and it has to land on $g = 1$. So stub 1 must leave you on the $g = 1$ circle <b>rotated back toward the load</b> by $2\beta d$ &mdash; the dashed helper circle the tool draws. Where that circle cuts the $g = g_L$ circle, you have a solution; there are two crossings, so two designs.</p>
+
+  <div class="eq box">
+    $$\operatorname{Re} y_2 = \frac{g\left(1+t^2\right)}{\left(1-tb\right)^2 + t^2 g^2}, \qquad t = \tan\beta d$$
+    <span class="note">setting this to 1 gives $\left(1-tb\right)^2 = g\left(1+t^2\right) - t^2g^2$, a quadratic in $b$</span>
+  </div>
+
+  <p class="t">The square root is real only when $g \le 1/\sin^2\beta d$, and that is the <b>forbidden region</b> &mdash; the shaded disc on the chart. A load inside it cannot be matched at that spacing by any pair of stub lengths, because stub 1 cannot move $g$ at all. The cures are to change the spacing, or to put a length of line in front of stub 1, which moves $g$ and drags the load out of the region. At $d = \lambda/8$ the limit is $g \le 2$; at $\lambda/4$ it tightens to $g \le 1$, which is why $\lambda/8$ and $3\lambda/8$ are the usual choices.</p>
+
+  <h3>Quarter-wave transformer</h3>
+  <p class="t">A transformer needs a <b>real</b> impedance to work on, and a mismatched line offers exactly two per half wavelength: the voltage maximum, where $z = S$, and the voltage minimum, where $z = 1/S$. Put a $\lambda/4$ section of $Z_1 = \sqrt{Z_0 Z_\text{real}}$ at either one.</p>
+
+  <h3>L-network</h3>
+  <p class="t">Two lumped reactances, no line length at all. One of them sits across the load and one in series with it; which order depends on the load. The condition is geometric: a series element slides you along a constant-$r$ circle, a shunt element along a constant-$g$ circle, and you need one of those to reach the matching circle. At least one order always works, and each working order has two solutions.</p>
+
+  <div class="key">
+    <span class="lab">Why methods sometimes come up empty</span>
+    <p>The solver reports <b>no solution</b> rather than an approximate one. A matched load has nothing to match; a purely reactive load ($R = 0$) cannot be matched by any lossless network to a real $Z_0$, because it absorbs no power; and an L-network in one of its two orders is genuinely impossible for some loads. The message says which case you are in.</p>
+  </div>
+</section>
+
+<section class="blk" id="walk">
+  <h2>A worked example, button by button</h2>
+  <p class="t">Press <b>example</b> in the load panel. That sets $Z_L = 25 - j30\ \Omega$ on a $50\ \Omega$ line at 1 GHz, a load that is both too resistive-low and capacitive &mdash; awkward enough to be worth a construction.</p>
+
+  <ol class="steps" id="walkthrough"></ol>
+
+  <p class="t">Then change the load and do it again. The whole point of the chart is that the construction is identical every time; only the arcs move.</p>
+</section>
+
+<section class="check">
+  <h3>Check yourself</h3>
+
+  <div class="q">
+    <p class="qt">On the chart, you move from the load a distance of $0.125\lambda$ toward the generator. How far does the point rotate, and which way?</p>
+    <div class="opts">
+      <button class="opt" data-ok="0">$45^\circ$ clockwise</button>
+      <button class="opt" data-ok="1">$90^\circ$ clockwise</button>
+      <button class="opt" data-ok="0">$90^\circ$ counter-clockwise</button>
+      <button class="opt" data-ok="0">$180^\circ$ clockwise</button>
+    </div>
+    <p class="exp"><b class="verdict"></b> The phase of $\Gamma$ advances by $2\beta d = 2(2\pi/\lambda)(0.125\lambda) = \pi/2$. A full turn is half a wavelength, so an eighth of a wavelength is a quarter turn &mdash; clockwise, because travelling toward the generator makes the phase more negative.</p>
+  </div>
+
+  <div class="q">
+    <p class="qt">Two students solve the same shunt-stub problem and get different answers, both of which the solver agrees are correct. What must be true?</p>
+    <div class="opts">
+      <button class="opt" data-ok="0">One of them used the admittance chart and the other the impedance chart</button>
+      <button class="opt" data-ok="1">They took the two different crossings of the $g=1$ circle</button>
+      <button class="opt" data-ok="0">One used a shorted stub and the other an open stub</button>
+      <button class="opt" data-ok="0">They normalised to different $Z_0$</button>
+    </div>
+    <p class="exp"><b class="verdict"></b> The constant-SWR circle cuts the $g = 1$ circle in two places, and either crossing gives a genuine match. They differ in stub position $d$, in the sign of the susceptance to be cancelled, and therefore in stub length &mdash; and usually in bandwidth too, which is the practical reason to compute both.</p>
+  </div>
+
+  <div class="q">
+    <p class="qt">A load reads $|\Gamma| = 0.5$. Roughly what is the return loss, and how much of the incident power comes back?</p>
+    <div class="opts">
+      <button class="opt" data-ok="1">About 6 dB, and a quarter of the power</button>
+      <button class="opt" data-ok="0">About 3 dB, and half the power</button>
+      <button class="opt" data-ok="0">About 6 dB, and half the power</button>
+      <button class="opt" data-ok="0">About 12 dB, and a quarter of the power</button>
+    </div>
+    <p class="exp"><b class="verdict"></b> $-20\log_{10}0.5 = 6.02$ dB, and the reflected <b>power</b> fraction is $|\Gamma|^2 = 0.25$. The factor-of-two trap is thinking in voltage where the question asks about power; the ruler under the chart lines both up so you can see them together.</p>
+  </div>
+</section>
+
+<nav class="pager">
+  <a class="pv" href="matching.html"><span class="dir">Previous</span><span class="ttl">11 &middot; Impedance matching</span></a>
+  <a class="nx" href="index.html"><span class="dir">Back to</span><span class="ttl">Contents</span></a>
+</nav>
+
+<footer class="site">
+  <span class="cr">&copy; 2026 Elie Hachem &middot; free to share and use for teaching</span>
+</footer>
+
+</div>
+
+<script src="assets/site.js"></script>
+<script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
+<script>
+(function(){
+"use strict";
+var MONO = 'ui-monospace, "IBM Plex Mono", monospace';
+var TAU = Math.PI*2, C0 = 299792458;
+
+/* ===================== complex / chart mathematics ===================== */
+
+/* Gamma from a normalised impedance z = r + jx. */
+function zToG(r, x){
+  var dr = r+1, di = x, d = dr*dr + di*di;
+  if(d < 1e-14) return [-1, 0];
+  return [ ((r-1)*dr + x*di)/d, (x*dr - (r-1)*di)/d ];
+}
+/* Normalised impedance from Gamma. */
+function gToZ(u, v){
+  var dr = 1-u, di = -v, d = dr*dr + di*di;
+  if(d < 1e-12) return [1e12, 0];
+  return [ ((1+u)*dr + v*di)/d, (v*dr - (1+u)*di)/d ];
+}
+/* y = g + jb sits on the same chart with Gamma rotated half a turn. */
+function yToG(g, b){ var G = zToG(g, b); return [-G[0], -G[1]]; }
+function gToY(u, v){ return gToZ(-u, -v); }
+
+function inv(r, x){ var d = r*r + x*x; if(d < 1e-14) return [1e12, 0]; return [r/d, -x/d]; }
+function mag(g){ return Math.hypot(g[0], g[1]); }
+
+/* ===================== state ===================== */
+
+var S = {
+  r: 0.5, x: -0.6,          /* normalised load */
+  z0: 50, f: 1000, ee: 1,
+  grid: 'z', rings: true,
+  /* the fine grid is unreadable on a phone-sized chart, so start it off there */
+  dense: !(window.matchMedia && window.matchMedia('(max-width: 760px)').matches),
+  d: 0,                      /* manual travel, wavelengths toward generator */
+  dd: 0.125,                 /* double-stub spacing, wavelengths */
+  zoom: 1, cu: 0, cv: 0,     /* view: magnification, and the chart point at the canvas centre */
+  method: null, pick: 0, openStub: false
+};
+
+var cv = document.getElementById('chart'), ctx = cv.getContext('2d');
+var nv = document.getElementById('nomo'), nctx = nv.getContext('2d');
+var cq = document.getElementById('ckt'), qctx = cq.getContext('2d');
+
+function lambda(){ /* metres */
+  var f = S.f*1e6; if(!(f > 0)) return 0;
+  return C0/(f*Math.sqrt(Math.max(1, S.ee)));
+}
+function omega(){ return TAU*S.f*1e6; }
+
+/* ===================== solvers =====================
+   Every one returns normalised quantities plus the distance d in wavelengths
+   measured from the load toward the generator. No iteration anywhere. */
+
+function wrapHalf(d){
+  d = d % 0.5; if(d < 0) d += 0.5;
+  /* 0.5 and 0 are the same point. Rounding can push an exact zero to the top
+     of the window, which reads as "half a wavelength away" instead of
+     "right at the load", so snap it back. */
+  if(d < 1e-9 || d > 0.5 - 1e-9) d = 0;
+  return d;
+}
+
+/* length of a stub that presents susceptance bs (shunt) or reactance xs (series) */
+function stubLen(val, isOpen, isSeries){
+  /* shunt, open  : y = +j tan(bl)   -> tan(bl) = bs
+     shunt, short : y = -j cot(bl)   -> tan(bl) = -1/bs
+     series, short: z = +j tan(bl)   -> tan(bl) = xs
+     series, open : z = -j cot(bl)   -> tan(bl) = -1/xs          */
+  var direct = isSeries ? !isOpen : isOpen;
+  var a = direct ? Math.atan(val) : Math.atan2(-1, val);
+  while(a < 0) a += Math.PI;
+  while(a >= Math.PI) a -= Math.PI;
+  return a/TAU;                        /* wavelengths, in [0, 0.5) */
+}
+
+/* Shunt or series single stub. Two solutions, always, unless already matched. */
+function solveStub(series){
+  var gL = zToG(S.r, S.x), m = mag(gL);
+  if(m < 1e-6) return {sols: [], why: 'matched'};
+  if(m > 0.9999) return {sols: [], why: 'lossless'};
+  var thL = Math.atan2(gL[1], gL[0]);
+  var out = [];
+  [1, -1].forEach(function(sgn){
+    var u = series ? m*m : -m*m;
+    var v = sgn*m*Math.sqrt(Math.max(0, 1 - m*m));
+    var d = wrapHalf((thL - Math.atan2(v, u))/(2*TAU));
+    /* what the line presents there */
+    var line = series ? 2*v/(1 - m*m)      /* x, since Re z = 1 */
+                      : -2*v/(1 - m*m);    /* b, since Re y = 1 (v is in the z-plane) */
+    var need = -line;                      /* the stub must cancel it */
+    out.push({
+      d: d, g: [u, v], line: line, need: need,
+      ls: stubLen(need, S.openStub, series),
+      series: !!series
+    });
+  });
+  out.sort(function(a,b){ return a.d - b.d; });
+  return {sols: out};
+}
+
+/* Quarter-wave transformer at the voltage maximum or minimum. */
+function solveQWT(){
+  var gL = zToG(S.r, S.x), m = mag(gL);
+  if(m < 1e-6) return {sols: [], why: 'matched'};
+  if(m > 0.9999) return {sols: [], why: 'lossless'};
+  var thL = Math.atan2(gL[1], gL[0]);
+  var swr = (1+m)/(1-m);
+  return {sols: [
+    { d: wrapHalf((thL - Math.PI)/(2*TAU)), at: 'minimum', zr: 1/swr,
+      g: [-m, 0], z1: Math.sqrt(1/swr) },
+    { d: wrapHalf(thL/(2*TAU)), at: 'maximum', zr: swr,
+      g: [m, 0], z1: Math.sqrt(swr) }
+  ].sort(function(a,b){ return a.d - b.d; })};
+}
+
+/* Lumped L-network. Two orders, two solutions each where they exist. */
+function solveL(){
+  var r = S.r, x = S.x;
+  if(Math.abs(r-1) < 1e-9 && Math.abs(x) < 1e-9) return {sols: [], why: 'matched'};
+  if(r < 1e-9) return {sols: [], why: 'lossless'};
+  var out = [];
+
+  /* order A: series element at the load, then shunt. Needs r <= 1. */
+  if(r <= 1 + 1e-12){
+    var root = Math.sqrt(Math.max(0, r*(1-r)));
+    [1, -1].forEach(function(sg){
+      var x1 = sg*root;
+      out.push({ order:'series first', xs: x1 - x, bp: x1/r, mid: [r, x1], midIsZ: true });
+    });
+  }
+  /* order B: shunt element at the load, then series. Needs g <= 1. */
+  var yL = inv(r, x), g = yL[0], b = yL[1];
+  if(g <= 1 + 1e-12){
+    var rootB = Math.sqrt(Math.max(0, g*(1-g)));
+    [1, -1].forEach(function(sg){
+      var b1 = sg*rootB;
+      out.push({ order:'shunt first', bp: b1 - b, xs: b1/g, mid: [g, b1], midIsZ: false });
+    });
+  }
+  /* drop duplicates (r = 1 or g = 1 give a repeated root) */
+  var keep = [];
+  out.forEach(function(s){
+    for(var i=0;i<keep.length;i++){
+      var k = keep[i];
+      if(k.order === s.order && Math.abs(k.xs-s.xs) < 1e-9 && Math.abs(k.bp-s.bp) < 1e-9) return;
+    }
+    keep.push(s);
+  });
+  return {sols: keep};
+}
+
+/* Double-stub tuner. Stub 1 sits at the load, stub 2 a fixed distance away.
+   Stub 1 can only change b, so y just after it stays on the g = g_L circle;
+   the spacing then rotates that point, and it must land on g = 1. Writing
+   y2 = (y1 + jt)/(1 + jt y1) with y1 = g + jb and t = tan(beta*d),
+
+       Re y2 = g(1 + t^2) / [ (1 - tb)^2 + t^2 g^2 ]
+
+   so Re y2 = 1 gives (1 - tb)^2 = g(1 + t^2) - t^2 g^2, a quadratic in b with
+   two roots when the right-hand side is non-negative, i.e. when
+
+       g <= (1 + t^2)/t^2 = 1/sin^2(beta*d).
+
+   That inequality is the forbidden region: loads whose conductance at stub 1
+   is too high cannot be matched at this spacing, however long the stubs.   */
+function solveDouble(){
+  var yL = inv(S.r, S.x), g = yL[0], bL = yL[1];
+  if(Math.abs(S.r - 1) < 1e-9 && Math.abs(S.x) < 1e-9) return {sols: [], why: 'matched'};
+  if(S.r < 1e-9) return {sols: [], why: 'lossless'};
+
+  var t = Math.tan(TAU*S.dd);
+  if(!isFinite(t) || Math.abs(t) > 1e9) t = (t < 0 ? -1 : 1)*1e9;
+  var gmax = (1 + t*t)/(t*t);
+  if(g > gmax + 1e-9) return {sols: [], why: 'forbidden', gmax: gmax, g: g};
+
+  var rad = Math.sqrt(Math.max(0, g*(1 + t*t) - t*t*g*g));
+  var out = [];
+  [-1, 1].forEach(function(sg){
+    var bm = (1 + sg*rad)/t;              /* susceptance just after stub 1 */
+    var b1 = bm - bL;
+    var nr = g, ni = bm + t, dr = 1 - t*bm, di = t*g;
+    var den = dr*dr + di*di;
+    var y2 = [(nr*dr + ni*di)/den, (ni*dr - nr*di)/den];
+    out.push({
+      g: g, bmid: bm, y2: y2,
+      b1: b1, b2: -y2[1],
+      ls1: stubLen(b1,  S.openStub, false),
+      ls2: stubLen(-y2[1], S.openStub, false)
+    });
+  });
+  /* a repeated root (g exactly at the limit) is one design, not two */
+  if(out.length === 2 && Math.abs(out[0].b1 - out[1].b1) < 1e-9) out.length = 1;
+  return {sols: out, gmax: gmax};
+}
+
+function solve(){
+  if(S.method === 'dstub')  return solveDouble();
+  if(S.method === 'shunt')  return solveStub(false);
+  if(S.method === 'series') return solveStub(true);
+  if(S.method === 'qwt')    return solveQWT();
+  if(S.method === 'lnet')   return solveL();
+  return {sols: []};
+}
+
+/* ===================== formatting ===================== */
+
+function n2(v){ return (Math.abs(v) < 5e-3 ? 0 : v).toFixed(2); }
+function n3(v){ return (Math.abs(v) < 5e-4 ? 0 : v).toFixed(3); }
+function n1(v){ return (Math.abs(v) < 5e-2 ? 0 : v).toFixed(1); }
+function cpx(re, im, dp){
+  dp = dp || 2;
+  if(!isFinite(re) || Math.abs(re) > 1e6) return '→ ∞';
+  var a = (Math.abs(re) < 5*Math.pow(10,-dp-1) ? 0 : re).toFixed(dp);
+  var b = im;
+  if(Math.abs(b) < 5*Math.pow(10,-dp-1)) return a + ' + j0.' + new Array(dp+1).join('0');
+  return a + (b < 0 ? ' − j' : ' + j') + Math.abs(b).toFixed(dp);
+}
+function polar(g){
+  var m = mag(g), a = Math.atan2(g[1], g[0])*180/Math.PI;
+  if(Math.abs(a) < 0.05) a = 0;
+  return n3(m) + '∠' + n1(a) + '°';
+}
+function mm(wl){ var L = lambda(); return L > 0 ? (wl*L*1000) : 0; }
+function lenTxt(wl){
+  var s = n3(wl) + 'λ';
+  var L = lambda();
+  if(L > 0) s += '  (' + n1(mm(wl)) + ' mm)';
+  return s;
+}
+/* a normalised shunt susceptance as a real component */
+function bComp(bp){
+  var B = bp/S.z0, w = omega();
+  if(!(w > 0) || Math.abs(B) < 1e-12) return '—';
+  if(B > 0) return 'C = ' + sig(B/w*1e12) + ' pF';
+  return 'L = ' + sig(-1/(w*B)*1e9) + ' nH';
+}
+function xComp(xs){
+  var X = xs*S.z0, w = omega();
+  if(!(w > 0) || Math.abs(X) < 1e-12) return '—';
+  if(X > 0) return 'L = ' + sig(X/w*1e9) + ' nH';
+  return 'C = ' + sig(-1/(w*X)*1e12) + ' pF';
+}
+function sig(v){
+  var a = Math.abs(v);
+  if(a >= 10000) return v.toFixed(0);
+  if(a >= 10)  return v.toFixed(1);
+  if(a >= 1)   return v.toFixed(2);
+  return v.toFixed(3);
+}
+
+/* ===================== chart geometry ===================== */
+
+var G = { cx:0, cy:0, R:0, h:0, gap:0, size:0, nums:false };
+function layout(){
+  var W = cv._w, H = cv._h, s = Math.min(W, H);
+  G.size = s;
+  G.nums = s >= 500;
+  G.h = S.rings ? (G.nums ? Math.max(14, Math.min(23, s*0.05))
+                          : Math.max(5, s*0.019)) : 0;
+  /* a clear annulus between the chart and the rings, reserved for stub arcs */
+  G.gap = Math.max(7, s*0.017);
+  /* and an outer band for the two direction arcs and the half-plane labels,
+     so neither can ever sit on top of the point you are reading */
+  G.out = Math.max(15, Math.min(34, s*0.042));
+  G.R = s/2 - 3*G.h - G.gap - G.out;
+  G.cx = W/2; G.cy = H/2;
+}
+function ringBase(){ return G.R + G.gap; }
+function outerR(){ return ringBase() + 3*G.h + G.out*0.5; }
+function stubR(){ return G.R + G.gap*0.5; }
+function P(u, v){ return [G.cx + u*G.R, G.cy - v*G.R]; }
+function rimPt(ang, rad){ return [G.cx + rad*Math.cos(ang), G.cy - rad*Math.sin(ang)]; }
+
+/* ring angle conventions */
+function angWTG(w){ return Math.PI - 2*TAU*w; }   /* 0 at the short, clockwise */
+function angWTL(w){ return Math.PI + 2*TAU*w; }   /* 0 at the short, counter-clockwise */
+
+/* ===================== grid values ===================== */
+
+var R_MAJ = [0.1,0.2,0.3,0.4,0.5,0.6,0.8,1,1.2,1.5,2,3,4,5,10,20];
+var R_MIN = [0.05,0.15,0.25,0.35,0.45,0.55,0.7,0.9,1.1,1.3,1.4,1.6,1.8,2.5,3.5,4.5,6,8];
+var X_MAJ = [0.1,0.2,0.3,0.4,0.5,0.6,0.8,1,1.2,1.5,2,3,4,5,10,20];
+var X_MIN = [0.05,0.15,0.25,0.35,0.45,0.7,0.9,1.1,1.4,1.8,2.5,3.5,6];
+
+function drawGrid(c, rotate, col, labels){
+  var sgn = rotate ? -1 : 1;
+  function Q(u,v){ return P(sgn*u, sgn*v); }
+  c.save();
+  c.beginPath(); c.arc(G.cx, G.cy, G.R, 0, TAU); c.clip();
+
+  function circR(r, w, al){
+    var p = Q(r/(1+r), 0);
+    c.beginPath(); c.arc(p[0], p[1], G.R/(1+r), 0, TAU);
+    c.strokeStyle = col; c.globalAlpha = al; c.lineWidth = w; c.stroke();
+  }
+  function circX(x, w, al){
+    var p = Q(1, 1/x);
+    c.beginPath(); c.arc(p[0], p[1], G.R*Math.abs(1/x), 0, TAU);
+    c.strokeStyle = col; c.globalAlpha = al; c.lineWidth = w; c.stroke();
+  }
+
+  if(S.dense){
+    /* with both grids up there are twice as many lines, so they go fainter */
+    var k = (S.grid === 'zy') ? 0.55 : 1;
+    R_MIN.forEach(function(r){ circR(r, 1, 0.17*k); });
+    X_MIN.forEach(function(x){ circX(x, 1, 0.15*k); circX(-x, 1, 0.15*k); });
+  }
+  R_MAJ.forEach(function(r){ circR(r, r===1 ? 1.7 : 1, r===1 ? 0.85 : 0.36); });
+  X_MAJ.forEach(function(x){ circX(x, 1, 0.32); circX(-x, 1, 0.32); });
+
+  /* x = 0 : the horizontal diameter */
+  var a = Q(-1,0), b = Q(1,0);
+  c.beginPath(); c.moveTo(a[0],a[1]); c.lineTo(b[0],b[1]);
+  c.strokeStyle = col; c.globalAlpha = 0.8; c.lineWidth = 1.6; c.stroke();
+  c.globalAlpha = 1;
+  c.restore();
+
+  if(!labels || G.size < 430) return;
+  /* r values along the real axis */
+  c.save();
+  c.font = Math.max(8, Math.round(G.size*0.0155)) + 'px ' + MONO;
+  c.fillStyle = col; c.globalAlpha = 0.95;
+  c.textAlign = 'center'; c.textBaseline = 'top';
+  [0.2,0.5,1,2,5].forEach(function(r){
+    var p = Q((r-1)/(r+1), 0);
+    c.fillText(String(r), p[0], p[1] + 4);
+  });
+  /* x values just inside the rim */
+  c.textBaseline = 'middle';
+  [0.5,1,2,5].forEach(function(x){
+    [1,-1].forEach(function(s){
+      var gg = zToG(0, s*x);                 /* on the rim */
+      var ang = Math.atan2(sgn*gg[1], sgn*gg[0]);
+      var p = rimPt(ang, G.R*0.935);
+      c.fillText((s<0?'−':'') + x, p[0], p[1]);
+    });
+  });
+  c.globalAlpha = 1;
+  c.restore();
+}
+
+/* ===================== peripheral rings ===================== */
+
+function drawRings(c, C){
+  if(!S.rings) return;
+  var h = G.h, R = ringBase();
+  var bands = [
+    { r0: R,       r1: R+h,   kind: 'ang'  },
+    { r0: R+h,     r1: R+2*h, kind: 'wtl'  },
+    { r0: R+2*h,   r1: R+3*h, kind: 'wtg'  }
+  ];
+  var showNums = G.nums;
+  var fs = Math.max(7, Math.min(10.5, h*0.46));
+
+  c.save();
+  c.strokeStyle = C.line2; c.globalAlpha = 0.9; c.lineWidth = 1;
+  [R, R+h, R+2*h, R+3*h].forEach(function(rr){
+    c.beginPath(); c.arc(G.cx, G.cy, rr, 0, TAU); c.stroke();
+  });
+  c.globalAlpha = 1;
+
+  function tick(ang, r0, r1, w, al, col){
+    var a = rimPt(ang, r0), b = rimPt(ang, r1);
+    c.beginPath(); c.moveTo(a[0],a[1]); c.lineTo(b[0],b[1]);
+    c.strokeStyle = col; c.lineWidth = w; c.globalAlpha = al; c.stroke();
+    c.globalAlpha = 1;
+  }
+  function label(ang, rad, txt){
+    var phi = -ang;
+    var x = G.cx + rad*Math.cos(phi), y = G.cy + rad*Math.sin(phi);
+    var rot = phi + Math.PI/2;
+    if(Math.sin(phi) > 1e-9) rot += Math.PI;
+    c.save(); c.translate(x, y); c.rotate(rot);
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(txt, 0, 0); c.restore();
+  }
+
+  c.font = fs + 'px ' + MONO;
+
+  bands.forEach(function(B){
+    var mid = (B.r0 + B.r1)/2;
+    if(B.kind === 'ang'){
+      for(var a = -180; a < 180; a += 2){
+        var major = (a % 10 === 0), lab = (a % 20 === 0);
+        if(!major && G.size < 560) continue;
+        tick(a*Math.PI/180, B.r0, B.r0 + (major ? h*0.34 : h*0.17),
+             1, major ? 0.55 : 0.3, C.ink3);
+        if(lab && showNums){
+          c.fillStyle = C.ink3;
+          label(a*Math.PI/180, mid + h*0.12, String(a));
+        }
+      }
+    } else {
+      var f = (B.kind === 'wtg') ? angWTG : angWTL;
+      for(var i = 0; i <= 500; i++){
+        var w = i/1000;
+        var major = (i % 50 === 0), med = (i % 10 === 0);
+        if(!med && G.size < 620) continue;
+        tick(f(w), B.r0, B.r0 + (major ? h*0.36 : med ? h*0.2 : h*0.1),
+             1, major ? 0.55 : 0.28, C.ink3);
+        if(major && showNums && i < 500){
+          c.fillStyle = C.ink3;
+          label(f(w), mid + h*0.1, w.toFixed(2).slice(1));
+        }
+      }
+    }
+  });
+  c.restore();
+}
+
+/* The two travel directions, drawn as arcs concentric with the chart so they
+   read as what they are: rotation about its centre. Clockwise is toward the
+   generator, counter-clockwise toward the load. */
+/* set a string along a circle, centred on a screen angle, each glyph rotated
+   to sit on the tangent */
+function arcText(c, txt, r, mid){
+  var i, total = 0;
+  for(i = 0; i < txt.length; i++) total += c.measureText(txt[i]).width;
+  var phi = mid - (total/r)/2;                 /* leading edge, screen angle */
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  for(i = 0; i < txt.length; i++){
+    var w = c.measureText(txt[i]).width, step = w/r;
+    var a = phi + step/2;
+    c.save();
+    c.translate(G.cx + r*Math.cos(a), G.cy + r*Math.sin(a));
+    c.rotate(a + Math.PI/2);
+    c.fillText(txt[i], 0, 0);
+    c.restore();
+    phi += step;
+  }
+}
+
+function drawDirections(c, C){
+  var R = outerR(), fs = Math.max(8, Math.min(11, G.size*0.0165));
+  c.save();
+  c.strokeStyle = C.ink3; c.fillStyle = C.ink3;
+  c.lineWidth = Math.max(1.2, G.size*0.0022);
+
+  function sweep(a0, a1, cw){
+    /* canvas angles run the other way round, hence the negations */
+    c.beginPath(); c.arc(G.cx, G.cy, R, -a0, -a1, !cw); c.stroke();
+    var tan = -a1 + (cw ? Math.PI/2 : -Math.PI/2);
+    var hx = G.cx + R*Math.cos(-a1), hy = G.cy + R*Math.sin(-a1);
+    var hh = Math.max(6.5, G.size*0.013);
+    c.beginPath();
+    c.moveTo(hx, hy);
+    c.lineTo(hx - hh*Math.cos(tan - 0.42), hy - hh*Math.sin(tan - 0.42));
+    c.lineTo(hx - hh*Math.cos(tan + 0.42), hy - hh*Math.sin(tan + 0.42));
+    c.closePath(); c.fill();
+  }
+  var D = Math.PI/180;
+  sweep(72*D, 16*D, true);     /* toward the generator: clockwise, right side */
+  sweep(108*D, 164*D, false);  /* toward the load: counter-clockwise, left side */
+
+  if(G.size >= 430){
+    c.font = fs + 'px ' + MONO;
+    arcText(c, 'toward generator', R + fs*1.25, -44*D);
+    arcText(c, 'toward load',      R + fs*1.25, -136*D);
+  }
+  c.restore();
+}
+
+/* ===================== construction paths ===================== */
+
+function polyline(c, pts, col, w, dash, alpha){
+  if(pts.length < 2) return;
+  c.save();
+  if(dash) c.setLineDash(dash);
+  c.strokeStyle = col; c.lineWidth = w; c.globalAlpha = alpha == null ? 1 : alpha;
+  c.beginPath();
+  var p = P(pts[0][0], pts[0][1]); c.moveTo(p[0], p[1]);
+  for(var i=1;i<pts.length;i++){ p = P(pts[i][0], pts[i][1]); c.lineTo(p[0], p[1]); }
+  c.stroke();
+  c.restore();
+}
+/* a word on an arc, nudged outward from the chart centre so it clears the line */
+function labelPath(c, pts, frac, txt, col){
+  if(pts.length < 2 || G.size < 440) return;
+  var i = Math.max(0, Math.min(pts.length-1, Math.round(frac*(pts.length-1))));
+  var p = P(pts[i][0], pts[i][1]);
+  var dx = p[0]-G.cx, dy = p[1]-G.cy, L = Math.hypot(dx,dy) || 1;
+  var off = Math.max(11, G.size*0.026);
+  c.save();
+  c.font = Math.max(9, Math.min(12, G.size*0.0162)) + 'px ' + MONO;
+  c.fillStyle = col; c.textAlign = 'center'; c.textBaseline = 'middle';
+  var tx = p[0] + dx/L*off, ty = p[1] + dy/L*off;
+  var w = c.measureText(txt).width;
+  c.fillStyle = EM.colors().sunk; c.globalAlpha = 0.82;
+  c.fillRect(tx - w/2 - 3, ty - 8, w + 6, 16);
+  c.globalAlpha = 1; c.fillStyle = col;
+  c.fillText(txt, tx, ty);
+  c.restore();
+}
+function headAt(c, pts, frac, col){
+  if(pts.length < 3) return;
+  var i = Math.max(1, Math.min(pts.length-1, Math.round(frac*(pts.length-1))));
+  var a = P(pts[i-1][0], pts[i-1][1]), b = P(pts[i][0], pts[i][1]);
+  var ang = Math.atan2(b[1]-a[1], b[0]-a[0]), hh = Math.max(6, G.size*0.013);
+  c.save(); c.fillStyle = col;
+  c.beginPath();
+  c.moveTo(b[0], b[1]);
+  c.lineTo(b[0] - hh*Math.cos(ang-0.42), b[1] - hh*Math.sin(ang-0.42));
+  c.lineTo(b[0] - hh*Math.cos(ang+0.42), b[1] - hh*Math.sin(ang+0.42));
+  c.closePath(); c.fill(); c.restore();
+}
+
+/* arc along a constant-|Gamma| circle, d wavelengths toward the generator */
+function travelPath(g0, d){
+  var m = mag(g0), th = Math.atan2(g0[1], g0[0]), pts = [], n = 90;
+  for(var i=0;i<=n;i++){
+    var a = th - 2*TAU*d*(i/n);
+    pts.push([m*Math.cos(a), m*Math.sin(a)]);
+  }
+  return pts;
+}
+/* along a constant-r circle, x from x0 to x1 */
+function pathR(r, x0, x1){
+  var pts = [], n = 70;
+  for(var i=0;i<=n;i++){ pts.push(zToG(r, x0 + (x1-x0)*i/n)); }
+  return pts;
+}
+/* along a constant-g circle, b from b0 to b1 */
+function pathG(g, b0, b1){
+  var pts = [], n = 70;
+  for(var i=0;i<=n;i++){ pts.push(yToG(g, b0 + (b1-b0)*i/n)); }
+  return pts;
+}
+/* The stub is its own line, so it travels on the |Gamma| = 1 rim. It gets its
+   own annulus just outside the chart so it can never be mistaken for a grid
+   curve. Termination: short -> Gamma_z = -1 (left); open -> +1 (right), for
+   shunt (admittance) and series (impedance) stubs alike. */
+function drawStubArc(c, C, isOpen, ls){
+  var a0 = isOpen ? 0 : Math.PI, rad = stubR();
+  var a1 = a0 - 2*TAU*ls;
+  c.save();
+  c.strokeStyle = C.acc; c.lineWidth = Math.max(3, G.size*0.006);
+  c.setLineDash([Math.max(2.5, G.size*0.006), Math.max(2.5, G.size*0.006)]);
+  c.lineCap = 'butt';
+  c.beginPath(); c.arc(G.cx, G.cy, rad, -a0, -a1, false); c.stroke();
+  c.setLineDash([]);
+  /* where it starts */
+  var p0 = rimPt(a0, rad);
+  c.fillStyle = C.acc;
+  c.beginPath(); c.arc(p0[0], p0[1], Math.max(3, G.size*0.005), 0, TAU); c.fill();
+  /* where it ends */
+  if(ls > 0.004){
+    var p1 = rimPt(a1, rad), tan = -a1 + Math.PI/2, hh = Math.max(7, G.size*0.014);
+    c.beginPath();
+    c.moveTo(p1[0], p1[1]);
+    c.lineTo(p1[0] - hh*Math.cos(tan-0.42), p1[1] - hh*Math.sin(tan-0.42));
+    c.lineTo(p1[0] - hh*Math.cos(tan+0.42), p1[1] - hh*Math.sin(tan+0.42));
+    c.closePath(); c.fill();
+  }
+  c.restore();
+}
+
+/* ===================== main chart draw ===================== */
+
+function drawChart(){
+  var C = EM.colors();
+  EM.fit(cv);
+  layout();
+  var c = ctx, W = cv._w, H = cv._h;
+  c.clearRect(0,0,W,H);
+  c.fillStyle = C.sunk; c.fillRect(0,0,W,H);
+
+  c.save();
+  if(S.zoom !== 1 || S.cu || S.cv){
+    c.translate(G.cx, G.cy);
+    c.scale(S.zoom, S.zoom);
+    c.translate(-G.cx - S.cu*G.R, -G.cy + S.cv*G.R);
+  }
+
+  drawRings(c, C);
+
+  if(S.grid === 'z' || S.grid === 'zy') drawGrid(c, false, C.e, S.grid === 'z');
+  if(S.grid === 'y' || S.grid === 'zy') drawGrid(c, true,  C.h, S.grid === 'y');
+
+  /* unit circle */
+  c.beginPath(); c.arc(G.cx, G.cy, G.R, 0, TAU);
+  c.strokeStyle = C.ink2; c.lineWidth = 1.5; c.stroke();
+
+  var gL = zToG(S.r, S.x), m = mag(gL);
+
+  /* constant-SWR circle */
+  if(m > 0.004){
+    c.beginPath(); c.arc(G.cx, G.cy, G.R*m, 0, TAU);
+    c.strokeStyle = C.ink; c.lineWidth = 1.4; c.globalAlpha = 0.5;
+    c.setLineDash([5,4]); c.stroke(); c.setLineDash([]); c.globalAlpha = 1;
+  }
+
+  var res = solve(), sol = res.sols[S.pick] || null;
+
+  /* --- double stub: the region no spacing of this length can reach --- */
+  if(S.method === 'dstub' && res.gmax){
+    var gm = res.gmax, fc = P(-gm/(1+gm), 0), fr = G.R/(1+gm);
+    c.save();
+    c.beginPath(); c.arc(fc[0], fc[1], fr, 0, TAU);
+    c.fillStyle = C.warn; c.globalAlpha = 0.11; c.fill();
+    c.globalAlpha = 0.55; c.strokeStyle = C.warn; c.lineWidth = 1.6;
+    c.setLineDash([5,4]); c.stroke(); c.restore();
+    if(G.size >= 440){
+      c.save();
+      c.font = Math.max(9, Math.min(11.5, G.size*0.0155)) + 'px ' + MONO;
+      c.fillStyle = C.warn; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText('g > ' + n2(gm) + ': no match', fc[0], fc[1] - fr*0.55);
+      c.restore();
+    }
+    /* the g = 1 circle rotated back by the spacing: where stub 1 must land */
+    var ph = 2*TAU*S.dd;
+    var rc = P(-0.5*Math.cos(ph), -0.5*Math.sin(ph));
+    c.save(); c.strokeStyle = C.acc; c.globalAlpha = 0.45; c.lineWidth = 1.8;
+    c.setLineDash([7,5]);
+    c.beginPath(); c.arc(rc[0], rc[1], G.R*0.5, 0, TAU); c.stroke(); c.restore();
+  }
+
+  /* --- the construction --- */
+  if(sol){
+    if(S.method === 'dstub'){
+      var yL0 = inv(S.r, S.x);
+      var a1 = pathG(sol.g, yL0[1], sol.bmid);          /* stub 1 */
+      polyline(c, a1, C.acc, 3.4, null, 0.95); headAt(c, a1, 0.6, C.acc);
+      labelPath(c, a1, 0.5, 'stub 1', C.acc);
+      var a2 = travelPath(yToG(sol.g, sol.bmid), S.dd); /* the spacing */
+      polyline(c, a2, C.acc, 3.4, null, 0.95); headAt(c, a2, 0.55, C.acc);
+      labelPath(c, a2, 0.5, 'd = ' + n3(S.dd) + 'λ', C.acc);
+      var a3 = pathG(1, sol.y2[1], 0);                  /* stub 2 */
+      polyline(c, a3, C.acc, 3.4, [7,5], 1); headAt(c, a3, 0.7, C.acc);
+      labelPath(c, a3, 0.45, 'stub 2', C.acc);
+      drawStubArc(c, C, S.openStub, sol.ls2);
+    } else
+    if(S.method === 'shunt' || S.method === 'series'){
+      /* the circle you are aiming at, whole, so the target is unmistakable */
+      var tc = P(sol.series ? 0.5 : -0.5, 0);
+      c.save(); c.strokeStyle = C.acc; c.globalAlpha = 0.22;
+      c.lineWidth = Math.max(1.6, G.size*0.0026);
+      c.beginPath(); c.arc(tc[0], tc[1], G.R*0.5, 0, TAU); c.stroke(); c.restore();
+
+      var p1 = travelPath(gL, sol.d);
+      polyline(c, p1, C.acc, 3.4, null, 0.95); headAt(c, p1, 0.55, C.acc);
+      if(sol.d > 0.03) labelPath(c, p1, 0.5, 'd = ' + n3(sol.d) + 'λ', C.acc);
+      var p2 = sol.series ? pathR(1, sol.line, 0) : pathG(1, sol.line, 0);
+      polyline(c, p2, C.acc, 3.4, [7,5], 1); headAt(c, p2, 0.72, C.acc);
+      labelPath(c, p2, 0.42, 'stub', C.acc);
+      drawStubArc(c, C, S.openStub, sol.ls);
+    } else if(S.method === 'qwt'){
+      var q1 = travelPath(gL, sol.d);
+      polyline(c, q1, C.acc, 3.4, null, 0.95); headAt(c, q1, 0.55, C.acc);
+      if(sol.d > 0.03) labelPath(c, q1, 0.5, 'd = ' + n3(sol.d) + 'λ', C.acc);
+      var a = P(sol.g[0], sol.g[1]), b = P(0,0);
+      c.save(); c.setLineDash([6,4]); c.strokeStyle = C.acc; c.lineWidth = 2.4;
+      c.globalAlpha = 0.85;
+      c.beginPath(); c.moveTo(a[0],a[1]); c.lineTo(b[0],b[1]); c.stroke();
+      c.setLineDash([]); c.globalAlpha = 1;
+      c.font = Math.max(9, Math.min(12, G.size*0.0165)) + 'px ' + MONO;
+      c.fillStyle = C.acc; c.textAlign = 'center'; c.textBaseline = 'bottom';
+      c.fillText('λ/4 of ' + sig(sol.z1*S.z0) + ' Ω',
+                 (a[0]+b[0])/2, a[1] - Math.max(7, G.size*0.012));
+      c.restore();
+    } else if(S.method === 'lnet'){
+      var l1, l2;
+      if(sol.midIsZ){
+        l1 = pathR(S.r, S.x, sol.mid[1]);
+        l2 = pathG(1, sol.mid[1]/S.r*-1, 0);
+      } else {
+        var yL = inv(S.r, S.x);
+        l1 = pathG(yL[0], yL[1], sol.mid[1]);
+        l2 = pathR(1, -sol.mid[1]/sol.mid[0], 0);
+      }
+      polyline(c, l1, C.acc, 3.4, null, 0.95); headAt(c, l1, 0.6, C.acc);
+      polyline(c, l2, C.acc, 3.4, [7,5], 1); headAt(c, l2, 0.7, C.acc);
+      labelPath(c, l1, 0.5, sol.midIsZ ? 'series x' : 'shunt b', C.acc);
+      labelPath(c, l2, 0.45, sol.midIsZ ? 'shunt b' : 'series x', C.acc);
+    }
+  } else if(S.d > 0.0005 && m > 0.004){
+    var pd = travelPath(gL, S.d);
+    polyline(c, pd, C.acc, 3, null, 0.9); headAt(c, pd, 0.6, C.acc);
+  }
+
+  /* --- markers --- */
+  var gC = curG();
+
+  /* Two readings on the outer scales: where you started and where you are.
+     The band between them is the distance travelled, read straight off the
+     wavelength ring the way you would with dividers on paper. */
+  if(m > 0.004){
+    var angC = Math.atan2(gC[1], gC[0]);
+    var angL = Math.atan2(gL[1], gL[0]);
+    var moved = Math.abs(angC - angL) > 1e-4;
+
+    /* radial line to the rim, so the angle ring can be read */
+    var e = rimPt(angC, S.rings ? ringBase() + 3*G.h : G.R);
+    c.beginPath(); c.moveTo(G.cx, G.cy); c.lineTo(e[0], e[1]);
+    c.strokeStyle = C.ink; c.globalAlpha = 0.28; c.lineWidth = 1; c.stroke();
+    c.globalAlpha = 1;
+
+    if(S.rings && G.nums){
+      var r0 = ringBase(), r1 = ringBase() + 3*G.h;
+      function ringMark(a, here){
+        var t0 = rimPt(a, r0), t1 = rimPt(a, r1);
+        c.save();
+        c.strokeStyle = here ? C.ink : C.acc;
+        c.globalAlpha = here ? 0.8 : 0.9;
+        c.lineWidth = Math.max(1.4, G.size*0.003);
+        if(!here) c.setLineDash([5, 3]);
+        c.beginPath(); c.moveTo(t0[0], t0[1]); c.lineTo(t1[0], t1[1]); c.stroke();
+        c.setLineDash([]);
+        var cap = rimPt(a, r1), rad = Math.max(2.6, G.size*0.0042);
+        c.beginPath(); c.arc(cap[0], cap[1], rad, 0, TAU);
+        if(here){ c.fillStyle = C.ink; c.fill(); }
+        else { c.fillStyle = C.sunk; c.fill(); c.strokeStyle = C.acc;
+               c.lineWidth = 1.6; c.stroke(); }
+        c.restore();
+      }
+      /* the sweep between the two, along the wavelength ring */
+      if(moved){
+        c.save();
+        c.strokeStyle = C.acc; c.globalAlpha = 0.35;
+        c.lineWidth = G.h*0.9;
+        c.beginPath();
+        c.arc(G.cx, G.cy, r1 - G.h*0.5, -angL, -angC, false);
+        c.stroke(); c.restore();
+      }
+      if(moved) ringMark(angL, false);
+      ringMark(angC, true);
+    }
+  }
+
+  /* load: hollow */
+  var pl = P(gL[0], gL[1]);
+  c.beginPath(); c.arc(pl[0], pl[1], Math.max(4.5, G.size*0.0085), 0, TAU);
+  c.strokeStyle = C.ink; c.lineWidth = 2.2; c.stroke();
+
+  /* current point: filled */
+  var pc = P(gC[0], gC[1]);
+  c.beginPath(); c.arc(pc[0], pc[1], Math.max(5, G.size*0.0095), 0, TAU);
+  c.fillStyle = C.acc; c.fill();
+  c.strokeStyle = C.sunk; c.lineWidth = 1.6; c.stroke();
+
+  /* rim words */
+  var fs = Math.max(8, Math.min(11.5, G.size*0.017));
+  c.font = fs + 'px ' + MONO; c.fillStyle = C.ink3;
+  c.textBaseline = 'alphabetic';
+  var yb = G.cy - 6;
+  c.textAlign = 'left';  c.fillText(S.grid === 'y' ? 'y → ∞' : 'short', G.cx - G.R + 3, yb);
+  c.textAlign = 'right'; c.fillText(S.grid === 'y' ? 'y = 0' : 'open',  G.cx + G.R - 3, yb);
+  /* Upper half is x > 0. Because y is read on the same disc turned half round,
+     the SAME upper half is b < 0 — so the two labels must disagree. */
+  c.textAlign = 'center';
+  var topTxt, botTxt;
+  if(S.grid === 'z'){ topTxt = 'inductive  x > 0';  botTxt = 'capacitive  x < 0'; c.fillStyle = C.e; }
+  else if(S.grid === 'y'){ topTxt = 'inductive  b < 0'; botTxt = 'capacitive  b > 0'; c.fillStyle = C.h; }
+  else { topTxt = 'inductive:  x > 0,  b < 0'; botTxt = 'capacitive:  x < 0,  b > 0'; c.fillStyle = C.ink3; }
+  /* outside the chart, at top and bottom centre, where no point can reach
+     them. The direction arcs keep to the diagonals, so nothing collides. */
+  c.textBaseline = 'middle';
+  c.fillText(topTxt, G.cx, G.cy - outerR());
+  c.fillText(botTxt, G.cx, G.cy + outerR());
+
+  drawDirections(c, C);
+  c.restore();
+
+  if(S.zoom !== 1){
+    c.save();
+    c.font = Math.max(10, Math.min(12.5, G.size*0.017)) + 'px ' + MONO;
+    c.fillStyle = C.acc; c.textAlign = 'left'; c.textBaseline = 'top';
+    c.fillText('\u00d7' + (Math.round(S.zoom*10)/10), 10, 10);
+    c.restore();
+  }
+}
+
+/* screen pixels -> chart plane, honouring the current view */
+function toChart(px, py){
+  return [ (px - G.cx)/(S.zoom*G.R) + S.cu,
+           S.cv - (py - G.cy)/(S.zoom*G.R) ];
+}
+function setZoom(z){
+  z = Math.max(1, Math.min(8, z));
+  S.zoom = z;
+  if(z === 1){ S.cu = 0; S.cv = 0; }
+  clampPan();
+  refresh();
+}
+function clampPan(){
+  var lim = 1.35;
+  S.cu = Math.max(-lim, Math.min(lim, S.cu));
+  S.cv = Math.max(-lim, Math.min(lim, S.cv));
+}
+
+/* the Gamma of the point we are reporting on */
+function curG(){
+  var gL = zToG(S.r, S.x), m = mag(gL), th = Math.atan2(gL[1], gL[0]);
+  var a = th - 2*TAU*S.d;
+  return [m*Math.cos(a), m*Math.sin(a)];
+}
+
+/* ===================== the radially scaled ruler ===================== */
+
+var SCALES = [
+  { name:'SWR', unit:'', short:'SWR',
+    ticks:[1,1.1,1.2,1.4,1.6,2,2.5,3,4,5,7,10,20],
+    toM:function(s){ return (s-1)/(s+1); },
+    val:function(m){ return m >= 0.99999 ? Infinity : (1+m)/(1-m); },
+    show:function(v){ return isFinite(v) ? sig(v) : '∞'; } },
+  { name:'SWR', unit:'dB', short:'SWR dB',
+    ticks:[0,1,2,3,4,6,8,10,14,20,26],
+    toM:function(v){ var s = Math.pow(10, v/20); return (s-1)/(s+1); },
+    val:function(m){ return m >= 0.99999 ? Infinity : 20*Math.log10((1+m)/(1-m)); },
+    show:function(v){ return isFinite(v) ? sig(v) : '∞'; } },
+  { name:'Return loss', unit:'dB', short:'RL dB',
+    ticks:[30,20,15,12,10,8,6,5,4,3,2,1,0.5,0],
+    toM:function(v){ return Math.pow(10, -v/20); },
+    val:function(m){ return m <= 1e-9 ? Infinity : -20*Math.log10(m); },
+    show:function(v){ return isFinite(v) ? sig(v) : '∞'; } },
+  { name:'Mismatch loss', unit:'dB', short:'ML dB',
+    ticks:[0,0.1,0.2,0.4,0.7,1,1.5,2,3,4,6,10],
+    toM:function(v){ return Math.sqrt(Math.max(0, 1 - Math.pow(10, -v/10))); },
+    val:function(m){ return m >= 0.99999 ? Infinity : -10*Math.log10(1 - m*m); },
+    show:function(v){ return isFinite(v) ? sig(v) : '∞'; } },
+  { name:'|Γ|', unit:'', short:'|Γ|',
+    ticks:[0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1],
+    toM:function(v){ return v; },
+    val:function(m){ return m; },
+    show:function(v){ return v.toFixed(3); } },
+  { name:'Reflected power', unit:'%', short:'refl %',
+    ticks:[0,1,2,5,10,20,30,50,70,90,100],
+    toM:function(v){ return Math.sqrt(v/100); },
+    val:function(m){ return 100*m*m; },
+    show:function(v){ return sig(v); } }
+];
+
+function drawNomo(){
+  var C = EM.colors();
+  EM.fit(nv);
+  var c = nctx, W = nv._w, H = nv._h;
+  c.clearRect(0,0,W,H);
+  c.fillStyle = C.sunk; c.fillRect(0,0,W,H);
+
+  /* The scales span the full canvas, and the canvas is the same width as the
+     chart above, so |Gamma| = 0 sits under the chart's left rim and 1 under
+     its right. Names and values go above each line rather than beside it,
+     which is what frees the whole width for the scale itself. */
+  var narrow = W < 520;
+  var x0 = 0, x1 = W;
+  var top = 20, rowH = (H - top - 6)/SCALES.length;
+  var m = mag(curG());
+  var fsName = narrow ? 9 : 10, fsTick = narrow ? 8 : 9, fsVal = narrow ? 11 : 12.5;
+
+  c.font = fsName + 'px ' + MONO;
+  c.fillStyle = C.ink3; c.textAlign = 'left'; c.textBaseline = 'top';
+  c.fillText('RADIALLY SCALED PARAMETERS', 0, 5);
+
+  /* Each scale is one block: its name and live value on top, its tick labels
+     just above its line. Nothing sits below a line, so a name can never be
+     mistaken for the scale above it. */
+  SCALES.forEach(function(sc, i){
+    var rTop = top + rowH*i, y = rTop + rowH - 9;
+
+    c.textBaseline = 'top';
+    c.font = fsName + 'px ' + MONO;
+    c.fillStyle = C.ink3; c.textAlign = 'left';
+    c.fillText(narrow ? sc.short : sc.name + (sc.unit ? ' (' + sc.unit + ')' : ''),
+               0, rTop);
+    c.font = fsVal + 'px ' + MONO;
+    c.fillStyle = C.ink; c.textAlign = 'right';
+    c.fillText(sc.show(sc.val(m)), x1 - 2, rTop - 2);
+
+    c.strokeStyle = C.line2; c.lineWidth = 1; c.globalAlpha = 0.9;
+    c.beginPath(); c.moveTo(x0, y + 0.5); c.lineTo(x1, y + 0.5); c.stroke();
+    c.globalAlpha = 1;
+
+    c.font = fsTick + 'px ' + MONO;
+    c.textAlign = 'center'; c.textBaseline = 'bottom';
+    var last = -1e9;
+    sc.ticks.forEach(function(t){
+      var mm2 = sc.toM(t);
+      if(!(mm2 >= 0 && mm2 <= 1.0001)) return;
+      var px = x0 + (x1-x0)*Math.min(1, mm2);
+      c.strokeStyle = C.ink3; c.globalAlpha = 0.6;
+      c.beginPath(); c.moveTo(px, y - 3.5); c.lineTo(px, y + 3.5); c.stroke();
+      c.globalAlpha = 1;
+      if(px - last > (narrow ? 20 : 24)){
+        /* the end labels would hang off the canvas, so they are pulled in by
+           their own half-width rather than by a fixed guess */
+        var lbl = String(t), hw = c.measureText(lbl).width/2 + 1;
+        c.fillStyle = C.ink3;
+        c.fillText(lbl, Math.max(hw, Math.min(W - hw, px)), y - 5);
+        last = px;
+      }
+    });
+  });
+
+  /* the cursor, through every row */
+  var cxp = x0 + (x1-x0)*Math.min(1, m);
+  c.save();
+  c.strokeStyle = C.acc; c.lineWidth = 2; c.globalAlpha = 0.9;
+  c.beginPath(); c.moveTo(cxp, top - 2); c.lineTo(cxp, H - 4); c.stroke();
+  c.restore();
+}
+
+/* ===================== the circuit that comes out =====================
+   The chart says where to put things; this says what you actually build.
+   Drawn in fixed design coordinates and scaled, so the layout can never
+   collide whatever the viewport. */
+
+function drawCircuit(){
+  var C = EM.colors();
+  EM.fit(cq);
+  var c = qctx, W = cq._w, H = cq._h;
+  c.clearRect(0, 0, W, H);
+  c.fillStyle = C.sunk; c.fillRect(0, 0, W, H);
+
+  var res = solve(), sol = res.sols[S.pick] || null;
+  if(!S.method || !sol){
+    c.font = '12.5px ' + MONO; c.fillStyle = C.ink3;
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(S.method ? 'nothing to build — see the note above'
+                        : 'pick a matching method to see the circuit it describes',
+               W/2, H/2);
+    return;
+  }
+
+  var DW = (W < 640) ? 560 : 980, DH = 250;
+  var sc = EM.design(c, cq, DW, DH);
+  var FS = Math.max(9.5, 12.5/sc);            /* captions stay readable when scaled */
+  var LWm = Math.max(1.8, 2.4/Math.max(sc, 0.5));
+  var LY = 94, GY = 198;                       /* conductor and ground rails */
+  var X0 = DW*0.05, XL = DW*0.845, BW = DW*0.135;
+
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  function L(x1, y1, x2, y2, w){
+    c.strokeStyle = c.strokeStyle || C.ink2; c.lineWidth = w || LWm;
+    c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+  }
+  function T(x, y, t, al, col, size){
+    c.font = (size || FS) + 'px ' + MONO;
+    c.fillStyle = col || C.ink2; c.textAlign = al || 'center';
+    c.textBaseline = 'middle'; c.fillText(t, x, y);
+  }
+  function dot(x, y){
+    c.fillStyle = C.ink2;
+    c.beginPath(); c.arc(x, y, LWm*1.5, 0, TAU); c.fill();
+  }
+  function gnd(x, y){
+    c.strokeStyle = C.ink2;
+    L(x-15, y, x+15, y); L(x-9.5, y+6, x+9.5, y+6); L(x-4, y+12, x+4, y+12);
+  }
+  function openEnd(x, y){ c.strokeStyle = C.ink2; L(x-10, y, x+10, y); }
+  function term(x, y){ if(S.openStub) openEnd(x, y); else gnd(x, y); }
+
+  function chip(x, y, t, col, size){
+    c.font = (size || FS) + 'px ' + MONO;
+    var w = c.measureText(t).width, h = (size || FS)*1.5;
+    c.fillStyle = C.sunk; c.globalAlpha = 0.9;
+    c.fillRect(x - w/2 - 4, y - h/2, w + 8, h);
+    c.globalAlpha = 1;
+    T(x, y, t, 'center', col, size);
+  }
+  function dim(x1, x2, y, label){
+    c.strokeStyle = C.acc;
+    var tw = Math.max(1, 1.4/Math.max(sc, 0.5));
+    L(x1, y - 6, x1, y + 6, tw); L(x2, y - 6, x2, y + 6, tw);
+    L(x1, y, x2, y, tw);
+    [[x1, 1], [x2, -1]].forEach(function(e){
+      c.fillStyle = C.acc; c.beginPath();
+      c.moveTo(e[0], y);
+      c.lineTo(e[0] + e[1]*8, y - 3.4);
+      c.lineTo(e[0] + e[1]*8, y + 3.4);
+      c.closePath(); c.fill();
+    });
+    chip((x1 + x2)/2, y, label, C.acc);
+  }
+  function box(x, y, w, h, l1, l2){
+    c.strokeStyle = C.ink2; c.lineWidth = LWm; c.fillStyle = C.surface;
+    c.beginPath(); c.rect(x, y - h/2, w, h); c.fill(); c.stroke();
+    T(x + w/2, y - FS*0.62, l1, 'center', C.ink, FS);
+    if(l2) T(x + w/2, y + FS*0.66, l2, 'center', C.ink2, FS*0.9);
+  }
+  function indH(x0, x1, y){
+    var n = 4, w = (x1 - x0)/n;
+    c.strokeStyle = C.ink2; c.lineWidth = LWm;
+    c.beginPath(); c.moveTo(x0, y);
+    for(var i = 0; i < n; i++) c.arc(x0 + w*(i + 0.5), y, w/2, Math.PI, TAU, false);
+    c.stroke();
+  }
+  function capH(x0, x1, y){
+    var xc = (x0 + x1)/2, g = 5, h = 15;
+    c.strokeStyle = C.ink2;
+    L(x0, y, xc - g, y); L(xc + g, y, x1, y);
+    L(xc - g, y - h, xc - g, y + h); L(xc + g, y - h, xc + g, y + h);
+  }
+  function indV(x, y0, y1){
+    var n = 4, h = (y1 - y0)/n;
+    c.strokeStyle = C.ink2; c.lineWidth = LWm;
+    c.beginPath(); c.moveTo(x, y0);
+    for(var i = 0; i < n; i++) c.arc(x, y0 + h*(i + 0.5), h/2, -Math.PI/2, Math.PI/2, false);
+    c.stroke();
+  }
+  function capV(x, y0, y1){
+    var yc = (y0 + y1)/2, g = 5, w = 15;
+    c.strokeStyle = C.ink2;
+    L(x, y0, x, yc - g); L(x, yc + g, x, y1);
+    L(x - w, yc - g, x + w, yc - g); L(x - w, yc + g, x + w, yc + g);
+  }
+  function seriesEl(x0, x1, y, xs){
+    if(xs >= 0) indH(x0, x1, y); else capH(x0, x1, y);
+    T((x0 + x1)/2, y - FS*2.1, xComp(xs), 'center', C.ink, FS);
+  }
+  function shuntEl(x, y0, y1, bp){
+    if(bp >= 0) capV(x, y0, y1); else indV(x, y0, y1);
+    T(x + 22, (y0 + y1)/2, bComp(bp), 'left', C.ink, FS);
+  }
+  function wl(v){
+    var t = n3(v) + 'λ';
+    if(lambda() > 0) t += '  ' + n1(mm(v)) + 'mm';
+    return t;
+  }
+  function stub(x, len, label){
+    c.strokeStyle = C.ink2;
+    L(x, LY, x, GY - 14); dot(x, LY); term(x, GY - 14);
+    T(x + 15, LY + (GY - LY)*0.38, label, 'left', C.acc, FS);
+    T(x + 15, LY + (GY - LY)*0.38 + FS*1.35, wl(len), 'left', C.ink2, FS);
+  }
+
+  /* the fixed furniture */
+  box(XL, LY, BW, 56, 'load', sig(S.r*S.z0) + (S.x < 0 ? ' − j' : ' + j') +
+      sig(Math.abs(S.x*S.z0)) + ' Ω');
+  T(X0, LY - FS*1.9, 'to source', 'left', C.ink3, FS);
+  T(X0, GY + 4, (S.method === 'lnet' ? 'Z₀ = ' : 'line  Z₀ = ')
+    + sig(S.z0) + ' Ω', 'left', C.ink3, FS);
+  c.strokeStyle = C.ink2;
+
+  if(S.method === 'shunt'){
+    var J = DW*0.60;
+    L(X0, LY, XL, LY);
+    stub(J, sol.ls, (S.openStub ? 'open' : 'shorted') + ' stub');
+    dim(J, XL, LY - 36, 'd = ' + wl(sol.d));
+
+  } else if(S.method === 'series'){
+    var Jc = DW*0.60, gp = DW*0.030, SY = GY - 24;
+    c.fillStyle = C.surface; c.globalAlpha = 0.75;
+    c.fillRect(Jc - gp, LY, 2*gp, SY - LY); c.globalAlpha = 1;
+    L(X0, LY, Jc - gp, LY); L(Jc + gp, LY, XL, LY);
+    L(Jc - gp, LY, Jc - gp, SY); L(Jc + gp, LY, Jc + gp, SY);
+    if(S.openStub){ openEnd(Jc - gp, SY); openEnd(Jc + gp, SY); }
+    else L(Jc - gp, SY, Jc + gp, SY);
+    T(Jc + gp + 20, LY + (SY - LY)*0.42,
+      (S.openStub ? 'open' : 'shorted') + ' series stub', 'left', C.acc, FS);
+    T(Jc + gp + 20, LY + (SY - LY)*0.42 + FS*1.35, wl(sol.ls), 'left', C.ink2, FS);
+    dim(Jc, XL, LY - 36, 'd = ' + wl(sol.d));
+
+  } else if(S.method === 'qwt'){
+    var T0 = DW*0.38, T1 = DW*0.585;
+    L(X0, LY, T0, LY); L(T1, LY, XL, LY);
+    c.fillStyle = C.accfill; c.strokeStyle = C.acc; c.lineWidth = LWm;
+    c.beginPath(); c.rect(T0, LY - 11, T1 - T0, 22); c.fill(); c.stroke();
+    c.strokeStyle = C.ink2;
+    T((T0 + T1)/2, LY + 30, 'Z₁ = ' + sig(sol.z1*S.z0) + ' Ω', 'center', C.ink, FS);
+    dim(T0, T1, LY - 36, lambda() > 0 ? 'λ/4   ' + n1(mm(0.25)) + 'mm' : 'λ/4');
+    dim(T1, XL, LY - 36, 'd = ' + wl(sol.d));
+    T(DW*0.50, DH - FS*1.2,
+      'the quarter wave is a quarter of the wavelength on the TRANSFORMER, which '
+      + 'differs from the main line unless both sit in the same medium',
+      'center', C.ink3, FS*0.95);
+
+  } else if(S.method === 'lnet'){
+    var seriesFirst = (sol.order === 'series first');
+    var SH, E0, E1;
+    if(seriesFirst){ SH = DW*0.50; E0 = DW*0.655; E1 = DW*0.775; }
+    else           { E0 = DW*0.50; E1 = DW*0.62;  SH = DW*0.775; }
+    L(X0, LY, Math.min(SH, E0), LY);
+    if(seriesFirst){ L(SH, LY, E0, LY); L(E1, LY, XL, LY); }
+    else           { L(E1, LY, SH, LY); L(SH, LY, XL, LY); }
+    seriesEl(E0, E1, LY, sol.xs);
+    c.strokeStyle = C.ink2;
+    shuntEl(SH, LY, GY - 14, sol.bp); dot(SH, LY); gnd(SH, GY - 14);
+    T(DW*0.50, DH - FS*1.2, seriesFirst
+        ? 'series element next to the load, shunt element toward the source'
+        : 'shunt element next to the load, series element toward the source',
+      'center', C.ink3, FS*0.95);
+
+  } else if(S.method === 'dstub'){
+    var S1 = DW*0.795, S2 = DW*0.45;
+    L(X0, LY, XL, LY);
+    stub(S1, sol.ls1, 'stub 1');
+    stub(S2, sol.ls2, 'stub 2');
+    dim(S2, S1, LY - 36, 'd = ' + wl(S.dd));
+    T(DW*0.50, DH - FS*1.2,
+      'both stubs ' + (S.openStub ? 'open' : 'shorted') +
+      ' · stub 1 sits at the load, the spacing is fixed',
+      'center', C.ink3, FS*0.95);
+  }
+
+  c.restore();
+}
+
+/* ===================== readouts ===================== */
+
+function bigRow(){
+  var gL = zToG(S.r, S.x), g = curG(), m = mag(g);
+  var z = gToZ(g[0], g[1]), y = gToY(g[0], g[1]);
+  var swr = m >= 0.99999 ? Infinity : (1+m)/(1-m);
+  var thL = Math.atan2(gL[1], gL[0]);
+  var tau = [1 + g[0], g[1]];
+  var out = [];
+  function add(k, v){ out.push('<div><dt>'+k+'</dt><dd>'+v+'</dd></div>'); }
+
+  add('z = Z/Z₀', cpx(z[0], z[1]));
+  add('Z (Ω)', (Math.abs(z[0]) > 1e6 ? '→ ∞'
+        : cpx(z[0]*S.z0, z[1]*S.z0, 1)));
+  add('y = Y·Z₀', cpx(y[0], y[1]));
+  add('Y (mS)', (Math.abs(y[0]) > 1e6 ? '→ ∞'
+        : cpx(y[0]/S.z0*1000, y[1]/S.z0*1000, 2)));
+  add('Γ', polar(g));
+  add('τ = 1+Γ', polar(tau));
+  add('SWR', isFinite(swr) ? sig(swr) : '∞');
+  add('Return loss', (m <= 1e-9 ? '∞' : sig(-20*Math.log10(m))) + ' dB');
+  add('Mismatch loss', (m >= 0.99999 ? '∞' : sig(-10*Math.log10(1-m*m))) + ' dB');
+  add('Refl. power', sig(100*m*m) + ' %');
+  /* first minimum and maximum, measured from the LOAD */
+  add('d → V min', m < 1e-6 ? '—' : n3(wrapHalf((thL - Math.PI)/(2*TAU))) + 'λ');
+  add('d → V max', m < 1e-6 ? '—' : n3(wrapHalf(thL/(2*TAU))) + 'λ');
+  /* where the present point reads on the toward-generator ring */
+  var th = Math.atan2(g[1], g[0]);
+  add('ring: WTG', m < 1e-6 ? '—' : n3(wrapHalf((Math.PI - th)/(2*TAU))) + 'λ');
+
+  document.getElementById('big').innerHTML = out.join('');
+}
+
+function solPanel(){
+  var host = document.getElementById('sols');
+  host.className = S.method ? 'sols' : '';
+  if(!S.method){ host.innerHTML = ''; return; }
+  var res = solve();
+  if(!res.sols.length){
+    var why = res.why === 'matched'
+      ? 'This load is already matched — Γ = 0, so there is nothing to do.'
+      : res.why === 'lossless'
+      ? 'A purely reactive load (R = 0) absorbs no power, so no lossless network can match it to a real Z₀.'
+      : res.why === 'forbidden'
+      ? 'This load is in the forbidden region. At a spacing of ' + n3(S.dd) +
+        'λ the tuner can only reach loads with g ≤ ' + n2(res.gmax) +
+        ', and this one has g = ' + n2(res.g) + '. Stub 1 changes b but not g, ' +
+        'so no stub length can rescue it — change the spacing, or add a length ' +
+        'of line before stub 1 to move g.'
+      : 'No solution for this load with this method.';
+    host.innerHTML = '<div class="sol"><p class="none">' + why + '</p></div>';
+    return;
+  }
+  var html = '';
+  res.sols.forEach(function(s, i){
+    var rows = '';
+    function R(k,v){ rows += '<dt>'+k+'</dt><dd>'+v+'</dd>'; }
+    if(S.method === 'shunt' || S.method === 'series'){
+      R('distance d', lenTxt(s.d));
+      R(s.series ? 'line gives z' : 'line gives y',
+        s.series ? cpx(1, s.line) : cpx(1, s.line));
+      R('stub must give', (s.series ? 'x = ' : 'b = ') + n3(s.need));
+      R('stub length', lenTxt(s.ls));
+      R('stub end', S.openStub ? 'open' : 'shorted');
+    } else if(S.method === 'dstub'){
+      R('spacing', lenTxt(S.dd));
+      R('stub 1 gives', 'b = ' + n3(s.b1));
+      R('stub 1 length', lenTxt(s.ls1));
+      R('after stub 1', 'y = ' + cpx(s.g, s.bmid));
+      R('after the line', 'y = ' + cpx(s.y2[0], s.y2[1]));
+      R('stub 2 gives', 'b = ' + n3(s.b2));
+      R('stub 2 length', lenTxt(s.ls2));
+      R('stub ends', S.openStub ? 'open' : 'shorted');
+    } else if(S.method === 'qwt'){
+      R('put it at the', 'voltage ' + s.at);
+      R('distance d', lenTxt(s.d));
+      R('z there', n3(s.zr) + '  (real)');
+      R('Z₁', sig(s.z1*S.z0) + ' Ω');
+      R('length', lenTxt(0.25));
+    } else {
+      R('order', s.order);
+      R('shunt b', n3(s.bp) + '   ' + bComp(s.bp));
+      R('series x', n3(s.xs) + '   ' + xComp(s.xs));
+      R('via', (s.midIsZ ? 'z = ' + cpx(s.mid[0], s.mid[1])
+                         : 'y = ' + cpx(s.mid[0], s.mid[1])));
+    }
+    html += '<div class="sol">'
+      + '<div class="hd"><span class="tag">solution ' + (i+1) + ' of ' + res.sols.length + '</span>'
+      + '<button class="mini use" data-pick="' + i + '" aria-pressed="'
+      + (S.pick === i ? 'true' : 'false') + '">show</button></div>'
+      + '<dl>' + rows + '</dl></div>';
+  });
+  host.innerHTML = html;
+  Array.prototype.forEach.call(host.querySelectorAll('[data-pick]'), function(b){
+    b.addEventListener('click', function(){
+      S.pick = +b.getAttribute('data-pick');
+      var s = solve().sols[S.pick];
+      if(s && s.d != null){ S.d = s.d; syncD(); }
+      refresh();
+    });
+  });
+}
+
+function legend(){
+  var C = EM.colors(), L = [];
+  function it(col, txt){ L.push('<span><i style="border-top-color:'+col+'"></i>'+txt+'</span>'); }
+  if(S.grid !== 'y') it(C.e, 'impedance grid  r, x');
+  if(S.grid !== 'z') it(C.h, 'admittance grid  g, b');
+  it(C.ink, 'constant-SWR circle (dashed)');
+  if(S.method) it(C.acc, 'construction, clockwise');
+  if(S.method === 'shunt' || S.method === 'series')
+    it(C.acc, 'stub, in the outer band');
+  if(S.method === 'dstub'){
+    it(C.acc, 'stub 2, in the outer band');
+    it(C.acc, 'g = 1 rotated back by d (dashed)');
+    it(C.warn, 'forbidden region');
+  }
+  document.getElementById('leg').innerHTML = L.join('');
+}
+
+/* ===================== the walkthrough, computed ===================== */
+
+function walkthrough(){
+  var keep = { r:S.r, x:S.x, z0:S.z0, f:S.f, ee:S.ee, method:S.method, openStub:S.openStub };
+  S.r = 0.5; S.x = -0.6; S.z0 = 50; S.f = 1000; S.ee = 1; S.openStub = false;
+  var gL = zToG(S.r, S.x), m = mag(gL), thd = Math.atan2(gL[1], gL[0])*180/Math.PI;
+  var swr = (1+m)/(1-m);
+  S.method = 'shunt';
+  var st = solve().sols;
+  S.method = 'qwt';
+  var qt = solve().sols;
+  var yL = inv(S.r, S.x);
+
+  var steps = [
+    ['Normalise.', 'Divide by $Z_0$: $z_L = ' + n2(S.r) + ' - j' + n2(-S.x) +
+     '$. Everything from here on is normalised, which is why the same chart works for any $Z_0$.'],
+    ['Plot it.', 'The point sits where the $r = ' + n2(S.r) + '$ circle crosses the $x = ' + n2(S.x) +
+     '$ arc &mdash; lower half, because the load is capacitive. Read its radius: $|\\Gamma| = ' +
+     n3(m) + '$, and its angle off the inner ring: $' + n1(thd) + '^\\circ$.'],
+    ['Read the ruler.', 'That radius gives SWR $= ' + sig(swr) + '$, return loss $= ' +
+     sig(-20*Math.log10(m)) + '$ dB, and $' + sig(100*m*m) +
+     '\\%$ of the incident power turned back. All from one measurement.'],
+    ['Switch to admittance.', 'A shunt stub adds susceptance, so work in $y$. Press <b>admittance</b>: ' +
+     'the point stays put and the grid rotates. Under it you now read $y_L = ' + cpx(yL[0], yL[1]) + '$.'],
+    ['Travel to the $g = 1$ circle.', 'Press <b>shunt stub</b>. The first crossing is at $d = ' +
+     n3(st[0].d) + '\\lambda$, where the line presents $y = 1 ' +
+     (st[0].line < 0 ? '- j' + n2(-st[0].line) : '+ j' + n2(st[0].line)) +
+     '$. The second is at $d = ' + n3(st[1].d) + '\\lambda$ &mdash; both are real answers.'],
+    ['Cancel what is left.', 'The stub must supply $b = ' + n3(st[0].need) +
+     '$. A shorted stub of $' + n3(st[0].ls) + '\\lambda$ does it; the dotted arc in the band just ' +
+     'outside the chart is that stub’s own journey from its short-circuit end, because the stub ' +
+     'is a length of line in its own right. In millimetres at 1 GHz in air: $' +
+     n1(mm(st[0].d)) + '$ mm along the line, $' + n1(mm(st[0].ls)) + '$ mm of stub.'],
+    ['Check it before you build it.', 'With the solution showing, the readout row reads the line ' +
+     '<b>at the stub, before the stub is attached</b> &mdash; so it should say $y = 1.00 ' +
+     (st[0].line < 0 ? '- j' + n2(-st[0].line) : '+ j' + n2(st[0].line)) +
+     '$, real part exactly 1. Adding $b = ' + n3(st[0].need) +
+     '$ in parallel kills the imaginary part and leaves $y = 1$. If the real part is not 1, ' +
+     'the construction went the wrong way round the chart.'],
+    ['Try another method.', 'Press <b>&lambda;/4 transf.</b> The voltage minimum is $' +
+     n3(qt[0].d) + '\\lambda$ from the load with $z = ' + n3(qt[0].zr) +
+     '$ there, needing $Z_1 = ' + sig(qt[0].z1*S.z0) + '\\ \\Omega$; the maximum is at $' +
+     n3(qt[1].d) + '\\lambda$ with $z = ' + n3(qt[1].zr) + '$ and $Z_1 = ' +
+     sig(qt[1].z1*S.z0) + '\\ \\Omega$. Same load, same chart, a different machine.']
+  ];
+
+  document.getElementById('walkthrough').innerHTML = steps.map(function(s){
+    return '<li><div><b>' + s[0] + '</b> ' + s[1] + '</div></li>';
+  }).join('');
+
+  S.r = keep.r; S.x = keep.x; S.z0 = keep.z0; S.f = keep.f; S.ee = keep.ee;
+  S.method = keep.method; S.openStub = keep.openStub;
+}
+
+/* ===================== wiring ===================== */
+
+function syncD(){
+  document.getElementById('i-d').value = S.d.toFixed(3);
+  document.getElementById('o-d').textContent = S.d.toFixed(3) + 'λ';
+}
+function syncLoad(){
+  document.getElementById('i-r').value = sig(S.r*S.z0);
+  document.getElementById('i-x').value = sig(S.x*S.z0);
+}
+function syncLambda(){
+  var L = lambda();
+  document.getElementById('lam').innerHTML =
+    L > 0 ? 'λ = ' + (L*1000).toFixed(1) + ' mm' : 'λ = —';
+}
+
+function refresh(){
+  drawChart(); drawNomo(); drawCircuit(); bigRow(); solPanel(); legend(); syncLambda();
+  Array.prototype.forEach.call(document.querySelectorAll('[data-grid]'), function(b){
+    b.setAttribute('aria-pressed', b.getAttribute('data-grid') === S.grid ? 'true' : 'false');
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-m]'), function(b){
+    b.setAttribute('aria-pressed', b.getAttribute('data-m') === S.method ? 'true' : 'false');
+  });
+  document.getElementById('b-rings').setAttribute('aria-pressed', S.rings ? 'true':'false');
+  document.getElementById('b-dense').setAttribute('aria-pressed', S.dense ? 'true':'false');
+  document.getElementById('z-val').textContent = '\u00d7' + (Math.round(S.zoom*10)/10);
+  document.getElementById('z-out').disabled = (S.zoom <= 1.001);
+  document.getElementById('z-in').disabled = (S.zoom >= 7.999);
+  var bt = document.getElementById('b-term');
+  bt.textContent = 'stub: ' + (S.openStub ? 'open' : 'shorted');
+  bt.setAttribute('aria-pressed', S.openStub ? 'true' : 'false');
+}
+
+function readLoad(){
+  var R = parseFloat(document.getElementById('i-r').value);
+  var X = parseFloat(document.getElementById('i-x').value);
+  var Z0 = parseFloat(document.getElementById('i-z0').value);
+  if(isFinite(Z0) && Z0 > 0) S.z0 = Z0;
+  if(isFinite(R)) S.r = Math.max(0, R)/S.z0;
+  if(isFinite(X)) S.x = X/S.z0;
+  var f = parseFloat(document.getElementById('i-f').value);
+  if(isFinite(f) && f >= 0) S.f = f;
+  var ee = parseFloat(document.getElementById('i-ee').value);
+  if(isFinite(ee) && ee >= 1) S.ee = ee;
+}
+
+['i-r','i-x','i-z0','i-f','i-ee'].forEach(function(id){
+  document.getElementById(id).addEventListener('input', function(){
+    readLoad(); S.pick = 0; refresh();
+  });
+});
+
+document.getElementById('i-d').addEventListener('input', function(){
+  S.d = parseFloat(this.value) || 0;
+  document.getElementById('o-d').textContent = S.d.toFixed(3) + 'λ';
+  S.method = null; S.pick = 0;
+  refresh();
+});
+
+Array.prototype.forEach.call(document.querySelectorAll('[data-grid]'), function(b){
+  b.addEventListener('click', function(){ S.grid = b.getAttribute('data-grid'); refresh(); });
+});
+Array.prototype.forEach.call(document.querySelectorAll('[data-m]'), function(b){
+  b.addEventListener('click', function(){
+    var m = b.getAttribute('data-m');
+    S.method = (S.method === m) ? null : m;
+    S.pick = 0;
+    /* bring up the grid you would actually work on. The toggle still wins
+       afterwards, so this is a starting point rather than a lock. */
+    if(S.method === 'shunt' || S.method === 'dstub') S.grid = 'y';
+    else if(S.method === 'series' || S.method === 'qwt') S.grid = 'z';
+    var s = S.method ? (solve().sols[0] || null) : null;
+    S.d = (s && s.d != null) ? s.d : 0;
+    syncD();
+    refresh();
+  });
+});
+document.getElementById('i-dd').addEventListener('change', function(){
+  S.dd = parseFloat(this.value) || 0.125; S.pick = 0; refresh();
+});
+document.getElementById('b-term').addEventListener('click', function(){
+  S.openStub = !S.openStub; refresh();
+});
+document.getElementById('z-in').addEventListener('click', function(){ setZoom(S.zoom*1.5); });
+document.getElementById('z-out').addEventListener('click', function(){ setZoom(S.zoom/1.5); });
+document.getElementById('z-rst').addEventListener('click', function(){ setZoom(1); });
+document.getElementById('b-rings').addEventListener('click', function(){
+  S.rings = !S.rings; refresh();
+});
+document.getElementById('b-dense').addEventListener('click', function(){
+  S.dense = !S.dense; refresh();
+});
+document.getElementById('b-clear').addEventListener('click', function(){
+  S.method = null; S.pick = 0; S.d = 0; syncD(); refresh();
+});
+
+var PRESETS = {
+  short: [0, 0], open: [2000, 0], match: [1, 0], ex: [0.5, -0.6]
+};
+Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'), function(b){
+  b.addEventListener('click', function(){
+    var p = PRESETS[b.getAttribute('data-preset')];
+    S.r = p[0]; S.x = p[1];
+    if(b.getAttribute('data-preset') === 'ex'){ S.z0 = 50; S.f = 1000; S.ee = 1;
+      document.getElementById('i-z0').value = 50;
+      document.getElementById('i-f').value = 1000;
+      document.getElementById('i-ee').value = 1; }
+    S.d = 0; S.pick = 0; syncD(); syncLoad(); refresh();
+  });
+});
+
+/* drag to place the load */
+(function(){
+  var dragging = false;
+  var lastX = 0, lastY = 0;
+  function px_(ev){ var r = cv.getBoundingClientRect();
+    return [(ev.clientX - r.left)*(cv._w/r.width), (ev.clientY - r.top)*(cv._h/r.height)]; }
+  function pan(ev){
+    var q = px_(ev);
+    S.cu -= (q[0] - lastX)/(S.zoom*G.R);
+    S.cv += (q[1] - lastY)/(S.zoom*G.R);
+    lastX = q[0]; lastY = q[1];
+    clampPan(); refresh();
+  }
+  function place(ev){
+    var q = px_(ev), px = q[0], py = q[1];
+    var uv = toChart(px, py), u = uv[0], v = uv[1];
+    var m = Math.hypot(u, v);
+    if(m > 0.995){ u *= 0.995/m; v *= 0.995/m; }
+    var z = gToZ(u, v);
+    S.r = Math.max(0, z[0]); S.x = z[1];
+    S.d = 0; S.pick = 0; S.method = null;
+    syncD(); syncLoad(); refresh();
+  }
+  var panning = false;
+  cv.addEventListener('pointerdown', function(ev){
+    try{ cv.setPointerCapture(ev.pointerId); }catch(e){}
+    if(ev.shiftKey || ev.button === 1){
+      panning = true; var q = px_(ev); lastX = q[0]; lastY = q[1];
+    } else { dragging = true; place(ev); }
+    ev.preventDefault();
+  });
+  cv.addEventListener('pointermove', function(ev){
+    if(panning) pan(ev); else if(dragging) place(ev);
+  });
+  window.addEventListener('pointerup', function(){ dragging = false; panning = false; });
+  cv.addEventListener('pointercancel', function(){ dragging = false; panning = false; });
+})();
+
+/* register both canvases with the shared runtime so resize and theme redraw them */
+EM.register(function(){ drawChart(); }, false);
+EM.register(function(){ drawNomo(); }, false);
+EM.register(function(){ drawCircuit(); }, false);
+
+syncLoad(); syncD(); walkthrough(); refresh();
+[150, 600, 1500].forEach(function(t){ setTimeout(refresh, t); });
+})();
+</script>
+</body>
+</html>

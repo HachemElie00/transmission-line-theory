@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Propagation on a line &middot; Transmission Line Theory</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="mast"><div class="in">
+  <a class="home" href="index.html">Transmission Line Theory</a>
+  <span class="sep"></span>
+  <span class="ch">04 &middot; Propagation on a line</span>
+  <span class="nav"><a href="telegraphers.html" title="Previous">‹</a><a href="microstrip.html" title="Next">›</a></span>
+</div></header>
+
+<div class="wrap">
+
+<div class="hero">
+  <p class="kicker">Chapter 04</p>
+  <h1>Propagation on a line</h1>
+  <p class="lead">Two coupled equations, decoupled the same way the prologue decoupled the field laws. Out come the two numbers that describe any transmission line completely: how a wave changes as it travels, and the fixed ratio of voltage to current while it does.</p>
+  <p class="t" style="margin-top:20px"><b>Assumes:</b> chapter 03 &mdash; the telegrapher's equations in phasor form.</p>
+</div>
+
+<section class="blk" id="decouple">
+  <h2>Decoupling, again</h2>
+  <p class="t">Chapter 03 ended with two equations, each giving one quantity's slope in terms of the other:</p>
+
+  <div class="eq">$$-\frac{d\tilde{V}}{dz} = Z'\tilde{I} \qquad\qquad -\frac{d\tilde{I}}{dz} = Y'\tilde{V}$$</div>
+
+  <p class="t">where $Z' = R' + j\omega L'$ and $Y' = G' + j\omega C'$. Neither can be solved alone, and the fix is the one from the prologue: <b>differentiate one and substitute the other.</b> Differentiating the first with respect to $z$ produces a $d\tilde{I}/dz$, which the second replaces &mdash; and $\tilde{I}$ leaves the problem.</p>
+
+  <div class="eq box">
+    $$\frac{d^2\tilde{V}}{dz^2} - \gamma^2\tilde{V} = 0 \qquad\text{with}\qquad \gamma^2 = Z'Y'$$
+    <span class="note">the same equation holds for $\tilde{I}$ &mdash; this is the Helmholtz equation of the prologue, in circuit variables</span>
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; the substitution in full</summary>
+    <div class="body">
+      <p>Differentiate the first telegrapher's equation with respect to $z$. Both $R'$ and $L'$ are constants along a uniform line, so $Z'$ passes through the derivative:</p>
+      <div class="eq">$$-\frac{d^2\tilde{V}}{dz^2} = Z'\frac{d\tilde{I}}{dz}$$</div>
+      <p>The second equation gives $d\tilde{I}/dz = -Y'\tilde{V}$ directly. Substituting:</p>
+      <div class="eq">$$-\frac{d^2\tilde{V}}{dz^2} = -Z'Y'\tilde{V} \quad\Longrightarrow\quad \frac{d^2\tilde{V}}{dz^2} = Z'Y'\,\tilde{V}$$</div>
+      <p>Doing the same in the other order &mdash; differentiate the second, substitute the first &mdash; gives the identical equation for $\tilde{I}$. That symmetry matters: voltage and current obey the <b>same</b> differential equation, so they have the same propagation behaviour and differ only in amplitude and sign.</p>
+      <p>Note what was assumed: that $R'$, $L'$, $G'$ and $C'$ do not vary with $z$. A tapered line, or one passing between two dielectrics, breaks that and the derivative of $Z'$ contributes an extra term.</p>
+    </div>
+  </details>
+
+  <p class="t">A second-order equation of that form has exponential solutions, and there are two of them:</p>
+
+  <div class="eq box">
+    $$\tilde{V}(z) = V_0^+ e^{-\gamma z} + V_0^- e^{+\gamma z}$$
+    <span class="note">one decaying toward $+z$, one toward $-z$ &mdash; a forward wave and a backward wave</span>
+  </div>
+
+  <p class="t">Everything in the remaining chapters is a consequence of those two terms and what happens where they meet a boundary. There is no third solution: a uniform line supports exactly one wave in each direction, and nothing else.</p>
+</section>
+
+<section class="blk" id="gamma">
+  <h2>The propagation constant</h2>
+  <p class="t">$\gamma$ is complex, and its two parts do separate jobs. Writing $\gamma = \alpha + j\beta$ and expanding the forward term:</p>
+
+  <div class="eq box">
+    $$e^{-\gamma z} = e^{-\alpha z}\,e^{-j\beta z}$$
+    <span class="note">a shrinking magnitude times a turning phase &mdash; the two effects are completely separable</span>
+  </div>
+
+  <div class="tw"><table>
+    <tr><th>Part</th><th>Name</th><th>Units</th><th>Does</th></tr>
+    <tr><td>$\alpha$</td><td>attenuation constant</td><td>Np/m</td><td>shrinks the amplitude: $e^{-\alpha z}$</td></tr>
+    <tr><td>$\beta$</td><td>phase constant</td><td>rad/m</td><td>advances the phase: $e^{-j\beta z}$</td></tr>
+  </table></div>
+
+  <p class="t">And $\gamma$ itself comes straight from the four line parameters:</p>
+
+  <div class="eq box">
+    $$\gamma = \sqrt{Z'Y'} = \sqrt{(R' + j\omega L')(G' + j\omega C')}$$
+    <span class="note">compare the prologue's $\gamma = \sqrt{j\omega\mu(\sigma + j\omega\varepsilon)}$ &mdash; identical structure, circuit quantities in place of material ones</span>
+  </div>
+
+  <p class="t">That resemblance is not decorative. The circuit model was built to describe the same physics the field equations describe, so the two expressions had to agree &mdash; and $\alpha$, $\beta$ mean exactly what they meant there.</p>
+
+  <p class="t">The attenuation unit deserves a note. A <b>neper</b> is a natural-log unit: $\alpha = 1$ Np/m means the amplitude falls by a factor $e$ every metre. Datasheets quote decibels instead, and the conversion is $1\ \text{Np} = 8.686\ \text{dB}$.</p>
+</section>
+
+<section class="blk" id="z0">
+  <h2>Characteristic impedance</h2>
+  <p class="t">The wave equation gave the voltage. The current follows by putting that solution back into the telegrapher's equation it came from, and the result is remarkably tidy:</p>
+
+  <div class="eq box">
+    $$\tilde{I}(z) = \frac{V_0^+}{Z_0}e^{-\gamma z} - \frac{V_0^-}{Z_0}e^{+\gamma z}
+    \qquad\text{with}\qquad Z_0 = \frac{Z'}{\gamma} = \sqrt{\frac{R' + j\omega L'}{G' + j\omega C'}}$$
+    <span class="note">note the minus sign on the backward term &mdash; the same sign that made reflection possible in the prologue</span>
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; and why $Z_0$ falls out as a constant</summary>
+    <div class="body">
+      <p>Take the voltage solution and differentiate it:</p>
+      <div class="eq">$$\frac{d\tilde{V}}{dz} = -\gamma V_0^+ e^{-\gamma z} + \gamma V_0^- e^{+\gamma z}$$</div>
+      <p>The first telegrapher's equation says this equals $-Z'\tilde{I}$, so</p>
+      <div class="eq">$$\tilde{I}(z) = \frac{\gamma}{Z'}\left(V_0^+ e^{-\gamma z} - V_0^- e^{+\gamma z}\right)$$</div>
+      <p>The factor $\gamma/Z'$ has units of admittance and does not depend on $z$ at all. Defining $Z_0 = Z'/\gamma$ gives the boxed result. Expanding it with $\gamma = \sqrt{Z'Y'}$:</p>
+      <div class="eq">$$Z_0 = \frac{Z'}{\sqrt{Z'Y'}} = \sqrt{\frac{Z'}{Y'}} = \sqrt{\frac{R'+j\omega L'}{G'+j\omega C'}}$$</div>
+      <p><b>Where the minus sign comes from.</b> It is not a convention. The backward voltage wave carries $e^{+\gamma z}$, so differentiating it produces $+\gamma$ rather than $-\gamma$, and that sign survives into the current. Physically: a wave travelling in $-z$ carries power in $-z$, which requires the current to reverse relative to its voltage. Take the ratio for each wave separately and</p>
+      <div class="eq">$$\frac{\tilde{V}^+}{\tilde{I}^+} = +Z_0 \qquad\qquad \frac{\tilde{V}^-}{\tilde{I}^-} = -Z_0$$</div>
+      <p>That asymmetry is the whole reason a mismatched load can be satisfied at all, and chapter 06 uses it to derive $\Gamma$ in two lines.</p>
+    </div>
+  </details>
+
+  <div class="key">
+    <span class="lab">What $Z_0$ is not</span>
+    <p>It is not a resistance you could find with an ohmmeter, and no power is dissipated in it. It is the <b>ratio of voltage to current within a single travelling wave</b> &mdash; the same kind of object as the intrinsic impedance $\eta = \sqrt{\mu/\varepsilon}$ from the prologue, and for the same reason. A 50 &Omega; cable measures as a short or an open at DC depending on what is on the far end.</p>
+  </div>
+
+  <p class="t">One more caution. $Z_0$ relates $\tilde{V}^+$ to $\tilde{I}^+$ <i>for one wave</i>. On a line carrying both waves, the total voltage divided by the total current is <b>not</b> $Z_0$ &mdash; it varies with position, and working out what it is instead is the subject of chapter 08.</p>
+</section>
+
+<section class="blk" id="lossless">
+  <h2>The lossless line</h2>
+  <p class="t">Set $R' = G' = 0$ and everything simplifies at once:</p>
+
+  <div class="eq box">
+    $$\gamma = \sqrt{(j\omega L')(j\omega C')} = j\omega\sqrt{L'C'}$$
+    $$\alpha = 0 \qquad \beta = \omega\sqrt{L'C'} \qquad Z_0 = \sqrt{\frac{L'}{C'}}$$
+    <span class="note">$\gamma$ is purely imaginary, so nothing decays; $Z_0$ is purely real, so voltage and current stay in phase</span>
+  </div>
+
+  <p class="t">The derived quantities follow immediately:</p>
+
+  <div class="tw"><table>
+    <tr><th>Quantity</th><th>Lossless value</th><th>Remark</th></tr>
+    <tr><td>Phase velocity</td><td>$u_p = \dfrac{\omega}{\beta} = \dfrac{1}{\sqrt{L'C'}}$</td><td>independent of frequency &mdash; no dispersion</td></tr>
+    <tr><td>Wavelength</td><td>$\lambda = \dfrac{2\pi}{\beta} = \dfrac{u_p}{f}$</td><td>as in chapter 01</td></tr>
+    <tr><td>$Z_0$</td><td>$\sqrt{L'/C'}$</td><td>real, frequency-independent</td></tr>
+  </table></div>
+
+  <p class="t">That $u_p$ does not depend on frequency is worth pausing on. Every frequency component travels at the same speed, so a pulse made of many components keeps its shape. A lossy line generally does not have this property, and the resulting spreading &mdash; dispersion &mdash; is what limits data rates on long cables.</p>
+
+  <div class="key">
+    <span class="lab">The bridge back to the fields</span>
+    <p>For any TEM line, $L'C' = \mu\varepsilon$ exactly. So $u_p = 1/\sqrt{L'C'} = 1/\sqrt{\mu\varepsilon}$ &mdash; the prologue's wave speed, recovered from circuit parameters. The geometry cancels out completely: <b>the speed on a line is set by the dielectric alone</b>, not by the conductor spacing. Only $Z_0$ depends on the geometry.</p>
+  </div>
+</section>
+
+<section class="blk" id="explore">
+  <h2>Seeing the parameters move</h2>
+  <p class="t">Everything above is one square root of a ratio of two complex numbers. Change the four line parameters and watch what happens to $\gamma$, $Z_0$ and the wave itself.</p>
+
+  <figure class="fig">
+    <canvas id="linefig" style="height:260px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="rp">R&prime; &Omega;/m</label><input type="range" id="rp" min="0" max="200" step="1" value="0"><output id="rpv">0</output></div>
+      <div class="ctl"><label for="gp">G&prime; mS/m</label><input type="range" id="gp" min="0" max="10" step="0.1" value="0"><output id="gpv">0.0</output></div>
+    </div>
+    <div class="rail" style="border-top:0;padding-top:0">
+      <div class="ctl"><label for="lp">L&prime; nH/m</label><input type="range" id="lp" min="100" max="900" step="5" value="250"><output id="lpv">250</output></div>
+      <div class="ctl"><label for="cp">C&prime; pF/m</label><input type="range" id="cp" min="40" max="400" step="2" value="100"><output id="cpv">100</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>&alpha;</dt><dd id="o-a">0.00</dd></div>
+      <div class="rd"><dt>&beta;</dt><dd id="o-b">31.4</dd></div>
+      <div class="rd"><dt>&lambda;</dt><dd id="o-l">20.0</dd></div>
+      <div class="rd"><dt>Z&#8320;</dt><dd id="o-z">50.0</dd></div>
+      <div class="rd"><dt>u<sub>p</sub>/c</dt><dd id="o-u">0.67</dd></div>
+    </dl>
+    <div class="btns">
+      <button data-p="0,0,250,100">lossless 50 &#937;</button>
+      <button data-p="2,0.02,250,100">real coax</button>
+      <button data-p="120,4,250,100">exaggerated loss</button>
+      <button data-p="0,0,500,200">same Z&#8320;, shorter &lambda;</button>
+      <button data-p="0,0,500,50">same &lambda;, double Z&#8320;</button>
+    </div>
+    <figcaption class="cap">one fixed metre of line at 1 GHz &mdash; the window never rescales, so changing L&prime; or C&prime; changes how many cycles fit inside it. &alpha; in Np/m, &beta; in rad/m, &lambda; in cm, Z&#8320; in &Omega;.</figcaption>
+  </figure>
+
+  <p class="t">The window is a <b>fixed metre of line</b>, so it never rescales under you. Three things are worth doing deliberately:</p>
+
+  <p class="t">The two presets on the right are the ones worth understanding, because together they separate the two things $L'$ and $C'$ control. <b>$Z_0$ depends on their ratio; $\lambda$ depends on their product.</b> So you can move one while holding the other fixed:</p>
+
+  <div class="tw"><table>
+    <tr><th>Preset</th><th>What changes</th><th>What does not</th></tr>
+    <tr><td><b>same Z&#8320;, shorter &lambda;</b><br>both raised together</td><td>the product $L'C'$ doubles, so $\lambda$ halves to 10 cm &mdash; twice as many cycles in the metre</td><td>the ratio is unchanged, so $Z_0$ stays at 50 &Omega;</td></tr>
+    <tr><td><b>same &lambda;, double Z&#8320;</b><br>$L'$ up, $C'$ down</td><td>the ratio quadruples, so $Z_0$ doubles to 100 &Omega;</td><td>the product is unchanged, so the wave looks <i>identical</i> &mdash; same $\lambda$, same shape</td></tr>
+    <tr><td><b>exaggerated loss</b></td><td>the envelope decays visibly, and $Z_0$ picks up a small phase angle</td><td>$\beta$ barely moves &mdash; low loss leaves the phase constant alone</td></tr>
+  </table></div>
+
+  <p class="t">That second preset is the important one, and it is the reason $Z_0$ is printed on the figure. <b>Nothing about the drawn wave changes</b> when you switch to it &mdash; same wavelength, same envelope, same everything &mdash; yet the line's impedance has doubled. $Z_0$ is invisible in a picture of $v(z)$ alone; it only reveals itself in the ratio of voltage to current, or in what happens when the wave meets a load.</p>
+
+  <p class="t">One honest note on the loss presets. Pick <b>real coax</b> and the envelope looks flat &mdash; because it is. Good cable loses well under a percent over a metre; you need hundreds of metres before attenuation is visible at this scale. The <b>exaggerated loss</b> preset uses values no real cable has, purely so that $\alpha$ does something you can see.</p>
+</section>
+
+<section class="blk" id="dispersion">
+  <h2>Why 50 &Omega; is a high-frequency statement</h2>
+  <p class="t">$Z_0 = \sqrt{L'/C'}$ holds when $\omega L' \gg R'$ and $\omega C' \gg G'$ &mdash; that is, when the reactive terms dominate the lossy ones. At low frequency they do not, and the same cable behaves entirely differently.</p>
+
+  <figure class="fig">
+    <canvas id="dispfig" class="static" style="height:280px"></canvas>
+    <div class="legend">
+      <span><i style="border-color:var(--e)"></i>|Z&#8320;|</span>
+      <span><i style="border-color:var(--h)"></i>&ang;Z&#8320;</span>
+    </div>
+    <figcaption class="cap">the same cable from 1 Hz to 10 GHz &mdash; R&prime; = 0.1 &Omega;/m, L&prime; = 250 nH/m, G&prime; = 1 &micro;S/m, C&prime; = 100 pF/m</figcaption>
+  </figure>
+
+  <p class="t">At the bottom of that sweep $Z_0 \to \sqrt{R'/G'}$, a few hundred ohms and purely real &mdash; the line behaves as a resistive divider, not as a wave medium. Through the middle it is complex, with $\angle Z_0$ dipping toward &minus;45&deg;. Only above roughly a megahertz does it settle onto the flat, real 50 &Omega; that the cable is sold as.</p>
+
+  <p class="t">So "RG-58 is 50 &Omega;" is shorthand for "well above its transition frequency, this cable's $\sqrt{L'/C'}$ is 50 &Omega;". For the RF work in the rest of this site that is always true, and $Z_0$ can be treated as a real constant &mdash; but it is an approximation with a domain, like every other one in this subject.</p>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; the low-loss approximation</summary>
+    <div class="body">
+      <p>Real cable is not lossless, but at RF it is usually <b>low-loss</b>: $R' \ll \omega L'$ and $G' \ll \omega C'$. Factor those small quantities out of $\gamma$:</p>
+      <div class="eq">$$\gamma = j\omega\sqrt{L'C'}\sqrt{\left(1 + \frac{R'}{j\omega L'}\right)\left(1 + \frac{G'}{j\omega C'}\right)}$$</div>
+      <p>Each square root is of the form $\sqrt{1+x}$ with $|x| \ll 1$, so expand to first order using $\sqrt{1+x} \approx 1 + x/2$ and keep only first-order terms:</p>
+      <div class="eq">$$\gamma \approx j\omega\sqrt{L'C'}\left(1 + \frac{R'}{2j\omega L'} + \frac{G'}{2j\omega C'}\right)$$</div>
+      <p>Separating real and imaginary parts gives the standard results:</p>
+      <div class="eq">$$\alpha \approx \frac{R'}{2}\sqrt{\frac{C'}{L'}} + \frac{G'}{2}\sqrt{\frac{L'}{C'}} = \frac{1}{2}\left(\frac{R'}{Z_0} + G'Z_0\right)$$</div>
+      <div class="eq">$$\beta \approx \omega\sqrt{L'C'} \qquad\qquad Z_0 \approx \sqrt{\frac{L'}{C'}}$$</div>
+      <p>Three things to take from this. The <b>phase</b> constant is unchanged to first order, so a low-loss line still has essentially no dispersion. The attenuation splits cleanly into a conductor term and a dielectric term, which is why datasheets plot two loss mechanisms. And $Z_0$ returns to its real lossless value, which is why treating it as a real number is defensible at RF and indefensible at audio.</p>
+    </div>
+  </details>
+</section>
+
+<section class="blk" id="check">
+  <div class="check">
+    <h3>Self-check</h3>
+    <p class="t" style="margin-top:6px">Three questions on what these two constants mean.</p>
+
+    <div class="q">
+      <p class="qt">1. You measure a 50 &Omega; coax with an ohmmeter, far end open. What do you read?</p>
+      <div class="opts">
+        <button class="opt">50 &Omega;, since that is the cable's impedance</button>
+        <button class="opt" data-ok="1">Essentially an open circuit &mdash; $Z_0$ is not a resistance and an ohmmeter works at DC</button>
+        <button class="opt">Around 25 &Omega;, because the two conductors appear in parallel</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>$Z_0$ is the ratio of voltage to current <i>in a travelling wave</i>, and at DC there are no waves. An ohmmeter sees only the series resistance of the conductors and the leakage through the dielectric, so an open-ended cable reads open and a shorted one reads near zero. Nothing about either measurement contradicts the cable being 50 &Omega; at RF.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">2. You double $L'$ and halve $C'$. What happens to $Z_0$ and to $u_p$?</p>
+      <div class="opts">
+        <button class="opt">$Z_0$ doubles; $u_p$ is unchanged</button>
+        <button class="opt" data-ok="1">$Z_0$ doubles; $u_p$ is unchanged, because the product $L'C'$ is unchanged</button>
+        <button class="opt">Both double, since both depend on $L'$</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>$Z_0 = \sqrt{L'/C'}$ depends on the <i>ratio</i>, which goes up by four, so $Z_0$ doubles. $u_p = 1/\sqrt{L'C'}$ depends on the <i>product</i>, and doubling one while halving the other leaves it untouched. The first and second options say the same thing &mdash; the second states the reason, which is the part worth carrying.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">3. On a line carrying both a forward and a backward wave, is the ratio of total voltage to total current equal to $Z_0$?</p>
+      <div class="opts">
+        <button class="opt">Yes &mdash; $Z_0$ is a property of the line, so it holds everywhere on it</button>
+        <button class="opt" data-ok="1">No &mdash; $Z_0$ relates each wave separately, and the backward wave carries a minus sign</button>
+        <button class="opt">Only if the line is lossless</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>The forward wave has $\tilde V^+/\tilde I^+ = +Z_0$ and the backward wave has $\tilde V^-/\tilde I^- = -Z_0$. Because of that sign, the totals do not combine into $Z_0$ &mdash; the ratio varies with position along the line. That varying ratio is exactly the input impedance of chapter 08, and it equals $Z_0$ everywhere only when the backward wave is absent.</p>
+    </div>
+  </div>
+</section>
+
+<nav class="pager">
+  <a href="telegraphers.html"><span class="dir">Previous</span><span class="ttl">The transmission line model</span></a>
+  <a class="nx" href="microstrip.html"><span class="dir">Chapter 05</span><span class="ttl">Microstrip and real lines</span></a>
+</nav>
+
+<footer class="site">
+  Chapter 04 of eleven. The explorer evaluates at 1 GHz; the sweep covers 1 Hz to 10 GHz.
+  <span class="cr">&copy; 2026 Elie Hachem &middot; free to share and use for teaching</span>
+</footer>
+
+</div>
+
+<script src="assets/site.js"></script>
+<script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
+<script>
+var MONO = 'IBM Plex Mono, monospace';
+var C_LIGHT = 2.99792458e8;
+
+/* complex helpers: [re, im] */
+function cmul(a,b){ return [a[0]*b[0]-a[1]*b[1], a[0]*b[1]+a[1]*b[0]]; }
+function cdiv(a,b){ var d=b[0]*b[0]+b[1]*b[1]; return [(a[0]*b[0]+a[1]*b[1])/d, (a[1]*b[0]-a[0]*b[1])/d]; }
+function csqrt(a){
+  var m = Math.sqrt(Math.hypot(a[0],a[1])), th = Math.atan2(a[1],a[0])/2;
+  return [m*Math.cos(th), m*Math.sin(th)];
+}
+function lineConstants(Rp, Gp, Lp, Cp, f){
+  var w = 2*Math.PI*f;
+  var Z = [Rp, w*Lp], Y = [Gp, w*Cp];
+  var gam = csqrt(cmul(Z,Y));
+  if(gam[0] < 0){ gam = [-gam[0], -gam[1]]; }      /* attenuation is positive */
+  if(gam[1] < 0){ gam = [gam[0], -gam[1]]; }        /* forward wave */
+  var Z0 = csqrt(cdiv(Z,Y));
+  return { a: gam[0], b: gam[1], z0m: Math.hypot(Z0[0],Z0[1]),
+           z0a: Math.atan2(Z0[1],Z0[0])*180/Math.PI, z0: Z0 };
+}
+
+/* ---- parameter explorer ---- */
+(function(){
+  var cv = document.getElementById('linefig');
+  if(!cv) return;
+  var Rp = 0, Gp = 0, Lp = 250e-9, Cp = 100e-12, F = 1e9;
+  var ids = {rp:'rpv', gp:'gpv', lp:'lpv', cp:'cpv'};
+  function read(){
+    Rp = +document.getElementById('rp').value;
+    Gp = +document.getElementById('gp').value * 1e-3;
+    Lp = +document.getElementById('lp').value * 1e-9;
+    Cp = +document.getElementById('cp').value * 1e-12;
+  }
+  function sync(){
+    read();
+    document.getElementById('rpv').textContent = (+document.getElementById('rp').value).toFixed(0);
+    document.getElementById('gpv').textContent = (+document.getElementById('gp').value).toFixed(1);
+    document.getElementById('lpv').textContent = document.getElementById('lp').value;
+    document.getElementById('cpv').textContent = document.getElementById('cp').value;
+    var k = lineConstants(Rp, Gp, Lp, Cp, F);
+    document.getElementById('o-a').textContent = k.a.toFixed(k.a < 1 ? 3 : 2);
+    document.getElementById('o-b').textContent = k.b.toFixed(1);
+    document.getElementById('o-l').textContent = (2*Math.PI/k.b*100).toFixed(1);
+    var zs = k.z0m.toFixed(1);
+    if(Math.abs(k.z0a) >= 0.5) zs += (k.z0a < 0 ? ' ∠−' : ' ∠') + Math.abs(k.z0a).toFixed(0) + '°';
+    document.getElementById('o-z').textContent = zs;
+    var up = 2*Math.PI*F/k.b;
+    document.getElementById('o-u').textContent = (up/C_LIGHT).toFixed(2);
+  }
+  ['rp','gp','lp','cp'].forEach(function(id){
+    document.getElementById(id).addEventListener('input', sync);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.btns button[data-p]'), function(b){
+    b.addEventListener('click', function(){
+      var v = b.getAttribute('data-p').split(',');
+      document.getElementById('rp').value = v[0];
+      document.getElementById('gp').value = v[1];
+      document.getElementById('lp').value = v[2];
+      document.getElementById('cp').value = v[3];
+      sync();
+    });
+  });
+  sync();
+
+  EM.register(function(C, t){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    var L = 44, R = 18, T = 20, B = 32;
+    var mid = T + (H-T-B)/2, sy = (H-T-B)/2/1.2;
+    c.clearRect(0,0,W,H);
+    var k = lineConstants(Rp, Gp, Lp, Cp, F);
+    /* a FIXED one metre of line: the window never rescales, so beta is visible */
+    var zmax = 1.0;
+    function px(z){ return L + (z/zmax)*(W-L-R); }
+    function env(z){ return Math.exp(-k.a*z); }
+
+    if(k.a*zmax > 0.01){
+      c.fillStyle = C.accfill; c.beginPath();
+      for(var i=0;i<=200;i++){ var z=i/200*zmax; c.lineTo(px(z), mid - env(z)*sy); }
+      for(var j=200;j>=0;j--){ var z2=j/200*zmax; c.lineTo(px(z2), mid + env(z2)*sy); }
+      c.closePath(); c.fill();
+      c.strokeStyle = C.acc; c.lineWidth = 1.2; c.globalAlpha = .7;
+      c.beginPath();
+      for(var e=0;e<=200;e++){ var z4=e/200*zmax; c.lineTo(px(z4), mid - env(z4)*sy); }
+      c.stroke(); c.globalAlpha = 1;
+    }
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L, mid+.5); c.lineTo(W-R, mid+.5);
+    c.moveTo(L+.5, T); c.lineTo(L+.5, H-B); c.stroke();
+
+    c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
+    for(var q=0;q<=440;q++){
+      var z3 = q/440*zmax;
+      c.lineTo(px(z3), mid - env(z3)*Math.cos(t - k.b*z3)*sy);
+    }
+    c.stroke();
+
+    /* a wavelength bracket, so a change in beta is unmissable */
+    var lam = 2*Math.PI/k.b;
+    if(lam < zmax*0.92){
+      var y = H - B + 15;
+      c.strokeStyle = C.ink3; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(px(0), y); c.lineTo(px(lam), y);
+      c.moveTo(px(0), y-5); c.lineTo(px(0), y+5);
+      c.moveTo(px(lam), y-5); c.lineTo(px(lam), y+5); c.stroke();
+      var lab = 'λ = ' + (lam*100).toFixed(1) + ' cm';
+      c.font = '11px ' + MONO; c.textAlign = 'center';
+      var tw = c.measureText(lab).width + 10;
+      c.fillStyle = C.sunk; c.fillRect(px(lam/2) - tw/2, y-8, tw, 16);
+      c.fillStyle = C.ink; c.fillText(lab, px(lam/2), y+4);
+    }
+
+    c.fillStyle = C.ink3; c.font = '11.5px ' + MONO;
+    c.textAlign = 'left'; c.fillText('v(z,t)', L + 7, T + 12);
+    c.textAlign = 'right';
+    c.fillText('one metre of line →', W-R, T + 12);
+    /* Z0 does not change the shape of v(z) at all, so state it on the figure */
+    c.textAlign = 'left'; c.fillStyle = C.e;
+    c.fillText('Z₀ = ' + k.z0m.toFixed(1) + ' Ω', L + 7, T + 28);
+    if(k.a > 0.01){
+      c.textAlign = 'right'; c.fillStyle = C.acc;
+      c.fillText('e⁻ᵅᶻ → ' + (env(1)*100).toFixed(0) + '% at 1 m', W-R, H - B + 15);
+    }
+  }, true);
+})();
+
+/* ---- Z0 across frequency ---- */
+(function(){
+  var cv = document.getElementById('dispfig');
+  if(!cv) return;
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    var L = 52, R = 52, T = 22, B = 40;
+    c.clearRect(0,0,W,H);
+    var Rp = 0.1, Gp = 1e-6, Lp = 250e-9, Cp = 100e-12;
+    var f0 = 0, f1 = 10;                       /* log10 Hz */
+    var zMax = 400, aMin = -50, aMax = 10;
+    function px(lf){ return L + (lf-f0)/(f1-f0)*(W-L-R); }
+    function pyM(z){ return (H-B) - (z/zMax)*(H-T-B); }
+    function pyA(a){ return (H-B) - ((a-aMin)/(aMax-aMin))*(H-T-B); }
+
+    /* grid */
+    c.strokeStyle = C.line; c.lineWidth = 1; c.font = '10.5px ' + MONO;
+    c.textAlign = 'center'; c.fillStyle = C.ink3;
+    var labs = ['1 Hz','1 kHz','1 MHz','1 GHz'];
+    [0,3,6,9].forEach(function(lf,i){
+      c.setLineDash([2,4]);
+      c.beginPath(); c.moveTo(px(lf), T); c.lineTo(px(lf), H-B); c.stroke();
+      c.setLineDash([]);
+      c.fillText(labs[i], px(lf), H-B+16);
+    });
+
+    /* |Z0| */
+    c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
+    for(var i=0;i<=280;i++){
+      var lf = f0 + (i/280)*(f1-f0);
+      var k = lineConstants(Rp, Gp, Lp, Cp, Math.pow(10, lf));
+      c.lineTo(px(lf), pyM(Math.min(k.z0m, zMax)));
+    }
+    c.stroke();
+
+    /* angle */
+    c.strokeStyle = C.h; c.lineWidth = 2; c.setLineDash([5,4]); c.beginPath();
+    for(var j=0;j<=280;j++){
+      var lf2 = f0 + (j/280)*(f1-f0);
+      var k2 = lineConstants(Rp, Gp, Lp, Cp, Math.pow(10, lf2));
+      c.lineTo(px(lf2), pyA(k2.z0a));
+    }
+    c.stroke(); c.setLineDash([]);
+
+    /* the 50 ohm asymptote, and the zero-phase baseline for the angle trace */
+    c.strokeStyle = C.ink3; c.lineWidth = 1; c.setLineDash([3,3]);
+    c.beginPath(); c.moveTo(L, pyM(50)); c.lineTo(W-R, pyM(50)); c.stroke();
+    c.setLineDash([]);
+    c.strokeStyle = C.h; c.lineWidth = 1; c.globalAlpha = .38; c.setLineDash([2,5]);
+    c.beginPath(); c.moveTo(L, pyA(0)); c.lineTo(W-R, pyA(0)); c.stroke();
+    c.setLineDash([]); c.globalAlpha = 1;
+
+    /* axes */
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L, H-B+.5); c.lineTo(W-R, H-B+.5);
+    c.moveTo(L+.5, T); c.lineTo(L+.5, H-B);
+    c.moveTo(W-R+.5, T); c.lineTo(W-R+.5, H-B); c.stroke();
+
+    c.font = '11px ' + MONO;
+    c.fillStyle = C.e; c.textAlign = 'right';
+    c.fillText('400', L-7, pyM(400)+4);
+    c.fillText('50', L-7, pyM(50)+4);
+    c.fillText('0', L-7, pyM(0)+4);
+    c.fillStyle = C.h; c.textAlign = 'left';
+    c.fillText('0°', W-R+7, pyA(0)+4);
+    c.fillText('−25°', W-R+7, pyA(-25)+4);
+    c.fillText('−45°', W-R+7, pyA(-45)+4);
+    c.fillStyle = C.ink3; c.textAlign = 'center';
+    c.fillText('frequency (log scale)', (L + W-R)/2, H-4);
+  }, false);
+})();
+</script>
+</body>
+</html>

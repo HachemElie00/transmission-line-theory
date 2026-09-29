@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Line lengths and transformers &middot; Transmission Line Theory</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="mast"><div class="in">
+  <a class="home" href="index.html">Transmission Line Theory</a>
+  <span class="sep"></span>
+  <span class="ch">09 &middot; Line lengths and transformers</span>
+  <span class="nav"><a href="input-impedance.html" title="Previous">‹</a><a href="smith-chart.html" title="Next">›</a></span>
+</div></header>
+
+<div class="wrap">
+
+<div class="hero">
+  <p class="kicker">Chapter 09</p>
+  <h1>Line lengths and transformers</h1>
+  <p class="lead">Two particular lengths do something useful enough to have names. A half wavelength changes nothing at all; a quarter wavelength turns an impedance upside down. From that second fact comes the simplest matching network there is, and from stubs of controlled length comes any reactance you like.</p>
+  <p class="t" style="margin-top:20px"><b>Assumes:</b> chapter 08 &mdash; the input impedance formula.</p>
+</div>
+
+<section class="blk" id="half">
+  <h2>The half-wave repeat</h2>
+  <p class="t">Put $d = \lambda/2$ into the tangent formula. Then $\beta d = \pi$, and $\tan\pi = 0$, so both tangent terms vanish:</p>
+
+  <div class="eq box">
+    $$Z_{\text{in}}\left(\frac{\lambda}{2}\right) = Z_0\,\frac{Z_L + jZ_0\cdot 0}{Z_0 + jZ_L\cdot 0} = Z_L$$
+    <span class="note">a half-wave line is electrically invisible &mdash; whatever the load is, that is what you see</span>
+  </div>
+
+  <p class="t">And since the same argument applies to any whole number of half wavelengths, <b>adding $n\lambda/2$ to a line changes nothing</b>. This is the same fact as the $\Gamma$ rotation completing a full lap, seen from the impedance side.</p>
+
+  <p class="t">It has a practical edge worth passing on. A half-wave line repeats the load <i>at the design frequency only</i>. Move off that frequency and the electrical length is no longer exactly $\pi$, so the repeat fails &mdash; and it fails faster the more half-waves you stacked up. A long cable is a narrowband component even when it looks like a plain connection.</p>
+</section>
+
+<section class="blk" id="quarter">
+  <h2>The quarter-wave inverter</h2>
+  <p class="t">Now put $d = \lambda/4$, so $\beta d = \pi/2$ and $\tan\beta d \to \infty$. Divide numerator and denominator by the tangent before taking the limit and the finite terms drop out:</p>
+
+  <div class="eq box">
+    $$Z_{\text{in}}\left(\frac{\lambda}{4}\right) = Z_0\,\frac{Z_L/\tan\beta d + jZ_0}{Z_0/\tan\beta d + jZ_L} \;\longrightarrow\; Z_0\,\frac{jZ_0}{jZ_L} = \frac{Z_0^2}{Z_L}$$
+    <span class="note">the load is inverted about $Z_0$ &mdash; large becomes small, small becomes large</span>
+  </div>
+
+  <p class="t">In normalised form, where $z = Z/Z_0$, it is cleaner still:</p>
+
+  <div class="eq">$$z_{\text{in}} = \frac{1}{z_L}$$</div>
+
+  <p class="t">A quarter-wave line turns a normalised impedance into its reciprocal &mdash; which is to say, it turns <b>impedance into admittance</b>. That single sentence is why the Smith chart has an admittance overlay, and why it is the same chart rotated half a turn. Chapter 10 makes that explicit.</p>
+
+  <div class="tw"><table>
+    <tr><th>Load</th><th>Seen through $\lambda/4$</th><th>Why it is useful</th></tr>
+    <tr><td>Short, $0$</td><td>Open, $\infty$</td><td>a shorted quarter-wave stub is an RF open &mdash; and a DC ground</td></tr>
+    <tr><td>Open, $\infty$</td><td>Short, $0$</td><td>an open quarter-wave stub shorts a chosen frequency to ground</td></tr>
+    <tr><td>$25\ \Omega$ on 50 &Omega;</td><td>$100\ \Omega$</td><td>impedance stepped up by four</td></tr>
+    <tr><td>$Z_0$</td><td>$Z_0$</td><td>a matched line stays matched, as always</td></tr>
+  </table></div>
+
+  <p class="t">The first row is the one that shows up in real hardware. A shorted quarter-wave stub presents an open circuit at the design frequency but a dead short at DC &mdash; which is exactly what you want for feeding bias into an amplifier without disturbing the signal.</p>
+</section>
+
+<section class="blk" id="transformer">
+  <h2>The quarter-wave transformer</h2>
+  <p class="t">Turn the inverter around and it becomes a matching network. Suppose a real load $R_L$ must be matched to a line of impedance $Z_0$. Insert a quarter-wave section of some <i>other</i> impedance $Z_1$ between them. Looking into that section:</p>
+
+  <div class="eq">$$Z_{\text{in}} = \frac{Z_1^2}{R_L}$$</div>
+
+  <p class="t">For a match we need $Z_{\text{in}} = Z_0$, which fixes $Z_1$ immediately:</p>
+
+  <div class="eq box">
+    $$Z_1 = \sqrt{Z_0 R_L}$$
+    <span class="note">the geometric mean of what you have and what you want</span>
+  </div>
+
+  <p class="t">That is the whole design. One section, one formula, no iteration &mdash; and it is exact at the design frequency.</p>
+
+  <figure class="fig">
+    <canvas id="qwt" style="height:300px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="rl">R<sub>L</sub> &Omega;</label><input type="range" id="rl" min="5" max="300" step="1" value="100"><output id="rlv">100</output></div>
+      <div class="ctl"><label for="tol">worst |&Gamma;| you accept</label><input type="range" id="tol" min="0.05" max="0.5" step="0.01" value="0.2"><output id="tolv">0.20</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>Z&#8321; needed</dt><dd id="q-z1">70.7</dd></div>
+      <div class="rd"><dt>SWR unmatched</dt><dd id="q-swr">2.00</dd></div>
+      <div class="rd"><dt>limit as SWR</dt><dd id="q-lim">1.50</dd></div>
+      <div class="rd"><dt>usable band</dt><dd id="q-band">0.61&ndash;1.39 f&#8320;</dd></div>
+      <div class="rd"><dt>bandwidth</dt><dd id="q-bw">78 %</dd></div>
+    </dl>
+    <div class="btns">
+      <button data-r="100">100 &#937;</button>
+      <button data-r="25">25 &#937;</button>
+      <button data-r="200">200 &#937;</button>
+      <button data-r="12">12 &#937; &mdash; a hard match</button>
+    </div>
+    <figcaption class="cap">|&Gamma;| against frequency &mdash; the transformer is perfect only at f&#8320;, and the further R<sub>L</sub> is from Z&#8320;, the narrower the useful band</figcaption>
+  </figure>
+
+  <p class="t">The figure shows the catch. $|\Gamma|$ is exactly zero at $f_0$ and climbs on both sides, because away from the design frequency the section is no longer a quarter wavelength.</p>
+
+  <p class="t"><b>Bandwidth is not a property of the transformer &mdash; it is a property of the transformer plus your tolerance.</b> Since the match degrades continuously, there is no natural edge to the band; you have to declare how much reflection you are willing to live with. That is what the second slider sets. Put it at $|\Gamma| = 0.2$ and you are saying "anything under 4&nbsp;% reflected power, an SWR of 1.5, counts as matched" &mdash; and the shaded stripe is then the frequency range that qualifies.</p>
+
+  <p class="t">With the limit fixed, push $R_L$ away from $Z_0$ and the stripe narrows: <b>a harder match is a narrower one</b>. Compare the 100 &Omega; preset with the 200 &Omega; one. That trade-off is fundamental rather than a defect of this particular network, and beating it needs multiple sections or a tapered line.</p>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; where the bandwidth number comes from</summary>
+    <div class="body">
+      <p>At a frequency $f$, the section still has its physical length $\lambda_0/4$, but the electrical length has changed to</p>
+      <div class="eq">$$\theta = \frac{\pi}{2}\cdot\frac{f}{f_0}$$</div>
+      <p>Using the cosine form of the input impedance avoids the singularity at $\theta = \pi/2$:</p>
+      <div class="eq">$$Z_{\text{in}} = Z_1\,\frac{R_L\cos\theta + jZ_1\sin\theta}{Z_1\cos\theta + jR_L\sin\theta}$$</div>
+      <p>and then $\Gamma = (Z_{\text{in}} - Z_0)/(Z_{\text{in}} + Z_0)$ as always. Working the algebra through gives a compact closed form:</p>
+      <div class="eq">$$|\Gamma| = \frac{\left|R_L - Z_0\right|\left|\cos\theta\right|}{\sqrt{(R_L+Z_0)^2\cos^2\theta + 4Z_0R_L\sin^2\theta}}$$</div>
+      <p>At $\theta = \pi/2$ the cosine vanishes and so does $|\Gamma|$, confirming the exact match. Setting $|\Gamma| = \Gamma_m$ and solving for $\theta$ gives the band edges, and the fractional bandwidth is</p>
+      <div class="eq">$$\frac{\Delta f}{f_0} = 2 - \frac{4}{\pi}\cos^{-1}\left[\frac{\Gamma_m}{\sqrt{1-\Gamma_m^2}}\cdot\frac{2\sqrt{Z_0R_L}}{\left|R_L - Z_0\right|}\right]$$</div>
+      <p>The structure is what matters more than the formula. The mismatch $|R_L - Z_0|$ sits in the denominator inside the arccosine, so <b>a bigger mismatch shrinks the bandwidth</b>. The readout above evaluates this expression directly, and the match-limit slider sets $\Gamma_m$.</p>
+    </div>
+  </details>
+</section>
+
+<section class="blk" id="stubs">
+  <h2>Stubs: reactance to order</h2>
+  <p class="t">Chapter 08 gave the input impedance of a shorted and an open line. Both are <b>purely imaginary</b>, and both sweep every value as the length changes:</p>
+
+  <div class="eq box">
+    $$Z_{\text{short}} = jZ_0\tan\beta l \qquad\qquad Z_{\text{open}} = -jZ_0\cot\beta l$$
+    <span class="note">no resistance at all on a lossless line &mdash; a stub stores energy, it does not dissipate it</span>
+  </div>
+
+  <p class="t">That makes a length of line a <b>tunable reactive component</b>. Need a particular inductance at 5 GHz? Cut a shorted stub to the length whose tangent gives it. At microwave frequencies this is often easier, cheaper and far more repeatable than sourcing a lumped part &mdash; and it is why boards at those frequencies are covered in little rectangular stubs.</p>
+
+  <figure class="fig">
+    <canvas id="stub" class="static" style="height:300px"></canvas>
+    <div class="legend">
+      <span><i style="border-color:var(--e)"></i>shorted stub</span>
+      <span><i style="border-color:var(--h)"></i>open stub</span>
+    </div>
+    <figcaption class="cap">normalised reactance X/Z&#8320; against stub length &mdash; above the axis is inductive, below is capacitive</figcaption>
+  </figure>
+
+  <div class="tw"><table>
+    <tr><th>Length</th><th>Shorted stub</th><th>Open stub</th></tr>
+    <tr><td>$\to 0$</td><td>short ($0$)</td><td>open ($\infty$)</td></tr>
+    <tr><td>$\lambda/8$</td><td>$+jZ_0$ &mdash; inductive</td><td>$-jZ_0$ &mdash; capacitive</td></tr>
+    <tr><td>$\lambda/4$</td><td>open ($\infty$)</td><td>short ($0$)</td></tr>
+    <tr><td>$3\lambda/8$</td><td>$-jZ_0$ &mdash; capacitive</td><td>$+jZ_0$ &mdash; inductive</td></tr>
+    <tr><td>$\lambda/2$</td><td>short ($0$)</td><td>open ($\infty$)</td></tr>
+  </table></div>
+
+  <p class="t">Read down the two columns and the pattern is clear: <b>the open stub is the shorted stub shifted by a quarter wavelength</b>, which is the inverter result again. Anything one can do, the other can do at a different length &mdash; so the choice between them is practical. A shorted stub needs a via to ground, which costs manufacturing effort; an open stub radiates a little from its exposed end. Below a few GHz, open stubs are usually easier.</p>
+
+  <div class="key">
+    <span class="lab">Where this is going</span>
+    <p>A stub can supply any reactance. Chapter 08 showed the line can turn any load into a point with the right resistance. Put those together &mdash; slide along the line until the real part is correct, then cancel the imaginary part with a stub &mdash; and you have single-stub matching. That is chapter 11, and the Smith chart of chapter 10 is what makes it a two-minute construction instead of an algebra problem.</p>
+  </div>
+</section>
+
+<section class="blk" id="check">
+  <div class="check">
+    <h3>Self-check</h3>
+    <p class="t" style="margin-top:6px">Three questions on using length as a component.</p>
+
+    <div class="q">
+      <p class="qt">1. A 75 &Omega; antenna must be matched to a 50 &Omega; line. What impedance quarter-wave section is needed?</p>
+      <div class="opts">
+        <button class="opt">62.5 &Omega; &mdash; the average of the two</button>
+        <button class="opt" data-ok="1">61.2 &Omega; &mdash; the geometric mean $\sqrt{50\times75}$</button>
+        <button class="opt">25 &Omega; &mdash; the difference between them</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>$Z_1 = \sqrt{Z_0 R_L} = \sqrt{3750} = 61.2\ \Omega$. The geometric mean, not the arithmetic one &mdash; because the section inverts through $Z_1^2$, not through addition. The two means are close for a mild mismatch like this, which is exactly why the error is easy to make and hard to spot.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">2. Why does a shorted quarter-wave stub look like an open circuit?</p>
+      <div class="opts">
+        <button class="opt">Because the short reflects the wave, which cancels at the input</button>
+        <button class="opt" data-ok="1">Because a quarter-wave line inverts the load: $Z_{\text{in}} = Z_0^2/0 \to \infty$</button>
+        <button class="opt">Because a quarter wavelength is too short for current to flow</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>It is the inversion, applied to $Z_L = 0$. Equivalently: the short forces a voltage node at its end, and a quarter wavelength away sits the voltage <i>antinode</i> &mdash; maximum voltage, minimum current, which is what an open circuit looks like. Both descriptions are the same fact. And it still conducts DC, which is why the trick is so useful for bias feeds.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">3. Two quarter-wave transformers, one matching 55 &Omega; and one matching 200 &Omega;, both to 50 &Omega;. Which has wider bandwidth?</p>
+      <div class="opts">
+        <button class="opt">The 200 &Omega; one &mdash; a larger transformation gives more margin</button>
+        <button class="opt" data-ok="1">The 55 &Omega; one &mdash; the smaller the mismatch, the wider the band</button>
+        <button class="opt">They are identical, since both are exactly matched at $f_0$</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>Both are perfect at $f_0$, but bandwidth depends on how quickly $|\Gamma|$ rises either side. The mismatch $|R_L - Z_0|$ appears in the bandwidth expression such that a bigger mismatch narrows the band. 55 &Omega; is nearly matched already and stays acceptable over a wide range; 200 &Omega; needs the transformer to work hard and only does so near $f_0$. Try both in the figure above.</p>
+    </div>
+  </div>
+</section>
+
+<nav class="pager">
+  <a href="input-impedance.html"><span class="dir">Previous</span><span class="ttl">Input impedance</span></a>
+  <a class="nx" href="smith-chart.html"><span class="dir">Chapter 10</span><span class="ttl">The Smith chart</span></a>
+</nav>
+
+<footer class="site">
+  Chapter 09 of eleven. Lossless line; $Z_0 = 50\ \Omega$ in the figures.
+  <span class="cr">&copy; 2026 Elie Hachem &middot; free to share and use for teaching</span>
+</footer>
+
+</div>
+
+<script src="assets/site.js"></script>
+<script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
+<script>
+var MONO = 'IBM Plex Mono, monospace';
+var Z0 = 50;
+
+/* |Gamma| of a quarter-wave transformer at normalised frequency f/f0 */
+function qwtGamma(RL, Z1, fr){
+  var th = Math.PI/2*fr, ct = Math.cos(th), st = Math.sin(th);
+  /* Zin = Z1 (RL cos + j Z1 sin)/(Z1 cos + j RL sin) */
+  var nr = Z1*RL*ct, ni = Z1*Z1*st;
+  var dr = Z1*ct, di = RL*st;
+  var dd = dr*dr + di*di;
+  if(dd < 1e-12) return 0;
+  var zr = (nr*dr + ni*di)/dd, zi = (ni*dr - nr*di)/dd;
+  var ar = zr - Z0, ai = zi, br = zr + Z0, bi = zi;
+  var bb = br*br + bi*bi;
+  if(bb < 1e-12) return 1;
+  return Math.hypot((ar*br + ai*bi)/bb, (ai*br - ar*bi)/bb);
+}
+
+(function(){
+  var cv = document.getElementById('qwt');
+  if(!cv) return;
+  var RL = 100, GM = 0.2, BAND = null;
+
+  /* the usable band: the contiguous run around f0 where |Gamma| stays under the
+     limit. Scanned outward from f0 so a stray dip elsewhere cannot widen it. */
+  function band(RL, Z1, GM){
+    if(qwtGamma(RL, Z1, 1) > GM) return null;
+    var N = 800, lo = 0, hi = 2, i;
+    for(i = N/2; i >= 0; i--){ if(qwtGamma(RL, Z1, i/N*2) > GM){ lo = (i+1)/N*2; break; } }
+    for(i = N/2; i <= N; i++){ if(qwtGamma(RL, Z1, i/N*2) > GM){ hi = (i-1)/N*2; break; } }
+    return [lo, hi];
+  }
+
+  function sync(){
+    RL = +document.getElementById('rl').value;
+    GM = +document.getElementById('tol').value;
+    document.getElementById('rlv').textContent = RL;
+    document.getElementById('tolv').textContent = GM.toFixed(2);
+    var Z1 = Math.sqrt(Z0*RL);
+    document.getElementById('q-z1').textContent = Z1.toFixed(1);
+    var g0 = Math.abs(RL-Z0)/(RL+Z0);
+    document.getElementById('q-swr').textContent = ((1+g0)/(1-g0)).toFixed(2);
+    document.getElementById('q-lim').textContent = ((1+GM)/(1-GM)).toFixed(2);
+    BAND = band(RL, Z1, GM);
+    if(!BAND){
+      document.getElementById('q-band').textContent = 'none';
+      document.getElementById('q-bw').textContent = '0 %';
+    } else if(BAND[0] <= 0.001 && BAND[1] >= 1.999){
+      document.getElementById('q-band').textContent = 'whole sweep';
+      document.getElementById('q-bw').innerHTML = '&gt; 200 %';
+    } else {
+      document.getElementById('q-band').innerHTML =
+        BAND[0].toFixed(2) + '&ndash;' + BAND[1].toFixed(2) + ' f&#8320;';
+      document.getElementById('q-bw').textContent = ((BAND[1]-BAND[0])*100).toFixed(0) + ' %';
+    }
+    EM.redrawStatic();
+  }
+  document.getElementById('rl').addEventListener('input', sync);
+  document.getElementById('tol').addEventListener('input', sync);
+  Array.prototype.forEach.call(document.querySelectorAll('.btns button[data-r]'), function(b){
+    b.addEventListener('click', function(){
+      document.getElementById('rl').value = b.getAttribute('data-r'); sync();
+    });
+  });
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    var L = 48, R = 20, T = 22, B = 40;
+    var Z1 = Math.sqrt(Z0*RL);
+    /* scale the vertical axis to the curve, so it is never a flat line at the bottom */
+    var gTop = Math.max(0.35, Math.min(1, qwtGamma(RL, Z1, 0)*1.18), GM*1.35);
+    function px(fr){ return L + (fr/2)*(W-L-R); }
+    function py(g){ return (H-B) - (g/gTop)*(H-T-B); }
+    c.clearRect(0,0,W,H);
+
+    /* the usable band, as a clean vertical stripe */
+    if(BAND){
+      c.fillStyle = C.accfill;
+      c.fillRect(px(BAND[0]), T, px(BAND[1]) - px(BAND[0]), (H-B) - T);
+      c.strokeStyle = C.acc; c.lineWidth = 1; c.globalAlpha = .55;
+      c.beginPath();
+      c.moveTo(px(BAND[0]), T); c.lineTo(px(BAND[0]), H-B);
+      c.moveTo(px(BAND[1]), T); c.lineTo(px(BAND[1]), H-B);
+      c.stroke(); c.globalAlpha = 1;
+    }
+
+    /* the limit you set */
+    c.strokeStyle = C.ink3; c.lineWidth = 1; c.setLineDash([4,4]);
+    c.beginPath(); c.moveTo(L, py(GM)); c.lineTo(W-R, py(GM)); c.stroke();
+    c.setLineDash([]);
+
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L, H-B+.5); c.lineTo(W-R, H-B+.5);
+    c.moveTo(L+.5, T); c.lineTo(L+.5, H-B); c.stroke();
+
+    /* the curve */
+    c.strokeStyle = C.e; c.lineWidth = 2.6; c.beginPath();
+    for(var j=0;j<=400;j++){
+      var fr2 = j/400*2;
+      c.lineTo(px(fr2), py(Math.min(gTop, qwtGamma(RL, Z1, fr2))));
+    }
+    c.stroke();
+
+    /* mark f0 */
+    c.strokeStyle = C.h; c.lineWidth = 1; c.setLineDash([2,3]);
+    c.beginPath(); c.moveTo(px(1), T); c.lineTo(px(1), H-B); c.stroke();
+    c.setLineDash([]);
+    c.fillStyle = C.h;
+    c.beginPath(); c.arc(px(1), py(0), 5, 0, EM.TAU); c.fill();
+
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3;
+    c.textAlign = 'right';
+    c.fillText(gTop.toFixed(2), L-6, py(gTop)+10);
+    c.fillText(GM.toFixed(2), L-6, py(GM)+4);
+    c.fillText('0', L-6, py(0)+4);
+    c.textAlign = 'center';
+    ['0','f₀','2f₀'].forEach(function(lab,k){
+      c.fillText(lab, px(k), H-B+16);
+    });
+    if(BAND && (BAND[1]-BAND[0]) > 0.25){
+      /* inside the stripe, clear of the f0 tick on the axis below */
+      c.fillStyle = C.acc;
+      c.fillText('usable band', px((BAND[0]+BAND[1])/2), T + 28);
+    }
+    c.textAlign = 'left'; c.fillStyle = C.e;
+    c.fillText('|Γ|  with a λ/4 section of Z₁ = ' + Z1.toFixed(1) + ' Ω', L+8, T+11);
+    c.textAlign = 'right'; c.fillStyle = C.ink3;
+    c.fillText('your limit', W-R-4, py(GM)-6);
+  }, false);
+
+  sync();
+})();
+
+/* ---- stub reactance ---- */
+(function(){
+  var cv = document.getElementById('stub');
+  if(!cv) return;
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    var L = 48, R = 20, T = 20, B = 40;
+    var yMax = 4;
+    function px(u){ return L + (u/0.5)*(W-L-R); }
+    function py(v){ return (H-B+T)/2 + ((H-T-B)/2) * (-Math.max(-yMax,Math.min(yMax,v))/yMax); }
+    c.clearRect(0,0,W,H);
+
+    c.strokeStyle = C.line; c.lineWidth = 1; c.setLineDash([2,4]);
+    c.beginPath(); c.moveTo(L, py(0)); c.lineTo(W-R, py(0)); c.stroke();
+    [0.125,0.25,0.375].forEach(function(u){
+      c.beginPath(); c.moveTo(px(u), T); c.lineTo(px(u), H-B); c.stroke();
+    });
+    c.setLineDash([]);
+    c.strokeStyle = C.line2;
+    c.beginPath(); c.moveTo(L+.5, T); c.lineTo(L+.5, H-B); c.stroke();
+
+    function curve(f, col){
+      c.strokeStyle = col; c.lineWidth = 2.6;
+      c.beginPath();
+      var pen = false;
+      for(var i=0;i<=400;i++){
+        var u = i/400*0.5, v = f(u);
+        if(!isFinite(v) || Math.abs(v) > yMax){ pen = false; continue; }
+        var X = px(u), Y = py(v);
+        if(pen) c.lineTo(X,Y); else { c.moveTo(X,Y); pen = true; }
+      }
+      c.stroke();
+    }
+    curve(function(u){ return Math.tan(EM.TAU*u); }, C.e);
+    curve(function(u){ return -1/Math.tan(EM.TAU*u); }, C.h);
+
+    /* the lambda/8 markers */
+    c.fillStyle = C.e;
+    c.beginPath(); c.arc(px(0.125), py(1), 4.5, 0, EM.TAU); c.fill();
+    c.fillStyle = C.h;
+    c.beginPath(); c.arc(px(0.125), py(-1), 4.5, 0, EM.TAU); c.fill();
+
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3;
+    c.textAlign = 'right';
+    c.fillText('+4', L-6, py(4)+4);
+    c.fillText('+1', L-6, py(1)+4);
+    c.fillText('0', L-6, py(0)+4);
+    c.fillText('−1', L-6, py(-1)+4);
+    c.fillText('−4', L-6, py(-4)+4);
+    c.textAlign = 'center';
+    [[0,'0'],[0.125,'λ/8'],[0.25,'λ/4'],[0.375,'3λ/8'],[0.5,'λ/2']].forEach(function(p){
+      c.fillText(p[1], px(p[0]), H-B+17);
+    });
+    c.textAlign = 'left'; c.fillStyle = C.ink3;
+    c.fillText('inductive', L+8, py(2.6));
+    c.fillText('capacitive', L+8, py(-2.6));
+  }, false);
+})();
+</script>
+</body>
+</html>

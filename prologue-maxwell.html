@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Maxwell's equations &middot; Transmission Line Theory</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="mast"><div class="in">
+  <a class="home" href="index.html">Transmission Line Theory</a>
+  <span class="sep"></span>
+  <span class="ch">Prologue &middot; Maxwell's equations</span>
+  <span class="nav"><a href="index.html" title="Previous">‹</a><a href="prologue-helmholtz.html" title="Next">›</a></span>
+</div></header>
+
+<div class="wrap">
+
+<div class="hero">
+  <p class="kicker">Prologue &middot; part one of two</p>
+  <h1>Maxwell's equations</h1>
+  <p class="lead">Four statements about how electric and magnetic fields relate to charge, to current, and to each other. Three were known before Maxwell. The fourth he corrected, and that correction is the reason a field can leave its source and never come back.</p>
+</div>
+
+<section class="blk" id="four">
+  <h2>The four laws</h2>
+  <p class="t">In differential form, for fields in a medium described by permittivity $\varepsilon$ and permeability $\mu$:</p>
+
+  <div class="eq box">
+    $$\dive \vD = \rho_v \qquad\qquad \dive \vB = 0$$
+    $$\curl \vE = -\frac{\partial \vB}{\partial t} \qquad\qquad \curl \vH = \vJ + \frac{\partial \vD}{\partial t}$$
+    <span class="note">with the constitutive relations $\vD = \varepsilon\vE$ and $\vB = \mu\vH$ in a linear, isotropic, homogeneous medium</span>
+  </div>
+
+  <p class="t">Read them as physical claims rather than as symbols:</p>
+
+  <div class="tw"><table>
+    <tr><th>Law</th><th>What it claims</th></tr>
+    <tr><td><b>Gauss</b><br>$\dive \vD = \rho_v$</td><td>Electric field lines begin and end on charge. Where there is no charge, whatever flows in must flow out.</td></tr>
+    <tr><td><b>Gauss, magnetic</b><br>$\dive \vB = 0$</td><td>Magnetic field lines never begin or end &mdash; they close on themselves. There is no magnetic charge to terminate on.</td></tr>
+    <tr><td><b>Faraday</b><br>$\curl \vE = -\partial\vB/\partial t$</td><td>A magnetic field that changes in time wraps an electric field around itself.</td></tr>
+    <tr><td><b>Amp&egrave;re&ndash;Maxwell</b><br>$\curl \vH = \vJ + \partial\vD/\partial t$</td><td>A current wraps a magnetic field around itself &mdash; and so does an electric field that changes in time.</td></tr>
+  </table></div>
+
+  <p class="t">The word doing the work in the last two is <b>curl</b>. A curl is a circulation: it says the field forms closed loops around whatever sits on the right-hand side. So Faraday's law says a changing $\vB$ is encircled by $\vE$, and Amp&egrave;re's law says a changing $\vD$ is encircled by $\vH$.</p>
+
+  <div class="key">
+    <span class="lab">The whole of chapter 2 in one sentence</span>
+    <p>Each of those two laws produces the very quantity the other one needs. Loop them together and you have a disturbance that sustains itself with no charge and no current anywhere near it.</p>
+  </div>
+</section>
+
+<section class="blk" id="dcurrent">
+  <h2>The term Maxwell added</h2>
+  <p class="t">Before Maxwell, Amp&egrave;re's law read simply $\curl \vH = \vJ$: magnetic fields encircle currents. That version is not merely incomplete, it is <b>self-contradictory</b>, and the contradiction shows up in the most ordinary circuit imaginable.</p>
+
+  <p class="t">Charge a capacitor. Amp&egrave;re's law in integral form says the magnetic field around a closed loop equals the current passing through <i>any</i> surface bounded by that loop. Take the loop around the wire. Stretch one surface flat across it &mdash; the wire punches through, so the enclosed current is $I$. Now stretch a different surface, bulging out so it passes between the capacitor plates. Same loop, same boundary, but <b>no conduction current crosses it at all</b>. The gap is empty.</p>
+
+  <figure class="fig">
+    <canvas id="capfig" class="static" style="height:320px"></canvas>
+    <figcaption class="cap">same loop, two surfaces &mdash; one pierced by the wire, one passing through the empty gap</figcaption>
+  </figure>
+
+  <p class="t">Two surfaces on the same loop give two different answers. Something is missing, and what is missing is in the gap: as charge piles up on the plates, the electric field between them grows. Maxwell's insight was that a <b>changing electric field acts exactly like a current</b> for the purpose of generating magnetism.</p>
+
+  <div class="eq box">
+    $$\vJ_d = \frac{\partial \vD}{\partial t}$$
+    <span class="note">the displacement current density &mdash; not a flow of charge, but it sources $\vH$ as if it were</span>
+  </div>
+
+  <p class="t">Add it and the paradox dissolves: through the flat surface you count conduction current, through the bulging surface you count displacement current, and the two are exactly equal.</p>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; the two surfaces give the same answer</summary>
+    <div class="body">
+      <p>Let the capacitor have plate area $A$ and carry charge $Q(t)$. The conduction current in the wire is by definition the rate at which charge arrives:</p>
+      <div class="eq">$$I = \frac{dQ}{dt}$$</div>
+      <p>Between the plates, Gauss's law applied to a pillbox enclosing one plate gives the field in the gap in terms of the surface charge $\rho_s = Q/A$:</p>
+      <div class="eq">$$D = \rho_s = \frac{Q}{A}$$</div>
+      <p>Now integrate the displacement current density over the bulging surface, which crosses the gap:</p>
+      <div class="eq">$$I_d = \int_A \frac{\partial \vD}{\partial t}\cdot d\vA = \frac{\partial}{\partial t}\left(\frac{Q}{A}\right) A = \frac{dQ}{dt} = I$$</div>
+      <p>The two surfaces now agree exactly, for any shape of surface, at every instant. <b>This is not a patch.</b> It is forced on you by charge conservation: taking the divergence of the corrected Amp&egrave;re law and using $\dive(\curl \vH) \equiv 0$ together with Gauss's law returns the continuity equation</p>
+      <div class="eq">$$\dive \vJ + \frac{\partial \rho_v}{\partial t} = 0$$</div>
+      <p>which says charge is never created or destroyed. Without the displacement term you would instead get $\dive \vJ = 0$, which forbids charge from ever accumulating anywhere &mdash; and capacitors would not work.</p>
+    </div>
+  </details>
+
+  <p class="t">The consequence reaches much further than capacitors. $\partial\vD/\partial t$ means a magnetic field can be created <b>without any charges moving</b>. Combined with Faraday's law, which creates an electric field without any charges at all, you have the two halves of a mechanism that needs no matter to keep going.</p>
+</section>
+
+<section class="blk" id="cycle">
+  <h2>Why this makes a wave</h2>
+  <p class="t">Trace the loop. An electric field somewhere starts changing. By Amp&egrave;re&ndash;Maxwell, that change wraps a magnetic field around it. But that magnetic field is itself now changing in time &mdash; and by Faraday, a changing magnetic field wraps an electric field around <i>itself</i>, slightly further along. That new electric field is also changing, and the cycle repeats.</p>
+
+  <figure class="fig">
+    <canvas id="cyclefig" style="height:260px"></canvas>
+    <figcaption class="cap">each law produces the input the other one needs &mdash; the disturbance walks itself forward</figcaption>
+  </figure>
+
+  <p class="t">Neither field is the cause and neither is the effect. They regenerate each other, and the regeneration happens a little further along each time, so the disturbance <b>propagates</b>. Nothing material moves; no charge is present. Once launched, the pattern is self-supporting and travels until something absorbs it.</p>
+
+  <p class="t">The minus sign in Faraday's law matters here too. It is Lenz's law in field form: the induced field opposes the change that produced it. Without it the loop would run away exponentially instead of oscillating. With it, the exchange is a stable back-and-forth &mdash; which is precisely what a sinusoid is.</p>
+
+  <div class="key">
+    <span class="lab">Where this is heading</span>
+    <p>That verbal argument is suggestive but not a proof. In the next chapter the same two curl equations are combined algebraically, and out falls a wave equation with a propagation speed set entirely by $\mu$ and $\varepsilon$ &mdash; which for free space turns out to be the speed of light.</p>
+  </div>
+</section>
+
+<section class="blk" id="forms">
+  <h2>Integral and differential forms</h2>
+  <p class="t">The same four laws are written two ways, and it is worth being fluent in both. The differential form states what happens <i>at a point</i> and is what you manipulate algebraically. The integral form states what happens <i>over a region</i> and is what you use when a problem has symmetry you can exploit.</p>
+
+  <div class="tw"><table>
+    <tr><th>Differential</th><th>Integral</th></tr>
+    <tr><td>$\dive \vD = \rho_v$</td><td>$\oint_S \vD\cdot d\vA = Q_{enc}$</td></tr>
+    <tr><td>$\dive \vB = 0$</td><td>$\oint_S \vB\cdot d\vA = 0$</td></tr>
+    <tr><td>$\curl \vE = -\dfrac{\partial\vB}{\partial t}$</td><td>$\oint_L \vE\cdot d\mathbf{l} = -\dfrac{d\Phi_B}{dt}$</td></tr>
+    <tr><td>$\curl \vH = \vJ + \dfrac{\partial\vD}{\partial t}$</td><td>$\oint_L \vH\cdot d\mathbf{l} = I_{enc} + \dfrac{d\Psi_D}{dt}$</td></tr>
+  </table></div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; how the two forms convert</summary>
+    <div class="body">
+      <p>Two theorems from vector calculus do all the work. <b>The divergence theorem</b> converts a volume integral of a divergence into a flux through the bounding surface:</p>
+      <div class="eq">$$\int_V (\dive \vA)\,dV = \oint_S \vA\cdot d\vA$$</div>
+      <p><b>Stokes' theorem</b> converts a surface integral of a curl into a circulation around the bounding loop:</p>
+      <div class="eq">$$\int_S (\curl \vA)\cdot d\vA = \oint_L \vA\cdot d\mathbf{l}$$</div>
+      <p>Apply the divergence theorem to $\dive \vD = \rho_v$ over any volume $V$ and the left side becomes a flux while the right side becomes the enclosed charge, giving Gauss's law in integral form. Apply Stokes' theorem to $\curl \vE = -\partial\vB/\partial t$ over any surface $S$ and the left side becomes the circulation of $\vE$ around the rim while the right side becomes the rate of change of magnetic flux through it, giving Faraday's law in integral form.</p>
+      <p>Because both theorems hold for <i>every</i> volume and <i>every</i> surface, the two forms carry identical information. Neither is more fundamental. The differential form does assume the fields are differentiable, so at a sharp material boundary you work with the integral form instead &mdash; which is exactly how boundary conditions are derived.</p>
+    </div>
+  </details>
+</section>
+
+<section class="blk" id="check">
+  <div class="check">
+    <h3>Self-check</h3>
+    <p class="t" style="margin-top:6px">Three questions that test the idea rather than the algebra.</p>
+
+    <div class="q">
+      <p class="qt">1. A capacitor is charging. Between the plates there is no conduction current at all. Is there a magnetic field in the gap?</p>
+      <div class="opts">
+        <button class="opt" data-ok="1">Yes &mdash; the changing electric field sources it just as a real current would</button>
+        <button class="opt">No &mdash; magnetic fields require moving charge, and nothing is moving in the gap</button>
+        <button class="opt">Only if the dielectric is conductive enough to leak some current</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>The displacement current $\partial\vD/\partial t$ appears on the right of Amp&egrave;re&ndash;Maxwell in exactly the same place as $\vJ$, so it produces a magnetic field in exactly the same way. It is not a flow of charge, and no dielectric is needed &mdash; the effect exists in vacuum.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">2. Why does $\dive \vB = 0$ have a zero on the right, where Gauss's law for $\vD$ has $\rho_v$?</p>
+      <div class="opts">
+        <button class="opt">Because magnetic fields are much weaker than electric fields</button>
+        <button class="opt" data-ok="1">Because no magnetic charge has ever been found, so field lines have nothing to start or stop on</button>
+        <button class="opt">Because magnetic fields only exist when charges are moving</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>A non-zero divergence means a source or sink &mdash; a place where field lines begin or end. Electric field lines terminate on charge. No isolated magnetic charge has ever been observed, so magnetic field lines have no terminus and must close on themselves. If a magnetic monopole were ever found, this equation would be the one to change.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">3. What would be lost if Faraday's law had no minus sign?</p>
+      <div class="opts">
+        <button class="opt">Nothing &mdash; the sign only fixes which way the field points</button>
+        <button class="opt">The fields would still oscillate but would travel backwards</button>
+        <button class="opt" data-ok="1">The regeneration would reinforce itself instead of opposing, so solutions would grow without bound rather than oscillate</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>The minus sign is Lenz's law in field form: the induced effect opposes the change that caused it. That opposition is what makes the exchange between the two fields a stable back-and-forth. Flip it and the coupled equations produce growing exponentials instead of sinusoids &mdash; energy from nowhere, which is why the sign is not cosmetic.</p>
+    </div>
+  </div>
+</section>
+
+<nav class="pager">
+  <a href="index.html"><span class="dir">Back to</span><span class="ttl">Contents</span></a>
+  <a class="nx" href="prologue-helmholtz.html"><span class="dir">Next</span><span class="ttl">The wave equation and Helmholtz</span></a>
+</nav>
+
+<footer class="site">
+  Prologue, part one. Optional background: the site's main sequence starts at chapter 01, waves and phasors.
+  <span class="cr">&copy; 2026 Elie Hachem &middot; free to share and use for teaching</span>
+</footer>
+
+</div>
+
+<script src="assets/site.js"></script>
+<script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
+<script>
+var MONO = 'IBM Plex Mono, monospace';
+
+/* ---- the two-surfaces capacitor figure (static) ----
+   Drawn in a fixed 560x300 design box so labels can never collide or clip. */
+(function(){
+  var cv = document.getElementById('capfig');
+  if(!cv) return;
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d');
+    c.clearRect(0, 0, cv._w, cv._h);
+    EM.design(c, cv, 560, 300);
+
+    /* wire and plates */
+    c.strokeStyle = C.ink2; c.lineWidth = 2.6; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(12,140); c.lineTo(322,140);
+    c.moveTo(374,140); c.lineTo(548,140); c.stroke();
+    c.fillStyle = C.ink2;
+    c.fillRect(322,102,8,76); c.fillRect(366,102,8,76);
+
+    /* growing E in the gap */
+    c.strokeStyle = C.e; c.fillStyle = C.e; c.lineWidth = 1.5;
+    for(var k=-2;k<=2;k++) EM.arrow(c, 332, 140+k*15, 364, 140+k*15, 6);
+    c.font = '15px ' + MONO; c.textAlign = 'left';
+    c.fillText('E growing', 384, 96);
+    c.strokeStyle = C.e; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(382,101); c.lineTo(360,118); c.stroke();
+
+    /* surface B: bulges out and crosses the gap */
+    c.strokeStyle = C.h; c.lineWidth = 2; c.setLineDash([6,4]);
+    c.beginPath();
+    c.moveTo(170,98);
+    c.bezierCurveTo(250,50, 330,70, 348,140);
+    c.bezierCurveTo(330,210, 250,230, 170,182);
+    c.stroke(); c.setLineDash([]);
+
+    /* the loop, and surface A filling it */
+    c.fillStyle = C.accfill; c.strokeStyle = C.acc; c.lineWidth = 2.2;
+    c.beginPath(); c.ellipse(170,140,15,42,0,0,EM.TAU); c.fill(); c.stroke();
+
+    /* current */
+    c.strokeStyle = C.ink3; c.fillStyle = C.ink3; c.lineWidth = 1.8;
+    EM.arrow(c, 30, 116, 70, 116, 7);
+    c.font = '16px ' + MONO; c.textAlign = 'left';
+    c.fillText('I', 78, 121);
+
+    /* labels — every anchor checked against the 0..560 box */
+    c.textAlign = 'center';
+    c.fillStyle = C.h; c.font = '17px ' + MONO;
+    c.fillText('surface B', 270, 32);
+    c.fillStyle = C.ink3; c.font = '14px ' + MONO;
+    c.fillText('bulges out through the gap', 270, 50);
+    c.fillText('one loop, two surfaces', 270, 248);
+    c.fillText('no conduction current crosses B', 270, 268);
+
+    c.textAlign = 'right';
+    c.fillStyle = C.acc; c.font = '17px ' + MONO;
+    c.fillText('surface A', 150, 60);
+    c.fillStyle = C.ink3; c.font = '14px ' + MONO;
+    c.fillText('flat disc', 150, 78);
+    c.fillText('encloses I', 150, 95);
+
+    c.restore();
+  }, false);
+})();
+
+/* ---- the regeneration cycle (animated) ---- */
+(function(){
+  var cv = document.getElementById('cyclefig');
+  if(!cv) return;
+  EM.register(function(C, t){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0,0,W,H);
+    var n = 4, pad = 14, mid = H*0.46;
+    /* size the rings first, then lay out from them, so nothing can clip */
+    var R = Math.min((W - 2*pad)/(n-1)*0.28, H*0.21);
+    var x0 = pad + R, dx = (W - 2*(pad + R))/(n-1);
+    var fs = Math.max(10, Math.min(13, R*0.36));
+
+    for(var i=0;i<n;i++){
+      var x = x0 + i*dx, ph = t - i*0.9;
+      var amp = Math.abs(Math.sin(ph));
+      var isE = (i % 2) === 0, col = isE ? C.e : C.h;
+      c.globalAlpha = 0.25 + 0.75*amp;
+      c.strokeStyle = col; c.lineWidth = 2.4;
+      c.beginPath(); c.arc(x, mid, R*(0.58+0.42*amp), 0, EM.TAU); c.stroke();
+      c.beginPath(); c.arc(x, mid, R*(0.3+0.2*amp), 0, EM.TAU); c.stroke();
+      c.globalAlpha = 1;
+      c.fillStyle = col; c.font = Math.round(fs*1.15) + 'px ' + MONO;
+      c.textAlign = 'center'; c.fillText(isE ? 'E' : 'H', x, mid + fs*0.4);
+
+      if(i < n-1){
+        var xa = x + R + 9, xb = x0 + (i+1)*dx - R - 9;
+        if(xb > xa){
+          var pulse = Math.max(0, Math.sin(ph - 0.45));
+          c.globalAlpha = 0.3 + 0.7*pulse;
+          c.strokeStyle = C.ink2; c.fillStyle = C.ink2; c.lineWidth = 1.7;
+          EM.arrow(c, xa, mid, xb, mid, 6.5);
+          c.globalAlpha = 1;
+          c.fillStyle = C.ink3; c.font = Math.round(fs*0.88) + 'px ' + MONO;
+          c.fillText(isE ? 'Ampère' : 'Faraday', (xa+xb)/2, mid - R - 11);
+        }
+      }
+    }
+    c.fillStyle = C.ink3; c.font = '11.5px ' + MONO; c.textAlign = 'center';
+    c.fillText('each law produces what the other needs →', W/2, H - 12);
+  }, true);
+})();
+</script>
+</body>
+</html>

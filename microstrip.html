@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Microstrip and real lines &middot; Transmission Line Theory</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="mast"><div class="in">
+  <a class="home" href="index.html">Transmission Line Theory</a>
+  <span class="sep"></span>
+  <span class="ch">05 &middot; Microstrip and real lines</span>
+  <span class="nav"><a href="propagation.html" title="Previous">‹</a><a href="reflection.html" title="Next">›</a></span>
+</div></header>
+
+<div class="wrap">
+
+<div class="hero">
+  <p class="kicker">Chapter 05</p>
+  <h1>Microstrip and real lines</h1>
+  <p class="lead">So far the four line parameters have been given numbers. They are not free: every one is fixed by the cross-section and the materials. This chapter computes them for the geometries you actually build, and looks at where microstrip stops obeying the model it was derived from.</p>
+  <p class="t" style="margin-top:20px"><b>Assumes:</b> chapter 04 &mdash; $Z_0 = \sqrt{L'/C'}$ and $u_p = 1/\sqrt{L'C'}$.</p>
+</div>
+
+<section class="blk" id="geometry">
+  <h2>Geometry sets everything</h2>
+  <p class="t">Chapter 04 closed with a result worth restating, because it organises this whole chapter. For any TEM line,</p>
+
+  <div class="eq box">
+    $$L'C' = \mu\varepsilon \qquad\Longrightarrow\qquad u_p = \frac{1}{\sqrt{L'C'}} = \frac{1}{\sqrt{\mu\varepsilon}} = \frac{c}{\sqrt{\varepsilon_r}}$$
+    <span class="note">the product is fixed by the material alone &mdash; the geometry cancels completely</span>
+  </div>
+
+  <p class="t">So the cross-section cannot change the speed. Squeeze the conductors together and $C'$ rises while $L'$ falls in exact compensation. What the geometry <b>does</b> control is the ratio, and therefore $Z_0$:</p>
+
+  <div class="eq">$$Z_0 = \sqrt{\frac{L'}{C'}} \quad\text{(geometry)} \qquad\qquad u_p = \frac{c}{\sqrt{\varepsilon_r}} \quad\text{(material)}$$</div>
+
+  <div class="tw"><table>
+    <tr><th>Line</th><th>$Z_0$ (lossless)</th><th>Notes</th></tr>
+    <tr><td>Coaxial</td><td>$\dfrac{\eta}{2\pi}\ln\dfrac{b}{a} = \dfrac{60}{\sqrt{\varepsilon_r}}\ln\dfrac{b}{a}$</td><td>$a$ inner radius, $b$ inner radius of the shield</td></tr>
+    <tr><td>Two-wire</td><td>$\dfrac{\eta}{\pi}\cosh^{-1}\dfrac{D}{2a}$</td><td>$a$ wire radius, $D$ centre spacing</td></tr>
+    <tr><td>Parallel plate</td><td>$\dfrac{\eta\,d}{w}$</td><td>$w \gg d$, fringing ignored</td></tr>
+    <tr><td>Microstrip</td><td>no closed form</td><td>quasi-TEM &mdash; see below</td></tr>
+  </table></div>
+
+  <p class="t">Each of the first three is a genuine TEM structure: the fields sit entirely in one uniform dielectric, so $\varepsilon$ is unambiguous and the formulas are exact. A quick check on the coax expression &mdash; a 50 &Omega; cable with a PTFE dielectric ($\varepsilon_r = 2.1$) needs $\ln(b/a) = 50\sqrt{2.1}/60 = 1.21$, so $b/a \approx 3.35$. That is the ratio you find in real RG-142.</p>
+</section>
+
+<section class="blk" id="quasi">
+  <h2>Why microstrip is different</h2>
+  <p class="t">Microstrip is a track on top of a substrate with a ground plane underneath. It is the dominant line in practice &mdash; it is simply what a circuit board <i>is</i> &mdash; and it breaks the assumption every formula above relies on.</p>
+
+  <figure class="fig">
+    <canvas id="xsecfig" class="static" style="height:300px"></canvas>
+    <figcaption class="cap">the field does not stay in one material &mdash; most of it in the substrate, some fringing through the air above</figcaption>
+  </figure>
+
+  <p class="t">The field lines leaving the track do not all pass through the substrate. Some arc through the <b>air</b> above it. So the wave is travelling through two dielectrics at once, with different permittivities, and no single $\varepsilon$ describes it.</p>
+
+  <p class="t">That has a real consequence: a pure TEM wave <b>cannot exist</b> on this structure. A true TEM mode needs the same phase velocity everywhere in the cross-section, and here the air region would propagate faster than the substrate region. The fields respond by acquiring small longitudinal components, which makes the mode <b>quasi-TEM</b>.</p>
+
+  <p class="t">The engineering fix is a fiction that works extremely well: pretend the line is surrounded by <b>one uniform imaginary dielectric</b>, chosen so the line has the right capacitance. That number is the effective permittivity:</p>
+
+  <div class="eq box">
+    $$1 < \varepsilon_{\text{eff}} < \varepsilon_r$$
+    <span class="note">a weighted average of air and substrate &mdash; wide tracks push it toward $\varepsilon_r$, narrow ones toward air</span>
+  </div>
+
+  <p class="t">Once you have $\varepsilon_{\text{eff}}$, every TEM result from chapter 04 applies with $\varepsilon_r$ replaced by it:</p>
+
+  <div class="eq">$$u_p = \frac{c}{\sqrt{\varepsilon_{\text{eff}}}} \qquad\qquad \lambda_g = \frac{\lambda_0}{\sqrt{\varepsilon_{\text{eff}}}} \qquad\qquad \beta = \frac{2\pi}{\lambda_g}$$</div>
+
+  <div class="key">
+    <span class="lab">Why your quarter-wave stub is shorter than you expect</span>
+    <p>$\lambda_g$ is the <b>guide wavelength</b>, and it is what every physical length in this subject refers to. On FR-4 with $\varepsilon_{\text{eff}} \approx 3.3$, a quarter wave at 2.4 GHz is not $\lambda_0/4 = 31$ mm but $31/\sqrt{3.3} \approx 17$ mm. Using the free-space figure is among the most common and most expensive board errors.</p>
+  </div>
+</section>
+
+<section class="blk" id="hammerstad">
+  <h2>The Hammerstad formulas</h2>
+  <p class="t">Microstrip has no exact closed form, but accurate curve fits exist. These are Hammerstad's, accurate to about 1&nbsp;% over the usual range, and they are what most tools use internally. Everything depends on the single ratio $W/h$ &mdash; track width over substrate thickness.</p>
+
+  <div class="eq box">
+    $$\varepsilon_{\text{eff}} = \frac{\varepsilon_r + 1}{2} + \frac{\varepsilon_r - 1}{2}\left(1 + \frac{12h}{W}\right)^{-1/2}$$
+    <span class="note">for $W/h < 1$, add $\;0.04\left(1 - W/h\right)^2$ times $(\varepsilon_r-1)/2$</span>
+  </div>
+
+  <p class="t">Then the impedance, in two branches:</p>
+
+  <div class="eq box">
+    $$\frac{W}{h} \le 1: \qquad Z_0 = \frac{60}{\sqrt{\varepsilon_{\text{eff}}}}\,\ln\!\left(\frac{8h}{W} + \frac{W}{4h}\right)$$
+    $$\frac{W}{h} \ge 1: \qquad Z_0 = \frac{120\pi}{\sqrt{\varepsilon_{\text{eff}}}\left[\dfrac{W}{h} + 1.393 + 0.667\ln\!\left(\dfrac{W}{h} + 1.444\right)\right]}$$
+  </div>
+
+  <p class="t">The structure of both is worth reading even if you never evaluate them by hand. <b>Wider track means lower impedance</b> &mdash; more capacitance to the ground plane, less inductance. And $\varepsilon_{\text{eff}}$ sits under a square root in the denominator of each, so a higher-permittivity substrate lowers $Z_0$ for the same geometry.</p>
+
+  <figure class="fig">
+    <canvas id="msfig" class="static" style="height:280px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="wh">W / h</label><input type="range" id="wh" min="0.1" max="8" step="0.02" value="2"><output id="whv">2.00</output></div>
+      <div class="ctl"><label for="er">&epsilon;<sub>r</sub></label><input type="range" id="er" min="1" max="12" step="0.1" value="4.4"><output id="erv">4.4</output></div>
+    </div>
+    <div class="rail" style="border-top:0;padding-top:0">
+      <div class="ctl"><label for="hh">h (mm)</label><input type="range" id="hh" min="0.1" max="3" step="0.05" value="1.6"><output id="hhv">1.60</output></div>
+      <div class="ctl"><label for="fr">f (GHz)</label><input type="range" id="fr" min="0.1" max="10" step="0.1" value="2.4"><output id="frv">2.4</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>&epsilon;<sub>eff</sub></dt><dd id="m-ee">3.34</dd></div>
+      <div class="rd"><dt>Z&#8320;</dt><dd id="m-z0">48.9</dd></div>
+      <div class="rd"><dt>W</dt><dd id="m-w">3.20</dd></div>
+      <div class="rd"><dt>&lambda;<sub>g</sub></dt><dd id="m-lg">68.4</dd></div>
+      <div class="rd"><dt>&lambda;<sub>g</sub>/4</dt><dd id="m-q">17.1</dd></div>
+    </dl>
+    <div class="btns">
+      <button data-m="2,4.4,1.6,2.4">FR-4, 50 &#937;-ish</button>
+      <button data-m="0.6,4.4,1.6,2.4">narrow &rarr; high Z&#8320;</button>
+      <button data-m="6,4.4,1.6,2.4">wide &rarr; low Z&#8320;</button>
+      <button data-m="2.2,2.2,0.79,10">RO5880 at 10 GHz</button>
+    </div>
+    <figcaption class="cap">W, &lambda;<sub>g</sub> and &lambda;<sub>g</sub>/4 in mm; the cross-section is drawn to the computed proportions. The frequency slider moves &lambda;<sub>g</sub> and &lambda;<sub>g</sub>/4 only &mdash; it deliberately leaves the curve alone, because Hammerstad's Z&#8320; carries no frequency dependence at all.</figcaption>
+  </figure>
+
+  <p class="t">Try the narrow and wide presets and watch two things move together: as the track narrows, $Z_0$ climbs <i>and</i> $\varepsilon_{\text{eff}}$ falls. The second happens because a narrow track holds proportionally more of its field in the air, dragging the effective permittivity down toward 1.</p>
+
+  <p class="t">Move the frequency slider and the curve does not budge &mdash; only $\lambda_g$ and $\lambda_g/4$ respond. That is not an oversight in the figure; it is what the formulas say. <b>Hammerstad's $\varepsilon_{\text{eff}}$ and $Z_0$ contain no frequency term</b>, so in this model a track is 50 &Omega; at DC and at 10 GHz alike. Frequency enters only through $\lambda_g = \lambda_0/\sqrt{\varepsilon_{\text{eff}}}$, which is what sets every physical length you cut. Real microstrip does drift with frequency &mdash; that is dispersion, and it is the first entry in the table below.</p>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; synthesis, going the other way</summary>
+    <div class="body">
+      <p>Design usually runs backwards: you know the $Z_0$ you want and need $W/h$. Hammerstad's synthesis formulas invert the analysis ones. First compute two intermediate quantities from the target impedance:</p>
+      <div class="eq">$$A = \frac{Z_0}{60}\sqrt{\frac{\varepsilon_r+1}{2}} + \frac{\varepsilon_r-1}{\varepsilon_r+1}\left(0.23 + \frac{0.11}{\varepsilon_r}\right)$$</div>
+      <div class="eq">$$B = \frac{377\pi}{2 Z_0 \sqrt{\varepsilon_r}}$$</div>
+      <p>Then for a narrow track, $W/h < 2$:</p>
+      <div class="eq">$$\frac{W}{h} = \frac{8e^{A}}{e^{2A} - 2}$$</div>
+      <p>and for a wide one, $W/h > 2$:</p>
+      <div class="eq">$$\frac{W}{h} = \frac{2}{\pi}\left[B - 1 - \ln(2B-1) + \frac{\varepsilon_r-1}{2\varepsilon_r}\left(\ln(B-1) + 0.39 - \frac{0.61}{\varepsilon_r}\right)\right]$$</div>
+      <p>Compute both, keep whichever lands in its own validity range, then <b>feed the answer back through the analysis formulas</b> to check. The two branches disagree slightly near $W/h = 2$, and the round trip is the only honest way to know which one you should have used.</p>
+      <p>A worked case. For 50 &Omega; on FR-4 ($\varepsilon_r = 4.4$): $A = 1.53$, giving $W/h = 1.86$; and $B = 5.63$, giving $W/h = 1.90$. Both branches agree closely here, so with $h = 1.6$ mm the track is about 3.0 mm wide. That is the number every FR-4 board you have seen is built around.</p>
+    </div>
+  </details>
+</section>
+
+<section class="blk" id="limits">
+  <h2>Where the model stops</h2>
+  <p class="t">Everything so far treats microstrip as an ideal quasi-TEM line with frequency-independent parameters. Four effects break that, and knowing when each one bites is the difference between a board that works and one that needs a second spin.</p>
+
+  <div class="tw"><table>
+    <tr><th>Effect</th><th>What happens</th><th>When it matters</th></tr>
+    <tr><td><b>Dispersion</b></td><td>$\varepsilon_{\text{eff}}$ rises with frequency as more field is pulled into the substrate, so $Z_0$ and $u_p$ drift</td><td>above roughly a few GHz on thick substrates</td></tr>
+    <tr><td><b>Skin effect</b></td><td>current crowds into a surface layer of depth $\delta = 1/\sqrt{\pi f\mu\sigma}$, so $R'$ grows as $\sqrt{f}$</td><td>always at RF; dominates conductor loss</td></tr>
+    <tr><td><b>Radiation</b></td><td>an open structure leaks, especially at discontinuities, bends and open stubs</td><td>worse on thick, low-$\varepsilon_r$ substrates</td></tr>
+    <tr><td><b>Higher-order modes</b></td><td>above a cutoff the quasi-TEM mode is no longer alone</td><td>when $h$ approaches $\lambda_g/2$</td></tr>
+  </table></div>
+
+  <p class="t">Skin effect deserves a line of its own because it explains a fact every RF engineer meets. At 1 GHz in copper the skin depth is about 2&nbsp;&micro;m &mdash; the current is confined to a film far thinner than the conductor. Making the track thicker buys almost nothing; making it <b>wider</b>, or smoother, is what reduces loss. It is also why $R'$ in chapter 04 is not really a constant: it climbs as $\sqrt{f}$.</p>
+
+  <div class="key">
+    <span class="lab">The practical summary</span>
+    <p>Below a few GHz on ordinary board, the formulas above are good to a percent or two and you can design directly from them. Above that, use them to get close and then let a field solver finish the job &mdash; but the intuition they encode, that $W/h$ sets impedance and $\varepsilon_{\text{eff}}$ sets wavelength, never stops being true.</p>
+  </div>
+</section>
+
+<section class="blk" id="check">
+  <div class="check">
+    <h3>Self-check</h3>
+    <p class="t" style="margin-top:6px">Three questions on what geometry controls.</p>
+
+    <div class="q">
+      <p class="qt">1. You move a coax design to a substrate with twice the permittivity, keeping the same $b/a$. What happens to $Z_0$ and to $u_p$?</p>
+      <div class="opts">
+        <button class="opt">Both halve</button>
+        <button class="opt" data-ok="1">Both fall by $\sqrt{2}$ &mdash; each carries a $1/\sqrt{\varepsilon_r}$</button>
+        <button class="opt">$Z_0$ is unchanged since $b/a$ is unchanged; only $u_p$ falls</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>$Z_0 = (60/\sqrt{\varepsilon_r})\ln(b/a)$ and $u_p = c/\sqrt{\varepsilon_r}$, so both scale as $1/\sqrt{\varepsilon_r}$ and both drop by about 41 %. The geometry term $\ln(b/a)$ is untouched &mdash; which is exactly the split this chapter opened with: geometry sets the ratio, material sets the speed.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">2. Why does microstrip need an <i>effective</i> permittivity at all?</p>
+      <div class="opts">
+        <button class="opt">Because the substrate's permittivity is never known accurately enough</button>
+        <button class="opt" data-ok="1">Because the field travels partly in the substrate and partly in air, so no single $\varepsilon$ describes it</button>
+        <button class="opt">Because the ground plane is finite rather than infinite</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>It is a two-dielectric problem. Part of the field arcs through air above the track, part passes through the substrate, and the mode is a compromise between them &mdash; which is also why it is quasi-TEM rather than TEM. $\varepsilon_{\text{eff}}$ is the single uniform permittivity that would give the same line capacitance, and it always lands between 1 and $\varepsilon_r$.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">3. A stub on FR-4 needs to be a quarter wavelength at 2.4 GHz. Roughly how long?</p>
+      <div class="opts">
+        <button class="opt">31 mm &mdash; a quarter of the free-space wavelength</button>
+        <button class="opt" data-ok="1">About 17 mm &mdash; the free-space quarter wave divided by $\sqrt{\varepsilon_{\text{eff}}}$</button>
+        <button class="opt">About 14 mm &mdash; divided by $\varepsilon_r$</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>Free space gives $\lambda_0 = 125$ mm, so $\lambda_0/4 = 31$ mm. But the wave travels in the guide, not in air: $\lambda_g = \lambda_0/\sqrt{\varepsilon_{\text{eff}}}$, and with $\varepsilon_{\text{eff}} \approx 3.3$ that is about 69 mm, giving a quarter wave near 17 mm. Note it is $\varepsilon_{\text{eff}}$ under the root, not $\varepsilon_r$ &mdash; using 4.4 would give 15 mm and a stub tuned to the wrong frequency.</p>
+    </div>
+  </div>
+</section>
+
+<nav class="pager">
+  <a href="propagation.html"><span class="dir">Previous</span><span class="ttl">Propagation on a line</span></a>
+  <a class="nx" href="reflection.html"><span class="dir">Chapter 06</span><span class="ttl">Reflection at a load</span></a>
+</nav>
+
+<footer class="site">
+  Chapter 05 of eleven. Hammerstad formulas; accuracy around 1 % for $0.1 \le W/h \le 10$ below a few GHz.
+  <span class="cr">&copy; 2026 Elie Hachem &middot; free to share and use for teaching</span>
+</footer>
+
+</div>
+
+<script src="assets/site.js"></script>
+<script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
+<script>
+var MONO = 'IBM Plex Mono, monospace';
+
+function epsEff(er, wh){
+  var e = (er+1)/2 + ((er-1)/2)*Math.pow(1 + 12/wh, -0.5);
+  if(wh < 1) e += ((er-1)/2)*0.04*Math.pow(1-wh, 2);
+  return e;
+}
+function z0ms(er, wh){
+  var ee = epsEff(er, wh);
+  if(wh <= 1) return (60/Math.sqrt(ee))*Math.log(8/wh + wh/4);
+  return 120*Math.PI/(Math.sqrt(ee)*(wh + 1.393 + 0.667*Math.log(wh + 1.444)));
+}
+
+/* ---- cross-section showing the two dielectrics ---- */
+(function(){
+  var cv = document.getElementById('xsecfig');
+  if(!cv) return;
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d');
+    c.clearRect(0,0,cv._w,cv._h);
+    EM.design(c, cv, 560, 300);
+    var gy = 232, sy = 176, tw = 96, cx = 280, th = 10;
+
+    /* substrate block */
+    c.fillStyle = C.accfill;
+    c.fillRect(120, sy, 320, gy - sy);
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.strokeRect(120, sy, 320, gy - sy);
+
+    /* ground plane and track */
+    c.fillStyle = C.ink2;
+    c.fillRect(120, gy, 320, 9);
+    c.fillRect(cx - tw/2, sy - th, tw, th);
+
+    /* field lines: through the substrate, and fringing through air */
+    c.strokeStyle = C.e; c.lineWidth = 1.4;
+    for(var k=-2;k<=2;k++){
+      var x = cx + k*(tw/5);
+      c.beginPath(); c.moveTo(x, sy); c.lineTo(x, gy); c.stroke();
+    }
+    c.strokeStyle = C.h; c.lineWidth = 1.4;
+    [0,1,2].forEach(function(i){
+      var spread = 34 + i*30, top = sy - th - 12 - i*22;
+      [-1,1].forEach(function(s){
+        c.beginPath();
+        c.moveTo(cx + s*tw/2, sy - th/2);
+        c.bezierCurveTo(cx + s*(tw/2 + spread), top, cx + s*(tw/2 + spread), gy - 20, cx + s*(tw/2 + spread*0.5), gy);
+        c.stroke();
+      });
+    });
+
+    /* labels */
+    c.font = '15px ' + MONO; c.textAlign = 'center';
+    c.fillStyle = C.ink;
+    c.fillText('track, width W', cx, sy - th - 16);
+    c.fillStyle = C.ink3; c.font = '13px ' + MONO;
+    c.fillText('ground plane', cx, gy + 28);
+    c.fillStyle = C.acc; c.font = '14px ' + MONO; c.textAlign = 'left';
+    c.fillText('substrate  εᵣ', 132, (sy+gy)/2 + 5);
+    c.fillStyle = C.h; c.font = '14px ' + MONO;
+    c.textAlign = 'left';
+    c.fillText('air  ε = 1', 20, 40);
+    c.fillStyle = C.ink3; c.font = '12px ' + MONO;
+    c.fillText('fringing field', 20, 58);
+
+    /* h dimension */
+    c.strokeStyle = C.ink3; c.lineWidth = 1;
+    c.beginPath();
+    c.moveTo(470, sy); c.lineTo(470, gy);
+    c.moveTo(464, sy); c.lineTo(476, sy);
+    c.moveTo(464, gy); c.lineTo(476, gy); c.stroke();
+    c.fillStyle = C.ink; c.font = '14px ' + MONO; c.textAlign = 'left';
+    c.fillText('h', 482, (sy+gy)/2 + 5);
+    c.restore();
+  }, false);
+})();
+
+/* ---- Hammerstad calculator with a live cross-section ---- */
+(function(){
+  var cv = document.getElementById('msfig');
+  if(!cv) return;
+  var wh = 2, er = 4.4, h = 1.6, f = 2.4;
+  function read(){
+    wh = +document.getElementById('wh').value;
+    er = +document.getElementById('er').value;
+    h  = +document.getElementById('hh').value;
+    f  = +document.getElementById('fr').value;
+  }
+  function sync(){
+    read();
+    document.getElementById('whv').textContent = wh.toFixed(2);
+    document.getElementById('erv').textContent = er.toFixed(1);
+    document.getElementById('hhv').textContent = h.toFixed(2);
+    document.getElementById('frv').textContent = f.toFixed(1);
+    var ee = epsEff(er, wh), z = z0ms(er, wh);
+    var lam0 = 299.792458/f;            /* mm */
+    var lg = lam0/Math.sqrt(ee);
+    document.getElementById('m-ee').textContent = ee.toFixed(2);
+    document.getElementById('m-z0').textContent = z.toFixed(1);
+    document.getElementById('m-w').textContent = (wh*h).toFixed(2);
+    document.getElementById('m-lg').textContent = lg.toFixed(1);
+    document.getElementById('m-q').textContent = (lg/4).toFixed(1);
+    EM.redrawStatic();
+  }
+  ['wh','er','hh','fr'].forEach(function(id){
+    document.getElementById(id).addEventListener('input', sync);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.btns button[data-m]'), function(b){
+    b.addEventListener('click', function(){
+      var v = b.getAttribute('data-m').split(',');
+      document.getElementById('wh').value = v[0];
+      document.getElementById('er').value = v[1];
+      document.getElementById('hh').value = v[2];
+      document.getElementById('fr').value = v[3];
+      sync();
+    });
+  });
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0,0,W,H);
+    var z = z0ms(er, wh), ee = epsEff(er, wh);
+
+    /* left: cross-section drawn to the current W/h */
+    var boxW = Math.min(W*0.46, 320);
+    var hpx = 46, gy = H*0.66, sy = gy - hpx;
+    var cx = boxW/2;
+    var wpx = Math.max(4, Math.min(boxW*0.82, wh*hpx));
+    c.fillStyle = C.accfill; c.fillRect(cx - boxW*0.42, sy, boxW*0.84, hpx);
+    c.strokeStyle = C.line2; c.lineWidth = 1; c.strokeRect(cx - boxW*0.42, sy, boxW*0.84, hpx);
+    c.fillStyle = C.ink2;
+    c.fillRect(cx - boxW*0.42, gy, boxW*0.84, 6);
+    c.fillRect(cx - wpx/2, sy - 7, wpx, 7);
+    /* real dimensions on the drawing: h only converts the ratio to millimetres,
+       so without these the h slider looks as though it does nothing */
+    c.font = '11px ' + MONO; c.textAlign = 'center'; c.fillStyle = C.ink;
+    c.fillText('W = ' + (wh*h).toFixed(2) + ' mm', cx, sy - 19);
+    c.fillStyle = C.ink3;
+    c.fillText('W/h = ' + wh.toFixed(2) + '   εᵣ = ' + er.toFixed(1), cx, gy + 22);
+    c.textAlign = 'left';
+    c.fillText('h = ' + h.toFixed(2) + ' mm', cx + boxW*0.44, (sy+gy)/2 + 4);
+    c.strokeStyle = C.ink3; c.lineWidth = 1;
+    c.beginPath();
+    c.moveTo(cx + boxW*0.435, sy); c.lineTo(cx + boxW*0.435, gy);
+    c.moveTo(cx + boxW*0.42, sy); c.lineTo(cx + boxW*0.45, sy);
+    c.moveTo(cx + boxW*0.42, gy); c.lineTo(cx + boxW*0.45, gy); c.stroke();
+
+    /* right: Z0 against W/h, with the current point marked */
+    var L = boxW + 34, R = 20, T = 22, B = 40;
+    if(W - L - R < 80){ return; }
+    var x0 = 0.1, x1 = 8, y0 = 0, y1 = 200;
+    function px(v){ return L + (v-x0)/(x1-x0)*(W-L-R); }
+    function py(v){ return (H-B) - (v-y0)/(y1-y0)*(H-T-B); }
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L, H-B+.5); c.lineTo(W-R, H-B+.5);
+    c.moveTo(L+.5, T); c.lineTo(L+.5, H-B); c.stroke();
+    c.strokeStyle = C.ink3; c.setLineDash([3,3]); c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L, py(50)); c.lineTo(W-R, py(50)); c.stroke();
+    c.setLineDash([]);
+    c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
+    for(var i=0;i<=200;i++){
+      var v = x0 + (i/200)*(x1-x0);
+      c.lineTo(px(v), py(Math.min(z0ms(er, v), y1)));
+    }
+    c.stroke();
+    c.fillStyle = C.h;
+    c.beginPath(); c.arc(px(wh), py(Math.min(z, y1)), 5, 0, EM.TAU); c.fill();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3;
+    c.textAlign = 'right';
+    c.fillText('200 Ω', L-6, py(200)+4);
+    c.fillText('50', L-6, py(50)+4);
+    c.fillText('0', L-6, py(0)+4);
+    c.textAlign = 'center';
+    c.fillText('W/h', (L+W-R)/2, H-8);
+    c.textAlign = 'left'; c.fillStyle = C.e;
+    c.fillText('Z₀ vs W/h', L+7, T+10);
+    c.fillStyle = C.acc; c.textAlign = 'right';
+    c.fillText('εeff = ' + ee.toFixed(2), W-R, T+10);
+  }, false);
+
+  sync();
+})();
+</script>
+</body>
+</html>

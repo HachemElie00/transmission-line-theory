@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Impedance matching &middot; Transmission Line Theory</title>
+<link rel="stylesheet" href="assets/site.css">
+<style>
+canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1/1;
+  margin-inline:auto;background:var(--sunk)}
+</style>
+</head>
+<body>
+
+<header class="mast"><div class="in">
+  <a class="home" href="index.html">Transmission Line Theory</a>
+  <span class="sep"></span>
+  <span class="ch">11 &middot; Impedance matching</span>
+  <span class="nav"><a href="smith-chart.html" title="Previous">‹</a><a href="smith-tool.html" title="Next">›</a></span>
+</div></header>
+
+<div class="wrap">
+
+<div class="hero">
+  <p class="kicker">Chapter 11 &middot; the last one</p>
+  <h1>Impedance matching</h1>
+  <p class="lead">Every chapter so far has been describing what a mismatched line does. This one undoes it. Two tools &mdash; a length of line, and a stub &mdash; are enough to turn any passive load into a perfect match, and the Smith chart turns the design into a two-step construction.</p>
+  <p class="t" style="margin-top:20px"><b>Assumes:</b> chapters 09 and 10 &mdash; stubs, and reading the chart.</p>
+</div>
+
+<section class="blk" id="why">
+  <h2>What matching buys</h2>
+  <p class="t">The goal is stated in one line: make the impedance seen at the input equal $Z_0$, so that $\Gamma = 0$ and no wave returns. Four things follow from achieving it.</p>
+
+  <div class="tw"><table>
+    <tr><th>Benefit</th><th>Why</th></tr>
+    <tr><td><b>All the power arrives</b></td><td>the reflected fraction $|\Gamma|^2$ goes to zero</td></tr>
+    <tr><td><b>Length stops mattering</b></td><td>with no reflected wave there is nothing to rotate, so $Z_{\text{in}} = Z_0$ at every distance</td></tr>
+    <tr><td><b>No voltage peaks</b></td><td>the standing-wave maximum $1+|\Gamma|$ collapses to 1, so nothing is over-stressed</td></tr>
+    <tr><td><b>The source behaves</b></td><td>amplifiers are specified into a known load; a reflection can detune or damage them</td></tr>
+  </table></div>
+
+  <p class="t">The second row is the one that changes how a system is built. An unmatched line is a component whose behaviour depends on its own length, so every cable becomes part of the design. Match it and the cable is just a cable again.</p>
+
+  <div class="key">
+    <span class="lab">The constraint that shapes every method</span>
+    <p>A matching network must be built from <b>lossless</b> elements. Putting a resistor in to soak up the reflection would work, and would also throw away the power you were trying to deliver. So every technique below uses only line lengths, stubs, inductors and capacitors &mdash; things that store energy rather than consume it.</p>
+  </div>
+</section>
+
+<section class="blk" id="quarter">
+  <h2>When the load is real: the quarter-wave transformer</h2>
+  <p class="t">Chapter 09 already solved this case. A real load $R_L$ matches to $Z_0$ through a quarter-wave section of $Z_1 = \sqrt{Z_0 R_L}$, and that is the whole design.</p>
+
+  <p class="t">A complex load can be brought into that case first. Chapter 08 showed that at a voltage minimum the impedance is <b>purely real</b> and equals $Z_0/S$. So: walk along the line to the first minimum, and transform from there.</p>
+
+  <ol class="steps">
+    <li><div>Find $l_{\min}$, the distance from the load to the first voltage minimum.</div></li>
+    <li><div>At that point $R = Z_0/S$, a pure resistance.</div></li>
+    <li><div>Insert a quarter-wave section of $Z_1 = \sqrt{Z_0 \cdot Z_0/S} = Z_0/\sqrt{S}$.</div></li>
+  </ol>
+
+  <p class="t">It works, and for a fixed frequency it is clean. The drawback is practical: $Z_1$ comes out as whatever the algebra demands, and on microstrip that means a track of a particular width you may not want, or on coax a cable impedance nobody sells. <b>Stub matching avoids that entirely</b>, because every piece of it is the same line you already have.</p>
+</section>
+
+<section class="blk" id="stub">
+  <h2>Single-stub matching</h2>
+  <p class="t">The idea is two moves, and each move fixes one of the two numbers you need to fix.</p>
+
+  <div class="eq box">
+    $$\textbf{1. Travel} \;\; d \;\text{ along the line until } \; y = 1 + jb$$
+    $$\textbf{2. Add a shunt stub } \; \text{of susceptance } -jb \;\Rightarrow\; y_{\text{total}} = 1$$
+    <span class="note">the line fixes the real part; the stub cancels what is left</span>
+  </div>
+
+  <p class="t">Two points of technique are worth stating plainly. We work in <b>admittance</b> because the stub goes in parallel, and parallel elements add admittances &mdash; that is the only reason chapter 10 bothered with the overlay. And the stub is <b>purely reactive</b>, so it can change $b$ without touching $g$; it cannot fix the real part, which is why the travel has to come first.</p>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; where to stop, in closed form</summary>
+    <div class="body">
+      <p>Write $\Gamma(d) = u + jv$ with $u^2 + v^2 = |\Gamma|^2 = m^2$, constant on a lossless line. The normalised admittance there is</p>
+      <div class="eq">$$y = \frac{1-\Gamma}{1+\Gamma} = \frac{(1-m^2) - j2v}{(1+u)^2 + v^2}$$</div>
+      <p>Setting the real part to 1 gives a condition of striking simplicity:</p>
+      <div class="eq">$$\frac{1-m^2}{(1+u)^2+v^2} = 1 \;\Longrightarrow\; 1-m^2 = 1 + 2u + m^2 \;\Longrightarrow\; \boxed{u = -m^2}$$</div>
+      <p>So you must travel until the <b>real part of $\Gamma$ equals $-|\Gamma|^2$</b>. Since $|\Gamma|$ is fixed, that is a vertical line cutting the constant-SWR circle in two places &mdash; hence <b>two solutions</b> per half wavelength:</p>
+      <div class="eq">$$v = \pm m\sqrt{1-m^2}$$</div>
+      <p>The distance follows from how far $\Gamma$ must rotate clockwise from $\theta_L$ to reach that point, at $2\beta$ per unit length. And the leftover susceptance is</p>
+      <div class="eq">$$b = \frac{-2v}{1-m^2} = \mp\frac{2m}{\sqrt{1-m^2}}$$</div>
+      <p>Finally the stub length. A shorted stub has $y = -j\cot\beta l_s$ and an open one $y = +j\tan\beta l_s$, so setting either equal to $-jb$ gives</p>
+      <div class="eq">$$\text{shorted:}\;\; \cot\beta l_s = b \qquad\qquad \text{open:}\;\; \tan\beta l_s = -b$$</div>
+      <p>Every quantity is closed-form. Nothing here needs iteration, and the chart below evaluates exactly these expressions.</p>
+    </div>
+  </details>
+
+  <h3>What the g = 1 circle is, and why you aim at it</h3>
+  <p class="t">Normalised admittance splits as $y = g + jb$, where $g$ is the <b>conductance</b> and $b$ the <b>susceptance</b> &mdash; the admittance counterparts of $r$ and $x$. The <b>$g = 1$ circle</b> is simply the set of all points whose conductance is 1, whatever their susceptance. It is a circle for the same reason the constant-$r$ curves are: chapter 10 showed the map from impedance to $\Gamma$ turns straight grid lines into circles, and admittance is that same map half a turn round.</p>
+
+  <p class="t">Geometrically it is <b>the $r = 1$ circle rotated 180&deg;</b>. It therefore passes through the centre of the chart, and runs from $\Gamma = 0$ out to $\Gamma = -1$.</p>
+
+  <p class="t">It is the target because of what a stub can and cannot do:</p>
+
+  <div class="tw"><table>
+    <tr><th>Element</th><th>Changes</th><th>Leaves alone</th><th>Moves you along</th></tr>
+    <tr><td>Length of line</td><td>both $g$ and $b$</td><td>$|\Gamma|$</td><td>the constant-SWR circle</td></tr>
+    <tr><td>Shunt stub</td><td>$b$ only</td><td>$g$</td><td>a constant-$g$ circle</td></tr>
+  </table></div>
+
+  <p class="t">The destination is the centre, $y = 1 + j0$, which sits on the $g = 1$ circle. Since the stub cannot change $g$, <b>you must already have $g = 1$ before you add it</b> &mdash; and the only tool that can change $g$ is the length of line. Hence the order: travel until you land on that circle, then let the stub carry you along it to the centre.</p>
+
+  <p class="t">On the chart the construction is therefore two arcs. Rotate clockwise along the constant-SWR circle until you strike the $g = 1$ circle; then ride that circle to the centre. The first arc is the length of line; the second is the stub.</p>
+
+  <figure class="fig">
+    <div style="background:var(--sunk);padding-block:6px"><canvas id="match"></canvas></div>
+    <div class="rail">
+      <div class="ctl"><label for="mr">r<sub>L</sub></label><input type="range" id="mr" min="0.05" max="6" step="0.01" value="2"><output id="mrv">2.00</output></div>
+      <div class="ctl"><label for="mx">x<sub>L</sub></label><input type="range" id="mx" min="-5" max="5" step="0.01" value="0"><output id="mxv">0.00</output></div>
+    </div>
+    <div class="rail" style="border-top:0;padding-top:0">
+      <button id="alt">Other solution</button>
+      <button id="typ">Shorted stub</button>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>SWR before</dt><dd id="m-swr">3.00</dd></div>
+      <div class="rd"><dt>travel d</dt><dd id="m-d">0.152&lambda;</dd></div>
+      <div class="rd"><dt>y there</dt><dd id="m-y">1 + j0.71</dd></div>
+      <div class="rd"><dt>stub length</dt><dd id="m-ls">0.152&lambda;</dd></div>
+      <div class="rd"><dt>y after stub</dt><dd id="m-tot">1.00 + j0.00</dd></div>
+    </dl>
+    <div class="btns">
+      <button data-m="2,0">r = 2</button>
+      <button data-m="0.5,0">r = 0.5</button>
+      <button data-m="1,1.5">1 + j1.5</button>
+      <button data-m="0.3,-0.6">0.3 &minus; j0.6</button>
+      <button data-m="3,2">3 + j2</button>
+    </div>
+    <figcaption class="cap">teal: travel along the line. coral: the stub's shunt susceptance. the violet circle is g = 1 &mdash; the r = 1 circle, half a turn round.</figcaption>
+  </figure>
+
+  <p class="t">The last readout is the check that matters: after the stub, $y = 1.00 + j0.00$ exactly, for every load you can set. Press <b>Other solution</b> to see the second intersection &mdash; both match perfectly, and choosing between them is a practical question. The shorter travel usually wins, but a stub length near zero or near $\lambda/2$ is awkward to fabricate, so the other branch sometimes gives a more comfortable pair of dimensions.</p>
+
+  <p class="t">To design one against a real chart &mdash; with the wavelength scales round the rim, the stub drawn as its own arc, and the series-stub and L-network versions of the same load side by side &mdash; use the <a href="smith-tool.html">workbench</a>.</p>
+
+  <figure class="fig">
+    <canvas id="layout" class="static" style="height:260px"></canvas>
+    <figcaption class="cap">what the two numbers mean physically &mdash; d from the load to the tee, l<sub>s</sub> from the tee to the stub's end</figcaption>
+  </figure>
+</section>
+
+<section class="blk" id="lumped">
+  <h2>Below microwave: the L-network</h2>
+  <p class="t">Stubs need a length of line comparable with a wavelength. At 100 MHz that is a couple of metres, which no circuit board will carry, so lower frequencies use <b>lumped</b> matching instead: two reactive components in an L.</p>
+
+  <div class="tw"><table>
+    <tr><th>Move</th><th>Element</th><th>On the chart</th></tr>
+    <tr><td>Series L or C</td><td>adds reactance</td><td>along a constant-$r$ circle</td></tr>
+    <tr><td>Shunt L or C</td><td>adds susceptance</td><td>along a constant-$g$ circle</td></tr>
+  </table></div>
+
+  <p class="t">Matching is then a path from the load to the centre using only those two kinds of arc. Two elements are always enough, because one constant-$r$ circle and one constant-$g$ circle through the centre will always intersect &mdash; usually twice, which is again why there are two solutions.</p>
+
+  <p class="t">The trade-off against stubs is worth naming. Lumped parts are tiny at low frequency and hopeless at high frequency, where their own parasitics dominate and the "capacitor" stops being one. Stubs are exact and repeatable at microwave and absurdly large below it. The crossover sits around a gigahertz, which is why boards in that band often use both.</p>
+</section>
+
+<section class="blk" id="bandwidth">
+  <h2>Nothing matches over all frequencies</h2>
+  <p class="t">Every network here is designed at one frequency. Move away from it and the electrical lengths change, the reactances change, and the match degrades &mdash; exactly as chapter 09's transformer did.</p>
+
+  <p class="t">This is not a limitation of any particular technique. There is a theoretical bound, the <b>Bode&ndash;Fano limit</b>, which says that for a given load the total match quality available across all frequencies is fixed: you may trade a deeper match over a narrow band against a shallower one over a wide band, but the budget cannot be enlarged.</p>
+
+  <div class="eq box">
+    $$\int_0^\infty \ln\frac{1}{|\Gamma(\omega)|}\,d\omega \;\le\; \frac{\pi}{RC}$$
+    <span class="note">for a parallel RC load &mdash; the area under the curve is bought and paid for</span>
+  </div>
+
+  <p class="t">The engineering consequence is simple to state. If you need more bandwidth, use <b>more sections</b> &mdash; two stubs, a multi-section transformer, a taper &mdash; and accept the extra size. A perfect match over an infinite band is not difficult, it is impossible, and knowing that saves a great deal of wasted effort.</p>
+</section>
+
+<section class="blk" id="end">
+  <h2>Where this leaves you</h2>
+  <p class="t">The chain is complete. A changing electric field makes a magnetic one, which makes an electric one a little further along, and the disturbance walks. Confine it between two conductors and the same physics reads as a ladder of $L$ and $C$. Terminate that ladder in the wrong impedance and a wave comes back. Two waves interfere into a standing pattern; that pattern makes the impedance depend on where you stand; and that dependence, drawn on a disc, is the chart you just used to cancel the whole thing out.</p>
+
+  <p class="t">Every step was derived rather than asserted, and nothing was used before it was earned. The factors of two that looked arbitrary in chapter 07 were round trips. The circles on the chart were a M&ouml;bius map of straight lines. The quarter wave that inverts an impedance is the half turn that converts impedance to admittance.</p>
+
+  <div class="key">
+    <span class="lab">What comes after</span>
+    <p>The natural next topics are waveguides, where the TEM assumption finally fails and modes appear; antennas, where the line is deliberately mismatched to free space; and scattering parameters, which generalise $\Gamma$ to networks with more than one port. All three assume exactly what you have just built.</p>
+  </div>
+</section>
+
+<section class="blk" id="check">
+  <div class="check">
+    <h3>Self-check</h3>
+    <p class="t" style="margin-top:6px">Three questions to finish on.</p>
+
+    <div class="q">
+      <p class="qt">1. Why must the travel along the line come before the stub, rather than after?</p>
+      <div class="opts">
+        <button class="opt">Because the stub would otherwise be at the wrong distance from the source</button>
+        <button class="opt" data-ok="1">Because a lossless stub can only change the susceptance, so the conductance must already be 1 when it is added</button>
+        <button class="opt">Because the order affects the bandwidth of the result</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>A purely reactive shunt element adds $jb$ and cannot alter $g$ at all &mdash; on the chart it moves you along a constant-$g$ circle. Since the target is $y = 1$, you must already be on the $g = 1$ circle before the stub can finish the job, and travelling along the line is the only move available that changes $g$.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">2. Why are there always two single-stub solutions?</p>
+      <div class="opts">
+        <button class="opt">One works for inductive loads and the other for capacitive ones</button>
+        <button class="opt" data-ok="1">The constant-SWR circle crosses the $g = 1$ circle at two points, so there are two valid places to stop</button>
+        <button class="opt">One uses a shorted stub and the other an open stub</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>Travelling along the line moves you round a circle of fixed radius, and that circle cuts the $g = 1$ circle twice &mdash; algebraically, $v = \pm m\sqrt{1-m^2}$. Both give a perfect match; they differ in the distance and in the sign of the leftover $b$, hence in the stub length. Either stub type can be used with either solution.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">3. Could you match a load with a resistor instead, and would anything be wrong with that?</p>
+      <div class="opts">
+        <button class="opt">No &mdash; a resistor cannot produce $\Gamma = 0$ for a complex load</button>
+        <button class="opt" data-ok="1">Yes, and the input would look matched &mdash; but the power would be dissipated in the resistor instead of reaching the load</button>
+        <button class="opt">Yes, and it is the standard approach below 1 GHz</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>A resistive pad genuinely reduces $|\Gamma|$ at the input, and is sometimes used deliberately to protect a source from a badly behaved load. But it achieves this by <i>absorbing</i> the reflection, which defeats the usual purpose: the power you were trying to deliver ends up as heat. That is exactly why every network in this chapter is built only from elements that store energy rather than consume it.</p>
+    </div>
+  </div>
+</section>
+
+<nav class="pager">
+  <a href="smith-chart.html"><span class="dir">Previous</span><span class="ttl">The Smith chart</span></a>
+  <a class="nx" href="smith-tool.html"><span class="dir">Next</span><span class="ttl">Workbench &middot; the full chart</span></a>
+</nav>
+
+<footer class="site">
+  Chapter 11 of eleven &mdash; the last. Lossless line; all impedances and admittances normalised to $Z_0$.
+  <span class="cr">&copy; 2026 Elie Hachem &middot; free to share and use for teaching</span>
+</footer>
+
+</div>
+
+<script src="assets/site.js"></script>
+<script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
+<script>
+var MONO = 'IBM Plex Mono, monospace';
+
+function zToG(r, x){
+  var nr = r-1, ni = x, dr = r+1, di = x, d = dr*dr + di*di;
+  if(d < 1e-12) return [-1,0];
+  return [(nr*dr + ni*di)/d, (ni*dr - nr*di)/d];
+}
+function gToY(u, v){
+  var nr = 1-u, ni = -v, dr = 1+u, di = v, d = dr*dr + di*di;
+  if(d < 1e-9) return [1e6, 0];
+  return [(nr*dr + ni*di)/d, (ni*dr - nr*di)/d];
+}
+
+/* closed-form single-stub solution. which = 0 or 1 picks the intersection. */
+function solveStub(rL, xL, which, openStub){
+  var g = zToG(rL, xL), m = Math.hypot(g[0], g[1]);
+  if(m < 1e-4) return null;
+  var u = -m*m;
+  var v2 = m*m - u*u; if(v2 < 0) v2 = 0;
+  var v = Math.sqrt(v2) * (which ? 1 : -1);
+  var phi = Math.atan2(g[1], g[0]) - Math.atan2(v, u);
+  while(phi < 0) phi += Math.PI*2;
+  while(phi >= Math.PI*2) phi -= Math.PI*2;
+  var b = -2*v/(1 - m*m);
+  var a;
+  if(openStub){ a = Math.atan(-b); if(a < 0) a += Math.PI; }   /* tan(bl) = -b  */
+  else { a = Math.atan2(1, b); }                                /* cot(bl) = b   */
+  return { m:m, gd:[u,v], d:phi/(4*Math.PI), b:b, ls:a/(2*Math.PI) };
+}
+
+(function(){
+  var cv = document.getElementById('match');
+  if(!cv) return;
+  var rL = 2, xL = 0, which = 0, openStub = false, SOL = null;
+
+  function sync(){
+    rL = +document.getElementById('mr').value;
+    xL = +document.getElementById('mx').value;
+    document.getElementById('mrv').textContent = rL.toFixed(2);
+    document.getElementById('mxv').textContent = xL.toFixed(2);
+    SOL = solveStub(rL, xL, which, openStub);
+    var el = {swr:'m-swr', d:'m-d', y:'m-y', ls:'m-ls', tot:'m-tot'};
+    if(!SOL){
+      document.getElementById(el.swr).textContent = '1.00';
+      ['d','y','ls'].forEach(function(k){ document.getElementById(el[k]).textContent = '—'; });
+      document.getElementById(el.tot).textContent = 'already matched';
+    } else {
+      var m = SOL.m;
+      document.getElementById(el.swr).textContent = m >= 0.999 ? '∞' : ((1+m)/(1-m)).toFixed(2);
+      document.getElementById(el.d).innerHTML = SOL.d.toFixed(3) + '&lambda;';
+      document.getElementById(el.y).innerHTML =
+        '1 ' + (SOL.b < 0 ? '− j' : '+ j') + Math.abs(SOL.b).toFixed(2);
+      document.getElementById(el.ls).innerHTML = SOL.ls.toFixed(3) + '&lambda;';
+      /* the proof: admittance at d, plus the stub, should be exactly 1 */
+      var y = gToY(SOL.gd[0], SOL.gd[1]);
+      var tot = [y[0], y[1] - SOL.b];
+      document.getElementById(el.tot).textContent =
+        tot[0].toFixed(2) + (tot[1] < -0.005 ? ' − j' : ' + j') + Math.abs(tot[1]).toFixed(2);
+    }
+    EM.redrawStatic();
+  }
+  ['mr','mx'].forEach(function(id){ document.getElementById(id).addEventListener('input', sync); });
+  var ab = document.getElementById('alt');
+  ab.addEventListener('click', function(){ which = which ? 0 : 1; sync(); });
+  var tb = document.getElementById('typ');
+  tb.addEventListener('click', function(){
+    openStub = !openStub;
+    tb.textContent = openStub ? 'Open stub' : 'Shorted stub';
+    sync();
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.btns button[data-m]'), function(b){
+    b.addEventListener('click', function(){
+      var v = b.getAttribute('data-m').split(',');
+      document.getElementById('mr').value = v[0];
+      document.getElementById('mx').value = v[1];
+      sync();
+    });
+  });
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0,0,W,H);
+    var R = Math.min(W,H)/2 - 24, cx = W/2, cy = H/2;
+    function P(u,v){ return [cx + u*R, cy - v*R]; }
+
+    /* faint impedance grid for orientation */
+    c.save();
+    c.beginPath(); c.arc(cx, cy, R, 0, Math.PI*2); c.clip();
+    c.globalAlpha = .28; c.lineWidth = 1;
+    [0.5,1,2].forEach(function(r){
+      c.strokeStyle = C.e;
+      c.beginPath(); c.arc(cx + (r/(1+r))*R, cy, R/(1+r), 0, Math.PI*2); c.stroke();
+    });
+    [1,-1,0.5,-0.5].forEach(function(x){
+      c.strokeStyle = C.h;
+      c.beginPath(); c.arc(cx + R, cy - (1/x)*R, Math.abs(1/x)*R, 0, Math.PI*2); c.stroke();
+    });
+    c.globalAlpha = 1;
+    /* the g = 1 circle: the r = 1 circle, half a turn round */
+    c.strokeStyle = C.acc; c.lineWidth = 2;
+    c.beginPath(); c.arc(cx - 0.5*R, cy, 0.5*R, 0, Math.PI*2); c.stroke();
+    c.restore();
+
+    c.strokeStyle = C.line2; c.lineWidth = 1.5;
+    c.beginPath(); c.arc(cx, cy, R, 0, Math.PI*2); c.stroke();
+    c.strokeStyle = C.line; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(cx-R, cy); c.lineTo(cx+R, cy); c.stroke();
+
+    c.font = '11px ' + MONO; c.textAlign = 'center';
+    c.fillStyle = C.acc;
+    c.fillText('g = 1', cx - R*0.5, cy - R*0.5 - 7);
+
+    if(!SOL){
+      c.fillStyle = C.ink;
+      c.beginPath(); c.arc(cx, cy, 6, 0, Math.PI*2); c.fill();
+      c.fillText('already matched', cx, cy + 22);
+      return;
+    }
+
+    var g = zToG(rL, xL), m = SOL.m;
+    /* constant SWR circle */
+    c.strokeStyle = C.ink3; c.lineWidth = 1; c.setLineDash([3,4]);
+    c.beginPath(); c.arc(cx, cy, m*R, 0, Math.PI*2); c.stroke();
+    c.setLineDash([]);
+
+    /* step 1: travel along the line, clockwise */
+    var a0 = Math.atan2(g[1], g[0]);
+    c.strokeStyle = C.e; c.lineWidth = 4.5; c.globalAlpha = .75;
+    c.beginPath(); c.arc(cx, cy, m*R, -a0, -a0 + 4*Math.PI*SOL.d, false); c.stroke();
+    c.globalAlpha = 1;
+
+    /* step 2: the stub, riding the g = 1 circle to the centre */
+    var gd = SOL.gd;
+    var ang0 = Math.atan2(gd[1], gd[0] + 0.5);     /* angle on the g=1 circle */
+    var angEnd = 0;                                 /* the origin sits at angle 0 */
+    c.strokeStyle = C.h; c.lineWidth = 4.5; c.globalAlpha = .8;
+    c.beginPath();
+    c.arc(cx - 0.5*R, cy, 0.5*R, -ang0, -angEnd, gd[1] < 0);
+    c.stroke(); c.globalAlpha = 1;
+
+    /* markers */
+    var pl = P(g[0], g[1]), pd = P(gd[0], gd[1]);
+    c.strokeStyle = C.ink; c.lineWidth = 2;
+    c.beginPath(); c.arc(pl[0], pl[1], 6, 0, Math.PI*2); c.stroke();
+    c.fillStyle = C.e;
+    c.beginPath(); c.arc(pd[0], pd[1], 5.5, 0, Math.PI*2); c.fill();
+    c.fillStyle = C.ink;
+    c.beginPath(); c.arc(cx, cy, 6, 0, Math.PI*2); c.fill();
+
+    c.font = '11px ' + MONO;
+    c.fillStyle = C.ink; c.textAlign = pl[0] > cx ? 'left' : 'right';
+    c.fillText('load', pl[0] + (pl[0] > cx ? 9 : -9), pl[1] + 4);
+    c.fillStyle = C.e; c.textAlign = pd[0] > cx ? 'left' : 'right';
+    c.fillText('y = 1 + jb', pd[0] + (pd[0] > cx ? 9 : -9), pd[1] + 4);
+    /* to the right of the centre: the stub arc leaves it downward and left */
+    c.fillStyle = C.ink3; c.textAlign = 'left';
+    c.fillText('matched', cx + 12, cy + 4);
+  }, false);
+
+  sync();
+})();
+
+/* ---- physical layout ---- */
+(function(){
+  var cv = document.getElementById('layout');
+  if(!cv) return;
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d');
+    c.clearRect(0,0,cv._w,cv._h);
+    EM.design(c, cv, 560, 260);
+    var y = 96, tee = 330, load = 500, src = 40, stubEnd = y + 104;
+
+    c.strokeStyle = C.ink2; c.lineWidth = 3; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(src, y); c.lineTo(load, y); c.stroke();
+
+    /* the stub hanging off the tee */
+    c.strokeStyle = C.h; c.lineWidth = 3;
+    c.beginPath(); c.moveTo(tee, y); c.lineTo(tee, stubEnd); c.stroke();
+    /* shorted end */
+    c.beginPath(); c.moveTo(tee - 16, stubEnd); c.lineTo(tee + 16, stubEnd); c.stroke();
+    c.fillStyle = C.h; c.font = '12px ' + MONO; c.textAlign = 'center';
+    c.fillText('short', tee, stubEnd + 18);
+
+    c.fillStyle = C.ink2;
+    c.beginPath(); c.arc(tee, y, 5, 0, EM.TAU); c.fill();
+
+    /* load box */
+    c.fillStyle = C.surface; c.fillRect(load, y-26, 46, 52);
+    c.strokeStyle = C.ink2; c.lineWidth = 2; c.strokeRect(load, y-26, 46, 52);
+    c.fillStyle = C.ink; c.font = '14px ' + MONO; c.textAlign = 'center';
+    c.fillText('Zₗ', load + 23, y + 5);
+
+    c.fillStyle = C.ink3; c.font = '12px ' + MONO; c.textAlign = 'left';
+    c.fillText('to source', src, y - 16);
+
+    /* dimensions */
+    function dim(x1, x2, yy, lab, col){
+      c.strokeStyle = C.ink3; c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(x1, yy); c.lineTo(x2, yy);
+      c.moveTo(x1, yy-6); c.lineTo(x1, yy+6);
+      c.moveTo(x2, yy-6); c.lineTo(x2, yy+6); c.stroke();
+      var w = c.measureText(lab).width + 12;
+      c.fillStyle = C.sunk; c.fillRect((x1+x2)/2 - w/2, yy-9, w, 18);
+      c.fillStyle = col; c.font = '13px ' + MONO; c.textAlign = 'center';
+      c.fillText(lab, (x1+x2)/2, yy+5);
+    }
+    dim(tee, load, y - 44, 'd', C.e);
+    c.strokeStyle = C.ink3; c.lineWidth = 1;
+    c.beginPath();
+    c.moveTo(tee + 42, y); c.lineTo(tee + 42, stubEnd);
+    c.moveTo(tee + 36, y); c.lineTo(tee + 48, y);
+    c.moveTo(tee + 36, stubEnd); c.lineTo(tee + 48, stubEnd); c.stroke();
+    c.fillStyle = C.h; c.font = '13px ' + MONO; c.textAlign = 'left';
+    c.fillText('l s', tee + 54, (y + stubEnd)/2 + 5);
+
+    c.fillStyle = C.ink3; c.font = '12px ' + MONO; c.textAlign = 'center';
+    c.fillText('everything left of the tee sees Z₀', 280, 246);
+    c.restore();
+  }, false);
+})();
+</script>
+</body>
+</html>

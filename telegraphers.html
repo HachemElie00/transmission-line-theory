@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The transmission line model &middot; Transmission Line Theory</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="mast"><div class="in">
+  <a class="home" href="index.html">Transmission Line Theory</a>
+  <span class="sep"></span>
+  <span class="ch">03 &middot; The transmission line model</span>
+  <span class="nav"><a href="circuit-to-line.html" title="Previous">‹</a><a href="propagation.html" title="Next">›</a></span>
+</div></header>
+
+<div class="wrap">
+
+<div class="hero">
+  <p class="kicker">Chapter 03</p>
+  <h1>The transmission line model</h1>
+  <p class="lead">Kirchhoff's laws fail over a long wire but hold perfectly over a short one. So apply them to a piece short enough that they are exact, and let calculus assemble the pieces. Two coupled differential equations come out, and they govern every transmission line there is.</p>
+  <p class="t" style="margin-top:20px"><b>Assumes:</b> chapter 02 &mdash; electrical length and why lumped theory fails.</p>
+</div>
+
+<section class="blk" id="params">
+  <h2>Four parameters per metre</h2>
+  <p class="t">Any transmission line is two conductors running alongside each other: coaxial cable, a twisted pair, a track over a ground plane. Whatever the geometry, the same four effects are present along the whole length.</p>
+
+  <div class="tw"><table>
+    <tr><th>Parameter</th><th>Represents</th><th>Units</th><th>Placed</th></tr>
+    <tr><td>$R'$</td><td>resistance of both conductors</td><td>&Omega;/m</td><td>in series</td></tr>
+    <tr><td>$L'$</td><td>magnetic energy stored around the current</td><td>H/m</td><td>in series</td></tr>
+    <tr><td>$G'$</td><td>leakage through the insulator between them</td><td>S/m</td><td>in shunt</td></tr>
+    <tr><td>$C'$</td><td>electric energy stored between the conductors</td><td>F/m</td><td>in shunt</td></tr>
+  </table></div>
+
+  <p class="t">Every one is quoted <b>per unit length</b>, which is what the primes mean, and that convention is doing real work. A piece of line twice as long has twice the series resistance and twice the shunt capacitance, so a slice of length $\Delta z$ contains $R'\Delta z$ ohms, $C'\Delta z$ farads, and so on. The model then scales to a line of any length without being rebuilt.</p>
+
+  <p class="t">The two <b>series</b> elements govern what happens to the current flowing along the line; the two <b>shunt</b> elements govern what leaks across between the conductors. The two <b>lossy</b> ones, $R'$ and $G'$, remove energy; the two <b>reactive</b> ones, $L'$ and $C'$, only store it and hand it back.</p>
+
+  <figure class="fig">
+    <canvas id="slicefig" class="static" style="height:300px"></canvas>
+    <figcaption class="cap">one slice of length &Delta;z &mdash; short enough that Kirchhoff's laws are exact inside it</figcaption>
+  </figure>
+
+  <div class="key">
+    <span class="lab">Where the numbers come from</span>
+    <p>$R'$, $L'$, $G'$ and $C'$ are set entirely by the cross-sectional geometry and the materials &mdash; conductor spacing, diameter, the dielectric between them. Chapter 05 computes them for coax, twin-lead and microstrip. For this chapter they are simply four given numbers.</p>
+  </div>
+</section>
+
+<section class="blk" id="derive">
+  <h2>Kirchhoff on a slice</h2>
+  <p class="t">Take one slice running from $z$ to $z + \Delta z$. Because $\Delta z$ is small, the lumped approximation is valid inside it and the ordinary circuit laws apply.</p>
+
+  <p class="t"><b>Around the loop.</b> The voltage entering is $v(z,t)$ and the voltage leaving is $v(z+\Delta z, t)$. The difference is whatever the series elements drop:</p>
+
+  <div class="eq">$$v(z,t) - v(z+\Delta z,t) = R'\Delta z\; i(z,t) + L'\Delta z\, \frac{\partial i(z,t)}{\partial t}$$</div>
+
+  <p class="t"><b>At the node.</b> The current entering is $i(z,t)$ and the current leaving is $i(z+\Delta z,t)$. What went missing was diverted across the shunt elements:</p>
+
+  <div class="eq">$$i(z,t) - i(z+\Delta z,t) = G'\Delta z\; v(z+\Delta z,t) + C'\Delta z\, \frac{\partial v(z+\Delta z,t)}{\partial t}$$</div>
+
+  <p class="t">Divide both by $\Delta z$ and let it shrink to zero. Each left-hand side becomes a derivative by definition, and the telegrapher's equations appear:</p>
+
+  <div class="eq box">
+    $$-\frac{\partial v(z,t)}{\partial z} = R'i(z,t) + L'\frac{\partial i(z,t)}{\partial t}$$
+    $$-\frac{\partial i(z,t)}{\partial z} = G'v(z,t) + C'\frac{\partial v(z,t)}{\partial t}$$
+    <span class="note">the telegrapher's equations, named for the problem they were first written to solve</span>
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; the limit, carefully</summary>
+    <div class="body">
+      <p>Take the KVL statement and divide by $\Delta z$:</p>
+      <div class="eq">$$\frac{v(z,t) - v(z+\Delta z,t)}{\Delta z} = R'i(z,t) + L'\frac{\partial i(z,t)}{\partial t}$$</div>
+      <p>The left side is minus a difference quotient, so as $\Delta z \to 0$ it becomes $-\partial v/\partial z$ by the definition of the derivative. That gives the first equation exactly.</p>
+      <p>The KCL statement needs one extra remark. Its right-hand side was written with $v(z+\Delta z, t)$, since the shunt elements sit at the far end of the slice. Expand that in a Taylor series:</p>
+      <div class="eq">$$v(z+\Delta z, t) = v(z,t) + \Delta z\frac{\partial v}{\partial z} + O(\Delta z^2)$$</div>
+      <p>Substituting gives terms in $\Delta z$ and terms in $(\Delta z)^2$. After dividing by $\Delta z$ the second group still carries a factor of $\Delta z$ and vanishes in the limit, leaving</p>
+      <div class="eq">$$-\frac{\partial i}{\partial z} = G'v + C'\frac{\partial v}{\partial t}$$</div>
+      <p><b>This is why the placement of the shunt elements does not matter.</b> Put them at the near end, the far end, or split them across both and the difference is second order in $\Delta z$ &mdash; gone in the limit. The same argument covers the choice of whether $R'$ and $L'$ sit in one conductor or are split between the two. The model has exactly one degree of freedom that survives: the four per-unit-length values.</p>
+    </div>
+  </details>
+
+  <p class="t">Look at what these two equations say. Each one relates <b>a change along the line</b> to <b>a rate of change in time</b>. Voltage falls along $z$ because current is changing in time; current falls along $z$ because voltage is changing in time. Each quantity drives the other, exactly as $\vE$ and $\vH$ did in the prologue &mdash; and for the same underlying reason, since this is that physics in circuit notation.</p>
+</section>
+
+<section class="blk" id="phasorform">
+  <h2>In phasor form</h2>
+  <p class="t">Chapter 01 established that for a single-frequency steady state, $\partial/\partial t$ becomes multiplication by $j\omega$. Applying that removes time from the problem entirely and turns the partial derivatives in $z$ into ordinary ones:</p>
+
+  <div class="eq box">
+    $$-\frac{d\tilde{V}(z)}{dz} = (R' + j\omega L')\,\tilde{I}(z)$$
+    $$-\frac{d\tilde{I}(z)}{dz} = (G' + j\omega C')\,\tilde{V}(z)$$
+    <span class="note">two coupled first-order ordinary differential equations in one variable</span>
+  </div>
+
+  <p class="t">The two bracketed groups appear so often that they earn names. $Z' = R' + j\omega L'$ is the <b>series impedance per unit length</b>; $Y' = G' + j\omega C'$ is the <b>shunt admittance per unit length</b>. In that shorthand the pair is simply</p>
+
+  <div class="eq">$$-\frac{d\tilde{V}}{dz} = Z'\tilde{I} \qquad\qquad -\frac{d\tilde{I}}{dz} = Y'\tilde{V}$$</div>
+
+  <p class="t">Which is as compact as this subject gets. Two quantities, each one's slope set by the other. The next chapter decouples them the same way the prologue decoupled $\vE$ and $\vH$ &mdash; differentiate one and substitute the other &mdash; and out come the propagation constant and the characteristic impedance.</p>
+
+  <figure class="fig">
+    <canvas id="ladderfig" style="height:250px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="cells">slices shown</label><input type="range" id="cells" min="3" max="14" step="1" value="6"><output id="cellsv">6</output></div>
+    </div>
+    <figcaption class="cap">the cascade &mdash; bar height is the voltage at each node; the disturbance passes from slice to slice rather than arriving everywhere at once</figcaption>
+  </figure>
+
+  <p class="t">Increase the number of slices and the staircase smooths into a curve. That is the whole content of the limiting process: the ladder is a discrete approximation, the telegrapher's equations are what it becomes when the steps vanish. A real line has no slices &mdash; the parameters are genuinely continuous along it.</p>
+</section>
+
+<section class="blk" id="lossless">
+  <h2>The lossless case</h2>
+  <p class="t">Most of this site works with $R' = G' = 0$. Over the short lengths used at microwave frequencies, good cable really does lose very little, and every important structural result &mdash; reflection, standing waves, impedance transformation, the Smith chart &mdash; survives the simplification unchanged. Loss changes the numbers, not the shape of the theory.</p>
+
+  <div class="eq box">
+    $$-\frac{\partial v}{\partial z} = L'\frac{\partial i}{\partial t} \qquad\qquad -\frac{\partial i}{\partial z} = C'\frac{\partial v}{\partial t}$$
+    <span class="note">the lossless telegrapher's equations &mdash; pure energy exchange between magnetic and electric storage</span>
+  </div>
+
+  <p class="t">With the loss terms gone, the pair describes something purely conservative: energy shuttling between the magnetic field of the current and the electric field of the voltage, propagating without ever being dissipated. That is a wave, and chapter 04 confirms it by solving them.</p>
+</section>
+
+<section class="blk" id="check">
+  <div class="check">
+    <h3>Self-check</h3>
+    <p class="t" style="margin-top:6px">Three questions on what the model does and does not claim.</p>
+
+    <div class="q">
+      <p class="qt">1. Why are $R'$, $L'$, $G'$ and $C'$ quoted per unit length rather than as plain circuit values?</p>
+      <div class="opts">
+        <button class="opt">Because their values change as the signal travels along the line</button>
+        <button class="opt" data-ok="1">Because the effects accumulate with distance, so a slice of length $\Delta z$ holds $R'\Delta z$ ohms and so on</button>
+        <button class="opt">Because per-metre values are what manufacturers happen to publish</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>The whole point is that these effects are distributed rather than located anywhere. Twice the length gives twice the capacitance and twice the series resistance, so only the per-metre quantity is a property of the line itself. It also makes the model independent of how finely you choose to slice.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">2. The shunt elements were drawn at the far end of the slice. Would putting them at the near end change the result?</p>
+      <div class="opts">
+        <button class="opt">Yes &mdash; it shifts every voltage by one slice, which accumulates along the line</button>
+        <button class="opt" data-ok="1">No &mdash; the difference is second order in $\Delta z$ and vanishes in the limit</button>
+        <button class="opt">Yes, but only for lossy lines where $G'$ is non-zero</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>Expanding $v(z+\Delta z)$ in a Taylor series produces the same first-order terms either way; the placement only affects terms carrying an extra factor of $\Delta z$, which disappear when the slice shrinks. This is the sense in which the ladder is a scaffold: the final equations do not remember how it was built.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">3. What do the telegrapher's equations say, physically?</p>
+      <div class="opts">
+        <button class="opt">That voltage and current are always proportional, with $Z_0$ as the constant</button>
+        <button class="opt">That energy is conserved along the line</button>
+        <button class="opt" data-ok="1">That a change in one quantity along the line is driven by a change in the other over time, each feeding the other</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>Each equation couples a spatial derivative of one quantity to a time derivative of the other &mdash; the same mutual-regeneration structure as Faraday and Amp&egrave;re in the prologue, which is unsurprising given where this model comes from. The fixed ratio $Z_0$ is a <i>consequence</i> derived in chapter 04, and it holds for a single travelling wave, not for the total voltage and current on a mismatched line.</p>
+    </div>
+  </div>
+</section>
+
+<nav class="pager">
+  <a href="circuit-to-line.html"><span class="dir">Previous</span><span class="ttl">When a circuit becomes a line</span></a>
+  <a class="nx" href="propagation.html"><span class="dir">Chapter 04</span><span class="ttl">Propagation on a line</span></a>
+</nav>
+
+<footer class="site">
+  Chapter 03 of eleven.
+  <span class="cr">&copy; 2026 Elie Hachem &middot; free to share and use for teaching</span>
+</footer>
+
+</div>
+
+<script src="assets/site.js"></script>
+<script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
+<script>
+var MONO = 'IBM Plex Mono, monospace';
+
+/* small schematic primitives, drawn in design coordinates */
+function resistor(c, x1, y, x2, col){
+  var n = 6, w = (x2-x1), h = 7;
+  c.strokeStyle = col; c.lineWidth = 1.8; c.beginPath();
+  c.moveTo(x1, y);
+  for(var i=0;i<n;i++){
+    c.lineTo(x1 + w*(i+0.5)/n, y + (i%2 ? h : -h));
+  }
+  c.lineTo(x2, y); c.stroke();
+}
+function inductor(c, x1, y, x2, col){
+  var n = 4, w = (x2-x1)/n, r = w/2;
+  c.strokeStyle = col; c.lineWidth = 1.8; c.beginPath();
+  c.moveTo(x1, y);
+  for(var i=0;i<n;i++) c.arc(x1 + w*(i+0.5), y, r, Math.PI, 0, false);
+  c.lineTo(x2, y); c.stroke();
+}
+function capacitor(c, x, y1, y2, col){
+  var mid = (y1+y2)/2, g = 5, w = 13;
+  c.strokeStyle = col; c.lineWidth = 1.8;
+  c.beginPath(); c.moveTo(x, y1); c.lineTo(x, mid-g); c.stroke();
+  c.beginPath(); c.moveTo(x-w, mid-g); c.lineTo(x+w, mid-g); c.stroke();
+  c.beginPath(); c.moveTo(x-w, mid+g); c.lineTo(x+w, mid+g); c.stroke();
+  c.beginPath(); c.moveTo(x, mid+g); c.lineTo(x, y2); c.stroke();
+}
+function resistorV(c, x, y1, y2, col){
+  var n = 6, h = (y2-y1), w = 7;
+  c.strokeStyle = col; c.lineWidth = 1.8; c.beginPath();
+  c.moveTo(x, y1);
+  for(var i=0;i<n;i++) c.lineTo(x + (i%2 ? w : -w), y1 + h*(i+0.5)/n);
+  c.lineTo(x, y2); c.stroke();
+}
+
+/* ---- one slice, fully labelled ---- */
+(function(){
+  var cv = document.getElementById('slicefig');
+  if(!cv) return;
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d');
+    c.clearRect(0,0,cv._w,cv._h);
+    EM.design(c, cv, 560, 300);
+    var top = 92, bot = 224, xl = 60, xr = 500, xs = 300;
+
+    /* rails */
+    c.strokeStyle = C.ink2; c.lineWidth = 2; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(xl, top); c.lineTo(120, top); c.stroke();
+    c.beginPath(); c.moveTo(250, top); c.lineTo(xr, top); c.stroke();
+    c.beginPath(); c.moveTo(xl, bot); c.lineTo(xr, bot); c.stroke();
+
+    resistor(c, 120, top, 180, C.h);
+    c.strokeStyle = C.h; c.lineWidth = 1.8;          /* lead joining R' to L' */
+    c.beginPath(); c.moveTo(180, top); c.lineTo(190, top); c.stroke();
+    inductor(c, 190, top, 250, C.h);
+    resistorV(c, xs, top, bot, C.e);
+    capacitor(c, 395, top, bot, C.e);
+    c.strokeStyle = C.ink2; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(xs, top); c.lineTo(395, top); c.stroke();
+
+    /* element labels */
+    c.textAlign = 'center'; c.font = '15px ' + MONO;
+    c.fillStyle = C.h;
+    c.fillText("R'Δz", 150, top - 22);
+    c.fillText("L'Δz", 220, top - 22);
+    c.fillStyle = C.e;
+    c.fillText("G'Δz", xs - 34, (top+bot)/2 + 5);
+    c.fillText("C'Δz", 395 + 40, (top+bot)/2 + 5);
+
+    /* terminal labels */
+    c.fillStyle = C.ink; c.font = '14px ' + MONO;
+    c.textAlign = 'left';
+    c.fillText('v(z,t)', 16, (top+bot)/2 - 6);
+    c.fillText('i(z,t)', 16, (top+bot)/2 + 14);
+    c.textAlign = 'right';
+    c.fillText('v(z+Δz,t)', 544, (top+bot)/2 - 6);
+    c.fillText('i(z+Δz,t)', 544, (top+bot)/2 + 14);
+
+    /* KVL / KCL annotations */
+    c.fillStyle = C.ink3; c.font = '13px ' + MONO; c.textAlign = 'center';
+    c.fillText('KVL around here', 185, bot + 34);
+    c.strokeStyle = C.ink3; c.lineWidth = 1; c.setLineDash([3,3]);
+    c.strokeRect(112, top - 12, 146, 24);
+    c.beginPath(); c.moveTo(185, bot + 22); c.lineTo(185, top + 14); c.stroke();
+    c.setLineDash([]);
+    c.fillText('KCL at this node', 348, 52);
+    c.strokeStyle = C.ink3; c.setLineDash([3,3]);
+    c.beginPath(); c.moveTo(348, 60); c.lineTo(348, top - 6); c.stroke();
+    c.setLineDash([]);
+
+    /* extent bracket */
+    c.strokeStyle = C.ink3; c.lineWidth = 1;
+    c.beginPath();
+    c.moveTo(xl, bot + 52); c.lineTo(xr, bot + 52);
+    c.moveTo(xl, bot + 46); c.lineTo(xl, bot + 58);
+    c.moveTo(xr, bot + 46); c.lineTo(xr, bot + 58); c.stroke();
+    c.fillStyle = C.sunk; c.fillRect(255, bot + 44, 50, 16);
+    c.fillStyle = C.ink; c.font = '14px ' + MONO;
+    c.fillText('Δz', 280, bot + 56);
+    c.restore();
+  }, false);
+})();
+
+/* ---- the cascade, with a wave passing through it ---- */
+(function(){
+  var cv = document.getElementById('ladderfig');
+  if(!cv) return;
+  var n = 6;
+  var sl = document.getElementById('cells');
+  sl.addEventListener('input', function(){
+    n = +this.value; document.getElementById('cellsv').textContent = n;
+  });
+
+  EM.register(function(C, t){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0,0,W,H);
+    /* upper band: the voltage plot. lower band: the schematic. never overlapping. */
+    var L = 26, R = 26, vy = H*0.30, amp = H*0.20;
+    var top = H*0.68, bot = H - 24;
+    var span = W - L - R, dx = span/n, lamCells = 4.5;
+    function volt(u){ return Math.cos(t - EM.TAU*u/lamCells); }
+
+    /* zero line for the voltage band */
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L, vy+.5); c.lineTo(W-R, vy+.5); c.stroke();
+
+    /* the continuum the staircase approximates */
+    c.strokeStyle = C.acc; c.lineWidth = 1.5; c.globalAlpha = .7;
+    c.setLineDash([4,4]); c.beginPath();
+    for(var q=0;q<=260;q++){
+      var u = q/260*n;
+      c.lineTo(L + u*dx, vy - volt(u)*amp);
+    }
+    c.stroke(); c.setLineDash([]); c.globalAlpha = 1;
+
+    /* rails */
+    c.strokeStyle = C.ink2; c.lineWidth = 2; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(L, top); c.lineTo(W-R, top);
+    c.moveTo(L, bot); c.lineTo(W-R, bot); c.stroke();
+
+    /* one series coil and one shunt cap per cell */
+    for(var i=0;i<n;i++){
+      var x0 = L + i*dx;
+      inductor(c, x0 + dx*0.16, top, x0 + dx*0.60, C.h);
+      capacitor(c, x0 + dx*0.82, top, bot, C.e);
+    }
+
+    /* node voltages, tied to their nodes by faint guides */
+    for(var k=0;k<=n;k++){
+      var x = L + k*dx, v = volt(k), y = vy - v*amp;
+      c.strokeStyle = C.line2; c.lineWidth = 1; c.globalAlpha = .55;
+      c.setLineDash([1,4]);
+      c.beginPath(); c.moveTo(x, y); c.lineTo(x, top); c.stroke();
+      c.setLineDash([]); c.globalAlpha = 1;
+      c.strokeStyle = v >= 0 ? C.e : C.h; c.lineWidth = 3;
+      c.beginPath(); c.moveTo(x, vy); c.lineTo(x, y); c.stroke();
+      c.fillStyle = v >= 0 ? C.e : C.h;
+      c.beginPath(); c.arc(x, y, 3.6, 0, EM.TAU); c.fill();
+    }
+
+    c.fillStyle = C.ink3; c.font = '11.5px ' + MONO;
+    c.textAlign = 'left'; c.fillText('node voltages', L, 15);
+    c.textAlign = 'right'; c.fillText('dashed: the continuous line', W-R, 15);
+  }, true);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Smith chart &middot; Transmission Line Theory</title>
+<link rel="stylesheet" href="assets/site.css">
+<style>
+.chartwrap{display:block;width:100%;background:var(--sunk)}
+canvas#smith{display:block;width:100%;max-width:560px;height:auto;aspect-ratio:1/1;
+  margin-inline:auto;background:var(--sunk);touch-action:none;cursor:crosshair}
+</style>
+</head>
+<body>
+
+<header class="mast"><div class="in">
+  <a class="home" href="index.html">Transmission Line Theory</a>
+  <span class="sep"></span>
+  <span class="ch">10 &middot; The Smith chart</span>
+  <span class="nav"><a href="line-lengths.html" title="Previous">‹</a><a href="matching.html" title="Next">›</a></span>
+</div></header>
+
+<div class="wrap">
+
+<div class="hero">
+  <p class="kicker">Chapter 10</p>
+  <h1>The Smith chart</h1>
+  <p class="lead">Not a nomogram, not a lookup table, and not a relic of the era before calculators. It is the impedance plane redrawn on the $\Gamma$ disc &mdash; and once you see which curves are circles and why, the whole thing becomes obvious rather than intimidating.</p>
+  <p class="t" style="margin-top:20px"><b>Assumes:</b> chapters 06 and 08 &mdash; $\Gamma$, its rotation, and input impedance.</p>
+</div>
+
+<section class="blk" id="why">
+  <h2>The problem it solves</h2>
+  <p class="t">Everything so far has moved between two descriptions of the same thing. Impedance is what components have; $\Gamma$ is what waves do. The map between them is the M&ouml;bius pair from chapter 06, in normalised form $z = Z/Z_0$:</p>
+
+  <div class="eq box">
+    $$\Gamma = \frac{z-1}{z+1} \qquad\qquad z = \frac{1+\Gamma}{1-\Gamma}$$
+  </div>
+
+  <p class="t">Each description makes different things easy, and that is the whole difficulty.</p>
+
+  <div class="tw"><table>
+    <tr><th></th><th>Easy</th><th>Awkward</th></tr>
+    <tr><td>Impedance</td><td>adding components in series, reading off $R$ and $X$</td><td>moving along a line &mdash; that tangent formula</td></tr>
+    <tr><td>$\Gamma$</td><td>moving along a line &mdash; just a rotation</td><td>seeing what impedance you are actually at</td></tr>
+  </table></div>
+
+  <p class="t">Smith's idea was to stop choosing. <b>Draw the impedance grid onto the $\Gamma$ plane</b>, and both become easy at once: travel along the line is still a plain rotation, and you can read the impedance directly off the grid you are standing on.</p>
+</section>
+
+<section class="blk" id="circles">
+  <h2>Why the grid is made of circles</h2>
+  <p class="t">Write $\Gamma = u + jv$ and $z = r + jx$, and push the second formula through. Separating real and imaginary parts gives</p>
+
+  <div class="eq">$$r = \frac{1-u^2-v^2}{(1-u)^2+v^2} \qquad\qquad x = \frac{2v}{(1-u)^2+v^2}$$</div>
+
+  <p class="t">Now ask: for a fixed $r$, what curve do $u$ and $v$ trace? Clear the denominator, collect terms and complete the square, and a circle appears &mdash; exactly, not approximately.</p>
+
+  <div class="eq box">
+    $$\textbf{constant } r: \quad \left(u - \frac{r}{1+r}\right)^2 + v^2 = \left(\frac{1}{1+r}\right)^2$$
+    $$\textbf{constant } x: \quad \left(u - 1\right)^2 + \left(v - \frac{1}{x}\right)^2 = \left(\frac{1}{x}\right)^2$$
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; completing the square</summary>
+    <div class="body">
+      <p>Take the expression for $r$ and multiply out:</p>
+      <div class="eq">$$r\left[(1-u)^2 + v^2\right] = 1 - u^2 - v^2$$</div>
+      <div class="eq">$$r - 2ru + ru^2 + rv^2 = 1 - u^2 - v^2$$</div>
+      <p>Gather every term in $u$ and $v$ on the left:</p>
+      <div class="eq">$$u^2(1+r) - 2ru + v^2(1+r) = 1 - r$$</div>
+      <p>Divide by $(1+r)$ and complete the square in $u$:</p>
+      <div class="eq">$$u^2 - \frac{2r}{1+r}u + \left(\frac{r}{1+r}\right)^2 + v^2 = \frac{1-r}{1+r} + \left(\frac{r}{1+r}\right)^2$$</div>
+      <p>The right-hand side collapses. Putting it over $(1+r)^2$ gives $\left[(1-r)(1+r) + r^2\right]/(1+r)^2 = 1/(1+r)^2$, so</p>
+      <div class="eq">$$\left(u - \frac{r}{1+r}\right)^2 + v^2 = \frac{1}{(1+r)^2}$$</div>
+      <p>which is a circle centred on the real axis at $r/(1+r)$ with radius $1/(1+r)$. The same treatment of the $x$ expression gives the second family. Note that <b>every constant-$r$ circle passes through $\Gamma = +1$</b>, since $u=1,\,v=0$ satisfies the equation for any $r$ &mdash; that point is $z = \infty$, where all the resistance circles must meet.</p>
+      <p>There is a deeper reason none of this required luck. The map $\Gamma = (z-1)/(z+1)$ is a M&ouml;bius transformation, and such maps always send circles and straight lines to circles and straight lines. The impedance grid is a set of straight lines; its image had to be circles.</p>
+    </div>
+  </details>
+
+  <p class="t">Both families are drawn below, one at a time, so you can see the chart assemble itself.</p>
+
+  <figure class="fig">
+    <canvas id="build" class="static" style="height:300px"></canvas>
+    <div class="btns" style="padding-top:14px">
+      <button data-b="0" aria-pressed="false">unit circle only</button>
+      <button data-b="1" aria-pressed="false">constant r alone</button>
+      <button data-b="2" aria-pressed="false">constant x alone</button>
+      <button data-b="3" aria-pressed="true">both &mdash; the chart</button>
+    </div>
+    <figcaption class="cap">constant-x circles are centred outside the disc and get clipped by it &mdash; only the part inside is drawn</figcaption>
+  </figure>
+
+  <div class="tw"><table>
+    <tr><th>Feature</th><th>Where</th><th>Because</th></tr>
+    <tr><td>$r = 0$</td><td>the outer unit circle</td><td>no resistance means no absorption, so $|\Gamma| = 1$</td></tr>
+    <tr><td>$r = 1$</td><td>circle through the centre</td><td>$z = 1$ is $Z_0$ &mdash; a match, $\Gamma = 0$</td></tr>
+    <tr><td>$x = 0$</td><td>the horizontal diameter</td><td>real impedances have real $\Gamma$</td></tr>
+    <tr><td>upper half</td><td>$x > 0$</td><td>inductive</td></tr>
+    <tr><td>lower half</td><td>$x < 0$</td><td>capacitive</td></tr>
+    <tr><td>far left</td><td>$z = 0$</td><td>short circuit, $\Gamma = -1$</td></tr>
+    <tr><td>far right</td><td>$z = \infty$</td><td>open circuit, $\Gamma = +1$</td></tr>
+  </table></div>
+</section>
+
+<section class="blk" id="chart">
+  <h2>The chart itself</h2>
+  <p class="t">Drag anywhere inside the circle to set a load. The dashed circle through your point is the <b>constant-SWR circle</b>: the path the impedance follows as you move along the line, because $|\Gamma|$ never changes on a lossless line.</p>
+
+  <figure class="fig">
+    <div class="chartwrap"><canvas id="smith"></canvas></div>
+    <div class="rail">
+      <div class="ctl"><label for="d">toward generator</label><input type="range" id="d" min="0" max="0.5" step="0.002" value="0"><output id="dv">0.000&lambda;</output></div>
+      <button id="run">Sweep</button>
+      <button id="adm" aria-pressed="false">Admittance</button>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>z at the load</dt><dd id="s-zl">0.50 + j0.00</dd></div>
+      <div class="rd"><dt>z here</dt><dd id="s-z">0.50 + j0.00</dd></div>
+      <div class="rd"><dt>&Gamma;</dt><dd id="s-g">0.33&ang;180&deg;</dd></div>
+      <div class="rd"><dt>SWR</dt><dd id="s-swr">2.00</dd></div>
+    </dl>
+    <div class="btns">
+      <button data-s="0.5,0">z = 0.5</button>
+      <button data-s="1,0">matched</button>
+      <button data-s="0,0">short</button>
+      <button id="sopen">open</button>
+      <button data-s="2,-1.4">2 &minus; j1.4</button>
+      <button data-s="0.4,0.8">0.4 + j0.8</button>
+    </div>
+    <figcaption class="cap">normalised throughout &mdash; multiply by Z&#8320; for ohms. The hollow marker is the load; the filled one is where you are standing.</figcaption>
+  </figure>
+
+  <p class="t">Sweep the slider and watch three facts from earlier chapters become one motion. The point travels <b>clockwise</b>; it returns to the start after <b>half a wavelength</b>; and it stays on a circle of <b>constant radius</b>, because a lossless line cannot change $|\Gamma|$. Where that circle crosses the real axis on the left you are at a voltage minimum and $z = 1/S$; where it crosses on the right you are at a maximum and $z = S$.</p>
+
+  <div class="key">
+    <span class="lab">Reading SWR straight off the chart</span>
+    <p>The constant-SWR circle crosses the positive real axis at exactly $r = S$. So you never compute the standing wave ratio here &mdash; you look at where the circle cuts the right-hand half of the horizontal line and read it.</p>
+  </div>
+</section>
+
+<section class="blk" id="admittance">
+  <h2>The admittance overlay</h2>
+  <p class="t">Matching networks add components in <b>parallel</b> as often as in series, and parallel elements add admittances, not impedances. Working in $y = 1/z$ ought to need a second chart. It does not.</p>
+
+  <p class="t">Chapter 09 showed that a quarter-wave line inverts a normalised impedance. In $\Gamma$ terms a quarter wave is a half rotation, so:</p>
+
+  <div class="eq box">
+    $$y = \frac{1}{z} \qquad\Longleftrightarrow\qquad \Gamma_y = -\Gamma_z$$
+    <span class="note">taking the reciprocal of an impedance is a 180&deg; rotation on the chart &mdash; nothing more</span>
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; one line</summary>
+    <div class="body">
+      <p>Substitute $z = 1/y$ into the definition and multiply through by $y$:</p>
+      <div class="eq">$$\Gamma_z = \frac{1/y - 1}{1/y + 1} = \frac{1 - y}{1 + y} = -\frac{y-1}{y+1} = -\Gamma_y$$</div>
+      <p>So the admittance coordinate of a point is the negation of its impedance coordinate &mdash; a rotation by $\pi$ about the origin. In practice this means one of two equivalent things, and it is worth being clear which you are doing:</p>
+      <p><b>Rotate the point, keep the grid.</b> Move your point half a turn and read the ordinary impedance grid; the numbers you read are now $g$ and $b$.</p>
+      <p><b>Rotate the grid, keep the point.</b> Overlay a second grid rotated 180&deg; and read your point against it. This is what the button below does, and what a printed <i>immittance</i> chart shows: both grids at once, so a matching problem needs no rotation at all.</p>
+    </div>
+  </details>
+
+  <p class="t">Turn on the admittance overlay above. The added grid is the same set of circles rotated half a turn, and the two together are what a commercial immittance chart prints. Series elements move you along the impedance circles; shunt elements move you along the admittance ones.</p>
+</section>
+
+<section class="blk" id="using">
+  <h2>What you can read off it</h2>
+  <div class="tw"><table>
+    <tr><th>Quantity</th><th>How</th></tr>
+    <tr><td>$\Gamma$</td><td>vector from the centre to the point: length is $|\Gamma|$, angle is $\theta_r$</td></tr>
+    <tr><td>SWR</td><td>where the constant-$|\Gamma|$ circle cuts the positive real axis</td></tr>
+    <tr><td>Return loss</td><td>$-20\log_{10}|\Gamma|$ from the radius</td></tr>
+    <tr><td>$Z_{\text{in}}$ at distance $d$</td><td>rotate clockwise by $2\beta d$, read the grid</td></tr>
+    <tr><td>Voltage minimum</td><td>first crossing of the negative real axis going clockwise</td></tr>
+    <tr><td>$Y$ at any point</td><td>rotate 180&deg;, or read the admittance overlay</td></tr>
+  </table></div>
+
+  <p class="t">A worked case, all of it read rather than computed. Take $Z_L = 100 - j70\ \Omega$ on a 50 &Omega; line, so $z_L = 2 - j1.4$ &mdash; the fourth preset above.</p>
+
+  <ol class="steps">
+    <li><div><b>Plot it.</b> Find the $r = 2$ circle, follow it to where it meets $x = -1.4$, in the lower half because the load is capacitive.</div></li>
+    <li><div><b>Read $\Gamma$.</b> The vector from the centre gives $|\Gamma| \approx 0.52$ at about $-29°$, so roughly 27&nbsp;% of the power is reflected.</div></li>
+    <li><div><b>Read SWR.</b> Follow the constant-radius circle round to the positive real axis: it cuts at about $r = 3.2$, so $S \approx 3.2$.</div></li>
+    <li><div><b>Find the first voltage minimum.</b> Sweep clockwise to the negative real axis &mdash; about $0.21\lambda$ from the load. There $z = 1/S \approx 0.32$, a pure resistance of about 16 &Omega;.</div></li>
+  </ol>
+
+  <p class="t">Every one of those is checkable against the figure above: load the fourth preset, and the readouts show $\Gamma = 0.520\angle{-29°}$ and $S = 3.16$ at the load. Sweep to $0.209\lambda$ and the point lands on the negative real axis with $z = 0.32$.</p>
+
+  <p class="t">Four numbers, no algebra. That is the argument for the chart, and it is why it survived the calculator: it is not faster arithmetic, it is a <b>picture of the whole solution space at once</b>, in which you can see where a match is and how to get there.</p>
+
+  <p class="t">The chart above is deliberately stripped down, so that the geometry stays visible. For a full one &mdash; every grid line, the wavelength and angle scales round the rim, and the radially scaled parameters underneath &mdash; there is a <a href="smith-tool.html">workbench at the end of the site</a>.</p>
+
+  <div class="key">
+    <span class="lab">The one thing to hold onto</span>
+    <p>A point inside a disc, turning clockwise on a fixed circle as you walk back along the line, one lap per half wavelength. Everything else &mdash; the grid, the overlay, the scales round the rim &mdash; is bookkeeping laid on top of that single motion.</p>
+  </div>
+</section>
+
+<section class="blk" id="check">
+  <div class="check">
+    <h3>Self-check</h3>
+    <p class="t" style="margin-top:6px">Three questions on what the chart is.</p>
+
+    <div class="q">
+      <p class="qt">1. Why is the Smith chart bounded by a circle rather than extending forever?</p>
+      <div class="opts">
+        <button class="opt">Because impedances above a few hundred ohms are rare in practice</button>
+        <button class="opt" data-ok="1">Because it plots $\Gamma$, and $|\Gamma| \le 1$ for any passive load</button>
+        <button class="opt">Because it was designed to fit on a sheet of paper</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>The chart's coordinates are $\Gamma$, not impedance. A passive load cannot reflect more than it receives, so $|\Gamma| \le 1$ and every possible load falls inside the unit disc. That is the chart's real trick: it maps the <i>infinite</i> impedance half-plane into a finite disc, with $z = \infty$ landing on a single point at the right-hand edge. Active devices can have $|\Gamma| > 1$, and their points fall outside &mdash; which is why oscillator design uses a compressed chart.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">2. What does rotating a point 180° about the centre do?</p>
+      <div class="opts">
+        <button class="opt">Moves you a quarter wavelength further from the load, and nothing more</button>
+        <button class="opt" data-ok="1">Converts impedance to admittance, since $y = 1/z$ corresponds to $\Gamma \to -\Gamma$</button>
+        <button class="opt">Changes the sign of the reactance, converting inductive to capacitive</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>Substituting $z = 1/y$ gives $\Gamma_z = -\Gamma_y$ exactly, so a half turn is the reciprocal. The first option is not wrong so much as incomplete &mdash; a quarter-wave line <i>is</i> a half rotation, and chapter 09 showed a quarter-wave line inverts the impedance. They are the same fact. Simply negating the reactance would be a reflection in the real axis, not a rotation.</p>
+    </div>
+
+    <div class="q">
+      <p class="qt">3. Moving along a lossless line traces what path on the chart?</p>
+      <div class="opts">
+        <button class="opt">A spiral inward, since the wave weakens with distance</button>
+        <button class="opt" data-ok="1">A circle centred on the origin, clockwise, one lap per $\lambda/2$</button>
+        <button class="opt">A straight line toward the centre as the match improves</button>
+      </div>
+      <p class="exp"><b class="verdict"></b>$\Gamma(d) = \Gamma_L e^{-j2\beta d}$ has constant magnitude, so the radius is fixed and the motion is a circle. Clockwise toward the generator, completing a lap when $2\beta d = 2\pi$, that is $d = \lambda/2$. The inward spiral is what a <i>lossy</i> line gives, since then $|\Gamma|$ really does shrink &mdash; and a long enough lossy line looks matched from the input no matter what is on the end.</p>
+    </div>
+  </div>
+</section>
+
+<nav class="pager">
+  <a href="line-lengths.html"><span class="dir">Previous</span><span class="ttl">Line lengths and transformers</span></a>
+  <a class="nx" href="matching.html"><span class="dir">Chapter 11</span><span class="ttl">Impedance matching</span></a>
+</nav>
+
+<footer class="site">
+  Chapter 10 of eleven. All impedances normalised to $Z_0$; lossless line throughout.
+  <span class="cr">&copy; 2026 Elie Hachem &middot; free to share and use for teaching</span>
+</footer>
+
+</div>
+
+<script src="assets/site.js"></script>
+<script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
+<script>
+var MONO = 'IBM Plex Mono, monospace';
+
+/* ---------- the chart, drawn from its own circle equations ---------- */
+/* constant r: centre (r/(1+r), 0), radius 1/(1+r)
+   constant x: centre (1, 1/x),     radius |1/x|                        */
+
+function drawGrid(c, cx, cy, R, opts){
+  opts = opts || {};
+  var rot = opts.rotate ? Math.PI : 0;     /* admittance overlay is a half turn */
+  var col = opts.color, faint = opts.faint, lw = opts.lw || 1;
+  function P(u, v){
+    if(rot){ u = -u; v = -v; }
+    return [cx + u*R, cy - v*R];
+  }
+  c.save();
+  c.beginPath(); c.arc(cx, cy, R, 0, Math.PI*2); c.clip();
+
+  var rs = opts.rs, xs = opts.xs;
+
+  if(opts.showR !== false){
+    rs.forEach(function(r){
+      var ctr = r/(1+r), rad = 1/(1+r);
+      var p = P(ctr, 0);
+      c.beginPath(); c.arc(p[0], p[1], rad*R, 0, Math.PI*2);
+      c.strokeStyle = (r === 1 && !faint) ? col : (faint ? col : col);
+      c.globalAlpha = (r === 1) ? 0.95 : 0.5;
+      c.lineWidth = (r === 1) ? lw*1.6 : lw;
+      c.stroke();
+    });
+  }
+  if(opts.showX !== false){
+    xs.forEach(function(x){
+      if(x === 0) return;
+      var cyv = 1/x, rad = Math.abs(1/x);
+      var p = P(1, cyv);
+      c.beginPath(); c.arc(p[0], p[1], rad*R, 0, Math.PI*2);
+      c.strokeStyle = col; c.globalAlpha = 0.45; c.lineWidth = lw;
+      c.stroke();
+    });
+    /* x = 0 is the horizontal diameter */
+    var a = P(-1,0), b = P(1,0);
+    c.beginPath(); c.moveTo(a[0],a[1]); c.lineTo(b[0],b[1]);
+    c.strokeStyle = col; c.globalAlpha = 0.95; c.lineWidth = lw*1.6; c.stroke();
+  }
+  c.globalAlpha = 1;
+  c.restore();
+}
+
+function zToGamma(r, x){
+  var nr = r-1, ni = x, dr = r+1, di = x, d = dr*dr + di*di;
+  if(d < 1e-12) return [-1, 0];
+  return [(nr*dr + ni*di)/d, (ni*dr - nr*di)/d];
+}
+function gammaToZ(u, v){
+  var nr = 1+u, ni = v, dr = 1-u, di = -v, d = dr*dr + di*di;
+  if(d < 1e-9) return [1e6, 0];
+  return [(nr*dr + ni*di)/d, (ni*dr - nr*di)/d];
+}
+function fmtZ(z){
+  /* dragging cannot exceed z ~ 400, so anything past 1000 is the open preset */
+  if(Math.abs(z[0]) > 1000) return '→ ∞';
+  var r = Math.abs(z[0]) < 0.005 ? '0.00' : z[0].toFixed(2);
+  var x = z[1];
+  if(Math.abs(x) < 0.005) return r + ' + j0.00';      /* never print a negative zero */
+  return r + (x < 0 ? ' − j' : ' + j') + Math.abs(x).toFixed(2);
+}
+
+/* ---------- construction figure ---------- */
+(function(){
+  var cv = document.getElementById('build');
+  if(!cv) return;
+  var stage = 3;
+  var btns = document.querySelectorAll('.btns button[data-b]');
+  Array.prototype.forEach.call(btns, function(b){
+    b.addEventListener('click', function(){
+      stage = +b.getAttribute('data-b');
+      Array.prototype.forEach.call(btns, function(o){
+        o.setAttribute('aria-pressed', o === b);
+      });
+      EM.redrawStatic();
+    });
+  });
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0,0,W,H);
+    var R = Math.min(W, H)/2 - 26, cx = W/2, cy = H/2;
+    /* 1 = r alone, 2 = x alone, 3 = both, so each family can be seen by itself */
+    var wantR = (stage === 1 || stage === 3);
+    var wantX = (stage === 2 || stage === 3);
+    if(wantR) drawGrid(c, cx, cy, R, {color:C.e, lw:1.1, showX:false, rs:[0.2,0.5,1,2,5], xs:[]});
+    if(wantX) drawGrid(c, cx, cy, R, {color:C.h, lw:1.1, showR:false,
+      rs:[], xs:[0.2,0.5,1,2,5,-0.2,-0.5,-1,-2,-5]});
+    c.strokeStyle = C.line2; c.lineWidth = 1.6;
+    c.beginPath(); c.arc(cx, cy, R, 0, Math.PI*2); c.stroke();
+
+    /* the centre is Gamma = 0, and the r = 1 circle runs through it */
+    c.fillStyle = C.ink;
+    c.beginPath(); c.arc(cx, cy, 4, 0, Math.PI*2); c.fill();
+
+    c.font = '11px ' + MONO; c.textAlign = 'center';
+    if(wantR){
+      /* label the r = 1 circle ON the circle, at its topmost point (0.5, 0.5),
+         not at its centre, which is not a point of the curve at all */
+      c.fillStyle = C.e;
+      c.fillText('r = 1', cx + R*0.5, cy - R*0.5 - 8);
+      c.strokeStyle = C.e; c.lineWidth = 1; c.globalAlpha = .6;
+      c.beginPath(); c.moveTo(cx + R*0.5, cy - R*0.5 - 5); c.lineTo(cx + R*0.5, cy - R*0.5);
+      c.stroke(); c.globalAlpha = 1;
+    }
+    /* leader from the centre dot down to its own two-line label */
+    c.strokeStyle = C.ink; c.lineWidth = 1; c.globalAlpha = .55;
+    c.beginPath(); c.moveTo(cx, cy + 7); c.lineTo(cx, cy + 28); c.stroke();
+    c.globalAlpha = 1;
+    c.fillStyle = C.ink; c.textAlign = 'center';
+    c.fillText('Γ = 0', cx, cy + 42);
+    c.fillStyle = C.ink3;
+    c.fillText('matched', cx, cy + 56);
+
+    c.fillStyle = C.ink3; c.textAlign = 'center';
+    c.fillText(['|Γ| = 1, the boundary of every passive load',
+                'constant r: circles through Γ = +1, one passing through the centre',
+                'constant x: centred outside the disc, so the disc clips them',
+                'both families together — the Smith chart'][stage], cx, H-8);
+    /* park the end labels outside the disc when there is room, inside when not */
+    var out = (W/2 - R) > 46;
+    c.textAlign = out ? 'right' : 'left';
+    c.fillText('z = 0', out ? cx - R - 8 : cx - R + 5, cy + 4);
+    c.textAlign = out ? 'left' : 'right';
+    c.fillText('z = ∞', out ? cx + R + 8 : cx + R - 5, cy + 4);
+  }, false);
+})();
+
+/* ---------- the interactive chart ---------- */
+(function(){
+  var cv = document.getElementById('smith');
+  if(!cv) return;
+  var gl = zToGamma(0.5, 0);          /* gamma at the load */
+  var D = 0, sweeping = false, showY = false;
+
+  function gAt(d){
+    var a = -2*EM.TAU*d;
+    return [gl[0]*Math.cos(a) - gl[1]*Math.sin(a), gl[0]*Math.sin(a) + gl[1]*Math.cos(a)];
+  }
+  function sync(){
+    var g = gAt(D), m = Math.hypot(g[0], g[1]);
+    document.getElementById('dv').innerHTML = D.toFixed(3) + '&lambda;';
+    document.getElementById('s-zl').textContent = fmtZ(gammaToZ(gl[0], gl[1]));
+    document.getElementById('s-z').textContent = fmtZ(gammaToZ(g[0], g[1]));
+    var ang = Math.round(Math.atan2(g[1], g[0])*180/Math.PI);
+    document.getElementById('s-g').innerHTML = m.toFixed(3) + '&ang;' + (ang<0?'−':'') + Math.abs(ang) + '&deg;';
+    document.getElementById('s-swr').textContent = m >= 0.999 ? '∞' : ((1+m)/(1-m)).toFixed(2);
+  }
+  function setFromXY(ev){
+    var r = cv.getBoundingClientRect();
+    var R = Math.min(r.width, r.height)/2 - 26;
+    var u = (ev.clientX - r.left - r.width/2)/R;
+    var v = -(ev.clientY - r.top - r.height/2)/R;
+    var m = Math.hypot(u,v);
+    if(m > 0.995){ u = u/m*0.995; v = v/m*0.995; }
+    gl = [u, v]; D = 0;
+    document.getElementById('d').value = 0;
+    sweeping = false; document.getElementById('run').textContent = 'Sweep';
+    sync();
+  }
+  var dragging = false;
+  cv.addEventListener('pointerdown', function(e){ dragging = true; cv.setPointerCapture(e.pointerId); setFromXY(e); });
+  cv.addEventListener('pointermove', function(e){ if(dragging) setFromXY(e); });
+  cv.addEventListener('pointerup', function(e){ dragging = false; });
+  cv.addEventListener('pointercancel', function(){ dragging = false; });
+
+  document.getElementById('d').addEventListener('input', function(){
+    D = +this.value; sweeping = false;
+    document.getElementById('run').textContent = 'Sweep';
+    sync();
+  });
+  var rb = document.getElementById('run');
+  rb.addEventListener('click', function(){
+    sweeping = !sweeping; rb.textContent = sweeping ? 'Stop' : 'Sweep';
+  });
+  var ab = document.getElementById('adm');
+  ab.addEventListener('click', function(){
+    showY = !showY;
+    ab.setAttribute('aria-pressed', showY);
+  });
+  function setLoad(g){
+    gl = g; D = 0;
+    document.getElementById('d').value = 0;
+    sweeping = false; rb.textContent = 'Sweep';
+    sync();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.btns button[data-s]'), function(b){
+    b.addEventListener('click', function(){
+      var v = b.getAttribute('data-s').split(',');
+      setLoad(zToGamma(+v[0], +v[1]));
+    });
+  });
+  /* an open is z -> infinity, which no coordinate pair can express, so it is set
+     directly: full reflection, in phase, at the right-hand edge of the chart */
+  document.getElementById('sopen').addEventListener('click', function(){
+    setLoad([0.9995, 0]);
+  });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    if(sweeping){
+      D += 0.0014; if(D > 0.5) D = 0;
+      document.getElementById('d').value = D;
+      sync();
+    }
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0,0,W,H);
+    var R = Math.min(W, H)/2 - 26, cx = W/2, cy = H/2;
+    var dense = R > 170;
+    var rs = dense ? [0.2,0.5,1,2,5] : [0.5,1,2];
+    var xs = dense ? [0.2,0.5,1,2,5,-0.2,-0.5,-1,-2,-5] : [0.5,1,2,-0.5,-1,-2];
+
+    if(showY){
+      drawGrid(c, cx, cy, R, {color:C.acc, lw:1, rotate:true, rs:rs, xs:xs});
+    }
+    drawGrid(c, cx, cy, R, {color:C.e, lw:1, showX:false, rs:rs, xs:xs});
+    drawGrid(c, cx, cy, R, {color:C.h, lw:1, showR:false, rs:rs, xs:xs});
+
+    c.strokeStyle = C.line2; c.lineWidth = 1.6;
+    c.beginPath(); c.arc(cx, cy, R, 0, Math.PI*2); c.stroke();
+
+    var m = Math.hypot(gl[0], gl[1]);
+    /* the constant SWR circle */
+    if(m > 0.005){
+      c.strokeStyle = C.ink; c.lineWidth = 1.4; c.setLineDash([4,4]);
+      c.beginPath(); c.arc(cx, cy, R*m, 0, Math.PI*2); c.stroke();
+      c.setLineDash([]);
+    }
+    /* arc travelled so far */
+    if(m > 0.005 && D > 0.002){
+      var a0 = Math.atan2(gl[1], gl[0]);
+      c.strokeStyle = C.acc; c.lineWidth = 4; c.globalAlpha = .45;
+      c.beginPath(); c.arc(cx, cy, R*m, -a0, -a0 + 2*EM.TAU*D, false); c.stroke();
+      c.globalAlpha = 1;
+    }
+    /* load marker, hollow */
+    c.strokeStyle = C.ink; c.lineWidth = 2;
+    c.beginPath(); c.arc(cx + gl[0]*R, cy - gl[1]*R, 5.5, 0, Math.PI*2); c.stroke();
+    /* current point, filled */
+    var g = gAt(D);
+    c.strokeStyle = C.ink; c.lineWidth = 1.5;
+    c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + g[0]*R, cy - g[1]*R); c.stroke();
+    c.fillStyle = C.ink;
+    c.beginPath(); c.arc(cx + g[0]*R, cy - g[1]*R, 6, 0, Math.PI*2); c.fill();
+
+    /* rim labels */
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3;
+    c.textAlign = 'left'; c.fillText('short', 4, cy - 8);
+    c.textAlign = 'right'; c.fillText('open', W - 4, cy - 8);
+    c.textAlign = 'center';
+    c.fillText('inductive  x > 0', cx, 16);
+    c.fillText('capacitive  x < 0', cx, H - 8);
+    if(showY){
+      c.fillStyle = C.acc; c.textAlign = 'left';
+      c.fillText('admittance grid on', 4, 16);
+    }
+    /* r labels along the real axis */
+    if(dense){
+      c.fillStyle = C.e; c.textAlign = 'center'; c.font = '10.5px ' + MONO;
+      [0.2,0.5,1,2,5].forEach(function(r){
+        var u = (r-1)/(r+1);
+        c.fillText(String(r), cx + u*R, cy + 16);
+      });
+    }
+  }, true);
+})();
+</script>
+</body>
+</html>
