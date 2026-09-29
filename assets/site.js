@@ -103,9 +103,10 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
     var aside = document.createElement('aside');
     aside.className = 'sidebar';
     aside.setAttribute('aria-label', 'Contents');
-    var html = '<a class="brand" href="index.html">'
-             + (document.querySelector('.mast a.home') || {textContent: 'Contents'}).textContent
-             + '</a>';
+    /* No title here. The masthead already carries it, directly above, and the
+       sidebar sat under it repeating the same words. The list starts at the
+       first group instead. */
+    var html = '';
     var group = null;
     SITE_PAGES.forEach(function(p){
       if(p[0] !== group){ group = p[0]; html += '<div class="grp">' + group + '</div>'; }

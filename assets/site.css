@@ -66,7 +66,15 @@
   --ok:#1f7a45; --warn:#c0531a;
 }
 *{box-sizing:border-box}
-html,body{max-width:100%;overflow-x:hidden}
+/* overflow-x:hidden forces the OTHER axis to compute as auto, which makes both
+   html and body scroll containers -- and a scroll container between a sticky
+   element and the viewport stops the sticking. That is why .mast had
+   position:sticky for a long time without ever sticking to anything.
+   overflow-x:clip clips exactly the same way without creating a scroll
+   container. The hidden declaration stays first as the fallback for browsers
+   that do not know clip; they keep today's behaviour rather than gaining a
+   horizontal scrollbar. */
+html,body{max-width:100%;overflow-x:hidden;overflow-x:clip}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);
   font-size:16.5px;line-height:1.65;-webkit-font-smoothing:antialiased}
 img,canvas,svg{max-width:100%}
@@ -123,8 +131,6 @@ a{color:var(--ui)}
     background:var(--surface);border-right:1px solid var(--line);
     padding:16px 12px 34px}
   .mast .chrail{display:none}
-  /* the bar carries the name beside the button; the sidebar needs no header */
-  .sidebar .brand{display:none}
   .sidebar{padding-top:10px}
 
   /* collapsed: the page reclaims the width and the bar goes back to normal */
@@ -133,15 +139,13 @@ a{color:var(--ui)}
   .sb-off .sidebar{display:none}
   .sb-off .mast .chrail{display:flex}
 }
-.sidebar .brand{display:block;font-family:var(--f-disp);font-weight:700;
-  font-size:15.5px;letter-spacing:-.01em;color:var(--ink);text-decoration:none;
-  padding:8px 10px 4px;line-height:1.25}
 .sidebar .grp{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;
   text-transform:uppercase;color:var(--ink3);padding:16px 10px 5px}
-.sidebar a:not(.brand){display:flex;gap:10px;align-items:baseline;
+.sidebar .grp:first-child{padding-top:6px}
+.sidebar a{display:flex;gap:10px;align-items:baseline;
   padding:7px 10px;border-radius:5px;text-decoration:none;color:var(--ink2);
   line-height:1.3;font-size:13.5px}
-.sidebar a:not(.brand):hover{background:var(--sunk);color:var(--ink)}
+.sidebar a:hover{background:var(--sunk);color:var(--ink)}
 .sidebar a[aria-current="page"]{background:var(--uifill);color:var(--ink)}
 .sidebar .n{font-family:var(--f-mono);font-size:10.5px;color:var(--ui);
   flex:none;width:20px;text-align:right}

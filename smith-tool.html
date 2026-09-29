@@ -25,6 +25,33 @@ canvas#ckt{display:block;width:100%;height:248px;background:var(--sunk);
   border-top:1px solid var(--line)}
 @media(max-width:560px){ canvas#nomo{height:282px} canvas#ckt{height:236px} }
 
+/* ---- full screen ----
+   For working a problem in front of a room: the chart takes as much height as
+   the display allows and the controls stay beside it, so nothing has to be
+   driven blind. The chart's normal max-width is a vw/px cap meant for a page
+   that scrolls; in here the binding constraint is the height left over after
+   the nomograph, so it is sized from that instead. The nomograph shrinks
+   rather than disappearing -- it is the thing being read off during a
+   matching example. */
+.wb:fullscreen{margin:0;border:0;border-radius:0;height:100vh;background:var(--surface)}
+.wb:fullscreen .grid{grid-template-columns:minmax(0,1fr) 336px;height:100vh}
+.wb:fullscreen .chartcol{display:flex;flex-direction:column;align-items:center;
+  justify-content:center;height:100vh;padding:10px;overflow:hidden}
+/* The nomograph and the export bars step aside here. Sharing the height with
+   the nomograph left the chart SMALLER than it is on the ordinary page, which
+   is the opposite of the point, and squeezing the nomograph into what was left
+   collided its own labels. Its six numbers are already in the panel's big
+   readout, which stays on screen. */
+.wb:fullscreen canvas#nomo,
+.wb:fullscreen .figbar{display:none}
+.wb:fullscreen canvas#chart{max-width:min(100%, calc(100vh - 20px));
+  max-height:calc(100vh - 20px)}
+.wb:fullscreen .panel{height:100vh;overflow-y:auto;overscroll-behavior:contain}
+@media(max-width:900px){
+  .wb:fullscreen .grid{grid-template-columns:minmax(0,1fr)}
+  .wb:fullscreen .panel{height:auto}
+}
+
 /* ---- control panel ---- */
 .grp{padding:15px 17px;border-bottom:1px solid var(--line)}
 .grp:last-child{border-bottom:0}
@@ -153,8 +180,16 @@ canvas#ckt{display:block;width:100%;height:248px;background:var(--sunk);
           <output id="z-val" style="font-family:var(--f-mono);font-size:12px;
             color:var(--ink2);margin-left:auto">&times;1.0</output>
         </div>
+        <div class="row" style="margin-top:9px">
+          <button class="mini" id="b-full" aria-pressed="false">full screen</button>
+        </div>
         <p class="hint">Hold <b>shift</b> and drag to move around while zoomed.
           Dragging without shift still places the load.</p>
+        <p class="hint">Full screen gives the whole display height to the chart
+          and keeps the controls beside it &mdash; for working a problem in
+          front of a room. The radially scaled parameters step aside; their six
+          numbers stay in the readout above. <b>F</b> toggles it, <b>Esc</b>
+          leaves.</p>
       </div>
 
       <div class="grp">
@@ -1768,6 +1803,52 @@ Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'), functio
   });
   window.addEventListener('pointerup', function(){ dragging = false; panning = false; });
   cv.addEventListener('pointercancel', function(){ dragging = false; panning = false; });
+})();
+
+/* ---------- full screen ----------
+   Presenting mode. The Fullscreen API is asked for on .wb rather than the
+   document so the panel comes with the chart; a chart nobody can change is no
+   use while a room is watching. Every entry point is feature-detected: iOS
+   Safari still has no Element.requestFullscreen, and there the button hides
+   rather than sitting there doing nothing. */
+(function(){
+  var wb = document.querySelector('.wb'), btn = document.getElementById('b-full');
+  if(!wb || !btn) return;
+  var can = !!(wb.requestFullscreen || wb.webkitRequestFullscreen);
+  if(!can){ btn.parentNode.style.display = 'none'; return; }
+
+  function isFull(){ return (document.fullscreenElement || document.webkitFullscreenElement) === wb; }
+  function toggle(){
+    if(isFull()){
+      (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    } else {
+      (wb.requestFullscreen || wb.webkitRequestFullscreen).call(wb);
+    }
+  }
+  btn.addEventListener('click', toggle);
+
+  /* F toggles, but not while a number is being typed into the load fields. */
+  document.addEventListener('keydown', function(ev){
+    if(ev.key !== 'f' && ev.key !== 'F') return;
+    if(ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    var t = ev.target, tag = t && t.tagName;
+    if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (t && t.isContentEditable)) return;
+    ev.preventDefault();
+    toggle();
+  });
+
+  /* The canvases are sized from their laid-out box, which changes the moment
+     the element goes full screen, so they have to be re-fitted afterwards.
+     A single refresh() can land before the browser has finished the
+     transition, hence the follow-ups. */
+  ['fullscreenchange', 'webkitfullscreenchange'].forEach(function(e){
+    document.addEventListener(e, function(){
+      btn.setAttribute('aria-pressed', isFull() ? 'true' : 'false');
+      btn.textContent = isFull() ? 'leave full screen' : 'full screen';
+      refresh();
+      [60, 220, 500].forEach(function(t){ setTimeout(refresh, t); });
+    });
+  });
 })();
 
 /* register both canvases with the shared runtime so resize and theme redraw them */
