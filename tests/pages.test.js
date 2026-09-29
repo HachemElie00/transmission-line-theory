@@ -17,7 +17,7 @@ const WIDTHS = [1920, 1440, 1200, 1100, 900, 700, 390];
 (async () => {
   const s = H.suite('pages');
   const pages = H.pages();
-  const b = await H.chromium.launch();
+  const b = await H.launch();
 
   for (const vw of WIDTHS){
     const ctx = await b.newContext({ viewport: { width: vw, height: 900 } });

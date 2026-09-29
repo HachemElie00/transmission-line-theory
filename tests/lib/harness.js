@@ -25,6 +25,13 @@ const MIME = {
 async function serve(root){
   root = root || SITE;
   const srv = http.createServer((q, r) => {
+    /* The site ships no favicon, and does not need one. Some browsers ask for
+       it anyway and log a console error when it 404s -- Edge does, headless
+       Chromium does not, which is exactly the kind of difference that makes a
+       suite pass on one machine and fail on another. The request is issued by
+       the browser rather than the page, so it never reaches page.on('response')
+       and cannot be filtered there. Answering it is the only clean place. */
+    if (q.url === '/favicon.ico'){ r.writeHead(204); r.end(); return; }
     let f = path.join(root, decodeURIComponent(q.url.split('?')[0]));
     if (f.endsWith(path.sep) || q.url === '/') f = path.join(root, 'index.html');
     fs.readFile(f, (e, d) => {
@@ -37,6 +44,35 @@ async function serve(root){
   const port = srv.address().port;
   return { url: 'http://localhost:' + port + '/', port,
            close: () => new Promise(res => srv.close(res)) };
+}
+
+/* Launch a Chromium-family browser, preferring Playwright's own build but
+   falling back to one already on the machine.
+
+   `npx playwright install chromium` downloads from cdn.playwright.dev, which
+   is not reachable from every network even where the npm registry is. Without
+   a fallback the entire suite is unrunnable in that situation, which is a poor
+   trade for a set of checks that only need a Chromium engine -- Edge ships on
+   every Windows machine and is the same engine.
+
+   Set TLT_BROWSER=chrome|msedge|chromium to force one. */
+let announced = false;
+async function launch(opts){
+  const forced = process.env.TLT_BROWSER;
+  const tries = forced ? [forced] : [null, 'chrome', 'msedge'];
+  const errs = [];
+  for (const channel of tries){
+    try {
+      const b = await chromium.launch(Object.assign({}, opts,
+        channel && channel !== 'chromium' ? { channel } : {}));
+      if (!announced){
+        announced = true;
+        console.log('       browser: ' + (channel || 'bundled chromium'));
+      }
+      return b;
+    } catch (e) { errs.push((channel || 'bundled') + ': ' + e.message.split('\n')[0]); }
+  }
+  throw new Error('no Chromium-family browser could be launched\n  ' + errs.join('\n  '));
 }
 
 /* Every HTML page in the site, in a stable order. */
@@ -87,6 +123,31 @@ function canvasHash(page, id){
   }, id);
 }
 
+/* Wait for a canvas to stop changing, and return its final hash.
+
+   Fixed sleeps after clicking a control were the worst source of flakiness in
+   this suite, and they fail in the most misleading way available: read the
+   canvas too early and you get the PREVIOUS render, which is indistinguishable
+   from a control that did not restore what it found. That is exactly how the
+   fine-grid check failed -- 450ms was enough for two grid modes and not for
+   the third, and merely adding a debug print between the click and the read
+   made it pass.
+
+   Pass `from` (the hash before the click) to wait for the render to actually
+   change first; without it a poll that lands before the redraw sees the old
+   value twice and calls that stable. */
+async function settle(page, id, from){
+  let prev = null;
+  for (let i = 0; i < 60; i++){
+    const h = await canvasHash(page, id);
+    if (from !== undefined && h === from){ prev = null; await page.waitForTimeout(100); continue; }
+    if (h === prev) return h;
+    prev = h;
+    await page.waitForTimeout(100);
+  }
+  return prev;
+}
+
 /* Set one of the workbench's number inputs and let it re-render. */
 function setInput(page, id, v){
   return page.evaluate(({ id, v }) => {
@@ -119,5 +180,5 @@ function suite(title){
   };
 }
 
-module.exports = { SITE, serve, pages, fileUrl, cutTheWire, watchErrors,
+module.exports = { SITE, serve, pages, fileUrl, cutTheWire, watchErrors, launch, settle,
                    canvasHash, setInput, suite, chromium, path, fs };

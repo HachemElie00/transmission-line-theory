@@ -319,7 +319,10 @@ function lineConstants(Rp, Gp, Lp, Cp, f){
     var k = lineConstants(Rp, Gp, Lp, Cp, F);
     document.getElementById('o-a').textContent = k.a.toFixed(k.a < 1 ? 3 : 2);
     document.getElementById('o-b').textContent = k.b.toFixed(1);
-    document.getElementById('o-l').textContent = (2*Math.PI/k.b*100).toFixed(1);
+    /* Two decimals, not one. R' and G' shift lambda by a fraction of a
+       percent -- real, but rounded away at one decimal, which made the
+       sliders look as though they did nothing to it at all. */
+    document.getElementById('o-l').textContent = (2*Math.PI/k.b*100).toFixed(2);
     var zs = k.z0m.toFixed(1);
     if(Math.abs(k.z0a) >= 0.5) zs += (k.z0a < 0 ? ' ∠−' : ' ∠') + Math.abs(k.z0a).toFixed(0) + '°';
     document.getElementById('o-z').textContent = zs;
@@ -345,7 +348,15 @@ function lineConstants(Rp, Gp, Lp, Cp, f){
     EM.fit(cv);
     var c = cv.getContext('2d'), W = cv._w, H = cv._h;
     var L = 44, R = 18, T = 20, B = 32;
-    var mid = T + (H-T-B)/2, sy = (H-T-B)/2/1.2;
+    /* Reserve a strip below the top margin for the two corner labels. The
+       trace used to run straight through them: its peak sits at mid - sy,
+       which with the old 1.2 divisor left about 20px under T -- room for one
+       line of text, not the two that are there, so "Z0 = ..." was drawn inside
+       the moving curve. Taking the head room out of the plot box first, and
+       letting the trace fill almost all of what remains, keeps the amplitude
+       within a few percent while making the overlap impossible at any height. */
+    var HEAD = 34, T2 = T + HEAD;
+    var mid = T2 + (H-T2-B)/2, sy = (H-T2-B)/2/1.06;
     c.clearRect(0,0,W,H);
     var k = lineConstants(Rp, Gp, Lp, Cp, F);
     /* a FIXED one metre of line: the window never rescales, so beta is visible */
@@ -365,7 +376,7 @@ function lineConstants(Rp, Gp, Lp, Cp, f){
     }
     c.strokeStyle = C.line2; c.lineWidth = 1;
     c.beginPath(); c.moveTo(L, mid+.5); c.lineTo(W-R, mid+.5);
-    c.moveTo(L+.5, T); c.lineTo(L+.5, H-B); c.stroke();
+    c.moveTo(L+.5, T2); c.lineTo(L+.5, H-B); c.stroke();
 
     c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
     for(var q=0;q<=440;q++){
@@ -377,16 +388,22 @@ function lineConstants(Rp, Gp, Lp, Cp, f){
     /* a wavelength bracket, so a change in beta is unmissable */
     var lam = 2*Math.PI/k.b;
     if(lam < zmax*0.92){
-      var y = H - B + 15;
+      var y = H - B + 11;
       c.strokeStyle = C.ink3; c.lineWidth = 1;
       c.beginPath(); c.moveTo(px(0), y); c.lineTo(px(lam), y);
       c.moveTo(px(0), y-5); c.lineTo(px(0), y+5);
       c.moveTo(px(lam), y-5); c.lineTo(px(lam), y+5); c.stroke();
-      var lab = 'λ = ' + (lam*100).toFixed(1) + ' cm';
+      /* The label used to sit ON the bracket, over a panel of background
+         colour. As soon as lambda was narrower than the text, that panel
+         covered the bracket and both end ticks, so the measurement disappeared
+         exactly when it was most interesting -- a short wavelength is the case
+         you raise the sliders to see. It goes underneath now, painting over
+         nothing, clamped so a very short lambda cannot push it off the edge. */
+      var lab = 'λ = ' + (lam*100).toFixed(2) + ' cm';
       c.font = '11px ' + MONO; c.textAlign = 'center';
-      var tw = c.measureText(lab).width + 10;
-      c.fillStyle = C.sunk; c.fillRect(px(lam/2) - tw/2, y-8, tw, 16);
-      c.fillStyle = C.ink; c.fillText(lab, px(lam/2), y+4);
+      var half = c.measureText(lab).width/2;
+      var lx = Math.min(Math.max(px(lam/2), L + half), W - R - half);
+      c.fillStyle = C.ink; c.fillText(lab, lx, y + 15);
     }
 
     c.fillStyle = C.ink3; c.font = '11.5px ' + MONO;

@@ -14,7 +14,7 @@ const H = require('./lib/harness');
 (async () => {
   const s = H.suite('offline');
   const srv = await H.serve();
-  const b = await H.chromium.launch();
+  const b = await H.launch();
 
   for (const pg of H.pages()){
     const ctx = await b.newContext({ viewport: { width: 1200, height: 900 } });

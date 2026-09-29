@@ -271,6 +271,71 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
   else build();
 })();
 
+/* ---------------------------------------------------------------
+   Back to top. The masthead is sticky, so the chapter list is always
+   one tap away wherever you are; this is for the page itself, which
+   on a long chapter is a long way up. Built here rather than written
+   into fifteen files, like everything else in this file.
+   --------------------------------------------------------------- */
+(function(){
+  var ARROW = '<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"'
+    + ' fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"'
+    + ' stroke-linejoin="round"><path d="M8 13.2V3.7"/><path d="M3.9 7.8 8 3.7l4.1 4.1"/></svg>';
+
+  function build(){
+    if(document.querySelector('.totop')) return;
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'totop';
+    b.innerHTML = ARROW;
+    b.title = 'Back to top';
+    b.setAttribute('aria-label', 'Back to top');
+
+    b.addEventListener('click', function(){
+      var smooth = true;
+      try{ smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+      catch(e){}
+      try{ window.scrollTo({top: 0, behavior: smooth ? 'smooth' : 'auto'}); }
+      catch(e){ window.scrollTo(0, 0); }
+      /* The button is about to hide itself. Leaving focus on it would strand a
+         keyboard reader on nothing, so hand focus to the heading they just
+         travelled to. preventScroll, or the browser undoes the smooth scroll. */
+      var h = document.querySelector('h1');
+      if(h){
+        h.setAttribute('tabindex', '-1');
+        try{ h.focus({preventScroll: true}); }catch(e){}
+      }
+    });
+    document.body.appendChild(b);
+
+    /* Threshold is most of a viewport: any less and the top is a flick away,
+       so the button would be clutter rather than a shortcut. */
+    var shown = null, queued = false;
+    function check(){
+      queued = false;
+      var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+      var want = y > Math.max(320, window.innerHeight * 0.75);
+      if(want === shown) return;          /* class writes on every scroll frame
+                                             would be a needless style recalc */
+      shown = want;
+      if(want) b.classList.add('on');
+      else b.classList.remove('on');
+    }
+    function onScroll(){
+      if(queued) return;
+      queued = true;
+      requestAnimationFrame(check);
+    }
+    try{ window.addEventListener('scroll', onScroll, {passive: true}); }
+    catch(e){ window.addEventListener('scroll', onScroll); }
+    window.addEventListener('resize', check);
+    check();
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build);
+  else build();
+})();
+
 var EM = (function(){
   var TAU = Math.PI*2, C = {}, drawers = [], running = true, active = null;
   var KEYS = ['ink','ink2','ink3','line','line2','e','h','z','acc','accfill','sunk','surface','ok','warn'];

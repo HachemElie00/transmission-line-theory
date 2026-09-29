@@ -9,7 +9,7 @@ lines and sets a non-zero exit code if anything fails.
 ```bash
 cd tests
 npm install                  # once: pulls Playwright
-npx playwright install chromium
+npx playwright install chromium   # optional, see "Which browser" below
 
 node run.js                  # everything except the slow solver stage (~4 min)
 node run.js --full           # everything, including it (~20 min)
@@ -31,6 +31,32 @@ step unchanged.
 | `pages.test.js` | all 15 pages × 7 widths from `file://`: no errors, no blank canvas, no overflow, correct `<head>` (doctype, lang, charset, viewport), all maths typeset, zero external requests — plus one mobile-emulated pass at 390px |
 | `offline.test.js` | the same over HTTP with every foreign origin aborted, plus per-page MathJax output and font-load counts |
 | `solvers.test.js` | the two-stage solver verification (below) |
+
+## Which browser
+
+`H.launch()` tries Playwright's bundled Chromium, then an installed Chrome,
+then Edge, and prints which one it got. `npx playwright install chromium`
+downloads from `cdn.playwright.dev`, which is not reachable on every network
+even where the npm registry is; without the fallback the whole suite would be
+unrunnable there, which is a poor trade for checks that only need a Chromium
+engine. Force one with `TLT_BROWSER=chrome|msedge|chromium`.
+
+## Two rules for writing checks here
+
+Both of these produced failures that pointed at the site when the fault was in
+the test.
+
+1. **Never sleep a fixed time after clicking a control and then hash the
+   canvas.** Read too early and you get the *previous* render, which is
+   indistinguishable from a control that did not restore what it found. Use
+   `H.settle(page, id, from)`: it waits for the render to change and then to
+   stop changing. A fixed 450ms was enough for two grid modes and not the
+   third, and inserting a debug print between the click and the read was enough
+   to make it pass.
+2. **Never return a whole RGBA `ImageData` array through `page.evaluate`.** At
+   around three million elements it comes back mangled, and a pixel diff over
+   it silently reports *zero differences* — the most misleading possible
+   answer. Reduce in the page and return one channel.
 
 ## Why these, and not unit tests
 

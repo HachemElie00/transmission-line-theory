@@ -20,7 +20,7 @@ const VIEWS = [[1500, 1150], [1280, 900], [900, 900], [390, 800]];
 
 (async () => {
   const s = H.suite('geometry');
-  const b = await H.chromium.launch();
+  const b = await H.launch();
 
   /* ---- 1. chart and nomograph share their edges ---- */
   for (const [vw, vh] of VIEWS){
@@ -56,22 +56,41 @@ const VIEWS = [[1500, 1150], [1280, 900], [900, 900], [390, 800]];
   await H.setInput(p, 'i-r', 25);
   await H.setInput(p, 'i-x', -30);
 
+  /* Sample the ring band with no sweep drawn, then count how many of those
+     same points changed. The probe here used to test `blue - red > 12`, which
+     is not a description of the sweep but of the accent colour it happened to
+     be drawn in. When the accent stopped being violet the test did not report
+     a wrong angle -- it reported zero degrees at every distance, which reads
+     as "the sweep is not drawn at all". Differencing against the page's own
+     unswept render makes the measurement independent of the palette. */
+  const RING = `(() => {
+    const c = document.getElementById('chart'), g = c.getContext('2d');
+    const cx = c.width/2, cy = c.height/2, R = cx*0.866;
+    const out = [];
+    for (let a = 0; a < 360; a += 3){
+      const th = a*Math.PI/180;
+      const d = g.getImageData(Math.round(cx + R*Math.cos(th)),
+                               Math.round(cy + R*Math.sin(th)), 1, 1).data;
+      out.push([d[0], d[1], d[2]]);
+    }
+    return out;
+  })()`;
+
+  await H.setInput(p, 'i-d', 0);
+  await p.waitForTimeout(450);
+  const unswept = await p.evaluate(RING);
+
   for (const d of [0.05, 0.17, 0.30, 0.45]){
     await H.setInput(p, 'i-d', d);
     await p.waitForTimeout(450);
 
-    const span = await p.evaluate(() => {
-      const c = document.getElementById('chart'), g = c.getContext('2d');
-      const cx = c.width/2, cy = c.height/2, R = cx*0.866;   /* the ring band */
-      let n = 0;
-      for (let a = 0; a < 360; a += 3){
-        const th = a*Math.PI/180;
-        const px = g.getImageData(Math.round(cx + R*Math.cos(th)),
-                                  Math.round(cy + R*Math.sin(th)), 1, 1).data;
-        if (px[2] - px[0] > 12) n++;        /* the sweep is the violet accent */
-      }
-      return n*3;
-    });
+    const now = await p.evaluate(RING);
+    let n = 0;
+    for (let i = 0; i < now.length; i++){
+      const a = now[i], b = unswept[i];
+      if (Math.abs(a[0]-b[0]) + Math.abs(a[1]-b[1]) + Math.abs(a[2]-b[2]) > 24) n++;
+    }
+    const span = n*3;
 
     const want = Math.round(d*720);
     /* the sampling step is 3 degrees and the markers themselves have width, so

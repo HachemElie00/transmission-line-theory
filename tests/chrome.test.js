@@ -30,7 +30,7 @@ const H = require('./lib/harness');
           offenders.length ? 'first at byte ' + offenders[0] : '');
 
   const srv = await H.serve();
-  const b = await H.chromium.launch();
+  const b = await H.launch();
 
   /* ---- sidebar ---- */
   {

@@ -19,12 +19,18 @@ const H = require('./lib/harness');
 (async () => {
   const s = H.suite('toggles');
   const srv = await H.serve();
-  const b = await H.chromium.launch();
+  const b = await H.launch();
   const ctx = await b.newContext({ viewport: { width: 1500, height: 1150 } });
   const p = await ctx.newPage();
   const errs = H.watchErrors(p);
   await p.goto(srv.url + 'smith-tool.html', { waitUntil: 'load' });
-  await p.waitForTimeout(1500);
+  /* 1500ms was not enough, and it failed in a way that looked like a site bug:
+     the FIRST grid mode tested would fail to restore its hash while the other
+     two passed. site.js schedules redrawStatic at 1400ms and buildBars at
+     1800ms, and building the toolbars changes layout, which resizes the canvas
+     and forces another redraw. So the first baseline hash was being taken
+     mid-settle, and the "restored" render was the correct one. Wait past both. */
+  await p.waitForTimeout(2600);
 
   const densePressed = () =>
     p.evaluate(() => document.getElementById('b-dense').getAttribute('aria-pressed'));
@@ -35,11 +41,22 @@ const H = require('./lib/harness');
     await p.waitForTimeout(400);
     if (await densePressed() === 'false'){ await p.click('#b-dense'); await p.waitForTimeout(400); }
 
-    const on = await H.canvasHash(p, 'chart');
-    await p.click('#b-dense'); await p.waitForTimeout(400);
-    const off = await H.canvasHash(p, 'chart');
-    await p.click('#b-dense'); await p.waitForTimeout(400);
-    const back = await H.canvasHash(p, 'chart');
+    /* One full cycle before measuring, so the baseline is a settled render.
+
+       The very first render of the page really is a one-off: in z mode it
+       carries about 13% more lit pixels than every render that follows, at
+       unchanged brightness, so extra faint minor lines rather than darker
+       ones. It never recurs once anything has been toggled. Only z showed it
+       because z is the default grid, and so the only mode whose first
+       measurement is also the page's first paint. */
+    let h = await H.settle(p, 'chart');
+    await p.click('#b-dense'); h = await H.settle(p, 'chart', h);
+    await p.click('#b-dense'); const on = await H.settle(p, 'chart', h);
+
+    await p.click('#b-dense');
+    const off = await H.settle(p, 'chart', on);
+    await p.click('#b-dense');
+    const back = await H.settle(p, 'chart', off);
 
     s.check('fine grid changes the ' + g + ' grid', on !== off, on + ' -> ' + off);
     s.check('fine grid restores the ' + g + ' grid', back === on);

@@ -66,7 +66,7 @@ const nearestD = (arr, d) => {
 
   /* ---------------- stage 2 ---------------- */
   const srv = await H.serve();
-  const b = await H.chromium.launch();
+  const b = await H.launch();
   const ctx = await b.newContext({ viewport: { width: 1280, height: 1000 } });
   const p = await ctx.newPage();
   const errs = H.watchErrors(p);

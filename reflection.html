@@ -98,23 +98,23 @@
       <div class="ctl"><label for="rl">R<sub>L</sub> &Omega;</label><input type="range" id="rl" min="0" max="300" step="1" value="90"><output id="rlv">90</output></div>
       <div class="ctl"><label for="xl">X<sub>L</sub> &Omega;</label><input type="range" id="xl" min="-250" max="250" step="1" value="-120"><output id="xlv">&minus;120</output></div>
       <select id="z0sel" aria-label="Characteristic impedance">
-        <option value="50">Z&#8320; = 50 &#937;</option>
+        <option value="50" selected>Z&#8320; = 50 &#937;</option>
         <option value="75">Z&#8320; = 75 &#937;</option>
-        <option value="150" selected>Z&#8320; = 150 &#937;</option>
+        <option value="150">Z&#8320; = 150 &#937;</option>
       </select>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>|&Gamma;|</dt><dd id="r-gm">0.50</dd></div>
-      <div class="rd"><dt>&theta;<sub>r</sub></dt><dd id="r-ga">&minus;90&deg;</dd></div>
-      <div class="rd"><dt>Power reflected</dt><dd id="r-pw">25 %</dd></div>
-      <div class="rd"><dt>Return loss</dt><dd id="r-rl">6.0 dB</dd></div>
+      <div class="rd"><dt>|&Gamma;|</dt><dd id="r-gm">0.686</dd></div>
+      <div class="rd"><dt>&theta;<sub>r</sub></dt><dd id="r-ga">&minus;31&deg;</dd></div>
+      <div class="rd"><dt>Power reflected</dt><dd id="r-pw">47.1 %</dd></div>
+      <div class="rd"><dt>Return loss</dt><dd id="r-rl">3.3 dB</dd></div>
     </dl>
     <div class="btns">
-      <button data-g="150,0,150">matched</button>
-      <button data-g="0,0,150">short</button>
+      <button data-match="1">matched</button>
+      <button data-g="0,0">short</button>
       <button id="gopen">open</button>
-      <button data-g="0,120,150">pure inductor</button>
-      <button data-g="90,-120,150">90 &minus; j120</button>
+      <button data-g="0,120">pure inductor</button>
+      <button data-g="90,-120">90 &minus; j120</button>
     </div>
     <figcaption class="cap">left: &Gamma; inside the unit circle. right: how the incident wave splits into reflected and delivered power.</figcaption>
   </figure>
@@ -229,7 +229,7 @@ var MONO = 'IBM Plex Mono, monospace';
 (function(){
   var gp = document.getElementById('gplane'), gb = document.getElementById('gbars');
   if(!gp) return;
-  var R = 90, X = -120, Z0 = 150, isOpen = false;
+  var R = 90, X = -120, Z0 = 50, isOpen = false;
   function gam(){
     if(isOpen) return {re:1, im:0, m:1, a:0};
     var nr = R-Z0, ni = X, dr = R+Z0, di = X, d = dr*dr + di*di;
@@ -250,15 +250,27 @@ var MONO = 'IBM Plex Mono, monospace';
   document.getElementById('rl').addEventListener('input', function(){ R = +this.value; isOpen = false; sync(); });
   document.getElementById('xl').addEventListener('input', function(){ X = +this.value; isOpen = false; sync(); });
   document.getElementById('z0sel').addEventListener('change', function(){ Z0 = +this.value; sync(); });
+  /* The presets set the load and leave Z0 alone. They used to carry a Z0 of
+     their own and write it back to the select, so choosing 75 ohm and then
+     pressing a preset silently put you back on a different line -- and the
+     reading you were in the middle of comparing changed for two reasons at
+     once. Z0 is the reader's choice; a load button has no business with it. */
+  function setLoad(r, x){
+    R = r; X = x; isOpen = false;
+    document.getElementById('rl').value = R;
+    document.getElementById('xl').value = X;
+    sync();
+  }
   Array.prototype.forEach.call(document.querySelectorAll('.btns button[data-g]'), function(b){
     b.addEventListener('click', function(){
       var v = b.getAttribute('data-g').split(',');
-      R = +v[0]; X = +v[1]; Z0 = +v[2]; isOpen = false;
-      document.getElementById('rl').value = R;
-      document.getElementById('xl').value = X;
-      document.getElementById('z0sel').value = Z0;
-      sync();
+      setLoad(+v[0], +v[1]);
     });
+  });
+  /* "Matched" is a relationship, not a number: it means R = Z0 at whatever Z0
+     is currently selected, so it stays matched when the reader changes line. */
+  Array.prototype.forEach.call(document.querySelectorAll('.btns button[data-match]'), function(b){
+    b.addEventListener('click', function(){ setLoad(Z0, 0); });
   });
   document.getElementById('gopen').addEventListener('click', function(){
     isOpen = true; X = 0; document.getElementById('xl').value = 0; sync();
