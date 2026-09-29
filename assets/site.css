@@ -356,6 +356,39 @@ ol.steps b,ol.steps strong{color:var(--ink);font-weight:600}
 footer.site{border-top:1px solid var(--line);margin-top:8px;padding-block:30px;
   color:var(--ink3);font-size:13.5px}
 footer.site .cr{display:block;margin-top:9px;font-family:var(--f-mono);font-size:12px;color:var(--ink2)}
+/* ---- search ---- */
+/* sized and bordered like .themebtn beside it; .mast .sep already does the
+   spacing, so this must not add a margin of its own */
+.searchbtn{display:grid;place-items:center;width:32px;height:28px;flex:none;
+  border:1px solid var(--line);border-radius:4px;background:var(--surface);
+  color:var(--ink2);cursor:pointer;padding:0}
+.searchbtn:hover{border-color:var(--ink3);color:var(--ink)}
+.searchbox{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);
+  display:flex;justify-content:center;align-items:flex-start;padding:12vh 16px 16px}
+/* An author `display` beats the browser's own [hidden]{display:none}, so
+   without this the closed overlay stays laid out across the whole viewport and
+   silently eats every click on the page behind it. */
+.searchbox[hidden]{display:none}
+.searchbox .panel{width:min(100%,620px);background:var(--raise);
+  border:1px solid var(--line2);border-radius:9px;overflow:hidden;
+  box-shadow:0 26px 60px -18px rgba(0,0,0,.6)}
+.searchbox input{width:100%;border:0;border-bottom:1px solid var(--line);
+  background:transparent;color:var(--ink);font:inherit;font-size:16px;
+  padding:13px 15px;outline:none}
+.searchbox .results{max-height:min(56vh,440px);overflow-y:auto;padding:6px}
+.searchbox .hint{color:var(--ink3);font-size:13px;padding:14px 10px}
+.searchbox a{display:flex;gap:10px;align-items:baseline;padding:8px 10px;
+  border-radius:6px;text-decoration:none;color:var(--ink2)}
+.searchbox a:hover{background:var(--sunk)}
+.searchbox a[aria-selected="true"]{background:var(--uifill);color:var(--ink)}
+.searchbox a .n{font-family:var(--f-mono);font-size:10.5px;color:var(--ui);
+  flex:none;width:20px;text-align:right}
+.searchbox a .b{min-width:0}
+.searchbox a .ttl{display:block;color:var(--ink);font-size:14px;line-height:1.3}
+.searchbox a .sub{display:block;color:var(--ink3);font-size:12px;line-height:1.35;
+  margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.searchbox mark{background:var(--uifill);color:var(--ink);border-radius:2px}
+
 /* ---- back to top ----
    The masthead is sticky, so the contents are always in reach; this is about
    the page itself, which on a long chapter is a long way up. Hidden with
@@ -377,6 +410,40 @@ footer.site .cr{display:block;margin-top:9px;font-family:var(--f-mono);font-size
 .totop:focus-visible{outline:2px solid var(--ui);outline-offset:2px}
 
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+/* ---- print ----
+   Students print chapters to annotate them. Two things matter: the navigation
+   is not paper, and a collapsed derivation that prints as a closed summary
+   loses the very working the reader wanted on the page. Everything is forced
+   to ink-on-white regardless of the theme, because printing the dark palette
+   floods a page with toner and renders faint grid lines invisible. */
+@media print{
+  :root, :root[data-theme="light"], :root[data-theme="dark"]{
+    color-scheme: light;
+    --bg:#fff; --surface:#fff; --sunk:#fff; --raise:#fff;
+    --ink:#000; --ink2:#222; --ink3:#555;
+    --line:#bbb; --line2:#888;
+    --e:#14508c; --h:#9c3f14; --z:#0a5f54; --acc:#8f0f2a;
+    --accfill:rgba(143,15,42,.12); --ui:#6b5210; --uifill:rgba(107,82,16,.12);
+    --ok:#17603a; --warn:#9c3f14;
+  }
+  .sidebar, .mast, .totop, #sitemenu, .menuwrap, .figbar, .themebtn,
+  .pager, .chrail{display:none !important}
+  body{padding-left:0 !important;font-size:11pt;background:#fff}
+  .wrap{max-width:none;padding:0}
+  /* a derivation the reader chose to print is a derivation they want to read */
+  details.deriv>.body{display:block !important}
+  details.deriv>summary{list-style:none;font-weight:600}
+  details.deriv{border:1px solid var(--line);padding:8px 10px}
+  .fig, .tw, .key, .check .q, details.deriv, ol.steps li{
+    break-inside:avoid; page-break-inside:avoid}
+  h1, h2, h3{break-after:avoid; page-break-after:avoid}
+  canvas{max-width:100% !important}
+  a{color:#000; text-decoration:none}
+  /* the self-checks are worth printing; their answers are not */
+  .check .exp{display:none !important}
+  footer.site{border-top:1px solid var(--line);font-size:9pt}
+}
 
 /* ---- wide-screen bleed ----
    The text column stays at a comfortable reading measure. The figures are the

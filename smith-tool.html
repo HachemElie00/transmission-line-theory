@@ -17,10 +17,25 @@
 .wb .panel{border-top:1px solid var(--line);min-width:0}
 @media(min-width:1000px){ .wb .panel{border-top:0;border-left:1px solid var(--line)} }
 
-canvas#chart{display:block;width:100%;max-width:min(1000px, 96vh);height:auto;aspect-ratio:1/1;
-  margin-inline:auto;background:var(--sunk);touch-action:none;cursor:crosshair}
-canvas#nomo{display:block;width:100%;max-width:min(1000px, 96vh);height:300px;
-  margin-inline:auto;background:var(--sunk)}
+/* The chart canvas fills its column rather than being a square centred in it.
+
+   Square, it left a band down each side that was canvas-coloured but was not
+   canvas: it looked like part of the chart, and dragging a magnified chart
+   sideways made the disc vanish into it at an invisible edge. The band was
+   worst exactly where it was most annoying -- full screen, and wide short
+   displays -- because there the column is much wider than the height the
+   square could use.
+
+   Filling the column makes that area real canvas, so a panned chart runs into
+   it instead of disappearing behind it. The disc is still sized by
+   min(width, height) in layout(), so nothing about the chart itself changes.
+   The nomograph must keep the SAME width, because drawNomo centres its scales
+   on the canvas midpoint to line them up with the disc. */
+canvas#chart{display:block;width:100%;height:min(1000px, 96vh);
+  background:var(--sunk);touch-action:none;cursor:crosshair}
+/* the height above is only the starting value; sizeChart() replaces it with
+   min(column width, height cap) so the box is never taller than it is wide */
+canvas#nomo{display:block;width:100%;height:300px;background:var(--sunk)}
 canvas#ckt{display:block;width:100%;height:248px;background:var(--sunk);
   border-top:1px solid var(--line)}
 @media(max-width:560px){ canvas#nomo{height:282px} canvas#ckt{height:236px} }
@@ -44,8 +59,8 @@ canvas#ckt{display:block;width:100%;height:248px;background:var(--sunk);
    readout, which stays on screen. */
 .wb:fullscreen canvas#nomo,
 .wb:fullscreen .figbar{display:none}
-.wb:fullscreen canvas#chart{max-width:min(100%, calc(100vh - 20px));
-  max-height:calc(100vh - 20px)}
+/* height comes from sizeChart(); only the width rule is needed here */
+.wb:fullscreen canvas#chart{width:100%}
 .wb:fullscreen .panel{height:100vh;overflow-y:auto;overscroll-behavior:contain}
 @media(max-width:900px){
   .wb:fullscreen .grid{grid-template-columns:minmax(0,1fr)}
@@ -182,9 +197,14 @@ canvas#ckt{display:block;width:100%;height:248px;background:var(--sunk);
         </div>
         <div class="row" style="margin-top:9px">
           <button class="mini" id="b-full" aria-pressed="false">full screen</button>
+          <button class="mini" id="b-link">copy link</button>
         </div>
         <p class="hint">Hold <b>shift</b> and drag to move around while zoomed.
           Dragging without shift still places the load.</p>
+        <p class="hint"><b>Copy link</b> captures everything on the bench &mdash;
+          the load, the line, the method, where you have travelled to &mdash; in
+          the address itself, so a particular problem can be put in a slide or
+          sent round before class and opened exactly as you left it.</p>
         <p class="hint">Full screen gives the whole display height to the chart
           and keeps the controls beside it &mdash; for working a problem in
           front of a room. The radially scaled parameters step aside; their six
@@ -943,8 +963,23 @@ function drawStubArc(c, C, isOpen, ls){
 
 /* ===================== main chart draw ===================== */
 
+/* The canvas takes the column's full width and is never taller than it is
+   wide: square where the column is the limit, letterboxed where the display
+   height is, and with no dead band in either case. CSS cannot set a height
+   from an element's own width, so it is done here from the measured width.
+   Writing the same value back is skipped, or this would invalidate layout on
+   every single draw. */
+function sizeChart(){
+  var w = cv.getBoundingClientRect().width;
+  if(!(w > 0)) return;
+  var cap = Math.min(1000, (window.innerHeight || 800) * 0.96);
+  var px = Math.round(Math.min(w, cap)) + 'px';
+  if(cv.style.height !== px) cv.style.height = px;
+}
+
 function drawChart(){
   var C = EM.colors();
+  sizeChart();
   EM.fit(cv);
   layout();
   var c = ctx, W = cv._w, H = cv._h;
@@ -1113,16 +1148,24 @@ function drawChart(){
     }
   }
 
+  /* The two markers are drawn inside the zoom transform, so without this they
+     magnify with everything else: at x4 the dot that marks the point covers
+     four times as much of the chart it is pointing at, which defeats the
+     reason for zooming. Dividing by the zoom holds their size on screen, so
+     magnifying genuinely buys precision. The paths and arcs are left to scale,
+     because those are constructions on the chart rather than pointers at it. */
+  var mk = 1/S.zoom;
+
   /* load: hollow */
   var pl = P(gL[0], gL[1]);
-  c.beginPath(); c.arc(pl[0], pl[1], Math.max(4.5, G.size*0.0085), 0, TAU);
-  c.strokeStyle = C.ink; c.lineWidth = 2.2; c.stroke();
+  c.beginPath(); c.arc(pl[0], pl[1], Math.max(4.5, G.size*0.0085)*mk, 0, TAU);
+  c.strokeStyle = C.ink; c.lineWidth = 2.2*mk; c.stroke();
 
   /* current point: filled */
   var pc = P(gC[0], gC[1]);
-  c.beginPath(); c.arc(pc[0], pc[1], Math.max(5, G.size*0.0095), 0, TAU);
+  c.beginPath(); c.arc(pc[0], pc[1], Math.max(5, G.size*0.0095)*mk, 0, TAU);
   c.fillStyle = C.acc; c.fill();
-  c.strokeStyle = C.sunk; c.lineWidth = 1.6; c.stroke();
+  c.strokeStyle = C.sunk; c.lineWidth = 1.6*mk; c.stroke();
 
   /* rim words */
   var fs = Math.max(8, Math.min(11.5, G.size*0.017));
@@ -1223,12 +1266,26 @@ function drawNomo(){
   c.clearRect(0,0,W,H);
   c.fillStyle = C.sunk; c.fillRect(0,0,W,H);
 
-  /* The scales span the full canvas, and the canvas is the same width as the
-     chart above, so |Gamma| = 0 sits under the chart's left rim and 1 under
-     its right. Names and values go above each line rather than beside it,
-     which is what frees the whole width for the scale itself. */
+  /* The scales span the chart's DISC, not the chart's canvas.
+
+     They used to run the full canvas width on the reasoning that the canvas is
+     the same width as the chart above it -- but the unit circle is inset from
+     its canvas by the three peripheral rings, the stub-arc gap and the outer
+     band for the direction arcs (see layout(): G.R = s/2 - 3*G.h - G.gap -
+     G.out). The scales were therefore 37% longer than the chart diameter at a
+     1500px viewport and 45% longer at 1100px, and the smaller the chart the
+     worse it got, because the inset is partly a fixed number of pixels. So
+     |Gamma| = 1 sat well outside the rim it is supposed to line up with.
+
+     G.R and the disc centre come from layout(), which drawChart() runs first;
+     the guard covers being called before that has ever happened.
+
+     Names and values still go above each line rather than beside it. That is
+     what frees the width for the scale, and it now also means the margins
+     either side of the scale are free for them. */
   var narrow = W < 520;
-  var x0 = 0, x1 = W;
+  var halfDia = (G.R > 0) ? G.R : W/2;
+  var x0 = W/2 - halfDia, x1 = W/2 + halfDia;
   var top = 20, rowH = (H - top - 6)/SCALES.length;
   var m = mag(curG());
   var fsName = narrow ? 9 : 10, fsTick = narrow ? 8 : 9, fsVal = narrow ? 11 : 12.5;
@@ -1250,7 +1307,10 @@ function drawNomo(){
                0, rTop);
     c.font = fsVal + 'px ' + MONO;
     c.fillStyle = C.ink; c.textAlign = 'right';
-    c.fillText(sc.show(sc.val(m)), x1 - 2, rTop - 2);
+    /* against the canvas edge, not the scale's end: the name is against the
+       other edge, and the margins outside the scale are now the natural place
+       for both */
+    c.fillText(sc.show(sc.val(m)), W - 2, rTop - 2);
 
     c.strokeStyle = C.line2; c.lineWidth = 1; c.globalAlpha = 0.9;
     c.beginPath(); c.moveTo(x0, y + 0.5); c.lineTo(x1, y + 0.5); c.stroke();
@@ -1687,6 +1747,119 @@ function refresh(){
   var bt = document.getElementById('b-term');
   bt.textContent = 'stub: ' + (S.openStub ? 'open' : 'shorted');
   bt.setAttribute('aria-pressed', S.openStub ? 'true' : 'false');
+  pushHash();
+}
+
+/* ===================== shareable link =====================
+   The bench's whole state lives in the URL hash, so one particular problem can
+   be handed to a room: paste the link into a slide, or send it round before
+   class and everyone opens the same load on the same line, with the same
+   method already chosen. Without this the tool can only be demonstrated; with
+   it, it can be set as work.
+
+   Only values that differ from the defaults are written, so an ordinary visit
+   keeps a clean address and a shared link reads as a description of exactly
+   what was changed. Everything arriving from the hash is treated as hostile:
+   a truncated copy-paste or a hand-edited number must not be able to leave the
+   page in a state it cannot draw. */
+var URL_SPEC = [
+  ['r','n'], ['x','n'], ['z0','n'], ['f','n'], ['ee','n'],
+  ['grid','s'], ['rings','b'], ['dense','b'],
+  ['d','n'], ['dd','n'], ['zoom','n'], ['cu','n'], ['cv','n'],
+  ['method','s'], ['pick','n'], ['openStub','b']
+];
+/* captured before any hash is read, so "same as default" always means the
+   built-in default and never whatever the link happened to set */
+var S_DEFAULTS = (function(){ var o = {}; for(var k in S) o[k] = S[k]; return o; })();
+
+function stateToHash(){
+  var out = [];
+  URL_SPEC.forEach(function(spec){
+    var k = spec[0], kind = spec[1], v = S[k], d = S_DEFAULTS[k];
+    if(kind === 'n'){
+      if(!isFinite(v) || Math.abs(v - d) < 1e-9) return;
+      out.push(k + '=' + (Math.round(v*1e6)/1e6));
+    } else if(kind === 'b'){
+      if(!!v === !!d) return;
+      out.push(k + '=' + (v ? 1 : 0));
+    } else {
+      if((v || '') === (d || '')) return;
+      if(v) out.push(k + '=' + encodeURIComponent(v));
+    }
+  });
+  return out.join('&');
+}
+
+/* Put S back inside its own limits. Called after anything external has
+   written to it, so a bad link degrades to a sane chart rather than a blank
+   one -- an empty canvas in front of a class is the failure that matters. */
+function sanitiseState(){
+  if(!isFinite(S.z0) || S.z0 <= 0) S.z0 = S_DEFAULTS.z0;
+  if(!isFinite(S.r) || S.r < 0)    S.r  = S_DEFAULTS.r;
+  if(!isFinite(S.x))               S.x  = S_DEFAULTS.x;
+  if(!isFinite(S.f) || S.f < 0)    S.f  = S_DEFAULTS.f;
+  if(!isFinite(S.ee) || S.ee < 1)  S.ee = S_DEFAULTS.ee;
+  if(['z','y','zy'].indexOf(S.grid) < 0) S.grid = S_DEFAULTS.grid;
+  if(S.method !== null && ['shunt','series','qwt','lnet','dstub'].indexOf(S.method) < 0)
+    S.method = null;
+  S.d  = isFinite(S.d) ? wrapHalf(S.d) : 0;
+  if(!isFinite(S.dd) || S.dd <= 0 || S.dd >= 0.5) S.dd = S_DEFAULTS.dd;
+  S.zoom = isFinite(S.zoom) ? Math.max(1, Math.min(8, S.zoom)) : 1;
+  S.cu = isFinite(S.cu) ? S.cu : 0;
+  S.cv = isFinite(S.cv) ? S.cv : 0;
+  S.pick = (isFinite(S.pick) && S.pick >= 0) ? Math.floor(S.pick) : 0;
+  S.rings = !!S.rings; S.dense = !!S.dense; S.openStub = !!S.openStub;
+}
+
+function applyHash(h){
+  h = String(h == null ? '' : h).replace(/^#/, '');
+  if(!h) return false;
+  var touched = false;
+  h.split('&').forEach(function(pair){
+    var i = pair.indexOf('=');
+    if(i < 1) return;
+    var k = pair.slice(0, i), raw = pair.slice(i+1), spec = null;
+    for(var j = 0; j < URL_SPEC.length; j++) if(URL_SPEC[j][0] === k) spec = URL_SPEC[j];
+    if(!spec) return;
+    try{ raw = decodeURIComponent(raw); }catch(e){ return; }
+    if(spec[1] === 'n'){
+      var v = parseFloat(raw);
+      if(isFinite(v)){ S[k] = v; touched = true; }
+    } else if(spec[1] === 'b'){
+      S[k] = (raw === '1' || raw === 'true'); touched = true;
+    } else {
+      S[k] = raw; touched = true;
+    }
+  });
+  if(touched) sanitiseState();
+  return touched;
+}
+
+/* Every control written from S at once. refresh() already syncs the buttons;
+   these are the fields it does not touch, needed only when the state arrives
+   from somewhere other than the controls themselves. */
+function syncAllInputs(){
+  syncLoad();
+  document.getElementById('i-z0').value = S.z0;
+  document.getElementById('i-f').value  = S.f;
+  document.getElementById('i-ee').value = S.ee;
+  syncD();
+  var dd = document.getElementById('i-dd');
+  if(dd) dd.value = String(S.dd);
+}
+
+var hashTimer = null;
+function pushHash(){
+  clearTimeout(hashTimer);
+  hashTimer = setTimeout(function(){
+    var h = stateToHash();
+    /* replaceState, not location.hash: the second would stack a history entry
+       on every slider nudge and make Back useless for leaving the page */
+    try{
+      history.replaceState(null, '',
+        location.pathname + location.search + (h ? '#' + h : ''));
+    }catch(e){}
+  }, 250);
 }
 
 function readLoad(){
@@ -1855,6 +2028,59 @@ Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'), functio
 EM.register(function(){ drawChart(); }, false);
 EM.register(function(){ drawNomo(); }, false);
 EM.register(function(){ drawCircuit(); }, false);
+
+/* Copy link. The address bar already carries the state, but nobody watching a
+   lecture thinks to look there, and on a phone it is half hidden. The button
+   also flushes the pending hash write first, so what gets copied is the state
+   on screen and not the one from a quarter of a second ago. */
+(function(){
+  var b = document.getElementById('b-link');
+  if(!b) return;
+  var revert = null;
+  function say(msg){
+    clearTimeout(revert);
+    b.textContent = msg;
+    revert = setTimeout(function(){ b.textContent = 'copy link'; }, 1600);
+  }
+  b.addEventListener('click', function(){
+    clearTimeout(hashTimer);
+    var h = stateToHash();
+    var url = location.origin === 'null'
+      ? location.href.split('#')[0] + (h ? '#' + h : '')
+      : location.origin + location.pathname + location.search + (h ? '#' + h : '');
+    try{
+      history.replaceState(null, '',
+        location.pathname + location.search + (h ? '#' + h : ''));
+    }catch(e){}
+    /* the clipboard API needs a secure context, which file:// is not, so
+       there is a selection-based fallback rather than a dead button */
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(function(){ say('copied'); },
+                                             function(){ fallback(url, say); });
+    } else fallback(url, say);
+  });
+  function fallback(url, say){
+    var ta = document.createElement('textarea');
+    ta.value = url;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:0;left:-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try{ ok = document.execCommand('copy'); }catch(e){}
+    ta.remove();
+    say(ok ? 'copied' : 'press ctrl+C');
+  }
+})();
+
+/* A link may be carrying a problem. Apply it before the first draw, so the
+   chart never appears in the default state and then jump to the shared one. */
+if(applyHash(location.hash)) syncAllInputs();
+
+/* Back/forward, and pasting a different link into the same tab. */
+window.addEventListener('hashchange', function(){
+  if(applyHash(location.hash)){ syncAllInputs(); refresh(); }
+});
 
 syncLoad(); syncD(); walkthrough(); refresh();
 [150, 600, 1500].forEach(function(t){ setTimeout(refresh, t); });

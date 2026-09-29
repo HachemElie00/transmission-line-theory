@@ -30,20 +30,60 @@ const VIEWS = [[1500, 1150], [1280, 900], [900, 900], [390, 800]];
     await p.goto(H.fileUrl('smith-tool.html'), { waitUntil: 'load' });
     await p.waitForTimeout(2600);
 
+    /* Measure what is DRAWN, not where the two canvases sit.
+
+       This compared the canvases' bounding boxes and called that "scales span
+       the chart diameter". The boxes did line up, and it passed for a long
+       time while the scales were 37% longer than the chart diameter at 1500px
+       and 45% longer at 1100px -- the unit circle is inset from its canvas by
+       the peripheral rings, the stub gap and the direction-arc band, and the
+       scales ran the full canvas width. The proxy was true; the claim it was
+       standing in for was false.
+
+       The disc's edges come from the grid, which drawGrid clips to the unit
+       circle exactly, so the outermost grid-coloured pixels on the centre row
+       ARE the rim. The scale's extent is the widest horizontal run of drawn
+       pixels in the nomograph. Both are converted to page coordinates, which
+       is what a reader's eye actually compares. */
     const r = await p.evaluate(() => {
-      const ch = document.getElementById('chart').getBoundingClientRect();
-      const no = document.getElementById('nomo').getBoundingClientRect();
+      const chEl = document.getElementById('chart'), noEl = document.getElementById('nomo');
+      const ch = chEl.getBoundingClientRect(), no = noEl.getBoundingClientRect();
+      const sx = ch.width / chEl.width, nx = no.width / noEl.width;
+
+      const row = chEl.getContext('2d')
+        .getImageData(0, Math.round(chEl.height / 2), chEl.width, 1).data;
+      let dl = -1, dr = -1;
+      for (let x = 0; x < chEl.width; x++){
+        const i = x * 4;
+        if (row[i + 1] > row[i] + 18){ if (dl < 0) dl = x; dr = x; }
+      }
+
+      const ng = noEl.getContext('2d');
+      let sl = Infinity, sr = -1;
+      for (let y = 0; y < noEl.height; y++){
+        const rr = ng.getImageData(0, y, noEl.width, 1).data;
+        let a = -1, bx = -1, n = 0;
+        for (let x = 0; x < noEl.width; x++){
+          const i = x * 4;
+          if (rr[i] > 40 || rr[i + 1] > 40 || rr[i + 2] > 40){ if (a < 0) a = x; bx = x; n++; }
+        }
+        if (n > noEl.width * 0.5){ if (a < sl) sl = a; if (bx > sr) sr = bx; }
+      }
+
       return {
-        chart: [Math.round(ch.left), Math.round(ch.right), Math.round(ch.width)],
-        nomo : [Math.round(no.left), Math.round(no.right), Math.round(no.width)],
-        dl: Math.abs(ch.left - no.left), dr: Math.abs(ch.right - no.right),
+        found: dl >= 0 && sr >= 0,
+        discL: ch.left + dl * sx, discR: ch.left + dr * sx,
+        scaleL: no.left + sl * nx, scaleR: no.left + sr * nx,
         ovf: document.documentElement.scrollWidth - document.documentElement.clientWidth
       };
     });
 
+    const dL = Math.abs(r.scaleL - r.discL), dR = Math.abs(r.scaleR - r.discR);
     s.check(vw + 'x' + vh + ': scales span the chart diameter',
-            r.dl < 1.5 && r.dr < 1.5 && r.ovf <= 1,
-            'chart ' + r.chart.join('/') + '  nomo ' + r.nomo.join('/') + '  ovf ' + r.ovf);
+            r.found && dL <= 4 && dR <= 4 && r.ovf <= 1,
+            'disc ' + Math.round(r.discR - r.discL) + 'px  scale ' +
+            Math.round(r.scaleR - r.scaleL) + 'px  ends off by ' +
+            dL.toFixed(1) + '/' + dR.toFixed(1) + '  ovf ' + r.ovf);
     await ctx.close();
   }
 
@@ -97,6 +137,61 @@ const VIEWS = [[1500, 1150], [1280, 900], [900, 900], [390, 800]];
        allow a few steps either way */
     s.check('sweep at d=' + d + ' spans ~' + want + ' degrees',
             Math.abs(span - want) <= 12, 'measured ' + span + ' degrees');
+  }
+
+  /* ---- 3. no resampling fringe at fractional display scaling ----
+
+     Windows at 125% gives devicePixelRatio 1.25, and an 878px element is then
+     878 * 1.25 = 1097.5 device pixels. The bitmap has to be a whole number, so
+     it is 1098 -- which is 878.4 CSS px, not 878. Painting only 878 of it left
+     a sliver the browser resampled, and the dense grid near the open-circuit
+     rim bled into a teal line down the right edge of the chart.
+
+     It appeared at 1.25 and not at 1.0 or 1.5, so only a sweep of scalings
+     finds it. The pixels are read from a screenshot rather than from the
+     canvas, because the artefact does not exist in the canvas -- it is created
+     when the browser scales the bitmap onto the screen. */
+  for (const dpr of [1, 1.25, 1.5, 1.75]){
+    const ctx = await b.newContext({ viewport: { width: 1500, height: 1100 },
+                                     deviceScaleFactor: dpr });
+    const p2 = await ctx.newPage();
+    await H.cutTheWire(p2, 'file://');
+    await p2.goto(H.fileUrl('smith-tool.html'), { waitUntil: 'load' });
+    await p2.waitForTimeout(2600);
+    await p2.click('#z-in'); await p2.waitForTimeout(450);
+    await p2.click('#z-rst'); await p2.waitForTimeout(800);
+
+    const g = await p2.evaluate(() => {
+      const r = document.getElementById('chart').getBoundingClientRect();
+      return { left: r.left, right: r.right, top: r.top, h: r.height };
+    });
+    const look = async (x) => {
+      const shot = await p2.screenshot({
+        clip: { x: Math.max(0, Math.floor(x) - 8), y: Math.round(g.top + g.h * 0.35),
+                width: 16, height: 120 } });
+      return p2.evaluate(async (b64) => {
+        const img = new Image();
+        await new Promise(r => { img.onload = r; img.src = 'data:image/png;base64,' + b64; });
+        const cv = document.createElement('canvas');
+        cv.width = img.width; cv.height = img.height;
+        const cx = cv.getContext('2d'); cx.drawImage(img, 0, 0);
+        const d = cx.getImageData(0, 0, cv.width, cv.height).data;
+        let worst = 0;
+        for (let x = 0; x < cv.width; x++){
+          let n = 0;
+          for (let y = 0; y < cv.height; y++){
+            const i = (y * cv.width + x) * 4;
+            if (d[i + 1] > d[i] + 12) n++;
+          }
+          if (n > worst) worst = n;
+        }
+        return worst;
+      }, shot.toString('base64'));
+    };
+    const right = await look(g.right), left = await look(g.left);
+    s.check('dpr ' + dpr + ': no grid fringe at the chart edges',
+            right === 0 && left === 0, 'right ' + right + '  left ' + left);
+    await ctx.close();
   }
 
   await b.close();

@@ -95,6 +95,17 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
     var p = location.pathname.split('/').pop();
     return (!p || p === '') ? 'index.html' : p;
   }
+  /* The tab icon, added here rather than in fifteen heads. Without one the
+     browser asks the server for /favicon.ico and logs an error when it is not
+     there, which is noise in any console check. */
+  function favicon(){
+    if(document.querySelector('link[rel~="icon"]')) return;
+    var l = document.createElement('link');
+    l.rel = 'icon';
+    l.type = 'image/svg+xml';
+    l.href = 'assets/favicon.svg';
+    document.head.appendChild(l);
+  }
   /* On a wide screen the contents live permanently down the left instead of
      behind a button. Same list, same source. */
   function buildSidebar(cur){
@@ -119,6 +130,7 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
   }
 
   function build(){
+    favicon();
     var bar = document.querySelector('.mast .in');
     if(!bar || bar.querySelector('.menuwrap')) return;
     var cur = here();
@@ -337,6 +349,223 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
   else build();
 })();
 
+/* ---------------------------------------------------------------
+   Search. Fifteen pages is past the point where "which chapter had
+   the half-wave repeat?" is answered faster by reading the contents
+   than by guessing, and the answer is usually a section rather than
+   a page, so results link to the heading.
+
+   The index is generated (tools/build-search-index.js) and loaded as
+   a script rather than fetched as JSON, because fetch() on a local
+   file is blocked from file:// and the site has to work from a
+   folder. If the script is absent the button is never built, so a
+   page that forgets to include it degrades to no search rather than
+   to a broken button.
+   --------------------------------------------------------------- */
+(function(){
+  var GLASS = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"'
+    + ' fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">'
+    + '<circle cx="7" cy="7" r="4.3"/><path d="M10.2 10.2 13.5 13.5"/></svg>';
+
+  var box, input, list, results = [], sel = -1;
+
+  function norm(s){ return String(s || '').toLowerCase(); }
+
+  /* Every word must appear somewhere in the entry. Not fuzzy: a chapter index
+     of this size rewards precision, and a near-miss that ranks nonsense above
+     the right section is worse than no result. */
+  function score(hay, terms){
+    var h = norm(hay), total = 0;
+    for(var i = 0; i < terms.length; i++){
+      var at = h.indexOf(terms[i]);
+      if(at < 0) return -1;
+      /* earlier is better, and a hit at a word boundary beats one inside a word */
+      total += (at === 0 ? 3 : (/\s/.test(h.charAt(at - 1)) ? 2 : 1));
+    }
+    return total;
+  }
+
+  function search(q){
+    var terms = norm(q).split(/\s+/).filter(Boolean);
+    if(!terms.length) return [];
+    var out = [];
+    (window.TLT_INDEX || []).forEach(function(pg){
+      /* The file name counts. Half of these chapters are known by a word that
+         is in their URL and not in their title -- "telegraphers" is the
+         obvious one, whose page is called "The transmission line model" --
+         and a student searching the word they remember should land on it.
+         Page level only: putting it in the section haystack too would make
+         every section of that page match the word and bury the real hits. */
+      var pageHay = pg.p.replace(/[-.]/g, ' ') + ' ' + pg.t + ' '
+                  + (pg.n || '') + ' ' + (pg.l || '');
+      var ps = score(pageHay, terms);
+      if(ps > 0) out.push({ s: ps + 4, page: pg, head: null, txt: pg.l });
+      (pg.s || []).forEach(function(sec){
+        var sc = score(pg.t + ' ' + sec.h + ' ' + sec.x, terms);
+        if(sc > 0) out.push({ s: sc + (score(sec.h, terms) > 0 ? 3 : 0),
+                              page: pg, head: sec, txt: sec.x });
+      });
+    });
+    out.sort(function(a, b){ return b.s - a.s; });
+    return out.slice(0, 12);
+  }
+
+  function esc(s){
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  /* mark the matched words so the eye lands on why a result is there */
+  function mark(text, terms){
+    var out = esc(text), i;
+    for(i = 0; i < terms.length; i++){
+      if(!terms[i]) continue;
+      var re = new RegExp('(' + terms[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
+      out = out.replace(re, '\u0001$1\u0002');
+    }
+    return out.replace(/\u0001/g, '<mark>').replace(/\u0002/g, '</mark>');
+  }
+
+  function render(q){
+    results = search(q);
+    sel = results.length ? 0 : -1;
+    var terms = norm(q).split(/\s+/).filter(Boolean);
+    if(!q){
+      list.innerHTML = '<div class="hint">Type to search the chapters.</div>';
+      return;
+    }
+    if(!results.length){
+      list.innerHTML = '<div class="hint">Nothing matches "' + esc(q) + '".</div>';
+      return;
+    }
+    list.innerHTML = results.map(function(r, i){
+      var href = r.page.p + (r.head && r.head.i ? '#' + r.head.i : '');
+      return '<a href="' + href + '"' + (i === sel ? ' aria-selected="true"' : '') + '>'
+           + '<span class="n">' + esc(r.page.n || '') + '</span>'
+           + '<span class="b"><span class="ttl">'
+           + mark(r.head ? r.head.h : r.page.t, terms) + '</span>'
+           + '<span class="sub">' + esc(r.page.t)
+           + (r.txt ? ' \u2014 ' + mark(String(r.txt).slice(0, 110), terms) : '')
+           + '</span></span></a>';
+    }).join('');
+  }
+
+  function move(d){
+    if(!results.length) return;
+    sel = (sel + d + results.length) % results.length;
+    var as = list.querySelectorAll('a');
+    Array.prototype.forEach.call(as, function(a, i){
+      if(i === sel) a.setAttribute('aria-selected', 'true');
+      else a.removeAttribute('aria-selected');
+    });
+    if(as[sel] && as[sel].scrollIntoView) as[sel].scrollIntoView({block: 'nearest'});
+  }
+
+  function open(){
+    box.hidden = false;
+    input.value = '';
+    render('');
+    input.focus();
+  }
+  function close(){
+    box.hidden = true;
+    var b = document.querySelector('.searchbtn');
+    if(b) b.focus();
+  }
+
+  /* The index is a script, not a fetch: from file:// a fetch or XHR for a
+     local file is blocked, while a script element loads. Injected here so the
+     fifteen pages do not each need a second script tag, and only used if it
+     actually arrives -- no index, no button, rather than a button that fails. */
+  function withIndex(cb){
+    if(window.TLT_INDEX) return cb();
+    var s = document.createElement('script');
+    s.src = 'assets/search-index.js';
+    s.onload = cb;
+    s.onerror = function(){};
+    document.head.appendChild(s);
+  }
+
+  function build(){
+    if(!window.TLT_INDEX || !window.TLT_INDEX.length) return;
+    var bar = document.querySelector('.mast .in');
+    if(!bar || document.querySelector('.searchbtn')) return;
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'searchbtn';
+    btn.innerHTML = GLASS;
+    btn.title = 'Search  (press /)';
+    btn.setAttribute('aria-label', 'Search');
+    btn.addEventListener('click', open);
+    var themeBtn = bar.querySelector('.themebtn');
+    if(themeBtn) bar.insertBefore(btn, themeBtn);
+    else bar.appendChild(btn);
+
+    box = document.createElement('div');
+    box.className = 'searchbox';
+    box.hidden = true;
+    box.innerHTML = '<div class="panel" role="dialog" aria-label="Search">'
+      + '<input type="search" autocomplete="off" spellcheck="false"'
+      + ' placeholder="Search the chapters" aria-label="Search the chapters">'
+      + '<div class="results"></div></div>';
+    document.body.appendChild(box);
+    input = box.querySelector('input');
+    list = box.querySelector('.results');
+
+    box.addEventListener('mousedown', function(ev){ if(ev.target === box) close(); });
+    input.addEventListener('input', function(){ render(input.value); });
+    input.addEventListener('keydown', function(ev){
+      if(ev.key === 'ArrowDown'){ ev.preventDefault(); move(1); }
+      else if(ev.key === 'ArrowUp'){ ev.preventDefault(); move(-1); }
+      else if(ev.key === 'Enter'){
+        var a = list.querySelectorAll('a')[sel];
+        if(a){ ev.preventDefault(); location.href = a.getAttribute('href'); }
+      } else if(ev.key === 'Escape'){ ev.preventDefault(); close(); }
+    });
+
+    document.addEventListener('keydown', function(ev){
+      if(ev.ctrlKey || ev.metaKey || ev.altKey) return;
+      var t = ev.target, tag = t && t.tagName;
+      if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' ||
+         (t && t.isContentEditable)) return;
+      if(ev.key === '/'){ ev.preventDefault(); open(); }
+    });
+  }
+
+  function start(){ withIndex(build); }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
+
+/* ---------------------------------------------------------------
+   Printing a chapter. A collapsed derivation prints as a closed
+   summary line, which is exactly the part a reader printing the page
+   wanted to have on paper. CSS cannot fix it: a closed <details> does
+   not render its body whatever display it is given, because the
+   content is never assigned to a slot. So they are opened for the
+   print and put back afterwards.
+   --------------------------------------------------------------- */
+(function(){
+  var opened = [];
+  function expand(){
+    if(opened.length) return;
+    Array.prototype.forEach.call(document.querySelectorAll('details:not([open])'),
+      function(d){ opened.push(d); d.open = true; });
+  }
+  function restore(){
+    opened.forEach(function(d){ d.open = false; });
+    opened = [];
+  }
+  try{ window.addEventListener('beforeprint', expand); }catch(e){}
+  try{ window.addEventListener('afterprint', restore); }catch(e){}
+  /* Safari fires neither reliably; the media query change covers it, and also
+     covers a headless check driving the print media directly. */
+  try{
+    var mq = window.matchMedia('print');
+    if(mq && mq.addEventListener)
+      mq.addEventListener('change', function(e){ if(e.matches) expand(); else restore(); });
+  }catch(e){}
+})();
+
 var EM = (function(){
   var TAU = Math.PI*2, C = {}, drawers = [], running = true, active = null;
   var KEYS = ['ink','ink2','ink3','line','line2','e','h','z','acc','accfill','sunk','surface','ok','warn'];
@@ -354,9 +583,19 @@ var EM = (function(){
     if(active && active.cvs.indexOf(cv) < 0) active.cvs.push(cv);
     var r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
     var w = Math.max(160, Math.round(r.width)), h = Math.max(80, Math.round(r.height));
-    if(cv._w === w && cv._h === h && cv._dpr === dpr) return false;
-    cv._w = w; cv._h = h; cv._dpr = dpr;
-    cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+    var dw = Math.round(w*dpr), dh = Math.round(h*dpr);
+    if(cv.width === dw && cv.height === dh && cv._dpr === dpr) return false;
+    cv.width = dw; cv.height = dh; cv._dpr = dpr;
+    /* The design size is the CSS-space extent of the BITMAP, which is not the
+       same as the rounded element width once the display scaling is
+       fractional. At 125% an 878px element gives 878 * 1.25 = 1097.5 device
+       pixels, rounded up to 1098, so the bitmap is really 878.4 CSS px wide.
+       Taking the design width as 878 left the last 0.4px never painted, and
+       the browser resampled that sliver into a teal fringe down the right-hand
+       edge of the Smith chart -- visible at 125% and not at 100% or 150%,
+       which is exactly the fingerprint of a rounding gap. Deriving it back
+       from the bitmap makes every draw cover the whole thing. */
+    cv._w = dw/dpr; cv._h = dh/dpr;
     cv.getContext('2d').setTransform(dpr,0,0,dpr,0,0);
     return true;
   }
