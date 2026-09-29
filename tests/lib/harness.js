@@ -6,6 +6,7 @@
    breaks. */
 
 const http = require('http'), fs = require('fs'), path = require('path');
+const { pathToFileURL } = require('url');
 const { chromium } = require('playwright');
 
 const SITE = path.resolve(__dirname, '..', '..');
@@ -43,7 +44,11 @@ function pages(root){
   return fs.readdirSync(root || SITE).filter(f => f.endsWith('.html')).sort();
 }
 
-const fileUrl = name => 'file://' + path.join(SITE, name);
+/* Not 'file://' + path.join(...). That is correct only where paths start with
+   a slash: on Windows it produces file://C:\site\index.html, which is not a
+   URL at all -- wrong number of slashes, backslash separators, and no drive
+   encoding. pathToFileURL handles all three and is right on both platforms. */
+const fileUrl = name => pathToFileURL(path.join(SITE, name)).href;
 
 /* Abort every request that does not start with `allow`, and collect what was
    attempted. This is how "no network at runtime" is proved: not by reading the
