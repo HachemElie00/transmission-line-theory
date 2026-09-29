@@ -1,0 +1,20 @@
+{
+  "name": "transmission-line-theory-tests",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Headless checks for the Transmission Line Theory site",
+  "scripts": {
+    "test": "node run.js",
+    "test:full": "node run.js --full",
+    "palette": "node palette.test.js",
+    "pages": "node pages.test.js",
+    "offline": "node offline.test.js",
+    "solvers": "node solvers.test.js",
+    "geometry": "node geometry.test.js",
+    "toggles": "node toggles.test.js",
+    "chrome": "node chrome.test.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.47.0"
+  }
+}

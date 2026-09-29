@@ -16,38 +16,54 @@
 @font-face{font-family:"IBM Plex Sans Condensed";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/cond-600-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304-0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:"IBM Plex Sans Condensed";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/cond-700-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304-0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 
+/* ---- palette ----
+   Dark is the default. The base :root carries it and light is opt-in, applied
+   only when the theme switch sets data-theme="light". The OS preference is
+   deliberately not consulted: the site chooses dark, the reader overrides.
+   (To follow the OS again, wrap the light block in
+   @media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){ ... } }.)
+
+   Roles, and why they are split:
+
+     --e   E-field, and the forward/incident quantity      blue
+     --h   H-field, admittance and reactance grids         orange
+     --z   the Smith chart's impedance grid ONLY           teal
+     --acc constructions, cursors, travel paths            red
+     --ui  chrome only: logos, numerals, active buttons    gold
+
+   --e and --h sit in the same figure constantly, so they are a warm/cool pair
+   and must stay far apart; blue against orange is the widest separation the
+   warm palette allows. --z exists so the chart keeps the teal it has always
+   had while the chapters drop it: it is the one teal left on the site, and it
+   is not a general-purpose colour. --acc and --ui stay separate because gold
+   inside a figure fights the orange grid, so figures get red and only the
+   chrome gets gold. Do not merge them, and do not reach for --ui in a canvas.
+
+   Every colour here was checked for contrast against --sunk (the figure
+   background) and for perceptual distance from the others; see tests. */
 :root{
-  color-scheme: light;
-  --bg:#ececeb; --surface:#f8f8f7; --sunk:#e2e2e0; --raise:#ffffff;
-  --ink:#191a1c; --ink2:#4f5155; --ink3:#7b7e84;
-  --line:#cfcfcd; --line2:#b2b3b1;
-  --e:#0d7a6b; --h:#b2441d; --acc:#6a4fb8; --accfill:rgba(106,79,184,.14);
-  --ui:#8a6a16; --uifill:rgba(138,106,22,.16);
-  --ok:#0d7a6b; --warn:#b2441d;
+  color-scheme: dark;
+  --bg:#17181b; --surface:#1e1f23; --sunk:#111214; --raise:#26282d;
+  --ink:#e9e9ea; --ink2:#a1a3a8; --ink3:#73767c;
+  --line:#2e3035; --line2:#41444a;
+  --e:#5ba8f5; --h:#ff9a52; --acc:#ff5d78; --accfill:rgba(255,93,120,.16);
+  --z:#34c3a4;
+  --ui:#e0b45c; --uifill:rgba(224,180,92,.16);
+  --ok:#57c98a; --warn:#ff9a52;
   --f-disp:"IBM Plex Sans Condensed",system-ui,sans-serif;
   --f-body:"IBM Plex Sans",system-ui,sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,monospace;
   --col:min(100% - 40px, 880px);
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    color-scheme: dark;
-    --bg:#17181b; --surface:#1e1f23; --sunk:#111214; --raise:#26282d;
-    --ink:#e9e9ea; --ink2:#a1a3a8; --ink3:#73767c;
-    --line:#2e3035; --line2:#41444a; 
-    --e:#34c3a4; --h:#ff8f62; --acc:#a58df2; --accfill:rgba(165,141,242,.16);
-    --ui:#e0b45c; --uifill:rgba(224,180,92,.16);
-    --ok:#34c3a4; --warn:#ff8f62;
-  }
-}
-:root[data-theme="dark"]{
-  color-scheme: dark;
---bg:#17181b; --surface:#1e1f23; --sunk:#111214; --raise:#26282d;
-  --ink:#e9e9ea; --ink2:#a1a3a8; --ink3:#73767c;
-  --line:#2e3035; --line2:#41444a; 
-  --e:#34c3a4; --h:#ff8f62; --acc:#a58df2; --accfill:rgba(165,141,242,.16);
-    --ui:#e0b45c; --uifill:rgba(224,180,92,.16);
-  --ok:#34c3a4; --warn:#ff8f62;
+:root[data-theme="light"]{
+  color-scheme: light;
+  --bg:#ececeb; --surface:#f8f8f7; --sunk:#e2e2e0; --raise:#ffffff;
+  --ink:#191a1c; --ink2:#4f5155; --ink3:#7b7e84;
+  --line:#cfcfcd; --line2:#b2b3b1;
+  --e:#1a5fa6; --h:#c0531a; --acc:#b01432; --accfill:rgba(176,20,50,.14);
+  --z:#0d7a6b;
+  --ui:#8a6a16; --uifill:rgba(138,106,22,.16);
+  --ok:#1f7a45; --warn:#c0531a;
 }
 *{box-sizing:border-box}
 html,body{max-width:100%;overflow-x:hidden}
@@ -145,11 +161,11 @@ a{color:var(--ui)}
 #sitemenu{position:absolute;top:calc(100% + 9px);left:0;z-index:40;
   width:min(90vw,330px);max-height:min(74vh,560px);overflow-y:auto;overscroll-behavior:contain;
   background:var(--raise);border:1px solid var(--line2);border-radius:7px;
-  box-shadow:0 14px 34px -10px rgba(0,0,0,.28),0 3px 9px -3px rgba(0,0,0,.18);
+  box-shadow:0 14px 34px -8px rgba(0,0,0,.7);
   padding:7px}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #sitemenu{
-  box-shadow:0 14px 34px -8px rgba(0,0,0,.7)}}
-:root[data-theme="dark"] #sitemenu{box-shadow:0 14px 34px -8px rgba(0,0,0,.7)}
+/* the dark shadow is the default, as dark is; light needs the softer pair */
+:root[data-theme="light"] #sitemenu{
+  box-shadow:0 14px 34px -10px rgba(0,0,0,.28),0 3px 9px -3px rgba(0,0,0,.18)}
 #sitemenu .grp{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;
   text-transform:uppercase;color:var(--ink3);padding:12px 10px 5px}
 #sitemenu .grp:first-child{padding-top:5px}

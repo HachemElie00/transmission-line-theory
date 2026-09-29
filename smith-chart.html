@@ -339,7 +339,7 @@ function fmtZ(z){
     /* 1 = r alone, 2 = x alone, 3 = both, so each family can be seen by itself */
     var wantR = (stage === 1 || stage === 3);
     var wantX = (stage === 2 || stage === 3);
-    if(wantR) drawGrid(c, cx, cy, R, {color:C.e, lw:1.1, showX:false, rs:[0.2,0.5,1,2,5], xs:[]});
+    if(wantR) drawGrid(c, cx, cy, R, {color:C.z, lw:1.1, showX:false, rs:[0.2,0.5,1,2,5], xs:[]});
     if(wantX) drawGrid(c, cx, cy, R, {color:C.h, lw:1.1, showR:false,
       rs:[], xs:[0.2,0.5,1,2,5,-0.2,-0.5,-1,-2,-5]});
     c.strokeStyle = C.line2; c.lineWidth = 1.6;
@@ -353,9 +353,9 @@ function fmtZ(z){
     if(wantR){
       /* label the r = 1 circle ON the circle, at its topmost point (0.5, 0.5),
          not at its centre, which is not a point of the curve at all */
-      c.fillStyle = C.e;
+      c.fillStyle = C.z;
       c.fillText('r = 1', cx + R*0.5, cy - R*0.5 - 8);
-      c.strokeStyle = C.e; c.lineWidth = 1; c.globalAlpha = .6;
+      c.strokeStyle = C.z; c.lineWidth = 1; c.globalAlpha = .6;
       c.beginPath(); c.moveTo(cx + R*0.5, cy - R*0.5 - 5); c.lineTo(cx + R*0.5, cy - R*0.5);
       c.stroke(); c.globalAlpha = 1;
     }
@@ -470,7 +470,7 @@ function fmtZ(z){
     if(showY){
       drawGrid(c, cx, cy, R, {color:C.acc, lw:1, rotate:true, rs:rs, xs:xs});
     }
-    drawGrid(c, cx, cy, R, {color:C.e, lw:1, showX:false, rs:rs, xs:xs});
+    drawGrid(c, cx, cy, R, {color:C.z, lw:1, showX:false, rs:rs, xs:xs});
     drawGrid(c, cx, cy, R, {color:C.h, lw:1, showR:false, rs:rs, xs:xs});
 
     c.strokeStyle = C.line2; c.lineWidth = 1.6;
@@ -513,7 +513,7 @@ function fmtZ(z){
     }
     /* r labels along the real axis */
     if(dense){
-      c.fillStyle = C.e; c.textAlign = 'center'; c.font = '10.5px ' + MONO;
+      c.fillStyle = C.z; c.textAlign = 'center'; c.font = '10.5px ' + MONO;
       [0.2,0.5,1,2,5].forEach(function(r){
         var u = (r-1)/(r+1);
         c.fillText(String(r), cx + u*R, cy + 16);

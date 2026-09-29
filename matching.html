@@ -330,7 +330,7 @@ function solveStub(rL, xL, which, openStub){
     c.beginPath(); c.arc(cx, cy, R, 0, Math.PI*2); c.clip();
     c.globalAlpha = .28; c.lineWidth = 1;
     [0.5,1,2].forEach(function(r){
-      c.strokeStyle = C.e;
+      c.strokeStyle = C.z;
       c.beginPath(); c.arc(cx + (r/(1+r))*R, cy, R/(1+r), 0, Math.PI*2); c.stroke();
     });
     [1,-1,0.5,-0.5].forEach(function(x){

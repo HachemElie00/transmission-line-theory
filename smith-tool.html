@@ -925,7 +925,7 @@ function drawChart(){
 
   drawRings(c, C);
 
-  if(S.grid === 'z' || S.grid === 'zy') drawGrid(c, false, C.e, S.grid === 'z');
+  if(S.grid === 'z' || S.grid === 'zy') drawGrid(c, false, C.z, S.grid === 'z');
   if(S.grid === 'y' || S.grid === 'zy') drawGrid(c, true,  C.h, S.grid === 'y');
 
   /* unit circle */
@@ -1100,7 +1100,7 @@ function drawChart(){
      the SAME upper half is b < 0 — so the two labels must disagree. */
   c.textAlign = 'center';
   var topTxt, botTxt;
-  if(S.grid === 'z'){ topTxt = 'inductive  x > 0';  botTxt = 'capacitive  x < 0'; c.fillStyle = C.e; }
+  if(S.grid === 'z'){ topTxt = 'inductive  x > 0';  botTxt = 'capacitive  x < 0'; c.fillStyle = C.z; }
   else if(S.grid === 'y'){ topTxt = 'inductive  b < 0'; botTxt = 'capacitive  b > 0'; c.fillStyle = C.h; }
   else { topTxt = 'inductive:  x > 0,  b < 0'; botTxt = 'capacitive:  x < 0,  b > 0'; c.fillStyle = C.ink3; }
   /* outside the chart, at top and bottom centre, where no point can reach
@@ -1552,7 +1552,7 @@ function solPanel(){
 function legend(){
   var C = EM.colors(), L = [];
   function it(col, txt){ L.push('<span><i style="border-top-color:'+col+'"></i>'+txt+'</span>'); }
-  if(S.grid !== 'y') it(C.e, 'impedance grid  r, x');
+  if(S.grid !== 'y') it(C.z, 'impedance grid  r, x');
   if(S.grid !== 'z') it(C.h, 'admittance grid  g, b');
   it(C.ink, 'constant-SWR circle (dashed)');
   if(S.method) it(C.acc, 'construction, clockwise');

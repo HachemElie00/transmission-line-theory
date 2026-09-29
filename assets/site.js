@@ -176,12 +176,12 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
     var MOON = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">'
       + '<path d="M13.4 10.3A5.8 5.8 0 0 1 6 2.8a5.9 5.9 0 1 0 7.4 7.5z"'
       + ' fill="currentColor"/></svg>';
+    /* Dark is the site default, so anything that is not an explicit "light"
+       is dark. The OS preference is not consulted here, and must not be: the
+       stylesheet does not consult it either, and a disagreement between the
+       two would put the wrong icon on the button. */
     function isDark(){
-      var a = document.documentElement.getAttribute('data-theme');
-      if(a === 'dark') return true;
-      if(a === 'light') return false;
-      try{ return window.matchMedia('(prefers-color-scheme: dark)').matches; }
-      catch(e){ return false; }
+      return document.documentElement.getAttribute('data-theme') !== 'light';
     }
     var tb = document.createElement('button');
     tb.type = 'button'; tb.className = 'themebtn';
@@ -198,10 +198,8 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
       syncTheme();
     });
     syncTheme();
-    try{
-      window.matchMedia('(prefers-color-scheme: dark)')
-        .addEventListener('change', syncTheme);
-    }catch(e){}
+    /* No prefers-color-scheme listener: the OS no longer decides the theme,
+       so there is nothing for it to resync. */
     var navEl = bar.querySelector('.nav');
     if(navEl) bar.insertBefore(tb, navEl);
 
@@ -275,7 +273,7 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
 
 var EM = (function(){
   var TAU = Math.PI*2, C = {}, drawers = [], running = true, active = null;
-  var KEYS = ['ink','ink2','ink3','line','line2','e','h','acc','accfill','sunk','surface','ok','warn'];
+  var KEYS = ['ink','ink2','ink3','line','line2','e','h','z','acc','accfill','sunk','surface','ok','warn'];
 
   function readColors(){
     var s = getComputedStyle(document.documentElement);
@@ -567,8 +565,8 @@ var EM = (function(){
       clearTimeout(rt); rt = setTimeout(function(){ readColors(); redrawStatic(); }, 90);
     });
     try{
-      window.matchMedia('(prefers-color-scheme: dark)')
-        .addEventListener('change', function(){ readColors(); redrawStatic(); });
+      /* data-theme is now the only thing that changes the palette, so the
+         observer below is the only trigger a figure needs. */
       new MutationObserver(function(){ readColors(); redrawStatic(); })
         .observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
     }catch(e){}
