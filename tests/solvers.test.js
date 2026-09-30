@@ -103,9 +103,17 @@ const nearestD = (arr, d) => {
            applied the spacing and silently compared the default instead */
         if (sp.value !== String(dd)) throw new Error('spacing not applied: ' + sp.value);
 
+        /* the method is a select now: set it, read, then put it back to none.
+           It no longer toggles, so the old click-twice idiom would have left
+           the method selected and every later read would have been wrong. */
+        const pick = m => {
+          const sel = document.getElementById('i-method');
+          sel.value = m;
+          sel.dispatchEvent(new Event('change', { bubbles: true }));
+          if (sel.value !== m) throw new Error('method not applied: ' + m);
+        };
         const read = m => {
-          const btn = document.querySelector('[data-m="' + m + '"]');
-          btn.click();
+          pick(m);
           const v = [...document.querySelectorAll('#sols .sol')].map(sol => {
             const o = {}, dt = [...sol.querySelectorAll('dt')],
                           dd2 = [...sol.querySelectorAll('dd')];
@@ -113,7 +121,7 @@ const nearestD = (arr, d) => {
             dt.forEach((d, i) => o[d.textContent.trim()] = dd2[i].textContent.trim());
             return o;
           }).filter(Boolean);
-          btn.click();
+          pick('');
           return v;
         };
         return { shunt: read('shunt'), series: read('series'), qwt: read('qwt'),

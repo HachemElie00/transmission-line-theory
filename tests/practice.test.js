@@ -114,12 +114,14 @@ function lnetDesigns(r, x){
     });
     await p.waitForTimeout(150);
     await p.click('#b-prac'); await p.waitForTimeout(200);
-    await p.evaluate(() => {
-      const cur = document.querySelector('[data-m][aria-pressed="true"]');
-      if (cur) cur.click();
-    });
-    await p.waitForTimeout(200);
-    await p.click('[data-m="' + m + '"]'); await p.waitForTimeout(450);
+    await p.evaluate(m => {
+      const sel = document.getElementById('i-method');
+      sel.value = '';
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+      sel.value = m;
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+    }, m);
+    await p.waitForTimeout(450);
   }
 
   /* The load the page starts with: 25 - j30 on 50 ohm, i.e. 0.5 - j0.6. */

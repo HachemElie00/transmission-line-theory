@@ -211,6 +211,71 @@ details.note .hint{margin-top:5px}
       </div>
 
       <div class="grp">
+        <h4>Move along the line</h4>
+        <div class="ctl" style="padding:0">
+          <label for="i-d">d&nbsp;&rarr;gen</label>
+          <input id="i-d" type="range" min="0" max="0.5" step="0.001" value="0">
+          <output id="o-d">0.000&lambda;</output>
+        </div>
+        <details class="note">
+          <summary>which way is which</summary>
+          <p class="hint">Toward the generator is clockwise. The point rides the
+            constant-SWR circle; only its angle changes.</p>
+        </details>
+      </div>
+
+      <div class="grp">
+        <h4>Match it</h4>
+        <!-- Five methods took three rows of buttons and pushed everything
+             below them off the screen. It is a single choice out of five,
+             which is what a select is for: one row, and the names stay
+             readable instead of being abbreviated to fit. -->
+        <div class="row">
+          <span class="fld"><label for="i-method">method</label>
+            <select id="i-method" style="flex:1;min-width:0">
+              <option value="">none</option>
+              <option value="shunt">shunt stub</option>
+              <option value="series">series stub</option>
+              <option value="qwt">&lambda;/4 transformer</option>
+              <option value="lnet">L-network</option>
+              <option value="dstub">double stub</option>
+            </select></span>
+        </div>
+        <div class="row" style="margin-top:9px">
+          <button class="mini" id="b-term" aria-pressed="false">stub: shorted</button>
+          <button class="mini" id="b-clear">clear</button>
+          <button class="mini" id="b-prac" aria-pressed="false">practice</button>
+        </div>
+
+        <div id="prac" hidden>
+          <p class="hint" style="margin-top:8px">Drag on the chart itself: the
+            point rides the constant-SWR circle while you travel, and once you
+            are on the target circle it rides that instead. The sliders and
+            fields do the same job if you would rather type.</p>
+          <ol class="pracsteps" id="prac-steps"></ol>
+          <div class="row" id="prac-fields"></div>
+          <div class="pracverdict" id="prac-verdict"></div>
+          <div class="row" style="margin-top:7px">
+            <button class="mini" id="b-prac-show">show me</button>
+          </div>
+        </div>
+        <div class="row" style="margin-top:9px">
+          <span class="fld"><label for="i-dd">spacing</label>
+            <select id="i-dd" style="flex:1;min-width:0">
+              <option value="0.125">&lambda;/8</option>
+              <option value="0.25">&lambda;/4</option>
+              <option value="0.375">3&lambda;/8</option>
+            </select></span>
+        </div>
+        <details class="note">
+          <summary>about spacing</summary>
+          <p class="hint">Spacing applies to the double-stub tuner only. Picking a
+            method brings up the grid it is worked on &mdash; admittance for shunt
+            stubs, impedance for series ones. Override it above at any time.</p>
+        </details>
+      </div>
+
+      <div class="grp">
         <h4>Grids</h4>
         <div class="seg" role="group" aria-label="Which grid to show">
           <button data-grid="z">impedance</button>
@@ -249,63 +314,6 @@ details.note .hint{margin-top:5px}
             chart and keeps the controls beside it. The radially scaled
             parameters step aside; their six numbers stay in the readout above.
             <b>F</b> toggles it, <b>Esc</b> leaves.</p>
-        </details>
-      </div>
-
-      <div class="grp">
-        <h4>Move along the line</h4>
-        <div class="ctl" style="padding:0">
-          <label for="i-d">d&nbsp;&rarr;gen</label>
-          <input id="i-d" type="range" min="0" max="0.5" step="0.001" value="0">
-          <output id="o-d">0.000&lambda;</output>
-        </div>
-        <p class="hint">Toward the generator is clockwise. The point rides the constant-SWR circle; only its angle changes.</p>
-      </div>
-
-      <div class="grp">
-        <h4>Match it</h4>
-        <div class="seg" role="group" aria-label="Matching method">
-          <button data-m="shunt">shunt stub</button>
-          <button data-m="series">series stub</button>
-        </div>
-        <div class="seg" style="margin-top:7px" role="group" aria-label="Matching method">
-          <button data-m="qwt">&lambda;/4 transf.</button>
-          <button data-m="lnet">L-network</button>
-        </div>
-        <div class="seg" style="margin-top:7px" role="group" aria-label="Matching method">
-          <button data-m="dstub">double stub</button>
-        </div>
-        <div class="row" style="margin-top:9px">
-          <button class="mini" id="b-term" aria-pressed="false">stub: shorted</button>
-          <button class="mini" id="b-clear">clear</button>
-          <button class="mini" id="b-prac" aria-pressed="false">practice</button>
-        </div>
-
-        <div id="prac" hidden>
-          <p class="hint" style="margin-top:8px">Drag on the chart itself: the
-            point rides the constant-SWR circle while you travel, and once you
-            are on the target circle it rides that instead. The sliders and
-            fields do the same job if you would rather type.</p>
-          <ol class="pracsteps" id="prac-steps"></ol>
-          <div class="row" id="prac-fields"></div>
-          <div class="pracverdict" id="prac-verdict"></div>
-          <div class="row" style="margin-top:7px">
-            <button class="mini" id="b-prac-show">show me</button>
-          </div>
-        </div>
-        <div class="row" style="margin-top:9px">
-          <span class="fld"><label for="i-dd">spacing</label>
-            <select id="i-dd" style="flex:1;min-width:0">
-              <option value="0.125">&lambda;/8</option>
-              <option value="0.25">&lambda;/4</option>
-              <option value="0.375">3&lambda;/8</option>
-            </select></span>
-        </div>
-        <details class="note">
-          <summary>about spacing</summary>
-          <p class="hint">Spacing applies to the double-stub tuner only. Picking a
-            method brings up the grid it is worked on &mdash; admittance for shunt
-            stubs, impedance for series ones. Override it above at any time.</p>
         </details>
       </div>
 
@@ -2103,9 +2111,8 @@ function refresh(){
   Array.prototype.forEach.call(document.querySelectorAll('[data-grid]'), function(b){
     b.setAttribute('aria-pressed', b.getAttribute('data-grid') === S.grid ? 'true' : 'false');
   });
-  Array.prototype.forEach.call(document.querySelectorAll('[data-m]'), function(b){
-    b.setAttribute('aria-pressed', b.getAttribute('data-m') === S.method ? 'true' : 'false');
-  });
+  var ms = document.getElementById('i-method');
+  if(ms && ms.value !== (S.method || '')) ms.value = S.method || '';
   document.getElementById('b-rings').setAttribute('aria-pressed', S.rings ? 'true':'false');
   document.getElementById('b-dense').setAttribute('aria-pressed', S.dense ? 'true':'false');
   document.getElementById('z-val').textContent = '\u00d7' + (Math.round(S.zoom*10)/10);
@@ -2353,31 +2360,33 @@ document.getElementById('i-d').addEventListener('input', function(){
 Array.prototype.forEach.call(document.querySelectorAll('[data-grid]'), function(b){
   b.addEventListener('click', function(){ S.grid = b.getAttribute('data-grid'); refresh(); });
 });
-Array.prototype.forEach.call(document.querySelectorAll('[data-m]'), function(b){
-  b.addEventListener('click', function(){
-    var m = b.getAttribute('data-m');
-    S.method = (S.method === m) ? null : m;
-    S.pick = 0;
-    /* bring up the grid you would actually work on. The toggle still wins
-       afterwards, so this is a starting point rather than a lock. */
-    if(S.method === 'shunt' || S.method === 'dstub') S.grid = 'y';
-    else if(S.method === 'series' || S.method === 'qwt') S.grid = 'z';
-    if(S.practice){
-      /* the whole point is that the reader travels the line themselves, so
-         the answer is neither jumped to nor drawn until they ask for it */
-      S.reveal = false;
-      S.d = 0;
-      S.prac.l1 = neutralStub(); S.prac.l2 = neutralStub();
-      S.prac.x1 = 0; S.prac.b1 = 0; S.prac.z1 = S.z0;
-      var fw = document.getElementById('prac-fields');
-      if(fw) fw.removeAttribute('data-for');
-    } else {
-      var s = S.method ? (solve().sols[0] || null) : null;
-      S.d = (s && s.d != null) ? s.d : 0;
-    }
-    syncD();
-    refresh();
-  });
+/* Choosing the method. A select rather than five buttons, so this is a plain
+   choice with no toggling: picking "none" is how you put it away. */
+function pickMethod(m){
+  S.method = m || null;
+  S.pick = 0;
+  /* bring up the grid you would actually work on. The toggle still wins
+     afterwards, so this is a starting point rather than a lock. */
+  if(S.method === 'shunt' || S.method === 'dstub') S.grid = 'y';
+  else if(S.method === 'series' || S.method === 'qwt') S.grid = 'z';
+  if(S.practice){
+    /* the whole point is that the reader travels the line themselves, so the
+       answer is neither jumped to nor drawn until they ask for it */
+    S.reveal = false;
+    S.d = 0;
+    S.prac.l1 = neutralStub(); S.prac.l2 = neutralStub();
+    S.prac.x1 = 0; S.prac.b1 = 0; S.prac.z1 = S.z0;
+    var fw = document.getElementById('prac-fields');
+    if(fw) fw.removeAttribute('data-for');
+  } else {
+    var s = S.method ? (solve().sols[0] || null) : null;
+    S.d = (s && s.d != null) ? s.d : 0;
+  }
+  syncD();
+  refresh();
+}
+document.getElementById('i-method').addEventListener('change', function(){
+  pickMethod(this.value);
 });
 document.getElementById('i-dd').addEventListener('change', function(){
   S.dd = parseFloat(this.value) || 0.125; S.pick = 0; refresh();
