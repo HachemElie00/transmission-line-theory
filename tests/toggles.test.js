@@ -98,6 +98,61 @@ const H = require('./lib/harness');
   s.check('theme switch changes the palette', after.bg !== before, before + ' -> ' + after.bg);
   s.check('theme switch persists', after.stored === after.attr && !!after.attr, after.stored);
 
+  /* ---- the load can be typed in five ways and they must all mean the same ----
+     The state is always r + jx; these only change what the two boxes mean. The
+     impedance must therefore be untouched by switching between them, and a
+     value typed in one of the derived units must come back as the right
+     impedance. */
+  {
+    const impedance = () => p.evaluate(() => {
+      const rows = [...document.querySelectorAll('#big > div')];
+      const r = rows.find(x => x.querySelector('dt').textContent.trim() === 'Z (Ω)');
+      return r ? r.querySelector('dd').textContent.trim() : null;
+    });
+    const setMode = m => p.evaluate(m => {
+      const s = document.getElementById('i-lmode');
+      s.value = m; s.dispatchEvent(new Event('change', { bubbles: true }));
+    }, m);
+
+    /* a reactive load, or the round trip proves little: with x = 0 the L and C
+       conversions are degenerate and would pass whatever they did */
+    await setMode('rx'); await p.waitForTimeout(250);
+    await p.evaluate(() => {
+      const a = document.getElementById('i-r'), b = document.getElementById('i-x');
+      a.value = '25';  a.dispatchEvent(new Event('input', { bubbles: true }));
+      b.value = '-30'; b.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    await p.waitForTimeout(300);
+    const z0 = await impedance();
+    let same = true, seen = [];
+    for (const m of ['g', 'swr', 'rl', 'rc', 'rx']){
+      await setMode(m); await p.waitForTimeout(250);
+      const z = await impedance();
+      seen.push(m + '=' + z);
+      if (z !== z0) same = false;
+    }
+    s.check('switching load units does not change the load', same, seen.join('  '));
+
+    /* 2 pF at 1 GHz is -1/(2*pi*f*C) = -79.6 ohm, computed here not read off */
+    await setMode('rc'); await p.waitForTimeout(250);
+    await p.evaluate(() => {
+      const a = document.getElementById('i-r'), b = document.getElementById('i-x');
+      a.value = '50'; a.dispatchEvent(new Event('input', { bubbles: true }));
+      b.value = '2';  b.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    await p.waitForTimeout(350);
+    const want = -1 / (2*Math.PI*1e9*2e-12);
+    const got = await p.evaluate(() => {
+      const rows = [...document.querySelectorAll('#big > div')];
+      const r = rows.find(x => x.querySelector('dt').textContent.trim() === 'Z (Ω)');
+      return r ? r.querySelector('dd').textContent.trim() : '';
+    });
+    const gotX = parseFloat(got.replace(/.*[−-]\s*j/, '')) * -1;
+    s.check('a capacitance entered in pF gives the right reactance',
+            Math.abs(gotX - want) < 0.3, got + '   theory ' + want.toFixed(1));
+    await setMode('rx'); await p.waitForTimeout(200);
+  }
+
   s.check('no page errors', errs.length === 0, errs.slice(0, 2).join(' '));
 
   await b.close();

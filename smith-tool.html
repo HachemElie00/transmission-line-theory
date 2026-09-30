@@ -192,8 +192,18 @@ details.note .hint{margin-top:5px}
       <div class="grp">
         <h4>Load</h4>
         <div class="row">
-          <span class="fld"><label for="i-r">R&nbsp;&Omega;</label><input id="i-r" type="number" value="25" step="any"></span>
-          <span class="fld"><label for="i-x">X&nbsp;&Omega;</label><input id="i-x" type="number" value="-30" step="any"></span>
+          <span class="fld"><label for="i-lmode">as</label>
+            <select id="i-lmode" style="flex:1;min-width:0">
+              <option value="rx">R + jX</option>
+              <option value="g">|&Gamma;| &ang;&theta;</option>
+              <option value="swr">SWR &ang;&theta;</option>
+              <option value="rl">R + L</option>
+              <option value="rc">R + C</option>
+            </select></span>
+        </div>
+        <div class="row">
+          <span class="fld"><label for="i-r" id="lab-r">R&nbsp;&Omega;</label><input id="i-r" type="number" value="25" step="any"></span>
+          <span class="fld"><label for="i-x" id="lab-x">X&nbsp;&Omega;</label><input id="i-x" type="number" value="-30" step="any"></span>
         </div>
         <div class="row">
           <span class="fld"><label for="i-z0">Z&#8320;&nbsp;&Omega;</label><input id="i-z0" type="number" value="50" step="any" min="1"></span>
@@ -549,6 +559,9 @@ var S = {
   /* frequency response: the SWR the match must stay under, and how far
      either side of f0 to look */
   blim: 2, bspan: 0.5,
+  /* how the load is being typed in. The state is always r + jx normalised;
+     this only decides what the two boxes mean. */
+  lmode: 'rx',
   prac: { l1: 0, l2: 0, z1: 50, x1: 0, b1: 0, order: 'series', rotated: false }
 };
 
@@ -2507,8 +2520,21 @@ function syncD(){
   document.getElementById('o-d').textContent = S.d.toFixed(3) + 'λ';
 }
 function syncLoad(){
-  document.getElementById('i-r').value = sig(S.r*S.z0);
-  document.getElementById('i-x').value = sig(S.x*S.z0);
+  var a = document.getElementById('i-r'), b = document.getElementById('i-x');
+  if(S.lmode === 'g' || S.lmode === 'swr'){
+    var g = zToG(S.r, S.x), m = mag(g);
+    a.value = (S.lmode === 'swr')
+      ? (m >= 0.99999 ? '' : sig((1 + m)/(1 - m)))
+      : n3(m);
+    b.value = n1(Math.atan2(g[1], g[0])*180/Math.PI);
+  } else {
+    a.value = sig(S.r*S.z0);
+    var X = S.x*S.z0;
+    b.value = (S.lmode === 'rl') ? sig(lFromX(X))
+            : (S.lmode === 'rc') ? sig(cFromX(X))
+            : sig(X);
+  }
+  syncLabels();
 }
 function syncLambda(){
   var L = lambda();
@@ -2654,7 +2680,8 @@ var URL_SPEC = [
   ['d','n'], ['dd','n'], ['zoom','n'], ['cu','n'], ['cv','n'],
   ['method','s'], ['pick','n'], ['openStub','b'],
   /* so a link can hand someone a problem to work rather than an answer */
-  ['practice','b'], ['ymode','s'], ['dir','s'], ['blim','n'], ['bspan','n']
+  ['practice','b'], ['ymode','s'], ['dir','s'], ['blim','n'], ['bspan','n'],
+  ['lmode','s']
 ];
 /* captured before any hash is read, so "same as default" always means the
    built-in default and never whatever the link happened to set */
@@ -2688,6 +2715,11 @@ function sanitiseState(){
   if(!isFinite(S.f) || S.f < 0)    S.f  = S_DEFAULTS.f;
   if(!isFinite(S.ee) || S.ee < 1)  S.ee = S_DEFAULTS.ee;
   if(['z','y','zy'].indexOf(S.grid) < 0) S.grid = S_DEFAULTS.grid;
+  if(['rx','g','swr','rl','rc'].indexOf(S.lmode) < 0) S.lmode = S_DEFAULTS.lmode;
+  if(S.ymode !== 'point' && S.ymode !== 'grid') S.ymode = S_DEFAULTS.ymode;
+  if(!(S.blim > 1)) S.blim = S_DEFAULTS.blim;
+  if(!(S.bspan > 0.02 && S.bspan < 0.99)) S.bspan = S_DEFAULTS.bspan;
+  if(['wtg','wtl'].indexOf(S.dir) < 0) S.dir = null;
   if(S.method !== null && ['shunt','series','qwt','lnet','dstub'].indexOf(S.method) < 0)
     S.method = null;
   S.d  = isFinite(S.d) ? wrapHalf(S.d) : 0;
@@ -2750,15 +2782,70 @@ function pushHash(){
   }, 250);
 }
 
+
+/* ===================== how the load is typed in =====================
+   The state is always the normalised r + jx. These only change what the two
+   boxes mean, because a load arrives from four directions -- as an impedance,
+   as a reflection coefficient, off a slotted line as an SWR and an angle, or
+   as a resistor with an inductor or a capacitor at some frequency -- and
+   making the reader convert by hand before they can start is friction with no
+   teaching value in it.
+
+   R + L and R + C are entry conveniences and depend on f: the field shows what
+   the present reactance works out to at the frequency in the box. A negative
+   value there means the load is the other kind, which is a clear signal that
+   the wrong one of the two is selected. */
+var LMODES = {
+  rx:  { a: 'R&nbsp;Ω',  b: 'X&nbsp;Ω' },
+  g:   { a: '|Γ|',       b: 'θ°'  },
+  swr: { a: 'SWR',            b: 'θ°'  },
+  rl:  { a: 'R&nbsp;Ω',  b: 'L&nbsp;nH'     },
+  rc:  { a: 'R&nbsp;Ω',  b: 'C&nbsp;pF'     }
+};
+
+/* X in ohms from an inductance in nH, and back; f is in MHz */
+function xFromL(L){ return TAU*S.f*L*1e-3; }
+function lFromX(X){ return S.f > 0 ? X/(TAU*S.f*1e-3) : 0; }
+/* and from a capacitance in pF */
+function xFromC(Cp){ return (S.f > 0 && Cp !== 0) ? -1e6/(TAU*S.f*Cp) : 0; }
+function cFromX(X){ return (S.f > 0 && X !== 0) ? -1e6/(TAU*S.f*X) : 0; }
+
+function syncLabels(){
+  var m = LMODES[S.lmode] || LMODES.rx;
+  var la = document.getElementById('lab-r'), lb = document.getElementById('lab-x');
+  if(la) la.innerHTML = m.a;
+  if(lb) lb.innerHTML = m.b;
+  var sel = document.getElementById('i-lmode');
+  if(sel && sel.value !== S.lmode) sel.value = S.lmode;
+}
+
 function readLoad(){
-  var R = parseFloat(document.getElementById('i-r').value);
-  var X = parseFloat(document.getElementById('i-x').value);
+  var A = parseFloat(document.getElementById('i-r').value);
+  var B = parseFloat(document.getElementById('i-x').value);
   var Z0 = parseFloat(document.getElementById('i-z0').value);
   if(isFinite(Z0) && Z0 > 0) S.z0 = Z0;
-  if(isFinite(R)) S.r = Math.max(0, R)/S.z0;
-  if(isFinite(X)) S.x = X/S.z0;
+  /* frequency first: the L and C modes are read against it */
   var f = parseFloat(document.getElementById('i-f').value);
   if(isFinite(f) && f >= 0) S.f = f;
+
+  if(S.lmode === 'g' || S.lmode === 'swr'){
+    var mm = A;
+    if(S.lmode === 'swr') mm = (isFinite(A) && A >= 1) ? (A - 1)/(A + 1) : NaN;
+    if(isFinite(mm) && isFinite(B)){
+      mm = Math.max(0, Math.min(0.999999, mm));
+      var th = B*Math.PI/180;
+      var zz = gToZ(mm*Math.cos(th), mm*Math.sin(th));
+      S.r = Math.max(0, zz[0]); S.x = zz[1];
+    }
+  } else {
+    if(isFinite(A)) S.r = Math.max(0, A)/S.z0;
+    if(isFinite(B)){
+      var X = (S.lmode === 'rl') ? xFromL(B)
+            : (S.lmode === 'rc') ? xFromC(B)
+            : B;
+      S.x = X/S.z0;
+    }
+  }
   var ee = parseFloat(document.getElementById('i-ee').value);
   if(isFinite(ee) && ee >= 1) S.ee = ee;
 }
@@ -2815,6 +2902,11 @@ function pickMethod(m){
 }
 document.getElementById('i-method').addEventListener('change', function(){
   pickMethod(this.value);
+});
+document.getElementById('i-lmode').addEventListener('change', function(){
+  S.lmode = this.value || 'rx';
+  syncLoad();               /* rewrite the boxes in the new units */
+  refresh();
 });
 document.getElementById('i-blim').addEventListener('change', function(){
   S.blim = parseFloat(this.value) || 2; refresh();
