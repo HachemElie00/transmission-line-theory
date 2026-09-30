@@ -67,6 +67,26 @@ canvas#ckt{display:block;width:100%;height:248px;background:var(--sunk);
   .wb:fullscreen .panel{height:auto}
 }
 
+/* ---- practice mode ---- */
+.pracsteps{margin:10px 0 0;padding-left:0;list-style:none;counter-reset:pstep}
+.pracsteps li{position:relative;padding:6px 0 6px 26px;font-size:12.5px;
+  line-height:1.45;color:var(--ink2);counter-increment:pstep}
+.pracsteps li::before{content:counter(pstep);position:absolute;left:0;top:6px;
+  width:17px;height:17px;border-radius:50%;border:1px solid var(--line2);
+  display:grid;place-items:center;font-family:var(--f-mono);font-size:9.5px;
+  color:var(--ink3)}
+.pracsteps li[data-ok="1"]{color:var(--ink3)}
+.pracsteps li[data-ok="1"]::before{content:"\2713";border-color:var(--ok);
+  color:var(--ok)}
+.pracsteps li[data-now="1"]{color:var(--ink)}
+.pracsteps li[data-now="1"]::before{border-color:var(--ui);color:var(--ui)}
+.pracsteps .hint{display:block;margin-top:2px;font-family:var(--f-mono);
+  font-size:11px;color:var(--ink3)}
+.pracverdict{margin-top:9px;padding:8px 10px;border-radius:5px;font-size:12.5px;
+  font-family:var(--f-mono);background:var(--sunk);color:var(--ink2)}
+.pracverdict[data-ok="1"]{color:var(--ok);background:var(--surface);
+  border:1px solid var(--ok)}
+
 /* ---- control panel ---- */
 .grp{padding:15px 17px;border-bottom:1px solid var(--line)}
 .grp:last-child{border-bottom:0}
@@ -238,6 +258,16 @@ canvas#ckt{display:block;width:100%;height:248px;background:var(--sunk);
         <div class="row" style="margin-top:9px">
           <button class="mini" id="b-term" aria-pressed="false">stub: shorted</button>
           <button class="mini" id="b-clear">clear</button>
+          <button class="mini" id="b-prac" aria-pressed="false">practice</button>
+        </div>
+
+        <div id="prac" hidden>
+          <ol class="pracsteps" id="prac-steps"></ol>
+          <div class="row" id="prac-fields"></div>
+          <div class="pracverdict" id="prac-verdict"></div>
+          <div class="row" style="margin-top:7px">
+            <button class="mini" id="b-prac-show">show me</button>
+          </div>
         </div>
         <div class="row" style="margin-top:9px">
           <span class="fld"><label for="i-dd">spacing</label>
@@ -441,7 +471,12 @@ var S = {
   d: 0,                      /* manual travel, wavelengths toward generator */
   dd: 0.125,                 /* double-stub spacing, wavelengths */
   zoom: 1, cu: 0, cv: 0,     /* view: magnification, and the chart point at the canvas centre */
-  method: null, pick: 0, openStub: false
+  method: null, pick: 0, openStub: false,
+  /* practice mode: the reader's own attempt, never touched by the solver.
+     l1/l2 are stub lengths in wavelengths, z1 the transformer in ohms,
+     x1/b1 the L-network elements normalised to Z0. */
+  practice: false, reveal: false,
+  prac: { l1: 0, l2: 0, z1: 50, x1: 0, b1: 0, order: 'series' }
 };
 
 var cv = document.getElementById('chart'), ctx = cv.getContext('2d');
@@ -598,6 +633,177 @@ function solveDouble(){
   /* a repeated root (g exactly at the limit) is one design, not two */
   if(out.length === 2 && Math.abs(out[0].b1 - out[1].b1) < 1e-9) out.length = 1;
   return {sols: out, gmax: gmax};
+}
+
+/* ===================== practice mode =====================
+   Pressing a method solves the problem, which is the right behaviour for
+   looking something up and the wrong one for learning to do it. In practice
+   mode the solver is not consulted: the reader travels the line with the same
+   slider, proposes the element values, and the tool assembles what they have
+   actually built and reports the normalised impedance it produces.
+
+   Checking by assembly rather than by comparison matters. A single stub has
+   two positions, an L-network has two orders and two roots each; comparing
+   against the one design the solver returns would mark three correct answers
+   wrong. Assembling accepts every design that matches, including ones neither
+   the solver nor the author thought of. It is the same argument the test
+   suite's stage 1 makes: re-assemble and check the result is 1 + j0. */
+
+/* A stub of length l wavelengths, as seen looking into it. Normalised.
+     shunt, open  : y = +j tan(bl)      shunt, short : y = -j cot(bl)
+     series, short: z = +j tan(bl)      series, open : z = -j cot(bl)   */
+function stubSusc(l, isOpen){
+  var t = Math.tan(TAU*l);
+  if(isOpen) return t;
+  return Math.abs(t) < 1e-12 ? -1e12 : -1/t;
+}
+function stubReact(l, isOpen){
+  var t = Math.tan(TAU*l);
+  if(!isOpen) return t;
+  return Math.abs(t) < 1e-12 ? -1e12 : -1/t;
+}
+
+/* The normalised impedance produced by the reader's own numbers. */
+function attemptZ(){
+  var Pp = S.prac;
+  var g = curG(), z = gToZ(g[0], g[1]);      /* after travelling S.d */
+
+  if(S.method === 'shunt'){
+    var y = inv(z[0], z[1]);
+    return inv(y[0], y[1] + stubSusc(Pp.l1, S.openStub));
+  }
+  if(S.method === 'series'){
+    return [z[0], z[1] + stubReact(Pp.l1, S.openStub)];
+  }
+  if(S.method === 'qwt'){
+    /* a quarter wave of characteristic impedance Z1 gives z_in = z1^2 / z */
+    var z1 = Pp.z1 / S.z0;
+    if(!(z1 > 0)) return [1e12, 0];
+    var d = z[0]*z[0] + z[1]*z[1];
+    if(d < 1e-14) return [1e12, 0];
+    return [ z1*z1*z[0]/d, -z1*z1*z[1]/d ];
+  }
+  if(S.method === 'lnet'){
+    /* no travel: both elements sit at the load */
+    if(Pp.order === 'series'){
+      var zs = [S.r, S.x + Pp.x1];
+      var ys = inv(zs[0], zs[1]);
+      return inv(ys[0], ys[1] + Pp.b1);
+    }
+    var yl = inv(S.r, S.x);
+    var z2 = inv(yl[0], yl[1] + Pp.b1);
+    return [z2[0], z2[1] + Pp.x1];
+  }
+  if(S.method === 'dstub'){
+    var y0 = inv(S.r, S.x);
+    var ya = [y0[0], y0[1] + stubSusc(Pp.l1, S.openStub)];
+    var ga = yToG(ya[0], ya[1]);
+    var mm = mag(ga), th = Math.atan2(ga[1], ga[0]) - 2*TAU*S.dd;
+    var yb = gToY(mm*Math.cos(th), mm*Math.sin(th));
+    return inv(yb[0], yb[1] + stubSusc(Pp.l2, S.openStub));
+  }
+  return [z[0], z[1]];
+}
+
+/* How close the reader is. 1% of Z0 in each part is comfortably inside what
+   the printed precision can express, and well inside what anyone reads off a
+   paper chart. */
+function attemptOff(){
+  var z = attemptZ();
+  if(!isFinite(z[0]) || !isFinite(z[1])) return Infinity;
+  return Math.hypot(z[0] - 1, z[1]);
+}
+var PRAC_TOL = 0.01;
+
+/* The construction, one move at a time. Each step says what to do, and owns a
+   test of whether the reader has done it, so the list can tick along as they
+   work rather than only judging the finished answer. `at` is the state the
+   step is checked against; `hint` is what to say when it is not met yet. */
+function pracSteps(){
+  var Pp = S.prac, open = S.openStub;
+  var g = curG(), z = gToZ(g[0], g[1]), y = inv(z[0], z[1]);
+  var zl = [S.r, S.x], yl = inv(S.r, S.x);
+  var near = function(a, b, t){ return Math.abs(a - b) <= (t || 0.02); };
+
+  if(S.method === 'shunt') return [
+    { t: 'Work on the admittance grid — a shunt element adds to y.',
+      ok: S.grid === 'y' || S.grid === 'zy',
+      hint: 'press admittance, or both' },
+    { t: 'Travel toward the generator until the point lands on the g = 1 circle.',
+      ok: near(y[0], 1),
+      hint: 'y = ' + cpx(y[0], y[1]) + ' — g must be 1' },
+    { t: 'Add a shunt stub whose susceptance cancels what is left: b = ' +
+         n2(-y[1]) + '.',
+      ok: near(y[0], 1) && Math.abs(stubSusc(Pp.l1, open) + y[1]) <= 0.03,
+      hint: 'your stub gives b = ' + n2(stubSusc(Pp.l1, open)) }
+  ];
+
+  if(S.method === 'series') return [
+    { t: 'Work on the impedance grid — a series element adds to z.',
+      ok: S.grid === 'z' || S.grid === 'zy',
+      hint: 'press impedance, or both' },
+    { t: 'Travel toward the generator until the point lands on the r = 1 circle.',
+      ok: near(z[0], 1),
+      hint: 'z = ' + cpx(z[0], z[1]) + ' — r must be 1' },
+    { t: 'Add a series stub whose reactance cancels what is left: x = ' +
+         n2(-z[1]) + '.',
+      ok: near(z[0], 1) && Math.abs(stubReact(Pp.l1, open) + z[1]) <= 0.03,
+      hint: 'your stub gives x = ' + n2(stubReact(Pp.l1, open)) }
+  ];
+
+  if(S.method === 'qwt') return [
+    { t: 'Travel to a point where the impedance is purely real — a voltage ' +
+         'maximum or minimum, on the horizontal axis.',
+      ok: Math.abs(z[1]) <= 0.03,
+      hint: 'z = ' + cpx(z[0], z[1]) + ' — the reactance must be zero' },
+    { t: 'Insert a quarter-wave line of Z1 = sqrt(Z0 · R) = ' +
+         (Math.abs(z[1]) <= 0.03 ? n1(Math.sqrt(S.z0*S.z0*z[0])) + ' ohm' : '...'),
+      ok: Math.abs(z[1]) <= 0.03 &&
+          Math.abs(Pp.z1 - Math.sqrt(S.z0*S.z0*z[0])) <= 0.02*S.z0,
+      hint: 'Z1 = ' + n1(Pp.z1) + ' ohm' }
+  ];
+
+  if(S.method === 'lnet'){
+    var seriesFirst = Pp.order === 'series';
+    var mid = seriesFirst ? [S.r, S.x + Pp.x1] : null;
+    var midY = seriesFirst ? null : [yl[0], yl[1] + Pp.b1];
+    return [
+      { t: 'Choose the order. Series first needs r ≤ 1; shunt first needs ' +
+           'g ≤ 1. Here r = ' + n2(S.r) + ' and g = ' + n2(yl[0]) + '.',
+        ok: seriesFirst ? S.r <= 1.0001 : yl[0] <= 1.0001,
+        hint: seriesFirst ? 'r > 1, so series first cannot reach the centre'
+                          : 'g > 1, so shunt first cannot reach the centre' },
+      { t: seriesFirst
+            ? 'Add the series element to land on the g = 1 circle.'
+            : 'Add the shunt element to land on the r = 1 circle.',
+        ok: seriesFirst ? near(inv(mid[0], mid[1])[0], 1)
+                        : near(inv(midY[0], midY[1])[0], 1),
+        hint: seriesFirst
+                ? 'after your x you are at y = ' + cpx(inv(mid[0], mid[1])[0], inv(mid[0], mid[1])[1])
+                : 'after your b you are at z = ' + cpx(inv(midY[0], midY[1])[0], inv(midY[0], midY[1])[1]) },
+      { t: seriesFirst ? 'Add the shunt element to cancel the rest.'
+                       : 'Add the series element to cancel the rest.',
+        ok: attemptOff() <= PRAC_TOL,
+        hint: 'you are at z = ' + cpx(attemptZ()[0], attemptZ()[1]) }
+    ];
+  }
+
+  if(S.method === 'dstub'){
+    var ya = [yl[0], yl[1] + stubSusc(Pp.l1, open)];
+    var ga = yToG(ya[0], ya[1]);
+    var mm = mag(ga), th = Math.atan2(ga[1], ga[0]) - 2*TAU*S.dd;
+    var yb = gToY(mm*Math.cos(th), mm*Math.sin(th));
+    return [
+      { t: 'Stub 1 sits at the load, so it can only change b. It must put you ' +
+           'where the spacing will carry you onto the g = 1 circle.',
+        ok: near(yb[0], 1, 0.03),
+        hint: 'after the spacing you arrive at y = ' + cpx(yb[0], yb[1]) },
+      { t: 'Stub 2 cancels the susceptance that is left: b = ' + n2(-yb[1]) + '.',
+        ok: near(yb[0], 1, 0.03) && Math.abs(stubSusc(Pp.l2, open) + yb[1]) <= 0.03,
+        hint: 'your stub 2 gives b = ' + n2(stubSusc(Pp.l2, open)) }
+    ];
+  }
+  return [];
 }
 
 function solve(){
@@ -1011,7 +1217,10 @@ function drawChart(){
     c.setLineDash([5,4]); c.stroke(); c.setLineDash([]); c.globalAlpha = 1;
   }
 
-  var res = solve(), sol = res.sols[S.pick] || null;
+  /* While practising, the answer is not drawn: the reader is constructing it.
+     "show me" sets S.reveal and the construction comes back. */
+  var res = solve();
+  var sol = (S.practice && !S.reveal) ? null : (res.sols[S.pick] || null);
 
   /* --- double stub: the region no spacing of this length can reach --- */
   if(S.method === 'dstub' && res.gmax){
@@ -1357,7 +1566,10 @@ function drawCircuit(){
   c.clearRect(0, 0, W, H);
   c.fillStyle = C.sunk; c.fillRect(0, 0, W, H);
 
-  var res = solve(), sol = res.sols[S.pick] || null;
+  /* While practising, the answer is not drawn: the reader is constructing it.
+     "show me" sets S.reveal and the construction comes back. */
+  var res = solve();
+  var sol = (S.practice && !S.reveal) ? null : (res.sols[S.pick] || null);
   if(!S.method || !sol){
     c.font = '12.5px ' + MONO; c.fillStyle = C.ink3;
     c.textAlign = 'center'; c.textBaseline = 'middle';
@@ -1747,7 +1959,95 @@ function refresh(){
   var bt = document.getElementById('b-term');
   bt.textContent = 'stub: ' + (S.openStub ? 'open' : 'shorted');
   bt.setAttribute('aria-pressed', S.openStub ? 'true' : 'false');
+  pracPanel();
   pushHash();
+}
+
+/* The stub length that does nothing. An open stub of zero length presents
+   y = 0; a SHORTED stub of zero length is a dead short across the line, which
+   is why practice used to open at z = 0 and look broken before the reader had
+   done anything. Quarter of a wavelength of shorted line is the open circuit,
+   so that is the neutral starting value there. */
+function neutralStub(){ return S.openStub ? 0 : 0.25; }
+
+/* ===================== practice panel =====================
+   The fields a method needs the reader to supply. Travel is not here: it is
+   the d slider they already have, which is the point -- the construction is
+   done with the tool's own controls, not in a separate exercise box. */
+function pracFields(){
+  if(S.method === 'shunt' || S.method === 'series')
+    return [{ k:'l1', lab:'stub λ', step:0.001 }];
+  if(S.method === 'qwt')
+    return [{ k:'z1', lab:'Z₁ Ω', step:0.1 }];
+  if(S.method === 'lnet')
+    return [{ k:'x1', lab:'series x', step:0.01 },
+            { k:'b1', lab:'shunt b', step:0.01 }];
+  if(S.method === 'dstub')
+    return [{ k:'l1', lab:'stub 1 λ', step:0.001 },
+            { k:'l2', lab:'stub 2 λ', step:0.001 }];
+  return [];
+}
+
+function pracPanel(){
+  var host = document.getElementById('prac');
+  if(!host) return;
+  var on = S.practice && !!S.method;
+  host.hidden = !on;
+  document.getElementById('b-prac').setAttribute('aria-pressed',
+    S.practice ? 'true' : 'false');
+  if(!on) return;
+
+  /* fields: rebuilt only when the method changes, so typing is not interrupted */
+  var fw = document.getElementById('prac-fields');
+  var want = S.method + (S.method === 'lnet' ? ':' + S.prac.order : '');
+  if(fw.getAttribute('data-for') !== want){
+    fw.setAttribute('data-for', want);
+    var html = pracFields().map(function(f){
+      return '<span class="fld"><label for="p-' + f.k + '">' + f.lab + '</label>'
+           + '<input id="p-' + f.k + '" type="number" step="' + f.step
+           + '" value="' + S.prac[f.k] + '"></span>';
+    }).join('');
+    if(S.method === 'lnet')
+      html += '<button class="mini" id="p-order">' +
+              (S.prac.order === 'series' ? 'series first' : 'shunt first') + '</button>';
+    fw.innerHTML = html;
+    pracFields().forEach(function(f){
+      var el = document.getElementById('p-' + f.k);
+      el.addEventListener('input', function(){
+        var v = parseFloat(this.value);
+        if(isFinite(v)) S.prac[f.k] = v;
+        refresh();
+      });
+    });
+    var ob = document.getElementById('p-order');
+    if(ob) ob.addEventListener('click', function(){
+      S.prac.order = S.prac.order === 'series' ? 'shunt' : 'series';
+      refresh();
+    });
+  }
+
+  var steps = pracSteps();
+  /* the current step is the first unmet one */
+  var now = steps.length;
+  for(var i = 0; i < steps.length; i++) if(!steps[i].ok){ now = i; break; }
+  document.getElementById('prac-steps').innerHTML = steps.map(function(st, i){
+    return '<li data-ok="' + (st.ok ? 1 : 0) + '" data-now="' + (i === now ? 1 : 0) + '">'
+         + st.t
+         + (i === now && st.hint ? '<span class="hint">' + st.hint + '</span>' : '')
+         + '</li>';
+  }).join('');
+
+  var off = attemptOff(), z = attemptZ();
+  var v = document.getElementById('prac-verdict');
+  if(off <= PRAC_TOL){
+    v.setAttribute('data-ok', '1');
+    v.textContent = 'matched — z = ' + cpx(z[0], z[1]);
+  } else {
+    v.removeAttribute('data-ok');
+    v.textContent = isFinite(off)
+      ? 'z = ' + cpx(z[0], z[1]) + '   (needs 1.00 + j0.00)'
+      : 'not a usable network yet';
+  }
 }
 
 /* ===================== shareable link =====================
@@ -1766,7 +2066,9 @@ var URL_SPEC = [
   ['r','n'], ['x','n'], ['z0','n'], ['f','n'], ['ee','n'],
   ['grid','s'], ['rings','b'], ['dense','b'],
   ['d','n'], ['dd','n'], ['zoom','n'], ['cu','n'], ['cv','n'],
-  ['method','s'], ['pick','n'], ['openStub','b']
+  ['method','s'], ['pick','n'], ['openStub','b'],
+  /* so a link can hand someone a problem to work rather than an answer */
+  ['practice','b']
 ];
 /* captured before any hash is read, so "same as default" always means the
    built-in default and never whatever the link happened to set */
@@ -1884,7 +2186,12 @@ function readLoad(){
 document.getElementById('i-d').addEventListener('input', function(){
   S.d = parseFloat(this.value) || 0;
   document.getElementById('o-d').textContent = S.d.toFixed(3) + 'λ';
-  S.method = null; S.pick = 0;
+  /* Moving off the solved distance normally means the reader has left the
+     solution behind, so the method is dropped. In practice mode travelling the
+     line IS the exercise, and dropping the method would close the very panel
+     they are working in. */
+  if(!S.practice){ S.method = null; }
+  S.pick = 0;
   refresh();
 });
 
@@ -1900,8 +2207,19 @@ Array.prototype.forEach.call(document.querySelectorAll('[data-m]'), function(b){
        afterwards, so this is a starting point rather than a lock. */
     if(S.method === 'shunt' || S.method === 'dstub') S.grid = 'y';
     else if(S.method === 'series' || S.method === 'qwt') S.grid = 'z';
-    var s = S.method ? (solve().sols[0] || null) : null;
-    S.d = (s && s.d != null) ? s.d : 0;
+    if(S.practice){
+      /* the whole point is that the reader travels the line themselves, so
+         the answer is neither jumped to nor drawn until they ask for it */
+      S.reveal = false;
+      S.d = 0;
+      S.prac.l1 = neutralStub(); S.prac.l2 = neutralStub();
+      S.prac.x1 = 0; S.prac.b1 = 0; S.prac.z1 = S.z0;
+      var fw = document.getElementById('prac-fields');
+      if(fw) fw.removeAttribute('data-for');
+    } else {
+      var s = S.method ? (solve().sols[0] || null) : null;
+      S.d = (s && s.d != null) ? s.d : 0;
+    }
     syncD();
     refresh();
   });
@@ -2028,6 +2346,51 @@ Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'), functio
 EM.register(function(){ drawChart(); }, false);
 EM.register(function(){ drawNomo(); }, false);
 EM.register(function(){ drawCircuit(); }, false);
+
+/* Practice mode toggle, and the escape hatch out of it. */
+(function(){
+  var pb = document.getElementById('b-prac');
+  if(pb) pb.addEventListener('click', function(){
+    S.practice = !S.practice;
+    S.reveal = false;
+    if(S.practice){
+      S.d = 0;
+      S.prac.l1 = neutralStub(); S.prac.l2 = neutralStub();
+      S.prac.x1 = 0; S.prac.b1 = 0; S.prac.z1 = S.z0;
+      var fw = document.getElementById('prac-fields');
+      if(fw) fw.removeAttribute('data-for');
+    } else if(S.method){
+      /* leaving practice puts the solved construction back, which is what the
+         reader is asking for by turning it off */
+      var s = solve().sols[0] || null;
+      S.d = (s && s.d != null) ? s.d : 0;
+    }
+    syncD();
+    refresh();
+  });
+
+  var sb = document.getElementById('b-prac-show');
+  if(sb) sb.addEventListener('click', function(){
+    S.reveal = !S.reveal;
+    sb.textContent = S.reveal ? 'hide it' : 'show me';
+    if(S.reveal){
+      var s = solve().sols[S.pick] || solve().sols[0] || null;
+      if(s){
+        if(s.d != null){ S.d = s.d; syncD(); }
+        if(s.ls != null) S.prac.l1 = s.ls;
+        if(s.ls1 != null) S.prac.l1 = s.ls1;
+        if(s.ls2 != null) S.prac.l2 = s.ls2;
+        if(s.z1 != null) S.prac.z1 = s.z1 * S.z0;
+        if(s.xs != null) S.prac.x1 = s.xs;
+        if(s.bp != null) S.prac.b1 = s.bp;
+        if(s.order) S.prac.order = (s.order === 'series first') ? 'series' : 'shunt';
+        var fw = document.getElementById('prac-fields');
+        if(fw) fw.removeAttribute('data-for');
+      }
+    }
+    refresh();
+  });
+})();
 
 /* Copy link. The address bar already carries the state, but nobody watching a
    lecture thinks to look there, and on a phone it is half hidden. The button

@@ -14,6 +14,7 @@ const ALL = [
      that look like drawing bugs */
   ['palette',  'palette.test.js',  []],
   ['search',   'search.test.js',   []],
+  ['practice', 'practice.test.js', []],
   ['chrome',   'chrome.test.js',   []],
   ['toggles',  'toggles.test.js',  []],
   ['geometry', 'geometry.test.js', []],

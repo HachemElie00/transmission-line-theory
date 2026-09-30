@@ -8,6 +8,7 @@
     "test:full": "node run.js --full",
     "palette": "node palette.test.js",
     "search": "node search.test.js",
+    "practice": "node practice.test.js",
     "pages": "node pages.test.js",
     "offline": "node offline.test.js",
     "solvers": "node solvers.test.js",
