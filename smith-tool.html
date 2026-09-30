@@ -1587,13 +1587,13 @@ function drawChart(){
       var pa = P(ga[0], ga[1]);
       if(Math.hypot(pa[0]-pc[0], pa[1]-pc[1]) > 2){
         c.save();
-        c.strokeStyle = C.ui; c.globalAlpha = 0.6; c.lineWidth = 1.6*mk;
+        c.strokeStyle = C.e; c.globalAlpha = 0.6; c.lineWidth = 1.6*mk;
         c.setLineDash([4*mk, 4*mk]);
         c.beginPath(); c.moveTo(pc[0], pc[1]); c.lineTo(pa[0], pa[1]); c.stroke();
         c.restore();
       }
       c.beginPath(); c.arc(pa[0], pa[1], Math.max(5.5, G.size*0.0105)*mk, 0, TAU);
-      c.strokeStyle = C.ui; c.lineWidth = 2.6*mk; c.stroke();
+      c.strokeStyle = C.e; c.lineWidth = 2.6*mk; c.stroke();
       c.fillStyle = C.sunk; c.globalAlpha = 0.55; c.fill(); c.globalAlpha = 1;
     }
   }
