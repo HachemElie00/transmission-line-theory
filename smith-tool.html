@@ -523,6 +523,10 @@ var S = {
      rotated grid instead and leaves the point alone, which is the immittance
      chart of chapter 10. Both are correct; doing both would not be. */
   ymode: 'point',
+  /* which wavelength scale to light up: 'wtg', 'wtl', or null for neither.
+     A new reader cannot tell the two rings apart, and picking the wrong one
+     is only obvious if you already know the numbers should grow. */
+  dir: null,
   prac: { l1: 0, l2: 0, z1: 50, x1: 0, b1: 0, order: 'series', rotated: false }
 };
 
@@ -1163,6 +1167,20 @@ function drawRings(c, C){
 
   bands.forEach(function(B){
     var mid = (B.r0 + B.r1)/2;
+    var lit = (S.dir === B.kind);
+    if(lit){
+      /* a wash behind the chosen scale, so the eye lands on the right ring
+         before it starts reading numbers off it */
+      c.save();
+      c.beginPath();
+      c.arc(G.cx, G.cy, B.r1, 0, TAU);
+      c.arc(G.cx, G.cy, B.r0, 0, TAU, true);
+      c.fillStyle = C.accfill; c.fill();
+      c.strokeStyle = C.acc; c.globalAlpha = 0.75; c.lineWidth = 1.4;
+      c.beginPath(); c.arc(G.cx, G.cy, B.r1, 0, TAU); c.stroke();
+      c.beginPath(); c.arc(G.cx, G.cy, B.r0, 0, TAU); c.stroke();
+      c.restore();
+    }
     if(B.kind === 'ang'){
       for(var a = -180; a < 180; a += 2){
         var major = (a % 10 === 0), lab = (a % 20 === 0);
@@ -1172,7 +1190,25 @@ function drawRings(c, C){
         if(lab && showNums){
           c.fillStyle = C.ink3;
           label(a*Math.PI/180, mid + h*0.12, String(a));
+          /* The angle of the transmission coefficient, on the same ring and
+             inside it, the way a printed chart carries both. On the rim
+             tau = 1 + Gamma = 2cos(t/2)e^(jt/2), so its angle is exactly half
+             the reflection angle: the same scale, halved. */
+          if(G.size >= 560){
+            c.fillStyle = C.e;
+            label(a*Math.PI/180, B.r0 - h*0.24, String(a/2));
+          }
         }
+      }
+      /* where the reader actually is on that scale */
+      var gm = curG(), ma = Math.hypot(gm[0], gm[1]);
+      if(ma > 1e-6){
+        var aa = Math.atan2(gm[1], gm[0]);
+        var t0 = rimPt(aa, B.r0), t1 = rimPt(aa, B.r1);
+        c.save();
+        c.strokeStyle = C.acc; c.lineWidth = Math.max(2, h*0.14);
+        c.beginPath(); c.moveTo(t0[0], t0[1]); c.lineTo(t1[0], t1[1]); c.stroke();
+        c.restore();
       }
     } else {
       var f = (B.kind === 'wtg') ? angWTG : angWTL;
@@ -1233,12 +1269,21 @@ function drawDirections(c, C){
     c.closePath(); c.fill();
   }
   var D = Math.PI/180;
+  /* Each arc is a control: pressing it lights up the scale you travel on, and
+     the selected one is drawn in the cursor colour so the arc and its ring
+     read as the same statement. */
+  c.strokeStyle = (S.dir === 'wtg') ? C.acc : C.ink3;
+  c.fillStyle   = (S.dir === 'wtg') ? C.acc : C.ink3;
   sweep(72*D, 16*D, true);     /* toward the generator: clockwise, right side */
+  c.strokeStyle = (S.dir === 'wtl') ? C.acc : C.ink3;
+  c.fillStyle   = (S.dir === 'wtl') ? C.acc : C.ink3;
   sweep(108*D, 164*D, false);  /* toward the load: counter-clockwise, left side */
 
   if(G.size >= 430){
     c.font = fs + 'px ' + MONO;
+    c.fillStyle = (S.dir === 'wtg') ? C.acc : C.ink3;
     arcText(c, 'toward generator', R + fs*1.25, -44*D);
+    c.fillStyle = (S.dir === 'wtl') ? C.acc : C.ink3;
     arcText(c, 'toward load',      R + fs*1.25, -136*D);
   }
   c.restore();
@@ -1781,6 +1826,25 @@ function drawNomo(){
    Drawn in fixed design coordinates and scaled, so the layout can never
    collide whatever the viewport. */
 
+/* The reader's own attempt, in the shape the circuit drawing expects. The
+   circuit only ever reads d, ls, ls1, ls2, z1, xs, bp and order, so the
+   attempt can be handed to it directly and the network is built as they work
+   rather than appearing finished at the end. It is drawn whether or not the
+   attempt matches yet: watching a wrong stub be the wrong length is most of
+   the value. */
+function pracSol(){
+  if(!S.method) return null;
+  var Pp = S.prac;
+  if(S.method === 'shunt' || S.method === 'series') return { d: S.d, ls: Pp.l1 };
+  if(S.method === 'qwt')   return { d: S.d, z1: Pp.z1 / S.z0 };
+  if(S.method === 'dstub') return { ls1: Pp.l1, ls2: Pp.l2 };
+  if(S.method === 'lnet')  return {
+    order: (Pp.order === 'series') ? 'series first' : 'shunt first',
+    xs: Pp.x1, bp: Pp.b1
+  };
+  return null;
+}
+
 function drawCircuit(){
   var C = EM.colors();
   EM.fit(cq);
@@ -1788,10 +1852,11 @@ function drawCircuit(){
   c.clearRect(0, 0, W, H);
   c.fillStyle = C.sunk; c.fillRect(0, 0, W, H);
 
-  /* While practising, the answer is not drawn: the reader is constructing it.
-     "show me" sets S.reveal and the construction comes back. */
+  /* While practising, the answer is not drawn on the chart -- the reader is
+     constructing it. The circuit is different: it should follow what they have
+     built so far, so it is fed the attempt instead of nothing. */
   var res = solve();
-  var sol = (S.practice && !S.reveal) ? null : (res.sols[S.pick] || null);
+  var sol = (S.practice && !S.reveal) ? pracSol() : (res.sols[S.pick] || null);
   if(!S.method || !sol){
     c.font = '12.5px ' + MONO; c.fillStyle = C.ink3;
     c.textAlign = 'center'; c.textBaseline = 'middle';
@@ -2303,7 +2368,7 @@ var URL_SPEC = [
   ['d','n'], ['dd','n'], ['zoom','n'], ['cu','n'], ['cv','n'],
   ['method','s'], ['pick','n'], ['openStub','b'],
   /* so a link can hand someone a problem to work rather than an answer */
-  ['practice','b'], ['ymode','s']
+  ['practice','b'], ['ymode','s'], ['dir','s']
 ];
 /* captured before any hash is read, so "same as default" always means the
    built-in default and never whatever the link happened to set */
@@ -2557,9 +2622,37 @@ Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'), functio
     refresh();
   }
 
+  /* Which direction arc, if either, is under a point. Worked in Gamma units so
+     it follows the zoom, and generous enough to take in the words, which is
+     what a reader will actually aim at. */
+  function dirAt(u, v){
+    if(!S.rings || !G.R) return null;
+    var r = Math.hypot(u, v), a = Math.atan2(v, u)*180/Math.PI;
+    var lo = (ringBase() + 3*G.h)/G.R, hi = (outerR() + G.out*0.9)/G.R;
+    if(r < lo || r > hi) return null;
+    if(a >= 10 && a <= 80)   return 'wtg';
+    if(a >= 100 && a <= 170) return 'wtl';
+    return null;
+  }
+
+  /* a label that does something has to look like it does something */
+  cv.addEventListener('pointermove', function(ev){
+    if(dragging || panning) return;
+    var q = px_(ev), uv = toChart(q[0], q[1]);
+    cv.style.cursor = dirAt(uv[0], uv[1]) ? 'pointer' : 'crosshair';
+  });
+
   var panning = false;
   cv.addEventListener('pointerdown', function(ev){
     try{ cv.setPointerCapture(ev.pointerId); }catch(e){}
+    var q0 = px_(ev), uv0 = toChart(q0[0], q0[1]);
+    var hitDir = (ev.shiftKey || ev.button === 1) ? null : dirAt(uv0[0], uv0[1]);
+    if(hitDir){
+      S.dir = (S.dir === hitDir) ? null : hitDir;
+      refresh();
+      ev.preventDefault();
+      return;
+    }
     if(ev.shiftKey || ev.button === 1){
       panning = true; var q = px_(ev); lastX = q[0]; lastY = q[1];
     } else if(S.practice && S.method && pracGrab(ev)){

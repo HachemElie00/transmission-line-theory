@@ -102,11 +102,25 @@ const strays = fs.readdirSync(H.SITE)
   .filter(f => /\bC\.z\b/.test(fs.readFileSync(path.join(H.SITE, f), 'utf8')));
 s.check('--z used only by the Smith chart figures', strays.length === 0, strays.join(' '));
 
-/* And the inverse: the chart files must not have drifted back to --e. */
+/* And the inverse: the GRIDS must not have drifted back to --e.
+
+   This used to forbid C.e anywhere in those files, which is a different and
+   much stronger claim than the one the rule is about. It started failing the
+   moment --e was legitimately used for something that is not a grid: the
+   practice attempt marker, and the transmission-angle numbers on the rim.
+   Test the grid calls themselves. */
 const reverted = chartFiles
   .filter(f => fs.existsSync(path.join(H.SITE, f)))
-  .filter(f => /\bC\.e\b/.test(fs.readFileSync(path.join(H.SITE, f), 'utf8')) && f !== 'matching.html');
+  .filter(f => fs.readFileSync(path.join(H.SITE, f), 'utf8')
+                 .split('\n')
+                 .some(l => l.indexOf('drawGrid') >= 0 && /\bC\.e\b/.test(l)));
 s.check('chart grids still use --z, not --e', reverted.length === 0, reverted.join(' '));
+
+/* matching.html draws its faint orientation grid inline rather than through
+   drawGrid, so it is checked on its own terms. */
+const mg = fs.readFileSync(path.join(H.SITE, 'matching.html'), 'utf8');
+s.check('the orientation grid in matching.html uses --z',
+        /strokeStyle = C\.z/.test(mg));
 
 /* Dark must be the default: the base :root carries the dark palette, and
    nothing may reintroduce an OS-preference branch for colour. */
