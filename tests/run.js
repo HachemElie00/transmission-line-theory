@@ -13,6 +13,7 @@ const ALL = [
      broken colour token would make several of the later suites fail in ways
      that look like drawing bugs */
   ['palette',  'palette.test.js',  []],
+  ['content',  'content.test.js',  []],
   ['search',   'search.test.js',   []],
   ['practice', 'practice.test.js', []],
   ['chrome',   'chrome.test.js',   []],

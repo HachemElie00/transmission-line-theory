@@ -2182,9 +2182,9 @@ function walkthrough(){
     ['Read the ruler.', 'That radius gives SWR $= ' + sig(swr) + '$, return loss $= ' +
      sig(-20*Math.log10(m)) + '$ dB, and $' + sig(100*m*m) +
      '\\%$ of the incident power turned back. All from one measurement.'],
-    ['Switch to admittance.', 'A shunt stub adds susceptance, so work in $y$. Press <b>admittance</b>: ' +
-     'the point stays put and the grid rotates. Under it you now read $y_L = ' + cpx(yL[0], yL[1]) + '$.'],
-    ['Travel to the $g = 1$ circle.', 'Press <b>shunt stub</b>. The first crossing is at $d = ' +
+    ['Get to admittance.', 'A shunt stub adds susceptance, so the work is in $y$. ' + (S.ymode === 'point' ? 'Turn the point half a turn about the centre: same radius, opposite side, and you go on reading the impedance grid. ' : 'Press <b>admittance</b>: the point stays put and the grid turns instead. ') +
+     'Either way you now read $y_L = ' + cpx(yL[0], yL[1]) + '$.'],
+    ['Travel to the $g = 1$ circle.', 'Choose <b>shunt stub</b> from the method list. The first crossing is at $d = ' +
      n3(st[0].d) + '\\lambda$, where the line presents $y = 1 ' +
      (st[0].line < 0 ? '- j' + n2(-st[0].line) : '+ j' + n2(st[0].line)) +
      '$. The second is at $d = ' + n3(st[1].d) + '\\lambda$ &mdash; both are real answers.'],
@@ -2199,7 +2199,7 @@ function walkthrough(){
      '$, real part exactly 1. Adding $b = ' + n3(st[0].need) +
      '$ in parallel kills the imaginary part and leaves $y = 1$. If the real part is not 1, ' +
      'the construction went the wrong way round the chart.'],
-    ['Try another method.', 'Press <b>&lambda;/4 transf.</b> The voltage minimum is $' +
+    ['Try another method.', 'Choose <b>&lambda;/4 transformer</b> instead. The voltage minimum is $' +
      n3(qt[0].d) + '\\lambda$ from the load with $z = ' + n3(qt[0].zr) +
      '$ there, needing $Z_1 = ' + sig(qt[0].z1*S.z0) + '\\ \\Omega$; the maximum is at $' +
      n3(qt[1].d) + '\\lambda$ with $z = ' + n3(qt[1].zr) + '$ and $Z_1 = ' +
@@ -2731,6 +2731,7 @@ EM.register(function(){ drawCircuit(); }, false);
   if(yb) yb.addEventListener('click', function(){
     S.ymode = (S.ymode === 'point') ? 'grid' : 'point';
     S.prac.rotated = false;
+    walkthrough();          /* step 4 describes whichever convention is live */
     if(S.method === 'shunt' || S.method === 'dstub')
       S.grid = (S.ymode === 'grid') ? 'y' : 'z';
     refresh();
