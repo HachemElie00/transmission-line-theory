@@ -1,5 +1,5 @@
 Transmission Line Theory - transmission lines and the Smith chart
-(c) 2026 Elie Hachem - free to share and use for teaching
+(c) 2026 Elie Hachem - all rights reserved
 
 TO OPEN IT
   Double-click index.html. Any modern browser will do.
