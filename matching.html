@@ -109,6 +109,15 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
 
   <p class="t">On the chart the construction is therefore two arcs. Rotate clockwise along the constant-SWR circle until you strike the $g = 1$ circle; then ride that circle to the centre. The first arc is the length of line; the second is the stub.</p>
 
+  <p class="t">That description assumes an admittance grid to read $g$ off. On a plain impedance chart &mdash; which is what you will usually have in front of you &mdash; the same construction is done with the other convention from chapter 10, and it is worth being able to work either way.</p>
+
+  <div class="key">
+    <span class="lab">The same two arcs on a plain impedance chart</span>
+    <p>Plot $z_L$, then turn it half a turn about the centre to get $y_L$: same $|\Gamma|$, opposite side, already sitting on the constant-SWR circle you were going to travel round anyway.</p>
+    <p>From there nothing changes except what you call the grid. You read the impedance circles and treat what you read as $g$ and $b$, so the circle marked $r = 1$ <i>is</i> the $g = 1$ circle for a turned point: travel clockwise until you strike it, then ride it to the centre.</p>
+    <p>The numbers come out identical &mdash; same $d$, same stub length &mdash; because the two conventions differ only in where the half turn is applied. The one thing to avoid is applying it twice.</p>
+  </div>
+
   <figure class="fig">
     <div style="background:var(--sunk);padding-block:6px"><canvas id="match"></canvas></div>
     <div class="rail">
@@ -133,7 +142,7 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
       <button data-m="0.3,-0.6">0.3 &minus; j0.6</button>
       <button data-m="3,2">3 + j2</button>
     </div>
-    <figcaption class="cap">teal: travel along the line. coral: the stub's shunt susceptance. the violet circle is g = 1 &mdash; the r = 1 circle, half a turn round.</figcaption>
+    <figcaption class="cap">travel along the line, then the stub's shunt susceptance. the marked circle is g = 1 &mdash; the r = 1 circle half a turn round, which is the circle you aim at directly if you turn the point instead of the grid.</figcaption>
   </figure>
 
   <p class="t">The last readout is the check that matters: after the stub, $y = 1.00 + j0.00$ exactly, for every load you can set. Press <b>Other solution</b> to see the second intersection &mdash; both match perfectly, and choosing between them is a practical question. The shorter travel usually wins, but a stub length near zero or near $\lambda/2$ is awkward to fabricate, so the other branch sometimes gives a more comfortable pair of dimensions.</p>
