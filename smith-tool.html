@@ -67,6 +67,23 @@ canvas#ckt{display:block;width:100%;height:248px;background:var(--sunk);
   .wb:fullscreen .panel{height:auto}
 }
 
+/* ---- collapsed explanations ----
+   These paragraphs pushed the travel slider below the fold, so using it meant
+   scrolling the chart out of view -- which is the one thing you need to watch
+   while you drag. They fold away instead, and the summary stays as a reminder
+   that there is something to read. */
+details.note{margin-top:7px}
+details.note>summary{list-style:none;cursor:pointer;display:inline-flex;
+  align-items:center;gap:5px;font-family:var(--f-mono);font-size:10.5px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);padding:2px 0}
+details.note>summary::-webkit-details-marker{display:none}
+details.note>summary::before{content:"";width:0;height:0;flex:none;
+  border-left:4px solid currentColor;border-top:3.5px solid transparent;
+  border-bottom:3.5px solid transparent;transition:transform .15s}
+details.note[open]>summary::before{transform:rotate(90deg)}
+details.note>summary:hover{color:var(--ink2)}
+details.note .hint{margin-top:5px}
+
 /* ---- practice mode ---- */
 .pracsteps{margin:10px 0 0;padding-left:0;list-style:none;counter-reset:pstep}
 .pracsteps li{position:relative;padding:6px 0 6px 26px;font-size:12.5px;
@@ -219,17 +236,20 @@ canvas#ckt{display:block;width:100%;height:248px;background:var(--sunk);
           <button class="mini" id="b-full" aria-pressed="false">full screen</button>
           <button class="mini" id="b-link">copy link</button>
         </div>
-        <p class="hint">Hold <b>shift</b> and drag to move around while zoomed.
-          Dragging without shift still places the load.</p>
-        <p class="hint"><b>Copy link</b> captures everything on the bench &mdash;
-          the load, the line, the method, where you have travelled to &mdash; in
-          the address itself, so a particular problem can be put in a slide or
-          sent round before class and opened exactly as you left it.</p>
-        <p class="hint">Full screen gives the whole display height to the chart
-          and keeps the controls beside it &mdash; for working a problem in
-          front of a room. The radially scaled parameters step aside; their six
-          numbers stay in the readout above. <b>F</b> toggles it, <b>Esc</b>
-          leaves.</p>
+        <details class="note">
+          <summary>what these do</summary>
+          <p class="hint">Hold <b>shift</b> and drag to move around while zoomed.
+            Dragging without shift places the load, or in practice mode moves
+            whichever handle you grab.</p>
+          <p class="hint"><b>Copy link</b> captures everything on the bench &mdash;
+            the load, the line, the method, where you have travelled to &mdash; in
+            the address itself, so a particular problem can be put in a slide or
+            sent round before class and opened exactly as you left it.</p>
+          <p class="hint"><b>Full screen</b> gives the whole display height to the
+            chart and keeps the controls beside it. The radially scaled
+            parameters step aside; their six numbers stay in the readout above.
+            <b>F</b> toggles it, <b>Esc</b> leaves.</p>
+        </details>
       </div>
 
       <div class="grp">
@@ -262,6 +282,10 @@ canvas#ckt{display:block;width:100%;height:248px;background:var(--sunk);
         </div>
 
         <div id="prac" hidden>
+          <p class="hint" style="margin-top:8px">Drag on the chart itself: the
+            point rides the constant-SWR circle while you travel, and once you
+            are on the target circle it rides that instead. The sliders and
+            fields do the same job if you would rather type.</p>
           <ol class="pracsteps" id="prac-steps"></ol>
           <div class="row" id="prac-fields"></div>
           <div class="pracverdict" id="prac-verdict"></div>
@@ -277,9 +301,12 @@ canvas#ckt{display:block;width:100%;height:248px;background:var(--sunk);
               <option value="0.375">3&lambda;/8</option>
             </select></span>
         </div>
-        <p class="hint">Spacing applies to the double-stub tuner only. Picking a method
-          brings up the grid it is worked on &mdash; admittance for shunt stubs,
-          impedance for series ones. Override it above at any time.</p>
+        <details class="note">
+          <summary>about spacing</summary>
+          <p class="hint">Spacing applies to the double-stub tuner only. Picking a
+            method brings up the grid it is worked on &mdash; admittance for shunt
+            stubs, impedance for series ones. Override it above at any time.</p>
+        </details>
       </div>
 
     </div>
@@ -806,6 +833,105 @@ function pracSteps(){
   return [];
 }
 
+/* ---- draggable handles on the chart ----
+   The construction is a sequence of moves along circles: travel rides the
+   constant-SWR circle, an element rides the circle the point landed on. So
+   each handle owns the circle it is constrained to, a distance from it (used
+   only to decide which handle a drag grabbed), and a rule turning a pointer
+   position into the value it controls.
+
+   Every `set` is a projection: it takes one number off the pointer -- an
+   angle, or the imaginary part of z or y -- and ignores the rest. That is what
+   makes the point stay glued to its circle however far off it the pointer
+   wanders, which is the whole feel of working on paper with a compass.
+
+   The handles are built once when the drag starts and then held, so the
+   geometry cannot shift underneath a drag that is changing it. */
+function circDist(u, v, cx, cy, r){ return Math.abs(Math.hypot(u - cx, v - cy) - r); }
+
+function pracHandles(){
+  var hs = [];
+  var gL = zToG(S.r, S.x), m = mag(gL), thL = Math.atan2(gL[1], gL[0]);
+  var g = curG(), z = gToZ(g[0], g[1]), y = inv(z[0], z[1]);
+  var meth = S.method;
+
+  if(meth === 'shunt' || meth === 'series' || meth === 'qwt'){
+    hs.push({ name: 'travel',
+      dist: function(u, v){ return Math.abs(Math.hypot(u, v) - m); },
+      set: function(u, v){
+        S.d = wrapHalf((thL - Math.atan2(v, u)) / (2*TAU));
+        syncD();
+      } });
+  }
+  if(meth === 'shunt'){
+    hs.push({ name: 'stub',
+      dist: function(u, v){ return circDist(u, v, -0.5, 0, 0.5); },
+      set: function(u, v){
+        var yt = gToY(u, v);
+        S.prac.l1 = stubLen(yt[1] - y[1], S.openStub, false);
+      } });
+  }
+  if(meth === 'series'){
+    hs.push({ name: 'stub',
+      dist: function(u, v){ return circDist(u, v, 0.5, 0, 0.5); },
+      set: function(u, v){
+        var zt = gToZ(u, v);
+        S.prac.l1 = stubLen(zt[1] - z[1], S.openStub, true);
+      } });
+  }
+  if(meth === 'dstub'){
+    var yl = inv(S.r, S.x), gl = yl[0];
+    hs.push({ name: 'stub 1',
+      dist: function(u, v){ return circDist(u, v, -gl/(1+gl), 0, 1/(1+gl)); },
+      set: function(u, v){
+        var yt = gToY(u, v);
+        S.prac.l1 = stubLen(yt[1] - yl[1], S.openStub, false);
+      } });
+    var ya = [yl[0], yl[1] + stubSusc(S.prac.l1, S.openStub)];
+    var ga = yToG(ya[0], ya[1]);
+    var mm = mag(ga), th2 = Math.atan2(ga[1], ga[0]) - 2*TAU*S.dd;
+    var yb = gToY(mm*Math.cos(th2), mm*Math.sin(th2));
+    hs.push({ name: 'stub 2',
+      dist: function(u, v){ return circDist(u, v, -0.5, 0, 0.5); },
+      set: function(u, v){
+        var yt = gToY(u, v);
+        S.prac.l2 = stubLen(yt[1] - yb[1], S.openStub, false);
+      } });
+  }
+  if(meth === 'lnet'){
+    if(S.prac.order === 'series'){
+      hs.push({ name: 'series x',
+        dist: function(u, v){ return circDist(u, v, S.r/(1+S.r), 0, 1/(1+S.r)); },
+        set: function(u, v){ S.prac.x1 = gToZ(u, v)[1] - S.x; } });
+      var zm = [S.r, S.x + S.prac.x1], ym = inv(zm[0], zm[1]);
+      hs.push({ name: 'shunt b',
+        dist: function(u, v){ return circDist(u, v, -ym[0]/(1+ym[0]), 0, 1/(1+ym[0])); },
+        set: function(u, v){ S.prac.b1 = gToY(u, v)[1] - ym[1]; } });
+    } else {
+      var yl2 = inv(S.r, S.x);
+      hs.push({ name: 'shunt b',
+        dist: function(u, v){ return circDist(u, v, -yl2[0]/(1+yl2[0]), 0, 1/(1+yl2[0])); },
+        set: function(u, v){ S.prac.b1 = gToY(u, v)[1] - yl2[1]; } });
+      var ym2 = [yl2[0], yl2[1] + S.prac.b1], zm2 = inv(ym2[0], ym2[1]);
+      hs.push({ name: 'series x',
+        dist: function(u, v){ return circDist(u, v, zm2[0]/(1+zm2[0]), 0, 1/(1+zm2[0])); },
+        set: function(u, v){ S.prac.x1 = gToZ(u, v)[1] - zm2[1]; } });
+    }
+  }
+  return hs;
+}
+
+/* Where the reader's attempt currently sits, as a point on the chart. This is
+   what the element handles move: curG() is the point after travelling only,
+   and adding a stub does not change it, so without this second marker the
+   stub drag would move nothing visible. */
+function attemptG(){
+  var z = attemptZ();
+  if(!isFinite(z[0]) || !isFinite(z[1])) return null;
+  var g = zToG(z[0], z[1]);
+  return mag(g) <= 1.2 ? g : null;
+}
+
 function solve(){
   if(S.method === 'dstub')  return solveDouble();
   if(S.method === 'shunt')  return solveStub(false);
@@ -1188,6 +1314,14 @@ function drawChart(){
   sizeChart();
   EM.fit(cv);
   layout();
+  /* The unit circle's radius in CSS pixels, published so anything outside can
+     map Gamma to the screen exactly. Inferring it from the rendered pixels is
+     unreliable -- the outer rings sit beyond the unit circle, so a scan for
+     "not the background" overshoots, and a scan for the grid's colour only
+     works while the grid happens to be that colour. Written only when it
+     changes, since an attribute write invalidates style. */
+  var discAttr = String(Math.round(G.R*10)/10);
+  if(cv.getAttribute('data-disc') !== discAttr) cv.setAttribute('data-disc', discAttr);
   var c = ctx, W = cv._w, H = cv._h;
   c.clearRect(0,0,W,H);
   c.fillStyle = C.sunk; c.fillRect(0,0,W,H);
@@ -1375,6 +1509,27 @@ function drawChart(){
   c.beginPath(); c.arc(pc[0], pc[1], Math.max(5, G.size*0.0095)*mk, 0, TAU);
   c.fillStyle = C.acc; c.fill();
   c.strokeStyle = C.sunk; c.lineWidth = 1.6*mk; c.stroke();
+
+  /* Where the reader's own attempt has got to. The filled marker above is the
+     point after travelling; an element moves the attempt off it, along the
+     circle it landed on, and this is what the reader drags to the centre.
+     Joined to the travel point so the move being made is legible. */
+  if(S.practice && S.method){
+    var ga = attemptG();
+    if(ga){
+      var pa = P(ga[0], ga[1]);
+      if(Math.hypot(pa[0]-pc[0], pa[1]-pc[1]) > 2){
+        c.save();
+        c.strokeStyle = C.ui; c.globalAlpha = 0.6; c.lineWidth = 1.6*mk;
+        c.setLineDash([4*mk, 4*mk]);
+        c.beginPath(); c.moveTo(pc[0], pc[1]); c.lineTo(pa[0], pa[1]); c.stroke();
+        c.restore();
+      }
+      c.beginPath(); c.arc(pa[0], pa[1], Math.max(5.5, G.size*0.0105)*mk, 0, TAU);
+      c.strokeStyle = C.ui; c.lineWidth = 2.6*mk; c.stroke();
+      c.fillStyle = C.sunk; c.globalAlpha = 0.55; c.fill(); c.globalAlpha = 1;
+    }
+  }
 
   /* rim words */
   var fs = Math.max(8, Math.min(11.5, G.size*0.017));
@@ -2281,19 +2436,59 @@ Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'), functio
     S.d = 0; S.pick = 0; S.method = null;
     syncD(); syncLoad(); refresh();
   }
+  /* In practice mode a drag moves a handle instead of placing the load. The
+     handle is chosen once, on pointerdown, by whichever is nearest the
+     pointer, and held for the rest of the drag -- choosing again on every move
+     would let the grab jump to another handle mid-gesture, right at the moment
+     the two circles cross. */
+  var grabbed = null;
+  function pracGrab(ev){
+    var q = px_(ev), uv = toChart(q[0], q[1]);
+    var hs = pracHandles();
+    if(!hs.length) return false;
+    var best = null, bd = Infinity;
+    for(var i = 0; i < hs.length; i++){
+      var d = hs[i].dist(uv[0], uv[1]);
+      if(d < bd){ bd = d; best = hs[i]; }
+    }
+    grabbed = best;
+    /* which handle a drag took hold of, for the checks and for anyone
+       wondering why a drag moved the thing it moved */
+    cv.setAttribute('data-grab', best ? best.name : '');
+    pracMove(ev);
+    return true;
+  }
+  function pracMove(ev){
+    if(!grabbed) return;
+    var q = px_(ev), uv = toChart(q[0], q[1]);
+    var m = Math.hypot(uv[0], uv[1]);
+    if(m > 0.999){ uv[0] *= 0.999/m; uv[1] *= 0.999/m; }
+    grabbed.set(uv[0], uv[1]);
+    var fw = document.getElementById('prac-fields');
+    if(fw) fw.removeAttribute('data-for');     /* the number fields follow */
+    refresh();
+  }
+
   var panning = false;
   cv.addEventListener('pointerdown', function(ev){
     try{ cv.setPointerCapture(ev.pointerId); }catch(e){}
     if(ev.shiftKey || ev.button === 1){
       panning = true; var q = px_(ev); lastX = q[0]; lastY = q[1];
-    } else { dragging = true; place(ev); }
+    } else if(S.practice && S.method && pracGrab(ev)){
+      dragging = true;
+    } else { dragging = true; grabbed = null; place(ev); }
     ev.preventDefault();
   });
   cv.addEventListener('pointermove', function(ev){
-    if(panning) pan(ev); else if(dragging) place(ev);
+    if(panning) pan(ev);
+    else if(dragging){ if(grabbed) pracMove(ev); else place(ev); }
   });
-  window.addEventListener('pointerup', function(){ dragging = false; panning = false; });
-  cv.addEventListener('pointercancel', function(){ dragging = false; panning = false; });
+  window.addEventListener('pointerup', function(){
+    dragging = false; panning = false; grabbed = null;
+  });
+  cv.addEventListener('pointercancel', function(){
+    dragging = false; panning = false; grabbed = null;
+  });
 })();
 
 /* ---------- full screen ----------

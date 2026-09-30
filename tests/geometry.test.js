@@ -48,15 +48,17 @@ const VIEWS = [[1500, 1150], [1280, 900], [900, 900], [390, 800]];
     const r = await p.evaluate(() => {
       const chEl = document.getElementById('chart'), noEl = document.getElementById('nomo');
       const ch = chEl.getBoundingClientRect(), no = noEl.getBoundingClientRect();
-      const sx = ch.width / chEl.width, nx = no.width / noEl.width;
+      const sx = ch.width / chEl._w, nx = no.width / noEl.width;
 
-      const row = chEl.getContext('2d')
-        .getImageData(0, Math.round(chEl.height / 2), chEl.width, 1).data;
-      let dl = -1, dr = -1;
-      for (let x = 0; x < chEl.width; x++){
-        const i = x * 4;
-        if (row[i + 1] > row[i] + 18){ if (dl < 0) dl = x; dr = x; }
-      }
+      /* The disc's radius is published by the chart as data-disc, in CSS px.
+         Finding it from the pixels needs a colour to look for, and there is no
+         safe one: the grid is teal on the impedance grid and orange on the
+         admittance grid, so a teal test silently measures zero the moment a
+         reader -- or a test -- switches grids. Scanning for "not the
+         background" instead overshoots, because the outer rings lie beyond the
+         unit circle. */
+      const discR = parseFloat(chEl.getAttribute('data-disc'));
+      const dl = chEl._w / 2 - discR, dr = chEl._w / 2 + discR;
 
       const ng = noEl.getContext('2d');
       let sl = Infinity, sr = -1;

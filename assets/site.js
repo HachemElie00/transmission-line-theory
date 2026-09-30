@@ -4,13 +4,17 @@
 /* Land at the top of a chapter, not wherever the previous page was scrolled to.
    Runs early, gives up the moment the reader scrolls for themselves, and repeats
    a few times because the page grows as fonts and typeset math arrive. */
-var SB_KEY = 'tlt-sidebar', TH_KEY = 'tlt-theme';
+var SB_KEY = 'tlt-sidebar', TH_KEY = 'tlt-theme', MB_KEY = 'tlt-mastbar';
 function thStored(){ try{ return localStorage.getItem(TH_KEY); }catch(e){ return null; } }
 function sbStored(){ try{ return localStorage.getItem(SB_KEY); }catch(e){ return null; } }
+function mbStored(){ try{ return localStorage.getItem(MB_KEY); }catch(e){ return null; } }
 (function(){
   var th = thStored();
   if(th === 'light' || th === 'dark') document.documentElement.setAttribute('data-theme', th);
   if(sbStored() === 'off') document.documentElement.classList.add('sb-off');
+  /* the top bar, hidden the same way and just as early, so it never
+     flashes in and then vanishes */
+  if(mbStored() === 'off') document.documentElement.classList.add('mb-off');
   try{ if('scrollRestoration' in history) history.scrollRestoration = 'manual'; }catch(e){}
   var moved = false;
   ['wheel','touchstart','keydown','pointerdown'].forEach(function(ev){
@@ -186,6 +190,11 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
       + ' fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">'
       + '<circle cx="8" cy="8" r="3.1"/><path d="M8 1.4v1.6M8 13v1.6M1.4 8h1.6M13 8h1.6'
       + 'M3.3 3.3l1.1 1.1M11.6 11.6l1.1 1.1M12.7 3.3l-1.1 1.1M4.4 11.6l-1.1 1.1"/></svg>';
+    /* one chevron, used pointing up to hide the bar and down to bring it back;
+       the .mastshow rule turns it over */
+    var CHEV = '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"'
+      + ' fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"'
+      + ' stroke-linejoin="round"><path d="M3.8 9.8 8 5.6l4.2 4.2"/></svg>';
     var MOON = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">'
       + '<path d="M13.4 10.3A5.8 5.8 0 0 1 6 2.8a5.9 5.9 0 1 0 7.4 7.5z"'
       + ' fill="currentColor"/></svg>';
@@ -267,9 +276,42 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
     function mastH(){
       var m = document.querySelector('.mast');
       if(!m) return;
+      var off = document.documentElement.classList.contains('mb-off');
       document.documentElement.style.setProperty(
-        '--mast-h', Math.round(m.getBoundingClientRect().height) + 'px');
+        '--mast-h', off ? '0px' : Math.round(m.getBoundingClientRect().height) + 'px');
     }
+
+    /* Hiding the bar. It is sticky, so on the workbench it permanently costs
+       the chart a slice of height. Hidden, the only way back is the small
+       chevron this leaves in the corner -- so that button is built first and
+       never depends on the bar existing. */
+    var showBtn = document.createElement('button');
+    showBtn.type = 'button';
+    showBtn.className = 'mastshow';
+    showBtn.innerHTML = CHEV;
+    showBtn.title = 'Show the bar';
+    showBtn.setAttribute('aria-label', 'Show the bar');
+    document.body.appendChild(showBtn);
+
+    function setMast(off){
+      document.documentElement.classList.toggle('mb-off', off);
+      try{ localStorage.setItem(MB_KEY, off ? 'off' : 'on'); }catch(e){}
+      hideBtn.setAttribute('aria-label', 'Hide the bar');
+      mastH();
+      window.dispatchEvent(new Event('resize'));   /* canvases re-measure */
+    }
+    showBtn.addEventListener('click', function(){ setMast(false); });
+
+    var hideBtn = document.createElement('button');
+    hideBtn.type = 'button';
+    hideBtn.className = 'masthide';
+    hideBtn.innerHTML = CHEV;
+    hideBtn.title = 'Hide this bar';
+    hideBtn.setAttribute('aria-label', 'Hide the bar');
+    hideBtn.addEventListener('click', function(){ setMast(true); });
+    if(navEl) bar.insertBefore(hideBtn, navEl);
+    else bar.appendChild(hideBtn);
+
     mastH();
     window.addEventListener('resize', mastH);
     [200, 900].forEach(function(d){ setTimeout(mastH, d); });

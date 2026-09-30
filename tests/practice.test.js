@@ -217,6 +217,74 @@ function lnetDesigns(r, x){
     s.check('"show me" produces a matched design for ' + m, v.ok, v.text);
   }
 
+  /* ---- solving it entirely by dragging on the chart ----
+
+     The construction is a sequence of moves along circles, and this is the
+     point of the mode: travel rides the constant-SWR circle, and once the
+     point is on the target circle the element rides that. Gamma is mapped to
+     the screen through the disc radius the chart publishes as data-disc --
+     measuring it from the pixels needs a colour to look for, and there isn't a
+     safe one, since selecting a shunt stub switches the grid from teal to
+     orange. */
+  {
+    /* getBoundingClientRect is viewport-relative, so this has to be read AFTER
+       the page has been put where the drag will happen -- reading it first and
+       then scrolling sends every click to empty space, and the symptom is a
+       grab of null rather than anything that points at the cause. */
+    const readMap = () => p.evaluate(() => {
+      const el = document.getElementById('chart'), r = el.getBoundingClientRect();
+      return { cx: r.x + r.width/2, cy: r.y + r.height/2,
+               R: parseFloat(el.getAttribute('data-disc')) * (r.width / el._w) };
+    });
+    let map;
+    const pt = (u, v) => ({ x: map.cx + u*map.R, y: map.cy - v*map.R });
+    const drag = async (from, to, steps) => {
+      await p.mouse.move(from.x, from.y); await p.mouse.down();
+      await p.mouse.move(to.x, to.y, { steps: steps || 14 }); await p.mouse.up();
+      await p.waitForTimeout(320);
+    };
+    const grabbed = () => p.evaluate(() =>
+      document.getElementById('chart').getAttribute('data-grab'));
+
+    await begin('shunt');
+    await p.evaluate(() => window.scrollTo(0, 0));
+    await p.waitForTimeout(400);
+    map = await readMap();
+
+    const g0 = gamma(R, X), m = Math.hypot(g0[0], g0[1]), th = Math.atan2(g0[1], g0[0]);
+    const design = stubDesigns(R, X, isOpen, false)
+      .reduce((a, b2) => (Math.abs(b2.d - 0.185) < Math.abs(a.d - 0.185) ? b2 : a));
+    const aim = th - 2*TAU*design.d;
+
+    /* a grab on the SWR circle must take the travel handle, not the element */
+    await p.mouse.move(pt(m*Math.cos(th), m*Math.sin(th)).x,
+                       pt(m*Math.cos(th), m*Math.sin(th)).y);
+    await p.mouse.down(); await p.waitForTimeout(120);
+    const gr1 = await grabbed();
+    await p.mouse.up(); await p.waitForTimeout(150);
+    s.check('a drag on the SWR circle grabs travel', gr1 === 'travel', 'grabbed ' + gr1);
+
+    await drag(pt(m*Math.cos(th), m*Math.sin(th)), pt(m*Math.cos(aim), m*Math.sin(aim)));
+    const travelled = await p.evaluate(() => document.getElementById('i-d').value);
+    s.check('dragging round the SWR circle sets the travel',
+            Math.abs(parseFloat(travelled) - design.d) < 0.004,
+            'got ' + travelled + ', wanted ' + design.d.toFixed(3));
+    s.check('the load is untouched by a practice drag',
+            await p.evaluate(() => document.getElementById('i-r').value) === '25.0');
+
+    /* and a grab on g = 1 must take the element */
+    await p.mouse.move(pt(-0.5 + 0.5*Math.cos(1.6), 0.5*Math.sin(1.6)).x,
+                       pt(-0.5 + 0.5*Math.cos(1.6), 0.5*Math.sin(1.6)).y);
+    await p.mouse.down(); await p.waitForTimeout(120);
+    const gr2 = await grabbed();
+    await p.mouse.up(); await p.waitForTimeout(150);
+    s.check('a drag on the g = 1 circle grabs the stub', gr2 === 'stub', 'grabbed ' + gr2);
+
+    await drag(pt(-0.5 + 0.5*Math.cos(1.6), 0.5*Math.sin(1.6)), pt(0, 0), 16);
+    const v = await verdict();
+    s.check('dragging the stub to the centre matches it', v.ok, v.text);
+  }
+
   /* ---- practice does not draw the answer before it is asked for ---- */
   {
     await begin('shunt');
