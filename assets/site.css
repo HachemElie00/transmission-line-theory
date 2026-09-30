@@ -377,6 +377,38 @@ footer.site .cr{display:block;margin-top:9px;font-family:var(--f-mono);font-size
 /* with no bar there is nothing to hang below, so the sidebar takes the height */
 .mb-off .sidebar{top:0}
 
+/* ---- problems ----
+   Each one is a block the reader can work through and check. The level chip is
+   a plain word rather than a colour, because a colour would say nothing to
+   anyone who cannot see it and would go stale the next time the palette moves. */
+.probs .prob{border:1px solid var(--line);border-radius:7px;padding:14px 15px;
+  margin-top:16px;background:var(--surface)}
+.probs .lvl{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink3);margin-bottom:7px}
+.probs .lvl[data-lvl="medium"]{color:var(--ui)}
+.probs .lvl[data-lvl="hard"]{color:var(--warn)}
+.probs .ask{font-size:15.5px;line-height:1.6;max-width:64ch}
+.probs .ans{display:flex;flex-wrap:wrap;gap:10px;margin-top:11px}
+.probs .ans .fld{display:flex;align-items:center;gap:7px}
+.probs .ans label{font-family:var(--f-mono);font-size:11.5px;color:var(--ink3);
+  white-space:nowrap}
+.probs .ans input{width:120px;background:var(--sunk);color:var(--ink);
+  border:1px solid var(--line2);border-radius:5px;padding:6px 8px;
+  font-family:var(--f-mono);font-size:13.5px}
+.probs .ans input[data-ok="1"]{border-color:var(--ok);color:var(--ok)}
+.probs .ans input[data-ok="0"]{border-color:var(--warn);color:var(--warn)}
+.probs .act{display:flex;align-items:center;gap:9px;margin-top:11px;flex-wrap:wrap}
+.probs .verdict{font-family:var(--f-mono);font-size:12px;color:var(--ink3)}
+.probs .verdict[data-ok="1"]{color:var(--ok)}
+.probs .verdict[data-ok="0"]{color:var(--warn)}
+.probs .work{margin-top:10px;border-top:1px solid var(--line);padding-top:9px}
+.probs .work .t{margin:0;font-size:14.5px}
+/* on paper the working is the point, and the boxes are not */
+@media print{
+  .probs .act, .probs .ans input{display:none}
+  .probs .work{display:block !important}
+}
+
 /* ---- search ---- */
 /* sized and bordered like .themebtn beside it; .mast .sep already does the
    spacing, so this must not add a margin of its own */

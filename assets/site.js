@@ -579,6 +579,107 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
 })();
 
 /* ---------------------------------------------------------------
+   Problems. Loaded like the search index, for the same reason: a
+   fetch for a local file is blocked from file://, a script element
+   is not, and the site has to work from a folder.
+
+   No answer is stored. Each one is a function of the numbers in its
+   own question, so a problem cannot drift away from its answer, and
+   a test can recompute every one by an independent route.
+
+   Answers are marked to a relative tolerance, because the point is
+   whether the reader can do the physics, not whether they rounded
+   the way the author did.
+   --------------------------------------------------------------- */
+(function(){
+  function build(){
+    var all = window.TLT_PROBLEMS;
+    if(!all) return;
+    var page = location.pathname.split('/').pop() || 'index.html';
+    var list = all[page];
+    if(!list || !list.length) return;
+    if(document.querySelector('.probs')) return;
+
+    var pager = document.querySelector('.pager');
+    var host = document.createElement('section');
+    host.className = 'blk probs';
+    host.id = 'problems';
+
+    var h = '<h2>Problems</h2>'
+          + '<p class="t">Work them on paper, then check. Answers are marked to '
+          + 'within a couple of percent, so round as you like.</p>';
+
+    list.forEach(function(pr, i){
+      h += '<div class="prob" data-i="' + i + '">'
+         + '<div class="lvl" data-lvl="' + pr.lvl + '">' + pr.lvl + '</div>'
+         + '<div class="ask">' + pr.q + '</div>'
+         + '<div class="ans">';
+      pr.f.forEach(function(fl, j){
+        h += '<span class="fld"><label>' + fl.lab + '</label>'
+           + '<input type="text" inputmode="decimal" data-j="' + j + '"></span>';
+      });
+      h += '</div>'
+         + '<div class="act"><button class="mini" data-act="check">check</button>'
+         + '<button class="mini" data-act="why">show working</button>'
+         + '<span class="verdict"></span></div>'
+         + '<div class="work" hidden><p class="t">' + pr.why + '</p></div>'
+         + '</div>';
+    });
+    host.innerHTML = h;
+
+    if(pager && pager.parentNode) pager.parentNode.insertBefore(host, pager);
+    else document.querySelector('.wrap').appendChild(host);
+
+    Array.prototype.forEach.call(host.querySelectorAll('.prob'), function(box){
+      var pr = list[+box.getAttribute('data-i')];
+      var verdict = box.querySelector('.verdict');
+      var work = box.querySelector('.work');
+
+      box.querySelector('[data-act="why"]').addEventListener('click', function(){
+        work.hidden = !work.hidden;
+        this.textContent = work.hidden ? 'show working' : 'hide working';
+        if(!work.hidden && window.MathJax && MathJax.typesetPromise)
+          MathJax.typesetPromise([work]);
+      });
+
+      box.querySelector('[data-act="check"]').addEventListener('click', function(){
+        var allRight = true, anyTyped = false;
+        Array.prototype.forEach.call(box.querySelectorAll('input'), function(inp){
+          var fl = pr.f[+inp.getAttribute('data-j')];
+          var want = fl.ans(), tol = fl.tol == null ? 0.02 : fl.tol;
+          var got = parseFloat(String(inp.value).replace(/,/g, ''));
+          if(!isFinite(got)){ inp.removeAttribute('data-ok'); allRight = false; return; }
+          anyTyped = true;
+          /* relative, with an absolute floor so an answer of zero is reachable */
+          var ok = Math.abs(got - want) <= Math.max(tol*Math.abs(want), 1e-9);
+          inp.setAttribute('data-ok', ok ? '1' : '0');
+          if(!ok) allRight = false;
+        });
+        if(!anyTyped){ verdict.textContent = 'type an answer first'; verdict.removeAttribute('data-ok'); return; }
+        verdict.setAttribute('data-ok', allRight ? '1' : '0');
+        verdict.textContent = allRight ? 'right' : 'not yet';
+      });
+    });
+
+    if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([host]);
+    else if(window.MathJax && MathJax.startup && MathJax.startup.promise)
+      MathJax.startup.promise.then(function(){ MathJax.typesetPromise([host]); });
+  }
+
+  function withData(cb){
+    if(window.TLT_PROBLEMS) return cb();
+    var s = document.createElement('script');
+    s.src = 'assets/problems.js';
+    s.onload = cb;
+    s.onerror = function(){};
+    document.head.appendChild(s);
+  }
+  function start(){ withData(build); }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
+
+/* ---------------------------------------------------------------
    Printing a chapter. A collapsed derivation prints as a closed
    summary line, which is exactly the part a reader printing the page
    wanted to have on paper. CSS cannot fix it: a closed <details> does
