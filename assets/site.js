@@ -579,6 +579,44 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
 })();
 
 /* ---------------------------------------------------------------
+   Fold the self-checks away. A reader working through a chapter
+   should meet the questions when they choose to, not have the
+   answers-shaped blocks sitting open at the foot of every page --
+   the same argument the collapsible derivations already make.
+
+   Done here rather than in thirteen files, and by rebuilding the
+   markup as a real <details> so that keyboard, search-in-page and
+   the print handler all treat it like every other disclosure.
+   --------------------------------------------------------------- */
+function foldBlock(host, title){
+  if(!host || host.querySelector(':scope > details.fold')) return;
+  var d = document.createElement('details');
+  d.className = 'fold';
+  var sum = document.createElement('summary');
+  sum.textContent = title;
+  d.appendChild(sum);
+  var moving = [], kids = host.childNodes, i;
+  for(i = 0; i < kids.length; i++) moving.push(kids[i]);
+  moving.forEach(function(k){
+    /* the heading becomes the summary, so it does not move inside */
+    if(k.nodeType === 1 && /^H[1-6]$/.test(k.tagName)){ host.removeChild(k); return; }
+    d.appendChild(k);
+  });
+  host.appendChild(d);
+}
+
+(function(){
+  function run(){
+    Array.prototype.forEach.call(document.querySelectorAll('.check'), function(el){
+      var h = el.querySelector('h1,h2,h3,h4');
+      foldBlock(el, (h && h.textContent.trim()) || 'Self-check');
+    });
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+  else run();
+})();
+
+/* ---------------------------------------------------------------
    Problems. Loaded like the search index, for the same reason: a
    fetch for a local file is blocked from file://, a script element
    is not, and the site has to work from a folder.
@@ -605,7 +643,7 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
     host.className = 'blk probs';
     host.id = 'problems';
 
-    var h = '<h2>Problems</h2>'
+    var h = '<details class="fold"><summary>Problems &mdash; ' + list.length + '</summary>'
           + '<p class="t">Work them on paper, then check. Answers are marked to '
           + 'within a couple of percent, so round as you like.</p>';
 
@@ -625,6 +663,7 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
          + '<div class="work" hidden><p class="t">' + pr.why + '</p></div>'
          + '</div>';
     });
+    h += '</details>';
     host.innerHTML = h;
 
     if(pager && pager.parentNode) pager.parentNode.insertBefore(host, pager);

@@ -552,10 +552,7 @@ var S = {
      rotated grid instead and leaves the point alone, which is the immittance
      chart of chapter 10. Both are correct; doing both would not be. */
   ymode: 'point',
-  /* which wavelength scale to light up: 'wtg', 'wtl', or null for neither.
-     A new reader cannot tell the two rings apart, and picking the wrong one
-     is only obvious if you already know the numbers should grow. */
-  dir: null,
+
   /* frequency response: the SWR the match must stay under, and how far
      either side of f0 to look */
   blim: 2, bspan: 0.5,
@@ -924,6 +921,31 @@ function pracSteps(){
 
    The handles are built once when the drag starts and then held, so the
    geometry cannot shift underneath a drag that is changing it. */
+/* Pressing a direction arc flashes its wavelength ring rather than recolouring
+   it. A permanent colour change is a state the reader then has to notice and
+   undo; a flash draws the eye, says which ring, and leaves the chart as it
+   was. Three pulses over about a second and a half, fading as they go.
+
+   The wash is drawn in --ink rather than in white, so it reads as a highlight
+   in both themes: near-white on the dark chart, near-black on the light one. */
+var FLASH = { kind: null, t0: 0, raf: 0 }, FLASH_MS = 1500;
+function nowMs(){ return (window.performance && performance.now) ? performance.now() : Date.now(); }
+function flashAlpha(kind){
+  if(FLASH.kind !== kind) return 0;
+  var t = (nowMs() - FLASH.t0)/FLASH_MS;
+  if(t < 0 || t >= 1) return 0;
+  return 0.34*Math.max(0, Math.sin(t*Math.PI*5))*(1 - t);
+}
+function flashTick(){
+  if((nowMs() - FLASH.t0) >= FLASH_MS){ FLASH.kind = null; FLASH.raf = 0; drawChart(); return; }
+  drawChart();
+  FLASH.raf = requestAnimationFrame(flashTick);
+}
+function startFlash(kind){
+  FLASH.kind = kind; FLASH.t0 = nowMs();
+  if(!FLASH.raf) FLASH.raf = requestAnimationFrame(flashTick);
+}
+
 function circDist(u, v, cx, cy, r){ return Math.abs(Math.hypot(u - cx, v - cy) - r); }
 
 function pracHandles(){
@@ -1203,18 +1225,13 @@ function drawRings(c, C){
 
   bands.forEach(function(B){
     var mid = (B.r0 + B.r1)/2;
-    var lit = (S.dir === B.kind);
-    if(lit){
-      /* a wash behind the chosen scale, so the eye lands on the right ring
-         before it starts reading numbers off it */
+    var fa = flashAlpha(B.kind);
+    if(fa > 0){
       c.save();
       c.beginPath();
       c.arc(G.cx, G.cy, B.r1, 0, TAU);
       c.arc(G.cx, G.cy, B.r0, 0, TAU, true);
-      c.fillStyle = C.accfill; c.fill();
-      c.strokeStyle = C.acc; c.globalAlpha = 0.75; c.lineWidth = 1.4;
-      c.beginPath(); c.arc(G.cx, G.cy, B.r1, 0, TAU); c.stroke();
-      c.beginPath(); c.arc(G.cx, G.cy, B.r0, 0, TAU); c.stroke();
+      c.fillStyle = C.ink; c.globalAlpha = fa; c.fill();
       c.restore();
     }
     if(B.kind === 'ang'){
@@ -1229,13 +1246,30 @@ function drawRings(c, C){
           /* The angle of the transmission coefficient, on the same ring and
              inside it, the way a printed chart carries both. On the rim
              tau = 1 + Gamma = 2cos(t/2)e^(jt/2), so its angle is exactly half
-             the reflection angle: the same scale, halved. */
+             the reflection angle: the same scale, halved. Same colour as the
+             reflection numbers -- which of the two rows you are reading is
+             said in words below, not in a colour. */
           if(G.size >= 560){
-            c.fillStyle = C.e;
+            c.fillStyle = C.ink3;
             label(a*Math.PI/180, B.r0 - h*0.24, String(a/2));
           }
         }
       }
+      /* Name the two rows. Written along the ring itself and allowed to sit
+         over a few of the numbers: the scale is dense enough that losing two
+         or three of them costs nothing, and not knowing which row is which
+         costs a great deal. Both go in the upper half, where arcText's
+         glyphs come out upright, and they are separated by angle rather than
+         by radius, which there is not enough of. */
+      if(showNums && G.size >= 520){
+        c.save();
+        c.font = Math.max(7, Math.round(h*0.34)) + 'px ' + MONO;
+        c.fillStyle = C.ink3; c.globalAlpha = 0.95;
+        arcText(c, 'REFLECTION COEFF. ANGLE', mid + h*0.12, -58*Math.PI/180);
+        arcText(c, 'TRANSMISSION COEFF. ANGLE', B.r0 - h*0.24, -122*Math.PI/180);
+        c.restore();
+      }
+
       /* where the reader actually is on that scale */
       var gm = curG(), ma = Math.hypot(gm[0], gm[1]);
       if(ma > 1e-6){
@@ -1305,21 +1339,25 @@ function drawDirections(c, C){
     c.closePath(); c.fill();
   }
   var D = Math.PI/180;
-  /* Each arc is a control: pressing it lights up the scale you travel on, and
-     the selected one is drawn in the cursor colour so the arc and its ring
-     read as the same statement. */
-  c.strokeStyle = (S.dir === 'wtg') ? C.acc : C.ink3;
-  c.fillStyle   = (S.dir === 'wtg') ? C.acc : C.ink3;
+  /* Each arc is a control: pressing it flashes the scale you travel on, and
+     the arc brightens with it so the two read as one statement. */
+  var fg = flashAlpha('wtg'), fl = flashAlpha('wtl');
+  function tint(f){
+    c.strokeStyle = C.ink3; c.fillStyle = C.ink3;
+    c.globalAlpha = 1 + f*2;            /* clamped to 1 by the canvas */
+    if(f > 0){ c.strokeStyle = C.ink; c.fillStyle = C.ink; }
+  }
+  tint(fg);
   sweep(72*D, 16*D, true);     /* toward the generator: clockwise, right side */
-  c.strokeStyle = (S.dir === 'wtl') ? C.acc : C.ink3;
-  c.fillStyle   = (S.dir === 'wtl') ? C.acc : C.ink3;
+  tint(fl);
   sweep(108*D, 164*D, false);  /* toward the load: counter-clockwise, left side */
+  c.globalAlpha = 1;
 
   if(G.size >= 430){
     c.font = fs + 'px ' + MONO;
-    c.fillStyle = (S.dir === 'wtg') ? C.acc : C.ink3;
+    c.fillStyle = fg > 0 ? C.ink : C.ink3;
     arcText(c, 'toward generator', R + fs*1.25, -44*D);
-    c.fillStyle = (S.dir === 'wtl') ? C.acc : C.ink3;
+    c.fillStyle = fl > 0 ? C.ink : C.ink3;
     arcText(c, 'toward load',      R + fs*1.25, -136*D);
   }
   c.restore();
@@ -2680,7 +2718,7 @@ var URL_SPEC = [
   ['d','n'], ['dd','n'], ['zoom','n'], ['cu','n'], ['cv','n'],
   ['method','s'], ['pick','n'], ['openStub','b'],
   /* so a link can hand someone a problem to work rather than an answer */
-  ['practice','b'], ['ymode','s'], ['dir','s'], ['blim','n'], ['bspan','n'],
+  ['practice','b'], ['ymode','s'], ['blim','n'], ['bspan','n'],
   ['lmode','s']
 ];
 /* captured before any hash is read, so "same as default" always means the
@@ -2719,7 +2757,6 @@ function sanitiseState(){
   if(S.ymode !== 'point' && S.ymode !== 'grid') S.ymode = S_DEFAULTS.ymode;
   if(!(S.blim > 1)) S.blim = S_DEFAULTS.blim;
   if(!(S.bspan > 0.02 && S.bspan < 0.99)) S.bspan = S_DEFAULTS.bspan;
-  if(['wtg','wtl'].indexOf(S.dir) < 0) S.dir = null;
   if(S.method !== null && ['shunt','series','qwt','lnet','dstub'].indexOf(S.method) < 0)
     S.method = null;
   S.d  = isFinite(S.d) ? wrapHalf(S.d) : 0;
@@ -3032,8 +3069,7 @@ Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'), functio
     var q0 = px_(ev), uv0 = toChart(q0[0], q0[1]);
     var hitDir = (ev.shiftKey || ev.button === 1) ? null : dirAt(uv0[0], uv0[1]);
     if(hitDir){
-      S.dir = (S.dir === hitDir) ? null : hitDir;
-      refresh();
+      startFlash(hitDir);
       ev.preventDefault();
       return;
     }

@@ -73,8 +73,8 @@
         <div style="font-family:var(--f-mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px">End-to-end error</div>
         <div id="o-err" style="font-family:var(--f-mono);font-size:19px">13 %</div></div>
       <div style="padding:13px 17px">
-        <div style="font-family:var(--f-mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px">Verdict</div>
-        <div id="o-ver" style="font-family:var(--f-mono);font-size:19px">lumped ok</div></div>
+        <div style="font-family:var(--f-mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px">Which model</div>
+        <div id="o-ver" style="font-family:var(--f-mono);font-size:17px">lumped is fine</div></div>
     </div>
     <div class="btns">
       <button data-l="0.002">60 Hz mains, 1 m</button>
@@ -213,9 +213,11 @@ var MONO = 'IBM Plex Mono, monospace';
     var err = 2*Math.abs(Math.sin(Math.PI*eL))*100;
     document.getElementById('o-err').textContent = err.toFixed(err < 10 ? 1 : 0) + ' %';
     var v = document.getElementById('o-ver');
-    if(eL <= 0.01){ v.textContent = 'lumped ok'; v.style.color = 'var(--ok)'; }
+    /* Say which model, not just a word. "needs a line" was read as a
+       property of the hardware rather than as the answer to "which model". */
+    if(eL <= 0.01){ v.textContent = 'lumped is fine'; v.style.color = 'var(--ok)'; }
     else if(eL <= 0.05){ v.textContent = 'borderline'; v.style.color = 'var(--ink)'; }
-    else { v.textContent = 'needs a line'; v.style.color = 'var(--warn)'; }
+    else { v.textContent = 'line model needed'; v.style.color = 'var(--warn)'; }
   }
   sl.addEventListener('input', function(){ eL = +this.value; sync(); });
   Array.prototype.forEach.call(document.querySelectorAll('.btns button[data-l]'), function(b){

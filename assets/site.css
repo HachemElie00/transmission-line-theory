@@ -377,6 +377,22 @@ footer.site .cr{display:block;margin-top:9px;font-family:var(--f-mono);font-size
 /* with no bar there is nothing to hang below, so the sidebar takes the height */
 .mb-off .sidebar{top:0}
 
+/* ---- folded blocks: self-checks and problems ----
+   Styled as a heading that happens to open, so a reader scanning the page sees
+   a section title rather than a widget. Same idea as details.deriv, and the
+   print handler opens both. */
+details.fold > summary{list-style:none;cursor:pointer;display:flex;
+  align-items:center;gap:9px;font-family:var(--f-disp);font-weight:700;
+  font-size:22px;letter-spacing:-.01em;color:var(--ink);padding:2px 0}
+details.fold > summary::-webkit-details-marker{display:none}
+details.fold > summary::before{content:"";width:0;height:0;flex:none;
+  border-left:7px solid currentColor;border-top:5px solid transparent;
+  border-bottom:5px solid transparent;transition:transform .16s;
+  color:var(--ui)}
+details.fold[open] > summary::before{transform:rotate(90deg)}
+details.fold > summary:hover{color:var(--ui)}
+.check details.fold > summary{font-size:19px}
+
 /* ---- problems ----
    Each one is a block the reader can work through and check. The level chip is
    a plain word rather than a colour, because a colour would say nothing to
@@ -387,6 +403,9 @@ footer.site .cr{display:block;margin-top:9px;font-family:var(--f-mono);font-size
   text-transform:uppercase;color:var(--ink3);margin-bottom:7px}
 .probs .lvl[data-lvl="medium"]{color:var(--ui)}
 .probs .lvl[data-lvl="hard"]{color:var(--warn)}
+/* the stretch problem reads as the accent rather than as a harder warning,
+   because it is optional and should not look like an escalation of "hard" */
+.probs .lvl[data-lvl="stretch"]{color:var(--acc)}
 .probs .ask{font-size:15.5px;line-height:1.6;max-width:64ch}
 .probs .ans{display:flex;flex-wrap:wrap;gap:10px;margin-top:11px}
 .probs .ans .fld{display:flex;align-items:center;gap:7px}
