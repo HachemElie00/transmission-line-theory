@@ -253,6 +253,9 @@ details.note .hint{margin-top:5px}
             are on the target circle it rides that instead. The sliders and
             fields do the same job if you would rather type.</p>
           <ol class="pracsteps" id="prac-steps"></ol>
+          <div class="row" id="prac-rot" hidden>
+            <button class="mini" id="b-rot" aria-pressed="false">rotate to y</button>
+          </div>
           <div class="row" id="prac-fields"></div>
           <div class="pracverdict" id="prac-verdict"></div>
           <div class="row" style="margin-top:7px">
@@ -285,6 +288,9 @@ details.note .hint{margin-top:5px}
         <div class="row" style="margin-top:9px">
           <button class="mini" id="b-rings" aria-pressed="true">outer scales</button>
           <button class="mini" id="b-dense" aria-pressed="true">fine grid</button>
+        </div>
+        <div class="row" style="margin-top:7px">
+          <button class="mini" id="b-ymode">y by: turning the point</button>
         </div>
       </div>
 
@@ -511,7 +517,13 @@ var S = {
      l1/l2 are stub lengths in wavelengths, z1 the transformer in ohms,
      x1/b1 the L-network elements normalised to Z0. */
   practice: false, reveal: false,
-  prac: { l1: 0, l2: 0, z1: 50, x1: 0, b1: 0, order: 'series' }
+  /* How a shunt problem gets to admittance. 'point' is the paper method --
+     turn the point half a turn and keep reading the impedance grid -- and is
+     the default because it is what students are taught. 'grid' overlays the
+     rotated grid instead and leaves the point alone, which is the immittance
+     chart of chapter 10. Both are correct; doing both would not be. */
+  ymode: 'point',
+  prac: { l1: 0, l2: 0, z1: 50, x1: 0, b1: 0, order: 'series', rotated: false }
 };
 
 var cv = document.getElementById('chart'), ctx = cv.getContext('2d');
@@ -760,11 +772,27 @@ function pracSteps(){
   var zl = [S.r, S.x], yl = inv(S.r, S.x);
   var near = function(a, b, t){ return Math.abs(a - b) <= (t || 0.02); };
 
+  /* A shunt element adds to y, so the first move is always getting to y. In
+     'point' mode that is the paper move -- turn the point half a turn and go
+     on reading the impedance grid. In 'grid' mode the grid is turned instead
+     and the point stays put. The rest of the construction is identical, which
+     is the point: only the bookkeeping differs. */
+  var toY = (S.ymode === 'point')
+    ? { t: 'Turn the load half a turn to get y = 1/z: same |Γ|, opposite ' +
+           'side of the chart. The impedance grid then reads g and b, so you ' +
+           'never leave it.',
+        ok: S.prac.rotated,
+        hint: 'press "rotate to y"' }
+    : { t: 'Switch to the admittance grid — a shunt element adds to y. ' +
+           'The half turn is in the grid here, so the point does not move.',
+        ok: S.grid === 'y' || S.grid === 'zy',
+        hint: 'press admittance, or both' };
+  var circleName = (S.ymode === 'point') ? 'r = 1 circle, which now reads g = 1'
+                                         : 'g = 1 circle';
+
   if(S.method === 'shunt') return [
-    { t: 'Work on the admittance grid — a shunt element adds to y.',
-      ok: S.grid === 'y' || S.grid === 'zy',
-      hint: 'press admittance, or both' },
-    { t: 'Travel toward the generator until the point lands on the g = 1 circle.',
+    toY,
+    { t: 'Travel toward the generator until the point lands on the ' + circleName + '.',
       ok: near(y[0], 1),
       hint: 'y = ' + cpx(y[0], y[1]) + ' — g must be 1' },
     { t: 'Add a shunt stub whose susceptance cancels what is left: b = ' +
@@ -829,8 +857,9 @@ function pracSteps(){
     var mm = mag(ga), th = Math.atan2(ga[1], ga[0]) - 2*TAU*S.dd;
     var yb = gToY(mm*Math.cos(th), mm*Math.sin(th));
     return [
+      toY,
       { t: 'Stub 1 sits at the load, so it can only change b. It must put you ' +
-           'where the spacing will carry you onto the g = 1 circle.',
+           'where the spacing will carry you onto the ' + circleName + '.',
         ok: near(yb[0], 1, 0.03),
         hint: 'after the spacing you arrive at y = ' + cpx(yb[0], yb[1]) },
       { t: 'Stub 2 cancels the susceptance that is left: b = ' + n2(-yb[1]) + '.',
@@ -1015,7 +1044,15 @@ function layout(){
 function ringBase(){ return G.R + G.gap; }
 function outerR(){ return ringBase() + 3*G.h + G.out*0.5; }
 function stubR(){ return G.R + G.gap*0.5; }
-function P(u, v){ return [G.cx + u*G.R, G.cy - v*G.R]; }
+/* P0 plots a Gamma exactly where it is. P plots a WORKING Gamma, which in the
+   rotated-to-admittance practice mode is drawn half a turn round -- because
+   Gamma_y = -Gamma_z, and that mode does the conversion the way it is done on
+   paper: move the point, keep the impedance grid. Everything that draws the
+   chart itself (the grids, the rings, the rim) uses P0 and is never turned;
+   everything that draws the reader's own point and construction uses P. */
+function P0(u, v){ return [G.cx + u*G.R, G.cy - v*G.R]; }
+function viewSign(){ return (S.practice && S.prac.rotated) ? -1 : 1; }
+function P(u, v){ var s = viewSign(); return P0(s*u, s*v); }
 function rimPt(ang, rad){ return [G.cx + rad*Math.cos(ang), G.cy - rad*Math.sin(ang)]; }
 
 /* ring angle conventions */
@@ -1031,7 +1068,7 @@ var X_MIN = [0.05,0.15,0.25,0.35,0.45,0.7,0.9,1.1,1.4,1.8,2.5,3.5,6];
 
 function drawGrid(c, rotate, col, labels){
   var sgn = rotate ? -1 : 1;
-  function Q(u,v){ return P(sgn*u, sgn*v); }
+  function Q(u,v){ return P0(sgn*u, sgn*v); }
   c.save();
   c.beginPath(); c.arc(G.cx, G.cy, G.R, 0, TAU); c.clip();
 
@@ -1508,9 +1545,31 @@ function drawChart(){
   var mk = 1/S.zoom;
 
   /* load: hollow */
-  var pl = P(gL[0], gL[1]);
+  var pl = P0(gL[0], gL[1]);   /* the load is always plotted as z */
   c.beginPath(); c.arc(pl[0], pl[1], Math.max(4.5, G.size*0.0085)*mk, 0, TAU);
   c.strokeStyle = C.ink; c.lineWidth = 2.2*mk; c.stroke();
+
+  /* The half turn itself, drawn as the diameter through the centre from z to
+     y. Without it the rotation is a thing that happened to the numbers; with
+     it the reader can see that y is the same point turned through the origin,
+     which is the whole content of Gamma_y = -Gamma_z. */
+  if(S.practice && S.prac.rotated){
+    var py = P0(-gL[0], -gL[1]);
+    c.save();
+    c.strokeStyle = C.ink3; c.globalAlpha = 0.5; c.lineWidth = 1.2*mk;
+    c.setLineDash([5*mk, 4*mk]);
+    c.beginPath(); c.moveTo(pl[0], pl[1]); c.lineTo(py[0], py[1]); c.stroke();
+    c.restore();
+    if(G.size >= 430){
+      c.save();
+      c.font = Math.max(9, Math.min(11.5, G.size*0.0155)) + 'px ' + MONO;
+      c.fillStyle = C.ink3; c.textAlign = 'center'; c.textBaseline = 'bottom';
+      c.fillText('z', pl[0], pl[1] - Math.max(9, G.size*0.016)*mk);
+      c.fillStyle = C.acc;
+      c.fillText('y', py[0], py[1] - Math.max(9, G.size*0.016)*mk);
+      c.restore();
+    }
+  }
 
   /* current point: filled */
   var pc = P(gC[0], gC[1]);
@@ -2113,6 +2172,9 @@ function refresh(){
   });
   var ms = document.getElementById('i-method');
   if(ms && ms.value !== (S.method || '')) ms.value = S.method || '';
+  var ym = document.getElementById('b-ymode');
+  if(ym) ym.textContent = 'y by: ' +
+    (S.ymode === 'point' ? 'turning the point' : 'turning the grid');
   document.getElementById('b-rings').setAttribute('aria-pressed', S.rings ? 'true':'false');
   document.getElementById('b-dense').setAttribute('aria-pressed', S.dense ? 'true':'false');
   document.getElementById('z-val').textContent = '\u00d7' + (Math.round(S.zoom*10)/10);
@@ -2188,6 +2250,17 @@ function pracPanel(){
     });
   }
 
+  /* the half turn only exists for the methods that need admittance, and only
+     when the reader is doing it by moving the point */
+  var needsY = (S.method === 'shunt' || S.method === 'dstub');
+  var rw = document.getElementById('prac-rot');
+  if(rw){
+    rw.hidden = !(needsY && S.ymode === 'point');
+    var rb = document.getElementById('b-rot');
+    rb.setAttribute('aria-pressed', S.prac.rotated ? 'true' : 'false');
+    rb.textContent = S.prac.rotated ? 'back to z' : 'rotate to y';
+  }
+
   var steps = pracSteps();
   /* the current step is the first unmet one */
   var now = steps.length;
@@ -2230,7 +2303,7 @@ var URL_SPEC = [
   ['d','n'], ['dd','n'], ['zoom','n'], ['cu','n'], ['cv','n'],
   ['method','s'], ['pick','n'], ['openStub','b'],
   /* so a link can hand someone a problem to work rather than an answer */
-  ['practice','b']
+  ['practice','b'], ['ymode','s']
 ];
 /* captured before any hash is read, so "same as default" always means the
    built-in default and never whatever the link happened to set */
@@ -2365,9 +2438,12 @@ Array.prototype.forEach.call(document.querySelectorAll('[data-grid]'), function(
 function pickMethod(m){
   S.method = m || null;
   S.pick = 0;
-  /* bring up the grid you would actually work on. The toggle still wins
-     afterwards, so this is a starting point rather than a lock. */
-  if(S.method === 'shunt' || S.method === 'dstub') S.grid = 'y';
+  /* Bring up the grid you would actually work on. The toggle still wins
+     afterwards, so this is a starting point rather than a lock. In 'point'
+     mode a shunt problem is worked on the IMPEDANCE grid with the point
+     turned half a turn, so it must not be dragged onto the admittance grid. */
+  if(S.method === 'shunt' || S.method === 'dstub')
+    S.grid = (S.ymode === 'grid') ? 'y' : 'z';
   else if(S.method === 'series' || S.method === 'qwt') S.grid = 'z';
   if(S.practice){
     /* the whole point is that the reader travels the line themselves, so the
@@ -2376,6 +2452,7 @@ function pickMethod(m){
     S.d = 0;
     S.prac.l1 = neutralStub(); S.prac.l2 = neutralStub();
     S.prac.x1 = 0; S.prac.b1 = 0; S.prac.z1 = S.z0;
+    S.prac.rotated = false;
     var fw = document.getElementById('prac-fields');
     if(fw) fw.removeAttribute('data-for');
   } else {
@@ -2452,7 +2529,8 @@ Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'), functio
      the two circles cross. */
   var grabbed = null;
   function pracGrab(ev){
-    var q = px_(ev), uv = toChart(q[0], q[1]);
+    var q = px_(ev), uv = toChart(q[0], q[1]), sg = viewSign();
+    uv = [sg*uv[0], sg*uv[1]];      /* display -> Gamma_z */
     var hs = pracHandles();
     if(!hs.length) return false;
     var best = null, bd = Infinity;
@@ -2469,7 +2547,8 @@ Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'), functio
   }
   function pracMove(ev){
     if(!grabbed) return;
-    var q = px_(ev), uv = toChart(q[0], q[1]);
+    var q = px_(ev), uv = toChart(q[0], q[1]), sg = viewSign();
+    uv = [sg*uv[0], sg*uv[1]];      /* display -> Gamma_z */
     var m = Math.hypot(uv[0], uv[1]);
     if(m > 0.999){ uv[0] *= 0.999/m; uv[1] *= 0.999/m; }
     grabbed.set(uv[0], uv[1]);
@@ -2551,6 +2630,31 @@ EM.register(function(){ drawChart(); }, false);
 EM.register(function(){ drawNomo(); }, false);
 EM.register(function(){ drawCircuit(); }, false);
 
+/* Which of the two equivalent pictures of admittance to work in. Switching it
+   abandons any half turn already made, because the same flag would then mean
+   the opposite thing. */
+(function(){
+  var yb = document.getElementById('b-ymode');
+  if(yb) yb.addEventListener('click', function(){
+    S.ymode = (S.ymode === 'point') ? 'grid' : 'point';
+    S.prac.rotated = false;
+    if(S.method === 'shunt' || S.method === 'dstub')
+      S.grid = (S.ymode === 'grid') ? 'y' : 'z';
+    refresh();
+  });
+})();
+
+/* The reader's own half turn from z to y. It changes nothing physical -- the
+   same point on the line, the same Gamma -- only which of the two equivalent
+   pictures is on screen, and which numbers the grid is read as. */
+(function(){
+  var rb = document.getElementById('b-rot');
+  if(rb) rb.addEventListener('click', function(){
+    S.prac.rotated = !S.prac.rotated;
+    refresh();
+  });
+})();
+
 /* Practice mode toggle, and the escape hatch out of it. */
 (function(){
   var pb = document.getElementById('b-prac');
@@ -2561,6 +2665,7 @@ EM.register(function(){ drawCircuit(); }, false);
       S.d = 0;
       S.prac.l1 = neutralStub(); S.prac.l2 = neutralStub();
       S.prac.x1 = 0; S.prac.b1 = 0; S.prac.z1 = S.z0;
+      S.prac.rotated = false;
       var fw = document.getElementById('prac-fields');
       if(fw) fw.removeAttribute('data-for');
     } else if(S.method){

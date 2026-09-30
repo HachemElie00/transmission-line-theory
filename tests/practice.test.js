@@ -122,6 +122,16 @@ function lnetDesigns(r, x){
       sel.dispatchEvent(new Event('change', { bubbles: true }));
     }, m);
     await p.waitForTimeout(450);
+    /* Shunt work now begins with the reader turning the point half a turn to
+       get y, on the impedance grid. It changes nothing physical, so it is not
+       part of what the checks below are testing -- but the steps do not tick
+       along without it. */
+    if (m === 'shunt' || m === 'dstub'){
+      const need = await p.evaluate(() =>
+        !document.getElementById('prac-rot').hidden &&
+        document.getElementById('b-rot').getAttribute('aria-pressed') !== 'true');
+      if (need){ await p.click('#b-rot'); await p.waitForTimeout(250); }
+    }
   }
 
   /* The load the page starts with: 25 - j30 on 50 ohm, i.e. 0.5 - j0.6. */
@@ -253,7 +263,16 @@ function lnetDesigns(r, x){
     await p.waitForTimeout(400);
     map = await readMap();
 
-    const g0 = gamma(R, X), m = Math.hypot(g0[0], g0[1]), th = Math.atan2(g0[1], g0[0]);
+    const g0 = gamma(R, X), m = Math.hypot(g0[0], g0[1]);
+    /* The reader has turned the point half a turn, so what is on SCREEN is
+       -Gamma_z: the working point starts at the load's angle plus pi, and the
+       circle the element rides is the r = 1 circle, centre +0.5, which is what
+       g = 1 looks like once the point rather than the grid has been turned. */
+    const rotated = await p.evaluate(() =>
+      document.getElementById('b-rot').getAttribute('aria-pressed') === 'true');
+    const sgn = rotated ? -1 : 1;
+    const th = Math.atan2(sgn*g0[1], sgn*g0[0]);
+    const elemCx = rotated ? 0.5 : -0.5;
     const design = stubDesigns(R, X, isOpen, false)
       .reduce((a, b2) => (Math.abs(b2.d - 0.185) < Math.abs(a.d - 0.185) ? b2 : a));
     const aim = th - 2*TAU*design.d;
@@ -274,17 +293,62 @@ function lnetDesigns(r, x){
     s.check('the load is untouched by a practice drag',
             await p.evaluate(() => document.getElementById('i-r').value) === '25.0');
 
-    /* and a grab on g = 1 must take the element */
-    await p.mouse.move(pt(-0.5 + 0.5*Math.cos(1.6), 0.5*Math.sin(1.6)).x,
-                       pt(-0.5 + 0.5*Math.cos(1.6), 0.5*Math.sin(1.6)).y);
+    /* and a grab on the element's circle must take the element */
+    await p.mouse.move(pt(elemCx + 0.5*Math.cos(1.6), 0.5*Math.sin(1.6)).x,
+                       pt(elemCx + 0.5*Math.cos(1.6), 0.5*Math.sin(1.6)).y);
     await p.mouse.down(); await p.waitForTimeout(120);
     const gr2 = await grabbed();
     await p.mouse.up(); await p.waitForTimeout(150);
-    s.check('a drag on the g = 1 circle grabs the stub', gr2 === 'stub', 'grabbed ' + gr2);
+    s.check('a drag on the element circle grabs the stub', gr2 === 'stub', 'grabbed ' + gr2);
 
-    await drag(pt(-0.5 + 0.5*Math.cos(1.6), 0.5*Math.sin(1.6)), pt(0, 0), 16);
+    await drag(pt(elemCx + 0.5*Math.cos(1.6), 0.5*Math.sin(1.6)), pt(0, 0), 16);
     const v = await verdict();
     s.check('dragging the stub to the centre matches it', v.ok, v.text);
+  }
+
+  /* ---- the two ways of reaching admittance must agree ----
+
+     Turning the point and turning the grid are the same statement,
+     Gamma_y = -Gamma_z, written two ways. They must therefore produce the same
+     design, and picking a shunt method must leave the reader on the grid their
+     convention says they are working on -- the impedance grid when the point
+     is what turns, which is the whole reason for the setting. */
+  {
+    const setMode = (want) => p.evaluate(want => {
+      const btn = document.getElementById('b-ymode');
+      for (let i = 0; i < 3; i++){
+        if (btn.textContent.indexOf(want) >= 0) return btn.textContent.trim();
+        btn.click();
+      }
+      return btn.textContent.trim();
+    }, want);
+
+    const outcome = {};
+    for (const [want, label] of [['turning the point', 'point'], ['turning the grid', 'grid']]){
+      await setMode(want);
+      await p.waitForTimeout(200);
+      await begin('shunt');
+      const grid = await p.evaluate(() =>
+        (document.querySelector('[data-grid][aria-pressed="true"]') || {}).textContent.trim());
+      s.check('"' + label + '" works a shunt stub on the ' +
+              (label === 'point' ? 'impedance' : 'admittance') + ' grid',
+              grid === (label === 'point' ? 'impedance' : 'admittance'), 'on ' + grid);
+      await p.click('#b-prac-show'); await p.waitForTimeout(600);
+      outcome[label] = await p.evaluate(() => ({
+        d: document.getElementById('i-d').value,
+        l1: parseFloat(document.getElementById('p-l1').value).toFixed(4),
+        ok: document.getElementById('prac-verdict').getAttribute('data-ok') === '1'
+      }));
+    }
+    s.check('both conventions reach a matched design',
+            outcome.point.ok && outcome.grid.ok);
+    s.check('and it is the SAME design',
+            outcome.point.d === outcome.grid.d && outcome.point.l1 === outcome.grid.l1,
+            'point d=' + outcome.point.d + ' ls=' + outcome.point.l1 +
+            '   grid d=' + outcome.grid.d + ' ls=' + outcome.grid.l1);
+
+    await setMode('turning the point');   /* leave it as the default */
+    await p.waitForTimeout(200);
   }
 
   /* ---- practice does not draw the answer before it is asked for ---- */
