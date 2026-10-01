@@ -936,6 +936,15 @@ function flashAlpha(kind){
   if(t < 0 || t >= 1) return 0;
   return 0.34*Math.max(0, Math.sin(t*Math.PI*5))*(1 - t);
 }
+/* True for the whole flash, with no envelope. The ring pulses; the arc and its
+   label are simply lit for as long as the pulsing lasts and go out with it.
+   Driving them from flashAlpha instead made them blink in step with the ring,
+   which read as three separate presses rather than one. */
+function flashOn(kind){
+  if(FLASH.kind !== kind) return false;
+  var t = nowMs() - FLASH.t0;
+  return t >= 0 && t < FLASH_MS;
+}
 function flashTick(){
   if((nowMs() - FLASH.t0) >= FLASH_MS){ FLASH.kind = null; FLASH.raf = 0; drawChart(); return; }
   drawChart();
@@ -1235,38 +1244,63 @@ function drawRings(c, C){
       c.restore();
     }
     if(B.kind === 'ang'){
+      /* Name the two rows along the rings themselves, on the right-hand side of
+         the chart, where a printed chart letters its scales. Measure them first,
+         at the font they will be drawn in, so the numbers they would cover can be
+         left out rather than painted over: an overwritten number is unreadable
+         and still looks like a number, which is worse than a gap. */
+      var NAME_MID = 0;                      /* screen angle: the far right */
+      var names = [];
+      if(showNums && G.size >= 520){
+        c.save();
+        c.font = Math.max(7, Math.round(h*0.34)) + 'px ' + MONO;
+        names.push({ txt: 'REFLECTION COEFF. ANGLE', r: mid + h*0.12 });
+        /* the inner row is only lettered when its numbers are actually drawn */
+        if(G.size >= 560)
+          names.push({ txt: 'TRANSMISSION COEFF. ANGLE', r: B.r0 - h*0.24 });
+        names.forEach(function(n){
+          var total = 0, k;
+          for(k = 0; k < n.txt.length; k++) total += c.measureText(n.txt[k]).width;
+          /* half the arc it spans, plus a glyph of clearance at each end */
+          n.half = (total/2 + c.measureText('M').width)/n.r;
+        });
+        c.restore();
+      }
+      /* true when the number at chart angle `deg` falls under row `n` */
+      var taken = function(n, deg){
+        if(!n) return false;
+        var d = Math.abs(-deg*Math.PI/180 - NAME_MID);
+        while(d > Math.PI) d = Math.abs(d - TAU);
+        return d < n.half;
+      };
+
       for(var a = -180; a < 180; a += 2){
         var major = (a % 10 === 0), lab = (a % 20 === 0);
         if(!major && G.size < 560) continue;
         tick(a*Math.PI/180, B.r0, B.r0 + (major ? h*0.34 : h*0.17),
              1, major ? 0.55 : 0.3, C.ink3);
         if(lab && showNums){
-          c.fillStyle = C.ink3;
-          label(a*Math.PI/180, mid + h*0.12, String(a));
+          if(!taken(names[0], a)){
+            c.fillStyle = C.ink3;
+            label(a*Math.PI/180, mid + h*0.12, String(a));
+          }
           /* The angle of the transmission coefficient, on the same ring and
              inside it, the way a printed chart carries both. On the rim
              tau = 1 + Gamma = 2cos(t/2)e^(jt/2), so its angle is exactly half
              the reflection angle: the same scale, halved. Same colour as the
              reflection numbers -- which of the two rows you are reading is
-             said in words below, not in a colour. */
-          if(G.size >= 560){
+             said in words on the ring, not in a colour. */
+          if(G.size >= 560 && !taken(names[1], a)){
             c.fillStyle = C.ink3;
             label(a*Math.PI/180, B.r0 - h*0.24, String(a/2));
           }
         }
       }
-      /* Name the two rows. Written along the ring itself and allowed to sit
-         over a few of the numbers: the scale is dense enough that losing two
-         or three of them costs nothing, and not knowing which row is which
-         costs a great deal. Both go in the upper half, where arcText's
-         glyphs come out upright, and they are separated by angle rather than
-         by radius, which there is not enough of. */
-      if(showNums && G.size >= 520){
+      if(names.length){
         c.save();
         c.font = Math.max(7, Math.round(h*0.34)) + 'px ' + MONO;
         c.fillStyle = C.ink3; c.globalAlpha = 0.95;
-        arcText(c, 'REFLECTION COEFF. ANGLE', mid + h*0.12, -58*Math.PI/180);
-        arcText(c, 'TRANSMISSION COEFF. ANGLE', B.r0 - h*0.24, -122*Math.PI/180);
+        names.forEach(function(n){ arcText(c, n.txt, n.r, NAME_MID); });
         c.restore();
       }
 
@@ -1323,6 +1357,7 @@ function arcText(c, txt, r, mid){
 function drawDirections(c, C){
   var R = outerR(), fs = Math.max(8, Math.min(11, G.size*0.0165));
   c.save();
+  c.globalAlpha = 1;          /* tint() used to set this; now nothing here does */
   c.strokeStyle = C.ink3; c.fillStyle = C.ink3;
   c.lineWidth = Math.max(1.2, G.size*0.0022);
 
@@ -1339,25 +1374,24 @@ function drawDirections(c, C){
     c.closePath(); c.fill();
   }
   var D = Math.PI/180;
-  /* Each arc is a control: pressing it flashes the scale you travel on, and
-     the arc brightens with it so the two read as one statement. */
-  var fg = flashAlpha('wtg'), fl = flashAlpha('wtl');
-  function tint(f){
-    c.strokeStyle = C.ink3; c.fillStyle = C.ink3;
-    c.globalAlpha = 1 + f*2;            /* clamped to 1 by the canvas */
-    if(f > 0){ c.strokeStyle = C.ink; c.fillStyle = C.ink; }
+  /* Each arc is a control: pressing it flashes the scale you travel on, and the
+     arc stays lit for the whole flash so the two read as one statement. The
+     ring does the pulsing; the arc only says which one is being pointed at. */
+  var fg = flashOn('wtg'), fl = flashOn('wtl');
+  function tint(on){
+    c.strokeStyle = on ? C.ink : C.ink3;
+    c.fillStyle   = on ? C.ink : C.ink3;
   }
   tint(fg);
   sweep(72*D, 16*D, true);     /* toward the generator: clockwise, right side */
   tint(fl);
   sweep(108*D, 164*D, false);  /* toward the load: counter-clockwise, left side */
-  c.globalAlpha = 1;
 
   if(G.size >= 430){
     c.font = fs + 'px ' + MONO;
-    c.fillStyle = fg > 0 ? C.ink : C.ink3;
+    c.fillStyle = fg ? C.ink : C.ink3;
     arcText(c, 'toward generator', R + fs*1.25, -44*D);
-    c.fillStyle = fl > 0 ? C.ink : C.ink3;
+    c.fillStyle = fl ? C.ink : C.ink3;
     arcText(c, 'toward load',      R + fs*1.25, -136*D);
   }
   c.restore();
