@@ -96,7 +96,9 @@
     </div>
   </div>
 
-  <p class="t">The triangles mark the instantaneous zero crossings. In the first two panels they march; in the third they are pinned. Split the total into a travelling part of amplitude $1-|\Gamma|$ and a standing part of amplitude $2|\Gamma|$: the first carries the power that reaches the load, the second is what bounced. Only at $|\Gamma| = 1$ does the travelling part vanish, and anything in between is a <b>partially standing wave</b>.</p>
+  <p class="t">The triangles mark the instantaneous zero crossings. In the first two panels they march; in the third they are pinned. Split the total into a travelling part of amplitude $1-|\Gamma|$ and a standing part of amplitude $2|\Gamma|$. The standing part is two equal waves running opposite ways, so it carries <b>no net power at all</b>; whatever reaches the load is carried by the travelling remainder. Only at $|\Gamma| = 1$ does that remainder vanish, and anything in between is a <b>partially standing wave</b>.</p>
+
+  <p class="t">One trap in that split, because it is tempting and wrong: the delivered power is <b>not</b> $(1-|\Gamma|)^2$. Power is quadratic, so the two parts interfere, and the cross term between them carries real power of its own &mdash; at $|\Gamma| = 0.5$ the travelling part accounts for only a third of what actually arrives. Add all three contributions and you recover chapter 06's $1-|\Gamma|^2$, which remains the delivered fraction. The decomposition tells you <i>which part of the pattern moves</i>, not how the power divides.</p>
 </section>
 
 <section class="blk" id="why">
@@ -138,6 +140,21 @@
     $$|V| = |V_0^+|\sqrt{1 + |\Gamma|^2 + 2|\Gamma|\cos\left(\theta_r - 2\beta l\right)}$$
     <span class="note">that single square root <i>is</i> the envelope &mdash; the conditions above are just where the cosine hits $\pm1$</span>
   </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; where the square root comes from</summary>
+    <div class="body">
+      <p>Start from $|V(l)| = |V_0^+|\,|1 + \Gamma e^{-j2\beta l}|$, derived above, and write $\Gamma = |\Gamma|e^{j\theta_r}$ so the rotating term collects into one angle:</p>
+      <div class="eq">$$\Gamma e^{-j2\beta l} = |\Gamma|\,e^{j(\theta_r - 2\beta l)} = |\Gamma|\cos\phi + j|\Gamma|\sin\phi, \qquad \phi \equiv \theta_r - 2\beta l$$</div>
+      <p>So the bracket is a single complex number with a known real and imaginary part:</p>
+      <div class="eq">$$1 + \Gamma e^{-j2\beta l} = \bigl(1 + |\Gamma|\cos\phi\bigr) + j\,|\Gamma|\sin\phi$$</div>
+      <p>Its magnitude is Pythagoras on those two parts:</p>
+      <div class="eq">$$\bigl|1 + \Gamma e^{-j2\beta l}\bigr|^2 = \bigl(1 + |\Gamma|\cos\phi\bigr)^2 + \bigl(|\Gamma|\sin\phi\bigr)^2 = 1 + 2|\Gamma|\cos\phi + |\Gamma|^2\cos^2\phi + |\Gamma|^2\sin^2\phi$$</div>
+      <p>The last two terms collapse by $\cos^2\phi + \sin^2\phi = 1$, leaving</p>
+      <div class="eq">$$\bigl|1 + \Gamma e^{-j2\beta l}\bigr|^2 = 1 + |\Gamma|^2 + 2|\Gamma|\cos\phi$$</div>
+      <p>and the square root of that, times $|V_0^+|$, is the boxed result. This is the law of cosines in disguise: two vectors of length $1$ and $|\Gamma|$ meeting at angle $\phi$ sum to a vector whose squared length is exactly $1^2 + |\Gamma|^2 + 2(1)|\Gamma|\cos\phi$ &mdash; the same picture from the start of this section, now with the algebra behind it. Setting $\phi = 0$ or $\phi = \pi$ recovers $1 \pm |\Gamma|$ without any further work, which is why those two cases needed no derivation above.</p>
+    </div>
+  </details>
 </section>
 
 <section class="blk" id="swr">

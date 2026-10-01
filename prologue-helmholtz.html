@@ -130,7 +130,7 @@
       <button data-a="0.25" data-b="1.4">low loss</button>
       <button data-a="0.7" data-b="1.4">lossy</button>
     </div>
-    <figcaption class="cap">E and H are perpendicular to each other and to the direction of travel, and peak at the same instant. Their vertical scales here are independent &mdash; the true ratio is &eta; &asymp; 377 &Omega; in free space, far too large to draw on one axis.</figcaption>
+    <figcaption class="cap">E and H are perpendicular to each other and to the direction of travel. With no loss they peak at the same instant; add attenuation and H falls behind by the angle of &eta;, which the readout gives. Their vertical scales here are independent &mdash; the true ratio is &eta; &asymp; 377 &Omega; in free space, far too large to draw on one axis.</figcaption>
   </figure>
 
   <p class="t">Two features of that picture are worth naming, because both carry into transmission lines unchanged. The fields are <b>mutually perpendicular and both transverse</b> to the direction of travel &mdash; a TEM wave. And in a lossless medium they are <b>exactly in phase</b>, their ratio being a real constant:</p>
@@ -156,6 +156,9 @@
       <p>The magnetic field points along $\hat{y}$ &mdash; perpendicular to $\vE$ and to the direction of travel, exactly as claimed. Now substitute $\beta = \omega\sqrt{\mu\varepsilon}$:</p>
       <div class="eq">$$\frac{\tilde{E}_x}{\tilde{H}_y} = \frac{\omega\mu}{\beta} = \frac{\omega\mu}{\omega\sqrt{\mu\varepsilon}} = \sqrt{\frac{\mu}{\varepsilon}} = \eta$$</div>
       <p>Because $\eta$ came out <b>real</b>, the two fields peak at the same instant. In a lossy medium $\gamma = \alpha + j\beta$ makes $\eta$ complex, the fields fall out of phase, and the wave carries less real power than their product would suggest &mdash; the same bookkeeping as a reactive load in a circuit.</p>
+      <p>How far out of phase takes no extra information. Repeating the step above without assuming $\gamma$ imaginary gives $\tilde{H}_y = (\gamma/j\omega\mu)\tilde{E}_x$, so $\eta\gamma = j\omega\mu$ exactly &mdash; and since $j\omega\mu$ has an angle of $90^\circ$,</p>
+      <div class="eq">$$\angle\eta = 90^\circ - \angle\gamma = 90^\circ - \arctan\frac{\beta}{\alpha}$$</div>
+      <p>which is what the figure's $\angle\eta$ readout reports as you move the attenuation slider. At $\alpha = 0$ it is zero, recovering the in-phase case. At the other extreme, a good conductor has $\alpha \to \beta$, giving $\angle\eta \to 45^\circ$ &mdash; the largest lag any passive medium produces, and the reason a wave entering metal is so quickly spent.</p>
     </div>
   </details>
 </section>
@@ -260,18 +263,25 @@
     c.beginPath(); c.moveTo(L, mid+.5); c.lineTo(W-R, mid+.5);
     c.moveTo(L+.5, T); c.lineTo(L+.5, H-B); c.stroke();
 
-    /* E and H: same phase, H drawn at 0.55 scale to read as a distinct trace */
-    function wave(scale, col, lw){
+    /* H lags E by the angle of eta, and that angle needs no extra parameters:
+       eta*gamma = j*omega*mu exactly, so arg(eta) = 90deg - arg(gamma) with
+       arg(gamma) = atan2(beta, alpha). At alpha = 0 it is zero and the two
+       traces peak together; add loss and they separate, which is the claim the
+       derivation below makes and this figure used to contradict by drawing both
+       with one phase. H is drawn at 0.55 scale to read as a distinct trace. */
+    var etaPh = Math.PI/2 - Math.atan2(be, al);
+
+    function wave(scale, ph, col, lw){
       c.strokeStyle = col; c.lineWidth = lw;
       c.beginPath();
       for(var i=0;i<=300;i++){
         var z = i/300*zmax;
-        c.lineTo(px(z), mid - env(z)*Math.cos(t - be*z)*sy*scale);
+        c.lineTo(px(z), mid - env(z)*Math.cos(t - be*z - ph)*sy*scale);
       }
       c.stroke();
     }
-    wave(0.55, C.h, 1.8);
-    wave(1, C.e, 2.4);
+    wave(0.55, etaPh, C.h, 1.8);
+    wave(1, 0, C.e, 2.4);
 
     /* wavelength marker */
     var lam = EM.TAU/be;
@@ -294,6 +304,9 @@
     c.fillStyle = C.ink3; c.font = '11.5px ' + M;
     c.textAlign = 'left';
     c.fillText(al > 0.005 ? ('α = ' + al.toFixed(2) + ' Np/m') : 'lossless (α = 0)', L + 7, T + 12);
+    c.fillText(al > 0.005
+      ? ('∠η = ' + (etaPh*180/Math.PI).toFixed(1) + '° — H lags E')
+      : '∠η = 0° — E and H in phase', L + 7, T + 28);
     c.fillText('z = 0', L, H - B + 14);
     c.textAlign = 'right'; c.fillText('propagation z →', W-R, T + 12);
   }, true);

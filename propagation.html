@@ -206,7 +206,9 @@
     <figcaption class="cap">the same cable from 1 Hz to 10 GHz &mdash; R&prime; = 0.1 &Omega;/m, L&prime; = 250 nH/m, G&prime; = 1 &micro;S/m, C&prime; = 100 pF/m</figcaption>
   </figure>
 
-  <p class="t">At the bottom of that sweep $Z_0 \to \sqrt{R'/G'}$, a few hundred ohms and purely real &mdash; the line behaves as a resistive divider, not as a wave medium. Through the middle it is complex, with $\angle Z_0$ dipping toward &minus;45&deg;. Only above roughly a megahertz does it settle onto the flat, real 50 &Omega; that the cable is sold as.</p>
+  <p class="t">At the bottom of that sweep $Z_0 \to \sqrt{R'/G'}$, a few hundred ohms and purely real &mdash; the line behaves as a resistive divider, not as a wave medium. Through the middle it is complex, and for this cable $\angle Z_0$ bottoms out near &minus;36&deg; around 10 kHz. Only above roughly a megahertz does it settle onto the flat, real 50 &Omega; that the cable is sold as.</p>
+
+  <p class="t">That &minus;36&deg; is worth one more line, because it is not an arbitrary number and it is not the worst case either. Since $\angle Z_0 = \tfrac12\left(\angle Z' - \angle Y'\right)$, and both $\angle Z'$ and $\angle Y'$ are confined between $0$ and $90^\circ$ for any passive line, <b>$|\angle Z_0|$ can never exceed 45&deg;</b>. That bound is approached only when the two corner frequencies $R'/L'$ and $G'/C'$ are infinitely far apart; here they differ by a factor of 40, which gets you to 36&deg; and no further.</p>
 
   <p class="t">So "RG-58 is 50 &Omega;" is shorthand for "well above its transition frequency, this cable's $\sqrt{L'/C'}$ is 50 &Omega;". For the RF work in the rest of this site that is always true, and $Z_0$ can be treated as a real constant &mdash; but it is an approximation with a domain, like every other one in this subject.</p>
 

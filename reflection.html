@@ -28,6 +28,11 @@
   <h2>Why a wave comes back</h2>
   <p class="t">Chapter 04 gave the general solution on a lossless line. Put the load at $z = 0$, with the line running off in the $-z$ direction toward the generator:</p>
 
+  <figure class="fig">
+    <canvas id="setupfig" class="static" style="height:260px"></canvas>
+    <figcaption class="cap">both waves exist on the same line at once; z = 0 is fixed at the load, so the generator sits somewhere at negative z</figcaption>
+  </figure>
+
   <div class="eq">$$\tilde{V}(z) = V_0^+e^{-j\beta z} + V_0^-e^{+j\beta z} \qquad \tilde{I}(z) = \frac{V_0^+}{Z_0}e^{-j\beta z} - \frac{V_0^-}{Z_0}e^{+j\beta z}$$</div>
 
   <p class="t">At the load, $z = 0$, both exponentials become 1:</p>
@@ -226,6 +231,58 @@
 <script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
 <script>
 var MONO = 'IBM Plex Mono, monospace';
+
+/* ---- the setup: both waves on one line, load fixing z = 0 ---- */
+(function(){
+  var cv = document.getElementById('setupfig');
+  if(!cv) return;
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d');
+    c.clearRect(0,0,cv._w,cv._h);
+    EM.design(c, cv, 560, 260);
+    var top = 96, bot = 164, mid = (top+bot)/2, xl = 40, xz = 400;
+
+    /* the two conductors */
+    c.strokeStyle = C.ink2; c.lineWidth = 2; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(xl, top); c.lineTo(xz, top);
+    c.moveTo(xl, bot); c.lineTo(xz, bot); c.stroke();
+    c.fillStyle = C.ink3; c.font = '13px ' + MONO; c.textAlign = 'center';
+    c.fillText('Z0', (xl+xz)/2, mid + 5);
+
+    /* the load, bridging the two conductors */
+    c.fillStyle = C.surface; c.fillRect(xz, top-22, 56, (bot-top)+44);
+    c.strokeStyle = C.ink2; c.lineWidth = 2; c.strokeRect(xz, top-22, 56, (bot-top)+44);
+    c.fillStyle = C.ink2; c.font = '15px ' + MONO; c.textAlign = 'center';
+    c.fillText('ZL', xz+28, mid+5);
+
+    /* z = 0, fixed at the load regardless of how long the line is */
+    c.strokeStyle = C.ink3; c.lineWidth = 1; c.setLineDash([4,4]);
+    c.beginPath(); c.moveTo(xz, top-42); c.lineTo(xz, bot+34); c.stroke();
+    c.setLineDash([]);
+    c.fillStyle = C.ink3; c.font = '13px ' + MONO; c.textAlign = 'center';
+    c.fillText('z = 0', xz, bot + 50);
+
+    /* toward the generator -- below the rails, mirroring z = 0 on the other side */
+    c.fillStyle = C.ink3; c.font = '12px ' + MONO; c.textAlign = 'left';
+    c.fillText('← toward the generator, z < 0', xl, bot + 50);
+
+    /* forward wave: travels toward the load, toward +z */
+    c.strokeStyle = C.e; c.fillStyle = C.e; c.lineWidth = 2;
+    EM.arrow(c, 140, top-42, 300, top-42, 7);
+    c.textAlign = 'center'; c.font = '14px ' + MONO;
+    c.fillText('V0+, I0+', 220, top - 50);
+
+    /* backward wave: reflected, travels toward the generator, toward -z */
+    c.strokeStyle = C.h; c.fillStyle = C.h; c.lineWidth = 2;
+    EM.arrow(c, 300, top-18, 140, top-18, 7);
+    c.font = '14px ' + MONO;
+    c.fillText('V0-, I0-', 220, top - 26);
+
+    c.restore();
+  }, false);
+})();
+
 (function(){
   var gp = document.getElementById('gplane'), gb = document.getElementById('gbars');
   if(!gp) return;

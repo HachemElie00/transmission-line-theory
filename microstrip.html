@@ -137,7 +137,7 @@
       <p>and for a wide one, $W/h > 2$:</p>
       <div class="eq">$$\frac{W}{h} = \frac{2}{\pi}\left[B - 1 - \ln(2B-1) + \frac{\varepsilon_r-1}{2\varepsilon_r}\left(\ln(B-1) + 0.39 - \frac{0.61}{\varepsilon_r}\right)\right]$$</div>
       <p>Compute both, keep whichever lands in its own validity range, then <b>feed the answer back through the analysis formulas</b> to check. The two branches disagree slightly near $W/h = 2$, and the round trip is the only honest way to know which one you should have used.</p>
-      <p>A worked case. For 50 &Omega; on FR-4 ($\varepsilon_r = 4.4$): $A = 1.53$, giving $W/h = 1.86$; and $B = 5.63$, giving $W/h = 1.90$. Both branches agree closely here, so with $h = 1.6$ mm the track is about 3.0 mm wide. That is the number every FR-4 board you have seen is built around.</p>
+      <p>A worked case. For 50 &Omega; on FR-4 ($\varepsilon_r = 4.4$): $A = 1.53$, giving $W/h = 1.91$; and $B = 5.65$, giving $W/h = 1.91$. The two branches agree to better than a tenth of a percent here, and the round trip confirms it &mdash; feeding $W/h = 1.91$ back through the analysis formula returns 50.3 &Omega;. So with $h = 1.6$ mm the track is about 3.0 mm wide. That is the number every FR-4 board you have seen is built around.</p>
     </div>
   </details>
 </section>
@@ -174,7 +174,7 @@
         <button class="opt" data-ok="1">Both fall by $\sqrt{2}$ &mdash; each carries a $1/\sqrt{\varepsilon_r}$</button>
         <button class="opt">$Z_0$ is unchanged since $b/a$ is unchanged; only $u_p$ falls</button>
       </div>
-      <p class="exp"><b class="verdict"></b>$Z_0 = (60/\sqrt{\varepsilon_r})\ln(b/a)$ and $u_p = c/\sqrt{\varepsilon_r}$, so both scale as $1/\sqrt{\varepsilon_r}$ and both drop by about 41 %. The geometry term $\ln(b/a)$ is untouched &mdash; which is exactly the split this chapter opened with: geometry sets the ratio, material sets the speed.</p>
+      <p class="exp"><b class="verdict"></b>$Z_0 = (60/\sqrt{\varepsilon_r})\ln(b/a)$ and $u_p = c/\sqrt{\varepsilon_r}$, so both scale as $1/\sqrt{\varepsilon_r}$ and both fall to about 71 % of what they were &mdash; a 29 % drop, not 41 %, since dividing by $\sqrt{2}$ is not the same as subtracting $\sqrt{2}-1$. The geometry term $\ln(b/a)$ is untouched &mdash; which is exactly the split this chapter opened with: geometry sets the ratio, material sets the speed.</p>
     </div>
 
     <div class="q">
@@ -272,13 +272,15 @@ function z0ms(er, wh){
     c.fillText('track, width W', cx, sy - th - 16);
     c.fillStyle = C.ink3; c.font = '13px ' + MONO;
     c.fillText('ground plane', cx, gy + 28);
-    c.fillStyle = C.acc; c.font = '14px ' + MONO; c.textAlign = 'left';
-    c.fillText('substrate  εᵣ', 132, (sy+gy)/2 + 5);
     c.fillStyle = C.h; c.font = '14px ' + MONO;
     c.textAlign = 'left';
     c.fillText('air  ε = 1', 20, 40);
     c.fillStyle = C.ink3; c.font = '12px ' + MONO;
     c.fillText('fringing field', 20, 58);
+    /* kept off the substrate block itself -- the fringing-field curves sweep
+       through it at every height the earlier inline label tried */
+    c.fillStyle = C.acc; c.font = '14px ' + MONO;
+    c.fillText('substrate  εᵣ', 20, 82);
 
     /* h dimension */
     c.strokeStyle = C.ink3; c.lineWidth = 1;

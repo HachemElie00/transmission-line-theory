@@ -153,6 +153,57 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
     <canvas id="layout" class="static" style="height:260px"></canvas>
     <figcaption class="cap">what the two numbers mean physically &mdash; d from the load to the tee, l<sub>s</sub> from the tee to the stub's end</figcaption>
   </figure>
+
+  <h3>The series-stub version</h3>
+  <p class="t">Everything above has a mirror image in <b>impedance</b> instead of admittance, for the same reason $z$ and $y$ are mirror images of each other: a series element adds impedance, so it needs a constant-$r$ circle through the centre to ride, exactly as a shunt element needed the constant-$g$ one.</p>
+
+  <div class="eq box">
+    $$\textbf{1. Travel} \;\; d \;\text{ along the line until } \; z = 1 + jx$$
+    $$\textbf{2. Add a series stub } \; \text{of reactance } -x \;\Rightarrow\; z_{\text{total}} = 1$$
+    <span class="note">the same two moves, with $g = 1$ replaced by $r = 1$ and a shunt stub replaced by a series one</span>
+  </div>
+
+  <p class="t">Repeating the single-stub derivation with $z = (1+\Gamma)/(1-\Gamma)$ in place of $y$ flips exactly one sign. Setting $\operatorname{Re}(z) = 1$ gives $u = +m^2$ this time, not $-m^2$ &mdash; travel until $\Gamma$'s real part equals $+|\Gamma|^2$, the vertical line that cuts the constant-SWR circle on the <i>other</i> side of the chart. The rest repeats unchanged: two crossings, two designs, and a leftover reactance</p>
+
+  <div class="eq">$$x = \frac{2v}{1-m^2}, \qquad v = \pm m\sqrt{1-m^2}$$</div>
+
+  <p class="t">cancelled by a stub presenting $-x$. A shorted series stub looks like $Z = jZ_0\tan\beta l_s$ at its base and an open one $Z = -jZ_0\cot\beta l_s$ &mdash; the reverse of the shunt case, because a stub's own input admittance and input impedance swap which one is $\tan$ and which is $-\cot$. Setting either equal to $-x$ gives the length directly:</p>
+
+  <div class="eq">$$\text{shorted:}\;\; \tan\beta l_s = -x \qquad\qquad \text{open:}\;\; \cot\beta l_s = x$$</div>
+
+  <p class="t">The practical trade-off is physical, not mathematical: a series stub has to be spliced <b>into</b> the line rather than tapped onto it, which is routine in coax and slotline but awkward in microstrip, where cutting the conductor to insert a stub costs a connector or a via. That is why microstrip designs default to shunt stubs and coax designs often do not.</p>
+</section>
+
+<section class="blk" id="dstub">
+  <h2>A tuner you do not rebuild: the double stub</h2>
+  <p class="t">The single stub has a flaw hiding in plain sight: the distance $d$ depends on the load. Change the load and the stub has to move, which is fine for a one-off design etched onto a board but useless for a <b>tuner</b> &mdash; a device meant to be adjusted by hand to match whatever is plugged into it. Fixing that means fixing the geometry and adjusting only the two stub lengths.</p>
+
+  <p class="t">The double-stub tuner does exactly that: one stub sits at the load, a second sits a fixed distance $d$ further toward the generator &mdash; commonly $\lambda/8$ or $3\lambda/8$ &mdash; and only the two lengths are tuned. Nothing ever has to slide.</p>
+
+  <p class="t">The construction follows from one fact already used above: a shunt stub changes $b$ but leaves $g$ untouched. So after stub 1, the point is still somewhere on the <b>same constant-$g$ circle the load started on</b>, $g = g_L$. The fixed length of line then carries that point to stub 2's location, rotating it by $2\beta d$ &mdash; and <i>that</i> point must land on $g = 1$ for stub 2 to finish the job.</p>
+
+  <ol class="steps">
+    <li><div><b>Work backward.</b> Take the $g = 1$ circle and rotate it back toward the load by $2\beta d$ &mdash; the direction travel undoes. Call this the target circle.</div></li>
+    <li><div><b>Find where it meets the load's circle.</b> The target circle crosses $g = g_L$ at up to two points. Whichever susceptance stub 1 adds to land on one of them is stub 1's length.</div></li>
+    <li><div><b>Let the fixed spacing do the rest.</b> Travelling $d$ from either crossing lands exactly on $g = 1$, by construction.</div></li>
+    <li><div><b>Stub 2 finishes it</b> the same way a single stub would: cancel whatever susceptance is left.</div></li>
+  </ol>
+
+  <div class="eq box">
+    $$\operatorname{Re}(y_2) = \frac{g\left(1+t^2\right)}{\left(1-tb\right)^2 + t^2g^2}, \qquad t = \tan\beta d$$
+    <span class="note">setting this to 1 and solving for $b$, the susceptance just after stub 1, gives a quadratic with up to two real roots</span>
+  </div>
+
+  <p class="t">That quadratic is where the flaw shows up. Its discriminant goes negative &mdash; no real $b$, hence no design &mdash; once</p>
+
+  <div class="eq box">
+    $$g > \frac{1}{\sin^2\beta d}$$
+    <span class="note">the <b>forbidden region</b>: loads this far from matched cannot be reached at this spacing, by any pair of stub lengths</span>
+  </div>
+
+  <p class="t">The reason is the same fact the construction was built on: stub 1 cannot move $g$, so if the load's own circle $g = g_L$ never reaches the rotated target circle, no stub 1 length will drag it there. The fix is not a longer stub &mdash; it is a different spacing, or a length of ordinary line in front of stub 1 to move $g$ before the tuner ever sees it. The limit tightens as $d$ grows: $g \le 2$ at $d = \lambda/8$, tightening to $g \le 1$ at $d = \lambda/4$, which is why $\lambda/8$ and $3\lambda/8$ &mdash; not $\lambda/4$ &mdash; are the spacings built in practice.</p>
+
+  <p class="t">To see the forbidden region drawn on the chart, and both crossings at once, use the <a href="smith-tool.html">workbench</a>'s double-stub method.</p>
 </section>
 
 <section class="blk" id="lumped">
@@ -165,7 +216,9 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
     <tr><td>Shunt L or C</td><td>adds susceptance</td><td>along a constant-$g$ circle</td></tr>
   </table></div>
 
-  <p class="t">Matching is then a path from the load to the centre using only those two kinds of arc. Two elements are always enough, because one constant-$r$ circle and one constant-$g$ circle through the centre will always intersect &mdash; usually twice, which is again why there are two solutions.</p>
+  <p class="t">Matching is then a path from the load to the centre using only those two kinds of arc, and which element goes first depends on the load. Put the series element first and you slide along the load's own constant-$r$ circle, needing it to reach $g = 1$; that works when $r_L &lt; 1$. Put the shunt element first and you slide along the load's constant-$g$ circle toward $r = 1$; that works when $g_L &lt; 1$.</p>
+
+  <p class="t"><b>At least one of the two orders always works</b>, because both failing would need $r_L > 1$ and $g_L > 1$ at once &mdash; and $g_L = r_L/(r_L^2+x_L^2) > 1$ already forces $r_L > r_L^2 + x_L^2 \ge r_L^2$, so $r_L &lt; 1$. The two cannot both fail. Whichever order works generally offers two roots, which is again why there are two solutions. The one load no L-network can reach is a purely reactive one, $r_L = 0$: it absorbs no power, so nothing lossless can match it.</p>
 
   <p class="t">The trade-off against stubs is worth naming. Lumped parts are tiny at low frequency and hopeless at high frequency, where their own parasitics dominate and the "capacitor" stops being one. Stubs are exact and repeatable at microwave and absurdly large below it. The crossover sits around a gigahertz, which is why boards in that band often use both.</p>
 </section>

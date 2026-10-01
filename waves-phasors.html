@@ -168,7 +168,7 @@
     <tr><td>FM / VHF</td><td>100 MHz</td><td>3 m</td><td>Cable length starts to matter.</td></tr>
     <tr><td>Wi-Fi, radar</td><td>2.4&ndash;10 GHz</td><td>12&ndash;3 cm</td><td>A connector lead is a sizeable fraction of &lambda;.</td></tr>
     <tr><td>mm-wave, 5G</td><td>30&ndash;300 GHz</td><td>10&ndash;1 mm</td><td>A solder joint is a transmission line.</td></tr>
-    <tr><td>Visible light</td><td>~500 THz</td><td>~500 nm</td><td>Same equations; we call it optics.</td></tr>
+    <tr><td>Visible light</td><td>430&ndash;750 THz</td><td>700&ndash;400 nm</td><td>Same equations; we call it optics.</td></tr>
   </table></div>
 
   <p class="t">Two cautions on that table. Wavelength shortens inside a dielectric by $\sqrt{\varepsilon_r}$, so a 12&nbsp;cm free-space wave is nearer 6&nbsp;cm on ordinary circuit board &mdash; which is why the numbers in chapter 05 come out smaller than intuition suggests. And <b>nothing physical changes at any row of that table.</b> There is no frequency at which circuit theory switches off. What changes is only the ratio of your hardware to $\lambda$, which is a continuous quantity, and the next chapter is about where in that continuum the error becomes intolerable.</p>
@@ -271,9 +271,19 @@ var MONO = 'IBM Plex Mono, monospace';
       c.beginPath(); c.arc(px(zc), mid - sy, 5.5, 0, EM.TAU); c.fill();
     }
 
-    /* wavelength bracket */
+    /* wavelength bracket -- pinned to the tracked crest and the next one, so
+       its ends sit on real crests of the moving wave instead of merely spanning
+       the right width. Take the period ahead of the crest, or the one behind it
+       if that would run off the plot. Only when neither fits -- lambda past half
+       the plot width, the bottom of the beta slider -- does it fall back to a
+       centred span, which still measures lambda but no longer lands on crests.
+       Clamping rather than wrapping keeps it from jumping mid-sweep. */
     if(lam < zmax*0.9){
-      var a = 0.6, b = a + lam, y = H - B + 16;
+      var a, y = H - B + 16;
+      if(zc + lam <= zmax)      a = zc;
+      else if(zc - lam >= 0)    a = zc - lam;
+      else                      a = Math.min(Math.max(zc - lam/2, 0), zmax - lam);
+      var b = a + lam;
       c.strokeStyle = C.ink3; c.lineWidth = 1;
       c.beginPath(); c.moveTo(px(a), y); c.lineTo(px(b), y);
       c.moveTo(px(a), y-5); c.lineTo(px(a), y+5);

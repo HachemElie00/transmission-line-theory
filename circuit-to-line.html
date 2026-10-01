@@ -98,6 +98,8 @@
     <span class="note">as a fraction of the signal amplitude &mdash; this is the error lumped theory commits by calling both ends one node</span>
   </div>
 
+  <p class="t">This is not a delay in the ordinary sense &mdash; every signal takes time to arrive somewhere, and nothing downstream is expecting a particular phase. The problem is narrower than that. Lumped theory assigns the whole wire a single node and a single voltage, true everywhere on it at every instant. The number above is how far the two ends actually disagree about what that one voltage is, <i>at the same instant</i> $t$. A node that disagrees with itself is not something any choice of lumped components can represent, which is exactly why a bigger discrepancy forces a different kind of model rather than just a less accurate lumped one.</p>
+
   <div class="tw"><table>
     <tr><th>Length</th><th>$\beta l$</th><th>Peak discrepancy</th><th>In practice</th></tr>
     <tr><td>$\lambda/1000$</td><td>0.36&deg;</td><td>0.6 %</td><td>Lumped theory is exact for any purpose.</td></tr>
