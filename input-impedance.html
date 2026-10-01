@@ -109,14 +109,14 @@
       <div class="rd"><dt>&beta;d</dt><dd id="z-bd">0&deg;</dd></div>
     </dl>
     <div class="btns">
-      <button data-z="25,0">R<sub>L</sub> = Z&#8320;/2</button>
+      <button data-z="25,0">R<sub>L</sub> = Z<sub>0</sub>/2</button>
       <button data-z="50,0">matched</button>
       <button data-z="0,0">short</button>
       <button id="zopen">open</button>
       <button data-z="0,80">pure reactance</button>
       <button data-z="30,-60">30 &minus; j60</button>
     </div>
-    <figcaption class="cap">Z&#8320; = 50 &#937; throughout &middot; the marker on the circle and the marker on the traces are the same point on the line</figcaption>
+    <figcaption class="cap">Z<sub>0</sub> = 50 &#937; throughout &middot; the marker on the circle and the marker on the traces are the same point on the line</figcaption>
   </figure>
 
   <p class="t">Three things to notice while sweeping. The $\Gamma$ dot travels <b>clockwise</b> and returns to its start after $d = \lambda/2$, which is why the traces on the right are periodic with that period, not $\lambda$. The resistance and reactance both swing wildly even though the load is fixed &mdash; a 25 &Omega; resistor seen through a line can look like almost anything. And the trace crosses the <b>real axis</b> twice per half wavelength: those two crossings are the voltage minimum and maximum of chapter 07.</p>
@@ -239,7 +239,7 @@
 <script src="assets/site.js"></script>
 <script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
 <script>
-var MONO = 'IBM Plex Mono, monospace';
+var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
 (function(){
   var zp = document.getElementById('zplane'), zt = document.getElementById('ztrace');
   if(!zp) return;
@@ -422,9 +422,18 @@ var MONO = 'IBM Plex Mono, monospace';
     function box(x, y, w, h, label, col){
       c.fillStyle = C.surface; c.fillRect(x, y, w, h);
       c.strokeStyle = col; c.lineWidth = 2; c.strokeRect(x, y, w, h);
+      /* "Z|L" draws Z with a real subscript L: the Unicode subscript letters
+         are no use here, a subscript l being a 1 in this face */
       if(label){
-        c.fillStyle = col; c.font = '14px ' + MONO; c.textAlign = 'center';
-        c.fillText(label, x + w/2, y + h/2 + 5);
+        var pr = label.split('|');
+        c.fillStyle = col; c.font = '14px ' + MONO;
+        var wb = c.measureText(pr[0]).width;
+        c.font = '10px ' + MONO;
+        var ws = pr[1] ? c.measureText(pr[1]).width : 0;
+        var x0 = x + w/2 - (wb + ws)/2;
+        c.textAlign = 'left'; c.font = '14px ' + MONO;
+        c.fillText(pr[0], x0, y + h/2 + 5);
+        if(pr[1]){ c.font = '10px ' + MONO; c.fillText(pr[1], x0 + wb, y + h/2 + 9); }
       }
     }
     function wire(){
@@ -438,18 +447,18 @@ var MONO = 'IBM Plex Mono, monospace';
     /* --- upper: generator, Zg, line, load --- */
     source(48, top, bot, 21);
     wire(48, top, 104, top,  158, top, 214, top,  48, bot, 214, bot);
-    box(104, top-15, 54, 30, 'Zg', C.ink2);
+    box(104, top-15, 54, 30, 'Z|g', C.ink2);
 
     c.fillStyle = C.accfill;
     c.fillRect(214, top-4, 236, 8); c.fillRect(214, bot-4, 236, 8);
     c.strokeStyle = C.acc; c.lineWidth = 1.5;
     c.strokeRect(214, top-4, 236, 8); c.strokeRect(214, bot-4, 236, 8);
     c.fillStyle = C.acc; c.font = '13px ' + MONO; c.textAlign = 'center';
-    c.fillText('line, Z₀, length l', 332, (top+bot)/2 - 5);
+    EM.rich(c, [['line, Z','n'], ['0','b'], [', length l','n']], 332, (top+bot)/2 - 5, 13, 'center');
     c.fillText('electrical length βl', 332, (top+bot)/2 + 14);
 
     wire(450, top, 486, top,  450, bot, 486, bot);
-    box(486, top-16, 52, (bot-top)+32, 'Zₗ', C.ink2);
+    box(486, top-16, 52, (bot-top)+32, 'Z|L', C.ink2);
 
     /* input plane */
     c.strokeStyle = C.h; c.lineWidth = 1; c.setLineDash([4,4]);
@@ -467,8 +476,8 @@ var MONO = 'IBM Plex Mono, monospace';
     /* --- lower: the equivalent lumped circuit --- */
     source(48, t2, b2, 19);
     wire(48, t2, 104, t2,  158, t2, 214, t2,  48, b2, 214, b2);
-    box(104, t2-15, 54, 30, 'Zg', C.ink2);
-    box(188, t2, 52, b2-t2, 'Z in', C.e);
+    box(104, t2-15, 54, 30, 'Z|g', C.ink2);
+    box(188, t2, 52, b2-t2, 'Z|in', C.e);
     c.restore();
   }, false);
 })();

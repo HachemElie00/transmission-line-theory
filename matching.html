@@ -52,13 +52,20 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
   <h2>When the load is real: the quarter-wave transformer</h2>
   <p class="t">Chapter 09 already solved this case. A real load $R_L$ matches to $Z_0$ through a quarter-wave section of $Z_1 = \sqrt{Z_0 R_L}$, and that is the whole design.</p>
 
-  <p class="t">A complex load can be brought into that case first. Chapter 08 showed that at a voltage minimum the impedance is <b>purely real</b> and equals $Z_0/S$. So: walk along the line to the first minimum, and transform from there.</p>
+  <p class="t">A complex load can be brought into that case first. Chapter 08 showed that the impedance is <b>purely real</b> at exactly two kinds of point on the line: at a voltage minimum it equals $Z_0/S$, at a voltage maximum $S Z_0$. They alternate every $\lambda/4$, so there is always one of each within the first half wavelength, and either will do.</p>
 
   <ol class="steps">
-    <li><div>Find $l_{\min}$, the distance from the load to the first voltage minimum.</div></li>
-    <li><div>At that point $R = Z_0/S$, a pure resistance.</div></li>
-    <li><div>Insert a quarter-wave section of $Z_1 = \sqrt{Z_0 \cdot Z_0/S} = Z_0/\sqrt{S}$.</div></li>
+    <li><div>Find the distance $d$ from the load to the first voltage minimum, or to the first maximum.</div></li>
+    <li><div>There the line looks like a pure resistance: $R = Z_0/S$ at the minimum, $R = S Z_0$ at the maximum.</div></li>
+    <li><div>Insert a quarter-wave section of $Z_1 = \sqrt{Z_0 R}$ at that point &mdash; $Z_1 = Z_0/\sqrt{S}$ at the minimum, $Z_1 = Z_0\sqrt{S}$ at the maximum.</div></li>
   </ol>
+
+  <figure class="fig">
+    <canvas id="lay-qwt" class="static" style="height:220px"></canvas>
+    <figcaption class="cap">the transformer goes where the line is already real &mdash; d from the load to that point, then a quarter wave of a different line</figcaption>
+  </figure>
+
+  <p class="t">The two choices differ in practice, not in principle. One section is lower than $Z_0$ and one higher by the same factor $\sqrt{S}$, so pick whichever is easier to build &mdash; a wider track or a narrower one, a cable you can buy &mdash; or whichever needs the shorter $d$. The workbench offers both.</p>
 
   <p class="t">It works, and for a fixed frequency it is clean. The drawback is practical: $Z_1$ comes out as whatever the algebra demands, and on microstrip that means a track of a particular width you may not want, or on coax a cable impedance nobody sells. <b>Stub matching avoids that entirely</b>, because every piece of it is the same line you already have.</p>
 </section>
@@ -171,6 +178,11 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
 
   <div class="eq">$$\text{shorted:}\;\; \tan\beta l_s = -x \qquad\qquad \text{open:}\;\; \cot\beta l_s = x$$</div>
 
+  <figure class="fig">
+    <canvas id="lay-series" class="static" style="height:260px"></canvas>
+    <figcaption class="cap">a series stub is spliced into the line rather than tapped off it, so the current along the line flows through it</figcaption>
+  </figure>
+
   <p class="t">The practical trade-off is physical, not mathematical: a series stub has to be spliced <b>into</b> the line rather than tapped onto it, which is routine in coax and slotline but awkward in microstrip, where cutting the conductor to insert a stub costs a connector or a via. That is why microstrip designs default to shunt stubs and coax designs often do not.</p>
 </section>
 
@@ -189,6 +201,11 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
     <li><div><b>Stub 2 finishes it</b> the same way a single stub would: cancel whatever susceptance is left.</div></li>
   </ol>
 
+  <figure class="fig">
+    <canvas id="lay-dstub" class="static" style="height:260px"></canvas>
+    <figcaption class="cap">the positions are fixed &mdash; stub 1 at the load, stub 2 a set distance d toward the source &mdash; and only the two lengths are tuned</figcaption>
+  </figure>
+
   <div class="eq box">
     $$\operatorname{Re}(y_2) = \frac{g\left(1+t^2\right)}{\left(1-tb\right)^2 + t^2g^2}, \qquad t = \tan\beta d$$
     <span class="note">setting this to 1 and solving for $b$, the susceptance just after stub 1, gives a quadratic with up to two real roots</span>
@@ -201,7 +218,23 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
     <span class="note">the <b>forbidden region</b>: loads this far from matched cannot be reached at this spacing, by any pair of stub lengths</span>
   </div>
 
-  <p class="t">The reason is the same fact the construction was built on: stub 1 cannot move $g$, so if the load's own circle $g = g_L$ never reaches the rotated target circle, no stub 1 length will drag it there. The fix is not a longer stub &mdash; it is a different spacing, or a length of ordinary line in front of stub 1 to move $g$ before the tuner ever sees it. The limit tightens as $d$ grows: $g \le 2$ at $d = \lambda/8$, tightening to $g \le 1$ at $d = \lambda/4$, which is why $\lambda/8$ and $3\lambda/8$ &mdash; not $\lambda/4$ &mdash; are the spacings built in practice.</p>
+  <p class="t">The reason is the same fact the construction was built on: stub 1 cannot move $g$, so if the load's own circle $g = g_L$ never reaches the rotated target circle, no stub 1 length will drag it there. The fix is not a longer stub &mdash; it is a different spacing, or a length of ordinary line in front of stub 1 to move $g$ before the tuner ever sees it.</p>
+
+  <p class="t">The limit depends on the spacing, and not monotonically: $1/\sin^2\beta d$ is 2 at both $d = \lambda/8$ and $d = 3\lambda/8$, but falls to 1 at $d = \lambda/4$, where every load with $g > 1$ is out of reach. That makes $\lambda/4$ the worst spacing available, and is why $\lambda/8$ and $3\lambda/8$ are the ones built in practice. Spacings close to 0 or $\lambda/2$ forbid almost nothing, but drive the stubs toward extreme lengths and narrow bandwidths.</p>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; the quadratic, and both stub values</summary>
+    <div class="body">
+      <p>After stub 1 the admittance at the load is $y_1 = g + jb$: the stub has added susceptance and left $g$ alone. A normalised admittance moves along the line by the same rule as a normalised impedance, so travelling the spacing $d$ toward the generator gives</p>
+      <div class="eq">$$y_2 = \frac{y_1 + jt}{1 + jt\,y_1} = \frac{g + j(b + t)}{(1 - tb) + jtg}, \qquad t = \tan\beta d$$</div>
+      <p>Multiply top and bottom by the conjugate of the denominator. The denominator becomes $(1-tb)^2 + t^2g^2$, and the real part of the numerator is $g(1-tb) + tg(b+t) = g(1+t^2)$, which is the boxed result. Setting it to 1:</p>
+      <div class="eq">$$(1 - tb)^2 = g(1+t^2) - t^2g^2 \quad\Longrightarrow\quad b = \frac{1 \pm \sqrt{g(1+t^2) - t^2g^2}}{t}$$</div>
+      <p>The square root is real only while $g(1+t^2) \ge t^2g^2$, that is $g \le (1+t^2)/t^2 = 1/\sin^2\beta d$ &mdash; the forbidden region, from nothing more than the discriminant. Each root is a design. <b>Stub 1 must add $b - b_L$</b>, the difference between where the load sits and where the root needs it.</p>
+      <p>With the real part fixed at 1 the denominator equals $g(1+t^2)$, and the imaginary part left at stub 2 is</p>
+      <div class="eq">$$\operatorname{Im}(y_2) = \frac{(b+t)(1-tb) - tg^2}{g(1+t^2)}$$</div>
+      <p><b>Stub 2 adds the negative of this.</b> Both lengths then follow exactly as for a single shunt stub: $\cot\beta l = -b_{\text{stub}}$ for a short, $\tan\beta l = b_{\text{stub}}$ for an open.</p>
+    </div>
+  </details>
 
   <p class="t">To see the forbidden region drawn on the chart, and both crossings at once, use the <a href="smith-tool.html">workbench</a>'s double-stub method.</p>
 </section>
@@ -216,9 +249,38 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
     <tr><td>Shunt L or C</td><td>adds susceptance</td><td>along a constant-$g$ circle</td></tr>
   </table></div>
 
-  <p class="t">Matching is then a path from the load to the centre using only those two kinds of arc, and which element goes first depends on the load. Put the series element first and you slide along the load's own constant-$r$ circle, needing it to reach $g = 1$; that works when $r_L &lt; 1$. Put the shunt element first and you slide along the load's constant-$g$ circle toward $r = 1$; that works when $g_L &lt; 1$.</p>
+  <p class="t">Matching is then a path from the load to the centre using only those two kinds of arc, and which element sits next to the load depends on the load. With the <b>series element at the load</b> you slide along the load's own constant-$r$ circle, needing it to reach $g = 1$, from where the shunt element carries you to the centre; that works when $r_L &lt; 1$. With the <b>shunt element at the load</b> you slide along the load's constant-$g$ circle to $r = 1$ and the series element finishes; that works when $g_L &lt; 1$.</p>
+
+  <figure class="fig">
+    <canvas id="lay-lnet" class="static" style="height:300px"></canvas>
+    <figcaption class="cap">the two orders &mdash; which element sits next to the load is decided by the load, and each order that works gives two designs</figcaption>
+  </figure>
 
   <p class="t"><b>At least one of the two orders always works</b>, because both failing would need $r_L > 1$ and $g_L > 1$ at once &mdash; and $g_L = r_L/(r_L^2+x_L^2) > 1$ already forces $r_L > r_L^2 + x_L^2 \ge r_L^2$, so $r_L &lt; 1$. The two cannot both fail. Whichever order works generally offers two roots, which is again why there are two solutions. The one load no L-network can reach is a purely reactive one, $r_L = 0$: it absorbs no power, so nothing lossless can match it.</p>
+
+  <p class="t">The chart gives a normalised reactance $x$ and susceptance $b$, and turning them into parts is where the frequency comes in. <b>The sign decides the kind of part:</b></p>
+
+  <div class="tw"><table>
+    <tr><th>Element</th><th>Sign</th><th>Part</th><th>Value</th></tr>
+    <tr><td>Series, $X = xZ_0$</td><td>$X > 0$</td><td>inductor</td><td>$L = X/\omega$</td></tr>
+    <tr><td>Series, $X = xZ_0$</td><td>$X &lt; 0$</td><td>capacitor</td><td>$C = -1/(\omega X)$</td></tr>
+    <tr><td>Shunt, $B = b/Z_0$</td><td>$B > 0$</td><td>capacitor</td><td>$C = B/\omega$</td></tr>
+    <tr><td>Shunt, $B = b/Z_0$</td><td>$B &lt; 0$</td><td>inductor</td><td>$L = -1/(\omega B)$</td></tr>
+  </table></div>
+
+  <p class="t">That sign is set at the design frequency and nowhere else. An inductor's reactance grows with frequency and a capacitor's shrinks, so away from $f_0$ the two parts drift apart in opposite directions &mdash; which is the L-network's bandwidth, and what the workbench's response plot draws.</p>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; both orders in closed form</summary>
+    <div class="body">
+      <p>Work in normalised quantities, $z_L = r + jx_L$. <b>Series element at the load</b> ($r &lt; 1$): add $jx$ to get $z_1 = r + j(x_L + x)$, then require the shunt element to finish, which needs $\operatorname{Re}(1/z_1) = 1$:</p>
+      <div class="eq">$$\frac{r}{r^2 + (x_L + x)^2} = 1 \;\Longrightarrow\; x = \pm\sqrt{r(1-r)} - x_L, \qquad b = \pm\sqrt{\frac{1-r}{r}}$$</div>
+      <p>with the signs taken together. The square roots are real exactly when $r \le 1$, which is the condition for this order.</p>
+      <p><b>Shunt element at the load</b> ($g_L &lt; 1$): add $jb$ across the load, then require $\operatorname{Re}(z_1) = 1$ so the series element can finish. Solving the resulting quadratic in $b$,</p>
+      <div class="eq">$$b = \frac{x_L \pm \sqrt{r}\,\sqrt{r^2 + x_L^2 - r}}{r^2 + x_L^2}, \qquad x = \frac{1}{b} + \frac{x_L}{r} - \frac{1}{b\,r}$$</div>
+      <p>The inner root is real when $r^2 + x_L^2 \ge r$, which is $g_L \le 1$ written in terms of $z_L$. These are the standard L-section results (Pozar, section 5.1) in normalised form; every pair, assembled back into the circuit, returns $z = 1$ exactly.</p>
+    </div>
+  </details>
 
   <p class="t">The trade-off against stubs is worth naming. Lumped parts are tiny at low frequency and hopeless at high frequency, where their own parasitics dominate and the "capacitor" stops being one. Stubs are exact and repeatable at microwave and absurdly large below it. The crossover sits around a gigahertz, which is why boards in that band often use both.</p>
 </section>
@@ -301,7 +363,7 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
 <script src="assets/site.js"></script>
 <script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
 <script>
-var MONO = 'IBM Plex Mono, monospace';
+var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
 
 function zToG(r, x){
   var nr = r-1, ni = x, dr = r+1, di = x, d = dr*dr + di*di;
@@ -464,66 +526,174 @@ function solveStub(rL, xL, which, openStub){
   sync();
 })();
 
-/* ---- physical layout ---- */
-(function(){
-  var cv = document.getElementById('layout');
+/* ---- physical layouts, one per method, in one drawing vocabulary ----
+   The same pieces the workbench draws under its chart: the line, a tee where a
+   stub or a part joins it, the load, and dimensions. Static and symbolic --
+   the numbers for a particular load belong to the workbench. */
+
+/* real subscripts on canvas: see EM.rich in site.js */
+var rich = EM.rich;
+
+function layoutFigure(id, dh, draw){
+  var cv = document.getElementById(id);
   if(!cv) return;
   EM.register(function(C){
     EM.fit(cv);
     var c = cv.getContext('2d');
-    c.clearRect(0,0,cv._w,cv._h);
-    EM.design(c, cv, 560, 260);
-    var y = 96, tee = 330, load = 500, src = 40, stubEnd = y + 104;
-
-    c.strokeStyle = C.ink2; c.lineWidth = 3; c.lineCap = 'round';
-    c.beginPath(); c.moveTo(src, y); c.lineTo(load, y); c.stroke();
-
-    /* the stub hanging off the tee */
-    c.strokeStyle = C.h; c.lineWidth = 3;
-    c.beginPath(); c.moveTo(tee, y); c.lineTo(tee, stubEnd); c.stroke();
-    /* shorted end */
-    c.beginPath(); c.moveTo(tee - 16, stubEnd); c.lineTo(tee + 16, stubEnd); c.stroke();
-    c.fillStyle = C.h; c.font = '12px ' + MONO; c.textAlign = 'center';
-    c.fillText('short', tee, stubEnd + 18);
-
-    c.fillStyle = C.ink2;
-    c.beginPath(); c.arc(tee, y, 5, 0, EM.TAU); c.fill();
-
-    /* load box */
-    c.fillStyle = C.surface; c.fillRect(load, y-26, 46, 52);
-    c.strokeStyle = C.ink2; c.lineWidth = 2; c.strokeRect(load, y-26, 46, 52);
-    c.fillStyle = C.ink; c.font = '14px ' + MONO; c.textAlign = 'center';
-    c.fillText('Zₗ', load + 23, y + 5);
-
-    c.fillStyle = C.ink3; c.font = '12px ' + MONO; c.textAlign = 'left';
-    c.fillText('to source', src, y - 16);
-
-    /* dimensions */
-    function dim(x1, x2, yy, lab, col){
-      c.strokeStyle = C.ink3; c.lineWidth = 1;
-      c.beginPath();
-      c.moveTo(x1, yy); c.lineTo(x2, yy);
-      c.moveTo(x1, yy-6); c.lineTo(x1, yy+6);
-      c.moveTo(x2, yy-6); c.lineTo(x2, yy+6); c.stroke();
-      var w = c.measureText(lab).width + 12;
-      c.fillStyle = C.sunk; c.fillRect((x1+x2)/2 - w/2, yy-9, w, 18);
-      c.fillStyle = col; c.font = '13px ' + MONO; c.textAlign = 'center';
-      c.fillText(lab, (x1+x2)/2, yy+5);
-    }
-    dim(tee, load, y - 44, 'd', C.e);
-    c.strokeStyle = C.ink3; c.lineWidth = 1;
-    c.beginPath();
-    c.moveTo(tee + 42, y); c.lineTo(tee + 42, stubEnd);
-    c.moveTo(tee + 36, y); c.lineTo(tee + 48, y);
-    c.moveTo(tee + 36, stubEnd); c.lineTo(tee + 48, stubEnd); c.stroke();
-    c.fillStyle = C.h; c.font = '13px ' + MONO; c.textAlign = 'left';
-    c.fillText('l s', tee + 54, (y + stubEnd)/2 + 5);
-
-    c.fillStyle = C.ink3; c.font = '12px ' + MONO; c.textAlign = 'center';
-    c.fillText('everything left of the tee sees Z₀', 280, 246);
+    c.clearRect(0, 0, cv._w, cv._h);
+    EM.design(c, cv, 560, dh);
+    var k = {
+      line: function(x1, y1, x2, y2){
+        c.strokeStyle = C.ink2; c.lineWidth = 3; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+      },
+      tee: function(x, y){
+        c.fillStyle = C.ink2; c.beginPath(); c.arc(x, y, 5, 0, EM.TAU); c.fill();
+      },
+      load: function(x, y){
+        c.fillStyle = C.surface; c.fillRect(x, y - 26, 46, 52);
+        c.strokeStyle = C.ink2; c.lineWidth = 2; c.strokeRect(x, y - 26, 46, 52);
+        c.fillStyle = C.ink; rich(c, [['Z','n'], ['L','b']], x + 23, y + 5, 14, 'center');
+      },
+      source: function(x, y){
+        c.fillStyle = C.ink3; c.font = '12px ' + MONO; c.textAlign = 'left';
+        c.fillText('to source', x, y - 16);
+      },
+      /* a stub hanging from (x, y) to depth y2, its end shorted */
+      stub: function(x, y, y2, name){
+        c.strokeStyle = C.h; c.lineWidth = 3; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(x, y); c.lineTo(x, y2);
+        c.moveTo(x - 16, y2); c.lineTo(x + 16, y2); c.stroke();
+        c.fillStyle = C.h; c.font = '12px ' + MONO; c.textAlign = 'center';
+        c.fillText(name || 'short', x, y2 + 18);
+      },
+      /* horizontal dimension above a span */
+      dimH: function(x1, x2, yy, segs, col){
+        c.strokeStyle = C.ink3; c.lineWidth = 1;
+        c.beginPath();
+        c.moveTo(x1, yy); c.lineTo(x2, yy);
+        c.moveTo(x1, yy - 6); c.lineTo(x1, yy + 6);
+        c.moveTo(x2, yy - 6); c.lineTo(x2, yy + 6); c.stroke();
+        c.font = '13px ' + MONO;
+        var w = 0; segs.forEach(function(s){ w += c.measureText(s[0]).width; });
+        c.fillStyle = C.sunk; c.fillRect((x1 + x2)/2 - w/2 - 6, yy - 9, w + 12, 18);
+        c.fillStyle = col; rich(c, segs, (x1 + x2)/2, yy + 5, 13, 'center');
+      },
+      /* vertical dimension beside a stub, label to its right (or left) */
+      dimV: function(x, y1, y2, segs, col, left){
+        c.strokeStyle = C.ink3; c.lineWidth = 1;
+        c.beginPath();
+        c.moveTo(x, y1); c.lineTo(x, y2);
+        c.moveTo(x - 6, y1); c.lineTo(x + 6, y1);
+        c.moveTo(x - 6, y2); c.lineTo(x + 6, y2); c.stroke();
+        c.fillStyle = col;
+        rich(c, segs, left ? x - 10 : x + 10, (y1 + y2)/2 + 5, 13, left ? 'right' : 'left');
+      },
+      /* a lumped reactance as a labelled box, inline on the line */
+      partH: function(x1, x2, y, segs){
+        c.fillStyle = C.surface; c.fillRect(x1, y - 13, x2 - x1, 26);
+        c.strokeStyle = C.ink; c.lineWidth = 2; c.strokeRect(x1, y - 13, x2 - x1, 26);
+        c.fillStyle = C.ink; rich(c, segs, (x1 + x2)/2, y + 5, 14, 'center');
+      },
+      /* a lumped susceptance from the line to ground */
+      partV: function(x, y, segs){
+        c.strokeStyle = C.ink2; c.lineWidth = 3;
+        c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 14); c.moveTo(x, y + 44); c.lineTo(x, y + 56); c.stroke();
+        c.fillStyle = C.surface; c.fillRect(x - 22, y + 14, 44, 30);
+        c.strokeStyle = C.ink; c.lineWidth = 2; c.strokeRect(x - 22, y + 14, 44, 30);
+        c.fillStyle = C.ink; rich(c, segs, x, y + 34, 14, 'center');
+        c.strokeStyle = C.ink2; c.lineWidth = 2;
+        c.beginPath();
+        c.moveTo(x - 14, y + 56); c.lineTo(x + 14, y + 56);
+        c.moveTo(x - 9, y + 61); c.lineTo(x + 9, y + 61);
+        c.moveTo(x - 4, y + 66); c.lineTo(x + 4, y + 66); c.stroke();
+      },
+      note: function(segs, y){
+        c.fillStyle = C.ink3; rich(c, segs, 280, y, 12, 'center');
+      }
+    };
+    draw(c, C, k);
     c.restore();
   }, false);
-})();
+}
+
+/* single shunt stub */
+layoutFigure('layout', 260, function(c, C, k){
+  var y = 110, tee = 330, load = 500, src = 40, end = y + 96;
+  k.line(src, y, load, y);
+  k.stub(tee, y, end);
+  k.tee(tee, y);
+  k.load(load, y);
+  k.source(src, y);
+  k.dimH(tee, load, y - 44, [['d','n']], C.e);
+  k.dimV(tee + 34, y, end, [['l','n'], ['s','b']], C.h);
+  k.note([['everything left of the tee sees Z','n'], ['0','b']], 250);
+});
+
+/* single series stub: spliced into the line, current runs through it */
+layoutFigure('lay-series', 260, function(c, C, k){
+  var y = 110, s0 = 300, s1 = 360, load = 500, src = 40, end = y + 96;
+  k.line(src, y, s0, y);
+  k.line(s1, y, load, y);
+  c.strokeStyle = C.h; c.lineWidth = 3; c.lineCap = 'round'; c.lineJoin = 'round';
+  c.beginPath(); c.moveTo(s0, y); c.lineTo(s0, end); c.lineTo(s1, end); c.lineTo(s1, y); c.stroke();
+  c.fillStyle = C.h; c.font = '12px ' + MONO; c.textAlign = 'center';
+  c.fillText('short', (s0 + s1)/2, end + 18);
+  k.load(load, y);
+  k.source(src, y);
+  k.dimH((s0 + s1)/2, load, y - 44, [['d','n']], C.e);
+  k.dimV(s1 + 28, y, end, [['l','n'], ['s','b']], C.h);
+  k.note([['the line is cut, and the stub completes the circuit in series','n']], 250);
+});
+
+/* double stub: fixed positions, two lengths */
+layoutFigure('lay-dstub', 260, function(c, C, k){
+  var y = 110, t1 = 470, t2 = 250, load = 500, src = 40;
+  k.line(src, y, load, y);
+  k.stub(t2, y, y + 96, 'stub 2');
+  k.stub(t1, y, y + 66, 'stub 1');
+  k.tee(t2, y); k.tee(t1, y);
+  k.load(load, y);
+  k.source(src, y);
+  k.dimH(t2, t1, y - 44, [['d, fixed','n']], C.e);
+  k.dimV(t2 + 26, y, y + 96, [['l','n'], ['2','b']], C.h);
+  k.dimV(t1 - 26, y, y + 66, [['l','n'], ['1','b']], C.h, true);
+  k.note([['stub 1 sits at the load; neither stub ever moves','n']], 250);
+});
+
+/* quarter-wave transformer, at the first voltage minimum or maximum */
+layoutFigure('lay-qwt', 220, function(c, C, k){
+  var y = 110, q0 = 220, q1 = 370, load = 500, src = 40;
+  k.line(src, y, q0, y);
+  k.line(q1, y, load, y);
+  c.fillStyle = C.accfill; c.fillRect(q0, y - 8, q1 - q0, 16);
+  c.strokeStyle = C.acc; c.lineWidth = 2; c.strokeRect(q0, y - 8, q1 - q0, 16);
+  c.fillStyle = C.acc;
+  rich(c, [['Z','n'], ['1','b'], [' = √(Z','n'], ['0','b'], ['R)','n']], (q0 + q1)/2, y + 34, 14, 'center');
+  k.load(load, y);
+  k.source(src, y);
+  k.dimH(q0, q1, y - 44, [['λ/4','n']], C.acc);
+  k.dimH(q1, load, y - 44, [['d','n']], C.e);
+  k.note([['R = Z','n'], ['0','b'], ['/S at a voltage minimum,  SZ','n'], ['0','b'], [' at a maximum','n']], 200);
+});
+
+/* L-network, both orders */
+layoutFigure('lay-lnet', 300, function(c, C, k){
+  var load = 470, src = 40;
+  function row(y, title, seriesAtLoad){
+    c.fillStyle = C.ink3; rich(c, title, src, y - 30, 12, 'left');
+    var xs0 = seriesAtLoad ? 360 : 190, xs1 = xs0 + 60;
+    var xp = seriesAtLoad ? 270 : 420;
+    k.line(src, y, xs0, y);
+    k.line(xs1, y, load, y);
+    k.partH(xs0, xs1, y, [['jx','n']]);
+    k.partV(xp, y, [['jb','n']]);
+    k.tee(xp, y);
+    k.load(load, y);
+  }
+  row(68,  [['series element at the load: needs r','n'], ['L','b'], [' < 1','n']], true);
+  row(208, [['shunt element at the load: needs g','n'], ['L','b'], [' < 1','n']], false);
+});
 </script>
 </body>
 </html>

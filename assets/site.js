@@ -643,7 +643,7 @@ function foldBlock(host, title){
     host.className = 'blk probs';
     host.id = 'problems';
 
-    var h = '<details class="fold"><summary>Problems &mdash; ' + list.length + '</summary>'
+    var h = '<details class="fold"><summary>Problems</summary>'
           + '<p class="t">Work them on paper, then check. Answers are marked to '
           + 'within a couple of percent, so round as you like.</p>';
 
@@ -830,6 +830,48 @@ var EM = (function(){
     c.closePath(); c.fill();
   }
 
+  /* Text with real subscripts and superscripts, which canvas does not have.
+     The Unicode subscript characters are no substitute: in this face a
+     subscript l is indistinguishable from a 1 and a subscript 0 shrinks to a
+     raised dot, so "Z sub L" reads as Z-one and "Z sub 0" as Zo.
+     segs is a list of [text, kind]: 'n' normal, 'b' below, 'p' above, or 'bp'
+     for a stacked pair written "below|above". Returns the width drawn. */
+  function rich(c, segs, x, y, size, align, family){
+    family = family || 'IBM Plex Mono, IBM Plex Sans, monospace';
+    /* Leave the context as it was found. Without restoring the font, the
+       caller is left on the last segment's subscript size, and a caller that
+       sizes its next label from c.font shrinks it -- a loop of tick labels
+       went 11px, 8px, 6px before this was here. Captured on entry: the
+       measuring pass below changes c.font before anything is drawn. */
+    var keep = c.textAlign, keepFont = c.font;
+    var sm = Math.round(size*0.72), widths = [], total = 0;
+    segs.forEach(function(s){
+      c.font = (s[1] === 'n' ? size : sm) + 'px ' + family;
+      var w;
+      if(s[1] === 'bp'){
+        var pr = s[0].split('|');
+        w = Math.max(c.measureText(pr[0]).width, c.measureText(pr[1]).width);
+      } else w = c.measureText(s[0]).width;
+      widths.push(w); total += w;
+    });
+    var x0 = align === 'center' ? x - total/2 : align === 'right' ? x - total : x;
+    c.textAlign = 'left';
+    segs.forEach(function(s, i){
+      c.font = (s[1] === 'n' ? size : sm) + 'px ' + family;
+      if(s[1] === 'n')      c.fillText(s[0], x0, y);
+      else if(s[1] === 'b') c.fillText(s[0], x0, y + size*0.28);
+      else if(s[1] === 'p') c.fillText(s[0], x0, y - size*0.42);
+      else {
+        var q = s[0].split('|');
+        c.fillText(q[0], x0, y + size*0.28);
+        c.fillText(q[1], x0, y - size*0.42);
+      }
+      x0 += widths[i];
+    });
+    c.textAlign = keep; c.font = keepFont;
+    return total;
+  }
+
   /* click-to-answer self checks */
   function checks(){
     Array.prototype.forEach.call(document.querySelectorAll('.check .q'), function(q){
@@ -920,10 +962,10 @@ var EM = (function(){
       rows.forEach(function(r, i){
         var x = padX + (i % cols)*cw, y = Hc + gap + Math.floor(i/cols)*rowH;
         c.textBaseline = 'top'; c.textAlign = 'left';
-        c.font = '10.5px ui-monospace, "IBM Plex Mono", monospace';
+        c.font = '10.5px ui-monospace, "IBM Plex Mono", "IBM Plex Sans", monospace';
         c.fillStyle = C.ink3 || '#888';
         c.fillText(r[0], x, y + 6);
-        c.font = '15px ui-monospace, "IBM Plex Mono", monospace';
+        c.font = '15px ui-monospace, "IBM Plex Mono", "IBM Plex Sans", monospace';
         c.fillStyle = C.ink || '#111';
         c.fillText(r[1], x, y + 20);
       });
@@ -1037,7 +1079,25 @@ var EM = (function(){
         sb.addEventListener('click', function(){ exportPNG(cv, host, name); });
         bar.appendChild(sb);
 
-        if(cv.nextSibling) cv.parentNode.insertBefore(bar, cv.nextSibling);
+        /* A canvas sitting directly in its figure gets its bar right after it.
+           One inside a wrapper -- two canvases side by side in a flex row --
+           must not: the bar became a third flex item wedged between the two
+           canvases. Those bars share one row after the wrapper, each taking its
+           own canvas's flex sizing so it lines up underneath it. */
+        var fig = cv.closest ? cv.closest('.fig') : null;
+        if(fig && cv.parentNode !== fig){
+          var wrap = cv;
+          while(wrap.parentNode && wrap.parentNode !== fig) wrap = wrap.parentNode;
+          var row = wrap._barRow;
+          if(!row){
+            row = document.createElement('div');
+            row.className = 'figbars';
+            fig.insertBefore(row, wrap.nextSibling);
+            wrap._barRow = row;
+          }
+          try{ bar.style.flex = getComputedStyle(cv).flex; }catch(e){}
+          row.appendChild(bar);
+        } else if(cv.nextSibling) cv.parentNode.insertBefore(bar, cv.nextSibling);
         else cv.parentNode.appendChild(bar);
       });
     });
@@ -1079,7 +1139,7 @@ var EM = (function(){
   else boot();
 
   return {
-    TAU: TAU, fit: fit, register: register, arrow: arrow, design: design,
+    TAU: TAU, fit: fit, register: register, arrow: arrow, design: design, rich: rich,
     colors: function(){ return C; },
     redrawStatic: redrawStatic,
     setRunning: function(v){ running = v; },

@@ -74,8 +74,14 @@ const nearestD = (arr, d) => {
   await p.waitForTimeout(1200);
 
   const worst = {}, seen = {}, bad = [];
+  /* A value that is not a number is a failure, not a pass. Without the
+     isFinite test, a readout whose label had changed came back undefined,
+     NaN > TOL is false, and the comparison passed silently -- which is what
+     would have happened when the Z1 label became Z<sub>1</sub>. */
   const note = (k, v, where) => {
     seen[k] = (seen[k] || 0) + 1;
+    if (!isFinite(v)) { bad.push([k, 'not a number (label not found?)'].concat(where).join('  '));
+                        worst[k] = NaN; return; }
     if (!(worst[k] >= v)) worst[k] = v;
     if (v > TOL(k)) bad.push([k, v.toExponential(2)].concat(where).join('  '));
   };
@@ -174,7 +180,8 @@ const nearestD = (arr, d) => {
       got.qwt.forEach((sol, i) => {
         if (!iq[i]) return;
         note('qwt d', Math.abs(firstNum(sol['distance d']) - iq[i].d), [rL, xL]);
-        note('Z1',    Math.abs(firstNum(sol['Z₁'])    - iq[i].z1*50), [rL, xL]);
+        /* the label is Z<sub>1</sub>, whose textContent is plain "Z1" */
+        note('Z1',    Math.abs(firstNum(sol['Z1'])    - iq[i].z1*50), [rL, xL]);
       });
 
       /* -- L-network -- */

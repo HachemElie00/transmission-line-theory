@@ -164,17 +164,17 @@
       <div class="rd"><dt>&alpha;</dt><dd id="o-a">0.00</dd></div>
       <div class="rd"><dt>&beta;</dt><dd id="o-b">31.4</dd></div>
       <div class="rd"><dt>&lambda;</dt><dd id="o-l">20.0</dd></div>
-      <div class="rd"><dt>Z&#8320;</dt><dd id="o-z">50.0</dd></div>
+      <div class="rd"><dt>Z<sub>0</sub></dt><dd id="o-z">50.0</dd></div>
       <div class="rd"><dt>u<sub>p</sub>/c</dt><dd id="o-u">0.67</dd></div>
     </dl>
     <div class="btns">
       <button data-p="0,0,250,100">lossless 50 &#937;</button>
       <button data-p="2,0.02,250,100">real coax</button>
       <button data-p="120,4,250,100">exaggerated loss</button>
-      <button data-p="0,0,500,200">same Z&#8320;, shorter &lambda;</button>
-      <button data-p="0,0,500,50">same &lambda;, double Z&#8320;</button>
+      <button data-p="0,0,500,200">same Z<sub>0</sub>, shorter &lambda;</button>
+      <button data-p="0,0,500,50">same &lambda;, double Z<sub>0</sub></button>
     </div>
-    <figcaption class="cap">one fixed metre of line at 1 GHz &mdash; the window never rescales, so changing L&prime; or C&prime; changes how many cycles fit inside it. &alpha; in Np/m, &beta; in rad/m, &lambda; in cm, Z&#8320; in &Omega;.</figcaption>
+    <figcaption class="cap">one fixed metre of line at 1 GHz &mdash; the window never rescales, so changing L&prime; or C&prime; changes how many cycles fit inside it. &alpha; in Np/m, &beta; in rad/m, &lambda; in cm, Z<sub>0</sub> in &Omega;.</figcaption>
   </figure>
 
   <p class="t">The window is a <b>fixed metre of line</b>, so it never rescales under you. Three things are worth doing deliberately:</p>
@@ -183,8 +183,8 @@
 
   <div class="tw"><table>
     <tr><th>Preset</th><th>What changes</th><th>What does not</th></tr>
-    <tr><td><b>same Z&#8320;, shorter &lambda;</b><br>both raised together</td><td>the product $L'C'$ doubles, so $\lambda$ halves to 10 cm &mdash; twice as many cycles in the metre</td><td>the ratio is unchanged, so $Z_0$ stays at 50 &Omega;</td></tr>
-    <tr><td><b>same &lambda;, double Z&#8320;</b><br>$L'$ up, $C'$ down</td><td>the ratio quadruples, so $Z_0$ doubles to 100 &Omega;</td><td>the product is unchanged, so the wave looks <i>identical</i> &mdash; same $\lambda$, same shape</td></tr>
+    <tr><td><b>same Z<sub>0</sub>, shorter &lambda;</b><br>both raised together</td><td>the product $L'C'$ doubles, so $\lambda$ halves to 10 cm &mdash; twice as many cycles in the metre</td><td>the ratio is unchanged, so $Z_0$ stays at 50 &Omega;</td></tr>
+    <tr><td><b>same &lambda;, double Z<sub>0</sub></b><br>$L'$ up, $C'$ down</td><td>the ratio quadruples, so $Z_0$ doubles to 100 &Omega;</td><td>the product is unchanged, so the wave looks <i>identical</i> &mdash; same $\lambda$, same shape</td></tr>
     <tr><td><b>exaggerated loss</b></td><td>the envelope decays visibly, and $Z_0$ picks up a small phase angle</td><td>$\beta$ barely moves &mdash; low loss leaves the phase constant alone</td></tr>
   </table></div>
 
@@ -200,8 +200,8 @@
   <figure class="fig">
     <canvas id="dispfig" class="static" style="height:280px"></canvas>
     <div class="legend">
-      <span><i style="border-color:var(--e)"></i>|Z&#8320;|</span>
-      <span><i style="border-color:var(--h)"></i>&ang;Z&#8320;</span>
+      <span><i style="border-color:var(--e)"></i>|Z<sub>0</sub>|</span>
+      <span><i style="border-color:var(--h)"></i>&ang;Z<sub>0</sub></span>
     </div>
     <figcaption class="cap">the same cable from 1 Hz to 10 GHz &mdash; R&prime; = 0.1 &Omega;/m, L&prime; = 250 nH/m, G&prime; = 1 &micro;S/m, C&prime; = 100 pF/m</figcaption>
   </figure>
@@ -279,7 +279,7 @@
 <script src="assets/site.js"></script>
 <script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
 <script>
-var MONO = 'IBM Plex Mono, monospace';
+var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
 var C_LIGHT = 2.99792458e8;
 
 /* complex helpers: [re, im] */
@@ -414,7 +414,7 @@ function lineConstants(Rp, Gp, Lp, Cp, f){
     c.fillText('one metre of line →', W-R, T + 12);
     /* Z0 does not change the shape of v(z) at all, so state it on the figure */
     c.textAlign = 'left'; c.fillStyle = C.e;
-    c.fillText('Z₀ = ' + k.z0m.toFixed(1) + ' Ω', L + 7, T + 28);
+    EM.rich(c, [['Z','n'], ['0','b'], [' = ' + k.z0m.toFixed(1) + ' Ω','n']], L + 7, T + 28, parseFloat(c.font), 'left');
     if(k.a > 0.01){
       c.textAlign = 'right'; c.fillStyle = C.acc;
       c.fillText('e⁻ᵅᶻ → ' + (env(1)*100).toFixed(0) + '% at 1 m', W-R, H - B + 15);

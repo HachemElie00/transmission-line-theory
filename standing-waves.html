@@ -263,7 +263,7 @@
 <script src="assets/site.js"></script>
 <script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
 <script>
-var MONO = 'IBM Plex Mono, monospace';
+var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
 var TAU2 = Math.PI*2, D2R = Math.PI/180;
 var g = 0.5, ph = -90, probe = null;
 function norm(v){ v = v % 0.5; return v < 0 ? v + 0.5 : v; }
@@ -474,18 +474,19 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
     c.textAlign = 'right'; c.fillText('distance from load →', W-RM, base+70);
     c.fillText('|V|', L-8, T+10);
     if(narrow){
-      c.textAlign = 'left'; c.fillStyle = C.h;
-      c.fillText('V max = (1+|Γ|)·V₀⁺', L+6, py(1.5)-9);
+      var fsN = parseFloat(c.font);
+      c.fillStyle = C.h;
+      EM.rich(c, [['V','n'], ['max','b'], [' = (1+|Γ|)·V','n'], ['0|+','bp']], L+6, py(1.5)-9, fsN, 'left');
       c.fillStyle = C.e;
-      c.fillText('V min = (1−|Γ|)·V₀⁺', L+6, py(0.5)-9);
+      EM.rich(c, [['V','n'], ['min','b'], [' = (1−|Γ|)·V','n'], ['0|+','bp']], L+6, py(0.5)-9, fsN, 'left');
     } else {
       var lx = W-RM+14;
       c.textAlign = 'left';
-      c.fillStyle = C.h; c.font = '13px ' + MONO; c.fillText('V max', lx, py(1.5)-3);
-      c.fillStyle = C.ink3; c.font = '11.5px ' + MONO; c.fillText('= (1+|Γ|)·V₀⁺', lx, py(1.5)+14);
-      c.fillStyle = C.e; c.font = '13px ' + MONO; c.fillText('V min', lx, py(0.5)-3);
-      c.fillStyle = C.ink3; c.font = '11.5px ' + MONO; c.fillText('= (1−|Γ|)·V₀⁺', lx, py(0.5)+14);
-      c.fillStyle = C.ink; c.font = '13px ' + MONO; c.fillText('S = Vmax/Vmin', lx, base+4);
+      c.fillStyle = C.h;    EM.rich(c, [['V','n'], ['max','b']], lx, py(1.5)-3, 13, 'left');
+      c.fillStyle = C.ink3; EM.rich(c, [['= (1+|Γ|)·V','n'], ['0|+','bp']], lx, py(1.5)+14, 11.5, 'left');
+      c.fillStyle = C.e;    EM.rich(c, [['V','n'], ['min','b']], lx, py(0.5)-3, 13, 'left');
+      c.fillStyle = C.ink3; EM.rich(c, [['= (1−|Γ|)·V','n'], ['0|+','bp']], lx, py(0.5)+14, 11.5, 'left');
+      c.fillStyle = C.ink;  EM.rich(c, [['S = V','n'], ['max','b'], ['/V','n'], ['min','b']], lx, base+4, 13, 'left');
       c.fillStyle = C.ink3; c.font = '11.5px ' + MONO; c.fillText('= (1+|Γ|)/(1−|Γ|)', lx, base+21);
     }
   }, false);

@@ -125,12 +125,15 @@
       <div class="ctl"><label for="alpha">attenuation &alpha;</label><input type="range" id="alpha" min="0" max="0.9" step="0.01" value="0"><output id="alphav">0.00</output></div>
       <div class="ctl"><label for="freq">&beta; (rad/m)</label><input type="range" id="freq" min="0.6" max="3" step="0.05" value="1.4"><output id="freqv">1.40</output></div>
     </div>
+    <dl class="readout">
+      <div class="rd"><dt>&ang;&eta;, the lag of H behind E</dt><dd id="o-eta">0.0&deg;</dd></div>
+    </dl>
     <div class="btns">
       <button data-a="0" data-b="1.4">lossless</button>
       <button data-a="0.25" data-b="1.4">low loss</button>
       <button data-a="0.7" data-b="1.4">lossy</button>
     </div>
-    <figcaption class="cap">E and H are perpendicular to each other and to the direction of travel. With no loss they peak at the same instant; add attenuation and H falls behind by the angle of &eta;, which the readout gives. Their vertical scales here are independent &mdash; the true ratio is &eta; &asymp; 377 &Omega; in free space, far too large to draw on one axis.</figcaption>
+    <figcaption class="cap">E and H are perpendicular to each other and to the direction of travel. With no loss they peak at the same instant; add attenuation and H falls behind by the angle of &eta;. Their vertical scales here are independent &mdash; the true ratio is &eta; &asymp; 377 &Omega; in free space, far too large to draw on one axis.</figcaption>
   </figure>
 
   <p class="t">Two features of that picture are worth naming, because both carry into transmission lines unchanged. The fields are <b>mutually perpendicular and both transverse</b> to the direction of travel &mdash; a TEM wave. And in a lossless medium they are <b>exactly in phase</b>, their ratio being a real constant:</p>
@@ -221,7 +224,12 @@
   var al = 0, be = 1.4;
   var aEl = document.getElementById('alpha'), bEl = document.getElementById('freq');
   var aOut = document.getElementById('alphav'), bOut = document.getElementById('freqv');
-  function sync(){ aOut.textContent = al.toFixed(2); bOut.textContent = be.toFixed(2); }
+  var etaOut = document.getElementById('o-eta');
+  function sync(){
+    aOut.textContent = al.toFixed(2); bOut.textContent = be.toFixed(2);
+    /* eta*gamma = j*omega*mu exactly, so arg(eta) = 90deg - arg(gamma) */
+    if(etaOut) etaOut.innerHTML = ((Math.PI/2 - Math.atan2(be, al))*180/Math.PI).toFixed(1) + '&deg;';
+  }
   aEl.addEventListener('input', function(){ al = +this.value; sync(); });
   bEl.addEventListener('input', function(){ be = +this.value; sync(); });
   Array.prototype.forEach.call(document.querySelectorAll('.btns button[data-a]'), function(b){
@@ -235,7 +243,7 @@
   EM.register(function(C, t){
     EM.fit(cv);
     var c = cv.getContext('2d'), W = cv._w, H = cv._h;
-    var M = 'IBM Plex Mono, monospace';
+    var M = 'IBM Plex Mono, IBM Plex Sans, monospace';
     var L = 42, R = 18, T = 18, B = 34;
     var zmax = 10, sx = (W-L-R)/zmax;
     var mid = T + (H-T-B)/2, sy = (H-T-B)/2/1.25;
@@ -285,10 +293,22 @@
 
     /* wavelength marker */
     var lam = EM.TAU/be;
+    /* From one crest of E to the next, as in chapter 01: of the crest pairs on
+       screen, the one nearest the middle rides with the wave, and the bracket
+       fades at the edges rather than popping on and off each cycle. */
     if(lam < zmax*0.92){
-      var z1 = (t % EM.TAU)/be, z2b = z1 + lam;
-      if(z2b < zmax){
-        var y = H - B + 14;
+      var zc0 = (t % EM.TAU)/be, z1 = null, fade = 0, EDGE = 0.6;
+      for(var kk = -1; zc0 + (kk+1)*lam <= zmax + 1e-9; kk++){
+        var cand = zc0 + kk*lam;
+        if(cand < -1e-9) continue;
+        var cf = Math.max(0, Math.min(1, Math.min(cand, zmax - cand - lam)/EDGE));
+        if(z1 === null || cf > fade + 1e-9 ||
+           (Math.abs(cf - fade) <= 1e-9 &&
+            Math.abs(cand + lam/2 - zmax/2) < Math.abs(z1 + lam/2 - zmax/2))){ z1 = cand; fade = cf; }
+      }
+      if(z1 !== null && fade > 0){
+        var z2b = z1 + lam, y = H - B + 14;
+        c.save(); c.globalAlpha = fade;
         c.strokeStyle = C.ink3; c.lineWidth = 1;
         c.beginPath(); c.moveTo(px(z1), y); c.lineTo(px(z2b), y);
         c.moveTo(px(z1), y-5); c.lineTo(px(z1), y+5);
@@ -298,15 +318,13 @@
         var w = c.measureText(lab).width + 10;
         c.fillStyle = C.sunk; c.fillRect((px(z1)+px(z2b))/2 - w/2, y-8, w, 16);
         c.fillStyle = C.ink; c.fillText(lab, (px(z1)+px(z2b))/2, y+4);
+        c.restore();
       }
     }
 
     c.fillStyle = C.ink3; c.font = '11.5px ' + M;
     c.textAlign = 'left';
     c.fillText(al > 0.005 ? ('α = ' + al.toFixed(2) + ' Np/m') : 'lossless (α = 0)', L + 7, T + 12);
-    c.fillText(al > 0.005
-      ? ('∠η = ' + (etaPh*180/Math.PI).toFixed(1) + '° — H lags E')
-      : '∠η = 0° — E and H in phase', L + 7, T + 28);
     c.fillText('z = 0', L, H - B + 14);
     c.textAlign = 'right'; c.fillText('propagation z →', W-R, T + 12);
   }, true);

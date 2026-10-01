@@ -226,7 +226,7 @@
 <script src="assets/site.js"></script>
 <script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
 <script>
-var MONO = 'IBM Plex Mono, monospace';
+var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
 
 /* ---- travelling wave with a tracked crest ---- */
 (function(){
@@ -271,19 +271,33 @@ var MONO = 'IBM Plex Mono, monospace';
       c.beginPath(); c.arc(px(zc), mid - sy, 5.5, 0, EM.TAU); c.fill();
     }
 
-    /* wavelength bracket -- pinned to the tracked crest and the next one, so
-       its ends sit on real crests of the moving wave instead of merely spanning
-       the right width. Take the period ahead of the crest, or the one behind it
-       if that would run off the plot. Only when neither fits -- lambda past half
-       the plot width, the bottom of the beta slider -- does it fall back to a
-       centred span, which still measures lambda but no longer lands on crests.
-       Clamping rather than wrapping keeps it from jumping mid-sweep. */
-    if(lam < zmax*0.9){
-      var a, y = H - B + 16;
-      if(zc + lam <= zmax)      a = zc;
-      else if(zc - lam >= 0)    a = zc - lam;
-      else                      a = Math.min(Math.max(zc - lam/2, 0), zmax - lam);
-      var b = a + lam;
+    /* wavelength bracket, from one minimum of the moving wave to the next.
+       Minima sit where cos(t - dir*beta*z) = -1. Of the adjacent pairs that fit
+       on the plot, take the one nearest the middle; as the wave travels the
+       pair rides with it, and when another pair becomes nearer the middle the
+       bracket steps across by exactly one wavelength. When lambda is so long
+       that two minima are on screen only part of the time, there is nothing
+       honest to bracket in between, so it fades in as a pair comes fully into
+       view and out as it leaves, rather than popping on and off. */
+    var zt = dir*(t - Math.PI)/be;
+    zt = zt - Math.floor(zt/lam)*lam;          /* the first minimum, in [0, lambda) */
+    var a = null, fade = 0, EDGE = 0.6;
+    for(var kk = 0; zt + (kk+1)*lam <= zmax + 1e-9; kk++){
+      var cand = zt + kk*lam;
+      var cf = Math.max(0, Math.min(1, Math.min(cand, zmax - cand - lam)/EDGE));
+      if(a === null || cf > fade + 1e-9 ||
+         (Math.abs(cf - fade) <= 1e-9 &&
+          Math.abs(cand + lam/2 - zmax/2) < Math.abs(a + lam/2 - zmax/2))){ a = cand; fade = cf; }
+    }
+    if(a !== null && fade > 0){
+      var b = a + lam, y = H - B + 16;
+      c.save(); c.globalAlpha = fade;
+      /* drop lines from the two minima, so the bracket visibly belongs to them */
+      c.strokeStyle = C.ink3; c.lineWidth = 1; c.globalAlpha = 0.55*fade; c.setLineDash([2,3]);
+      c.beginPath();
+      c.moveTo(px(a), mid + sy + 5); c.lineTo(px(a), y - 6);
+      c.moveTo(px(b), mid + sy + 5); c.lineTo(px(b), y - 6); c.stroke();
+      c.setLineDash([]); c.globalAlpha = fade;
       c.strokeStyle = C.ink3; c.lineWidth = 1;
       c.beginPath(); c.moveTo(px(a), y); c.lineTo(px(b), y);
       c.moveTo(px(a), y-5); c.lineTo(px(a), y+5);
@@ -293,6 +307,7 @@ var MONO = 'IBM Plex Mono, monospace';
       var w = c.measureText(lab).width + 10;
       c.fillStyle = C.sunk; c.fillRect((px(a)+px(b))/2 - w/2, y-8, w, 16);
       c.fillStyle = C.ink; c.fillText(lab, (px(a)+px(b))/2, y+4);
+      c.restore();
     }
 
     c.fillStyle = C.ink3; c.font = '11.5px ' + MONO;

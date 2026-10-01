@@ -119,7 +119,7 @@
   'prologue-maxwell.html': [
     { lvl: 'easy',
       q: 'A 100 pF capacitor is charged so its voltage rises at $dV/dt = 2\\times10^6$ V/s. Give the displacement current.',
-      f: [ { lab: 'I_d (mA)', ans: function(){ return 100e-12*2e6*1e3; } } ],
+      f: [ { lab: 'I<sub>d</sub> (mA)', ans: function(){ return 100e-12*2e6*1e3; } } ],
       why: 'A capacitor\'s current is $I = C\\,dV/dt$ by definition, and this is exactly the displacement current that keeps Amp&egrave;re\'s law consistent whichever surface you choose through the loop -- the flat one sees it as conduction current in the lead, the bulging one sees it as $\\partial\\vD/\\partial t$ in the gap.' },
 
     { lvl: 'easy',
@@ -129,7 +129,7 @@
 
     { lvl: 'easy',
       q: 'A time-harmonic electric field in vacuum has $E(t) = 50\\cos(\\omega t)$ V/m at $f = 300$ MHz. Give the peak displacement current density.',
-      f: [ { lab: 'J_d,max (mA/m&sup2;)', ans: function(){ return EPS0*50*TAU*300e6*1e3; } } ],
+      f: [ { lab: 'J<sub>d,max</sub> (mA/m&sup2;)', ans: function(){ return EPS0*50*TAU*300e6*1e3; } } ],
       why: '$\\vJ_d = \\varepsilon_0\\,\\partial\\vE/\\partial t$, and differentiating a cosine peaks at amplitude times $\\omega$, so $J_{d,\\max} = \\varepsilon_0 E_0 \\omega$. No charge moves anywhere in this calculation -- the vacuum itself is "conducting" in Maxwell\'s sense.' },
 
     { lvl: 'medium',
@@ -149,7 +149,7 @@
 
     { lvl: 'hard',
       q: 'A circular parallel-plate capacitor of radius $1$ cm and gap $1$ mm, vacuum dielectric, is driven at $f = 500$ MHz with a $10$ V peak across the gap. Give the peak displacement current through it.',
-      f: [ { lab: 'I_d (mA)', ans: function(){
+      f: [ { lab: 'I<sub>d</sub> (mA)', ans: function(){
                var a = 0.01, d = 1e-3, V0 = 10, w = TAU*500e6;
                var C = EPS0*Math.PI*a*a/d;
                return C*V0*w*1000; } } ],
@@ -157,17 +157,17 @@
 
     { lvl: 'hard',
       q: 'A medium has conductivity $\\sigma = 0.02$ S/m and $\\varepsilon_r = 4$. At $f = 1$ GHz, give the ratio of conduction to displacement current density.',
-      f: [ { lab: 'J_c/J_d', ans: function(){ return 0.02/(TAU*1e9*4*EPS0); } } ],
+      f: [ { lab: 'J<sub>c</sub>/J<sub>d</sub>', ans: function(){ return 0.02/(TAU*1e9*4*EPS0); } } ],
       why: 'Amp&egrave;re&ndash;Maxwell\'s right side is $\\vJ + \\partial\\vD/\\partial t$; with $\\vJ = \\sigma\\vE$ and $\\vD = \\varepsilon\\vE$ the two terms have ratio $\\sigma/\\omega\\varepsilon$, the loss tangent. Below 1 the medium behaves mostly like a capacitor; above 1, mostly like a resistor.' },
 
     { lvl: 'hard',
       q: 'In a region, $\\vJ = 2x\\,\\hat x - 3y\\,\\hat y + 5z\\,\\hat z$ A/m$^2$ (coefficients in A/m$^3$). Give the rate of change of volume charge density at any point there.',
-      f: [ { lab: 'd&rho;_v/dt (C/(m&sup3;&middot;s))', ans: function(){ return -(2 - 3 + 5); } } ],
+      f: [ { lab: 'd&rho;<sub>v</sub>/dt (C/(m&sup3;&middot;s))', ans: function(){ return -(2 - 3 + 5); } } ],
       why: 'Taking the divergence of the corrected Amp&egrave;re law gives the continuity equation $\\dive\\vJ + \\partial\\rho_v/\\partial t = 0$. The divergence of a linear field is just the sum of the three coefficients, $2 - 3 + 5 = 4$ A/m$^3$, so charge drains from every point in this region at that rate.' },
 
     { lvl: 'stretch',
       q: 'Maxwell\'s equations fix two constants from completely unrelated experiments: $\\mu_0$ from the force between current-carrying wires, $\\varepsilon_0$ from the force between charged plates. Combine them into a quantity with units of velocity, and give it alongside its ratio to $c = 299{,}792{,}458$ m/s.',
-      f: [ { lab: 'u (&times;10&#8312; m/s)', ans: function(){ return 1/Math.sqrt(MU0*EPS0)/1e8; } },
+      f: [ { lab: 'u (&times;10<sup>8</sup> m/s)', ans: function(){ return 1/Math.sqrt(MU0*EPS0)/1e8; } },
            { lab: 'u / c',                    ans: function(){ return 1/Math.sqrt(MU0*EPS0)/C0; } } ],
       why: 'This is the calculation the chapter sets up and stops short of: $u = 1/\\sqrt{\\mu_0\\varepsilon_0}$ comes out equal, to measurement precision, to the speed of light -- two benchtop constants from electrostatics and magnetostatics, with no optics anywhere in their derivation, predicting exactly how fast light travels. That coincidence is what told Maxwell light itself is an electromagnetic wave, and the next chapter derives why.' }
   ],
@@ -176,7 +176,7 @@
   'prologue-helmholtz.html': [
     { lvl: 'easy',
       q: 'Polyethylene has $\\varepsilon_r = 2.1$, $\\mu_r = 1$. Give the propagation speed of a wave inside it.',
-      f: [ { lab: 'u (&times;10&#8312; m/s)', ans: function(){ return C0/Math.sqrt(2.1)/1e8; } } ],
+      f: [ { lab: 'u (&times;10<sup>8</sup> m/s)', ans: function(){ return C0/Math.sqrt(2.1)/1e8; } } ],
       why: '$u = 1/\\sqrt{\\mu\\varepsilon} = c/\\sqrt{\\varepsilon_r\\mu_r}$ -- a dielectric with no magnetic response simply divides the free-space speed by $\\sqrt{\\varepsilon_r}$.' },
 
     { lvl: 'easy',
@@ -204,7 +204,7 @@
 
     { lvl: 'medium',
       q: 'A plane wave in free space has peak $E_0 = 120$ V/m. Give the peak magnetic field.',
-      f: [ { lab: 'H_0 (A/m)', ans: function(){ return 120/Math.sqrt(MU0/EPS0); } } ],
+      f: [ { lab: 'H<sub>0</sub> (A/m)', ans: function(){ return 120/Math.sqrt(MU0/EPS0); } } ],
       why: '$\\eta$ is defined as the ratio $\\tilde E_x/\\tilde H_y$, and in a lossless medium it is real, so the peak fields divide by it directly: $H_0 = E_0/\\eta_0$.' },
 
     { lvl: 'medium',
@@ -251,7 +251,7 @@
 
     { lvl: 'stretch',
       q: 'Everything on this page stopped at the ratio of fields. The time-average power a plane wave carries is $S_{avg} = E_0^2/(2\\eta)$. For free space with $E_0 = 100$ V/m peak, give it.',
-      f: [ { lab: 'S_avg (W/m&sup2;)', ans: function(){ var eta0 = Math.sqrt(MU0/EPS0); return 1e4/(2*eta0); } } ],
+      f: [ { lab: 'S<sub>avg</sub> (W/m&sup2;)', ans: function(){ var eta0 = Math.sqrt(MU0/EPS0); return 1e4/(2*eta0); } } ],
       why: '$\\eta$ was introduced purely as a field ratio, but once you have it, the power follows the same shape as $|V|^2/2Z_0$ on a line -- which is exactly the quantity chapter 07 onward will care about, just not yet in field form.' }
   ],
 
@@ -282,7 +282,7 @@
 
     { lvl: 'medium',
       q: 'A voltage is $v(z,t) = 8\\cos(6\\pi\\times10^{9}t + 40\\pi z)$ V. Give $u_p$, and the direction of travel as a sign ($+1$ for $+z$, $-1$ for $-z$).',
-      f: [ { lab: 'u_p (m/s)', ans: function(){ return 6*Math.PI*1e9/(40*Math.PI); } },
+      f: [ { lab: 'u<sub>p</sub> (m/s)', ans: function(){ return 6*Math.PI*1e9/(40*Math.PI); } },
            { lab: 'direction', ans: function(){ return -1; }, tol: 0.001 } ],
       why: '$u_p = \\omega/\\beta$, here $3\\times10^{9}\\pi / 40\\pi$. The sign between $\\omega t$ and $\\beta z$ gives the direction: with a plus sign, holding the phase constant as $t$ rises requires $z$ to fall, so the wave moves toward $-z$.' },
 
@@ -381,7 +381,7 @@
 
     { lvl: 'stretch',
       q: 'A 10 cm, $50\\ \\Omega$ trace on a board with $\\varepsilon_{\\text{eff}} = 4.0$ feeds a $200\\ \\Omega$ resistive load at 500 MHz. Give the true $|Z_{\\text{in}}|$, and the error of the lumped answer $Z_{\\text{in}} = Z_L$ as a percentage of it.',
-      f: [ { lab: '|Z_in| (&Omega;)', ans: function(){
+      f: [ { lab: '|Z<sub>in</sub>| (&Omega;)', ans: function(){
                var lam = (C0/2)/500e6, z = move(4, 0, 0.1/lam);
                return 50*Math.hypot(z[0], z[1]); }, tol: 0.04 },
            { lab: 'error (%)', ans: function(){
@@ -395,14 +395,14 @@
   'telegraphers.html': [
     { lvl: 'easy',
       q: 'A lossless line has $L\' = 250$ nH/m and $C\' = 100$ pF/m.',
-      f: [ { lab: 'Z&#8320; (&Omega;)', ans: function(){ return Math.sqrt(250e-9/100e-12); } },
-           { lab: 'u_p (m/s)',         ans: function(){ return 1/Math.sqrt(250e-9*100e-12); } } ],
+      f: [ { lab: 'Z<sub>0</sub> (&Omega;)', ans: function(){ return Math.sqrt(250e-9/100e-12); } },
+           { lab: 'u<sub>p</sub> (m/s)',         ans: function(){ return 1/Math.sqrt(250e-9*100e-12); } } ],
       why: 'For a lossless line $Z_0 = \\sqrt{L\'/C\'}$ and $u_p = 1/\\sqrt{L\'C\'}$. Note $Z_0$ depends on their ratio and $u_p$ on their product, so the two can be set independently.' },
 
     { lvl: 'easy',
       q: 'Another lossless line has $L\' = 500$ nH/m and $C\' = 200$ pF/m. Give $Z_0$ and $u_p$.',
-      f: [ { lab: 'Z&#8320; (&Omega;)', ans: function(){ return Math.sqrt(500e-9/200e-12); } },
-           { lab: 'u_p (m/s)',         ans: function(){ return 1/Math.sqrt(500e-9*200e-12); } } ],
+      f: [ { lab: 'Z<sub>0</sub> (&Omega;)', ans: function(){ return Math.sqrt(500e-9/200e-12); } },
+           { lab: 'u<sub>p</sub> (m/s)',         ans: function(){ return 1/Math.sqrt(500e-9*200e-12); } } ],
       why: 'Both parameters doubled from the previous problem, so the ratio is unchanged and $Z_0$ is the same 50 ohm -- while the product quadrupled, halving $u_p$. Two independent knobs, demonstrated.' },
 
     { lvl: 'easy',
@@ -412,26 +412,26 @@
 
     { lvl: 'medium',
       q: 'A lossless line is to have $Z_0 = 75\\ \\Omega$ and $u_p = 2\\times10^{8}$ m/s.',
-      f: [ { lab: 'L\' (nH/m)', ans: function(){ return 75/2e8*1e9; } },
-           { lab: 'C\' (pF/m)', ans: function(){ return 1/(75*2e8)*1e12; } } ],
+      f: [ { lab: 'L&prime; (nH/m)', ans: function(){ return 75/2e8*1e9; } },
+           { lab: 'C&prime; (pF/m)', ans: function(){ return 1/(75*2e8)*1e12; } } ],
       why: 'Invert the pair: $L\' = Z_0/u_p$ and $C\' = 1/(Z_0 u_p)$. Two numbers in, two out -- the model has exactly as many degrees of freedom as the measurements.' },
 
     { lvl: 'medium',
       q: 'A coaxial cable has $C\' = 100$ pF/m and a velocity factor of 0.66, so $u_p = 0.66c$.',
-      f: [ { lab: 'Z&#8320; (&Omega;)', ans: function(){ return 1/(100e-12*0.66*C0); }, tol: 0.03 },
-           { lab: 'L\' (nH/m)',        ans: function(){
+      f: [ { lab: 'Z<sub>0</sub> (&Omega;)', ans: function(){ return 1/(100e-12*0.66*C0); }, tol: 0.03 },
+           { lab: 'L&prime; (nH/m)',        ans: function(){
                return (1/(100e-12*0.66*C0))/(0.66*C0)*1e9; }, tol: 0.03 } ],
       why: 'Combining the two lossless relations gives $Z_0 = 1/(C\'u_p)$, which is the useful form: capacitance per metre and velocity factor are exactly what a cable datasheet prints. Then $L\' = Z_0/u_p$.' },
 
     { lvl: 'medium',
       q: 'A line has $L\' = 300$ nH/m and $C\' = 120$ pF/m with $R\' = 4\\ \\Omega$/m, at 500 MHz. Give $\\omega L\'$ and the ratio $R\'/\\omega L\'$.',
-      f: [ { lab: '&omega;L\' (&Omega;/m)', ans: function(){ return TAU*500e6*300e-9; }, tol: 0.03 },
-           { lab: 'R\'/&omega;L\'',         ans: function(){ return 4/(TAU*500e6*300e-9); }, tol: 0.03 } ],
+      f: [ { lab: '&omega;L&prime; (&Omega;/m)', ans: function(){ return TAU*500e6*300e-9; }, tol: 0.03 },
+           { lab: 'R&prime;/&omega;L&prime;',         ans: function(){ return 4/(TAU*500e6*300e-9); }, tol: 0.03 } ],
       why: 'About 942 ohm per metre of reactance against 4 ohm of resistance, a ratio of 0.0042. That smallness is precisely what "low loss" means, and it is why the lossless formulas survive at microwave frequencies while failing badly for an audio cable.' },
 
     { lvl: 'hard',
       q: 'A line has $R\' = 4\\ \\Omega$/m, $L\' = 300$ nH/m, $G\' = 0$, $C\' = 120$ pF/m at 500 MHz. Give $|Z_0|$ and its angle.',
-      f: [ { lab: '|Z&#8320;| (&Omega;)', ans: function(){
+      f: [ { lab: '|Z<sub>0</sub>| (&Omega;)', ans: function(){
                var w = TAU*500e6, Z = [4, w*300e-9], Y = [0, w*120e-12];
                var d = Y[0]*Y[0] + Y[1]*Y[1];
                var q = [(Z[0]*Y[0] + Z[1]*Y[1])/d, (Z[1]*Y[0] - Z[0]*Y[1])/d];
@@ -455,7 +455,7 @@
 
     { lvl: 'hard',
       q: 'A distortionless line satisfies $R\'/L\' = G\'/C\'$. With $R\' = 5\\ \\Omega$/m, $L\' = 250$ nH/m and $C\' = 100$ pF/m, what $G\'$ is needed, and what is $\\alpha$?',
-      f: [ { lab: 'G\' (mS/m)',     ans: function(){ return 5/250e-9*100e-12*1e3; }, tol: 0.03 },
+      f: [ { lab: 'G&prime; (mS/m)',     ans: function(){ return 5/250e-9*100e-12*1e3; }, tol: 0.03 },
            { lab: '&alpha; (Np/m)', ans: function(){ return 5*Math.sqrt(100e-12/250e-9); }, tol: 0.03 } ],
       why: 'The condition makes $\\gamma = \\sqrt{R\'G\'} + j\\omega\\sqrt{L\'C\'}$ exactly, so $\\alpha = R\'\\sqrt{C\'/L\'} = R\'/Z_0$ and does not depend on frequency: every component of a pulse is attenuated equally and the shape survives. Heaviside got long telegraph cables working by deliberately adding series inductance to approach this.' },
 
@@ -463,9 +463,9 @@
       q: 'An air-filled coaxial line has $L\' = (\\mu_0/2\\pi)\\ln(b/a)$ and $C\' = 2\\pi\\varepsilon_0/\\ln(b/a)$. Design it for $Z_0 = 50\\ \\Omega$.',
       f: [ { lab: 'b/a', ans: function(){
                return Math.exp(50*TAU/(MU0*C0)); }, tol: 0.03 },
-           { lab: 'L\' (nH/m)', ans: function(){
+           { lab: 'L&prime; (nH/m)', ans: function(){
                return (MU0/TAU)*(50*TAU/(MU0*C0))*1e9; }, tol: 0.03 },
-           { lab: 'C\' (pF/m)', ans: function(){
+           { lab: 'C&prime; (pF/m)', ans: function(){
                return TAU*(1/(MU0*C0*C0))/(50*TAU/(MU0*C0))*1e12; }, tol: 0.03 } ],
       why: 'Their ratio gives $Z_0 = \\dfrac{1}{2\\pi}\\sqrt{\\mu_0/\\varepsilon_0}\\,\\ln(b/a) = 59.96\\ln(b/a)$, so $\\ln(b/a) = 0.834$ and $b/a = 2.30$. Their product gives $u_p = 1/\\sqrt{\\mu_0\\varepsilon_0} = c$ whatever the geometry -- as it must be for a line whose field is entirely in air. This is where the per-metre parameters stop being fitted numbers and become geometry.' }
   ],
@@ -551,12 +551,12 @@
   'microstrip.html': [
     { lvl: 'easy',
       q: 'A microstrip has $W/h = 2$ on a substrate with $\\varepsilon_r = 4.4$.',
-      f: [ { lab: '&epsilon;_eff', ans: function(){ return eeff(4.4, 2); } } ],
+      f: [ { lab: '&epsilon;<sub>eff</sub>', ans: function(){ return eeff(4.4, 2); } } ],
       why: 'Some of the field is in the board and some in the air above it, so the wave sees a weighted average: $\\varepsilon_{\\text{eff}} = \\frac{\\varepsilon_r+1}{2} + \\frac{\\varepsilon_r-1}{2}(1 + 12h/W)^{-1/2}$. It always lies between 1 and $\\varepsilon_r$.' },
 
     { lvl: 'easy',
       q: 'A line has $\\varepsilon_{\\text{eff}} = 3.0$. Give its phase velocity as a fraction of $c$.',
-      f: [ { lab: 'u_p / c', ans: function(){ return 1/Math.sqrt(3); }, tol: 0.03 } ],
+      f: [ { lab: 'u<sub>p</sub> / c', ans: function(){ return 1/Math.sqrt(3); }, tol: 0.03 } ],
       why: '$u_p = c/\\sqrt{\\varepsilon_{\\text{eff}}}$, so about $0.577c$. Everything on a board is slower than light by this factor and by nothing else -- the copper geometry has already been absorbed into $\\varepsilon_{\\text{eff}}$.' },
 
     { lvl: 'easy',
@@ -567,7 +567,7 @@
 
     { lvl: 'medium',
       q: 'The same line: $W/h = 2$, $\\varepsilon_r = 4.4$. Give its characteristic impedance.',
-      f: [ { lab: 'Z&#8320; (&Omega;)', ans: function(){ return z0ms(4.4, 2); }, tol: 0.03 } ],
+      f: [ { lab: 'Z<sub>0</sub> (&Omega;)', ans: function(){ return z0ms(4.4, 2); }, tol: 0.03 } ],
       why: 'With $\\varepsilon_{\\text{eff}}$ known, $Z_0 = \\dfrac{120\\pi}{\\sqrt{\\varepsilon_{\\text{eff}}}\\left[W/h + 1.393 + 0.667\\ln(W/h + 1.444)\\right]}$ for $W/h \\ge 1$. Wider track, lower impedance -- more capacitance per metre.' },
 
     { lvl: 'medium',
@@ -715,7 +715,7 @@
     { lvl: 'medium',
       q: 'A probe finds $|V|_{\\max} = 6$ V and $|V|_{\\min} = 2$ V on a line. Give the SWR and the amplitude of the forward wave.',
       f: [ { lab: 'SWR',       ans: function(){ return 6/2; } },
-           { lab: '|V+| (V)',  ans: function(){ return (6+2)/2; } } ],
+           { lab: '|V<sup>+</sup>| (V)',  ans: function(){ return (6+2)/2; } } ],
       why: 'SWR is the ratio of the extremes, 3. Since the extremes are $|V^+| \\pm |V^-|$, their half-sum is $|V^+| = 4$ V and their half-difference is $|V^-| = 2$ V. Two probe readings recover both travelling waves separately, which is the entire idea behind the instrument.' },
 
     { lvl: 'medium',
@@ -768,30 +768,30 @@
   'input-impedance.html': [
     { lvl: 'easy',
       q: 'A quarter-wave section of $70.7\\ \\Omega$ line is terminated in $100\\ \\Omega$.',
-      f: [ { lab: 'Z_in (&Omega;)', ans: function(){ return 70.7*70.7/100; }, tol: 0.02 } ],
+      f: [ { lab: 'Z<sub>in</sub> (&Omega;)', ans: function(){ return 70.7*70.7/100; }, tol: 0.02 } ],
       why: 'A quarter wave inverts: $Z_{\\text{in}} = Z_1^2/Z_L$. It is the one length whose effect can be written down without a tangent.' },
 
     { lvl: 'easy',
       q: 'A half-wave section of $50\\ \\Omega$ line is terminated in $30 + j40\\ \\Omega$.',
-      f: [ { lab: 'R_in (&Omega;)', ans: function(){ return 30; } },
-           { lab: 'X_in (&Omega;)', ans: function(){ return 40; } } ],
+      f: [ { lab: 'R<sub>in</sub> (&Omega;)', ans: function(){ return 30; } },
+           { lab: 'X<sub>in</sub> (&Omega;)', ans: function(){ return 40; } } ],
       why: 'A half wave is a full turn on the chart, $2\\beta\\ell = 2\\pi$, so it returns the load unchanged whatever the load and whatever $Z_0$. This is why a half-wave section is used to move a connector without disturbing a design -- and why it only works at one frequency.' },
 
     { lvl: 'easy',
       q: 'A shorted $50\\ \\Omega$ line is $\\lambda/8$ long.',
-      f: [ { lab: 'X_in (&Omega;)', ans: function(){ return 50*Math.tan(Math.PI/4); }, tol: 0.02 } ],
+      f: [ { lab: 'X<sub>in</sub> (&Omega;)', ans: function(){ return 50*Math.tan(Math.PI/4); }, tol: 0.02 } ],
       why: '$Z_{\\text{in}} = jZ_0\\tan\\beta\\ell$ and $\\beta\\ell = 45^\\circ$, so the reactance is $+j50$: a shorted eighth-wave line is an inductor of exactly $Z_0$. The $\\lambda/8$ point is worth memorising, because it is where $\\tan$ is 1 and the arithmetic disappears.' },
 
     { lvl: 'medium',
       q: 'A $50\\ \\Omega$ line of length $0.10\\lambda$ is terminated in $Z_L = 25 + j30\\ \\Omega$.',
-      f: [ { lab: 'R_in (&Omega;)', ans: function(){ return 50*move(0.5, 0.6, 0.10)[0]; }, tol: 0.03 },
-           { lab: 'X_in (&Omega;)', ans: function(){ return 50*move(0.5, 0.6, 0.10)[1]; }, tol: 0.03 } ],
+      f: [ { lab: 'R<sub>in</sub> (&Omega;)', ans: function(){ return 50*move(0.5, 0.6, 0.10)[0]; }, tol: 0.03 },
+           { lab: 'X<sub>in</sub> (&Omega;)', ans: function(){ return 50*move(0.5, 0.6, 0.10)[1]; }, tol: 0.03 } ],
       why: 'Normalise, then $z_{\\text{in}} = \\dfrac{z_L + j\\tan\\beta\\ell}{1 + jz_L\\tan\\beta\\ell}$ with $\\beta\\ell = 2\\pi(0.10)$, and multiply back by $Z_0$. On the chart this is one rotation of $2\\beta\\ell$ about the centre.' },
 
     { lvl: 'medium',
       q: 'A $50\\ \\Omega$ line of length $0.3\\lambda$ is terminated in $100\\ \\Omega$.',
-      f: [ { lab: 'R_in (&Omega;)', ans: function(){ return 50*move(2, 0, 0.3)[0]; }, tol: 0.03 },
-           { lab: 'X_in (&Omega;)', ans: function(){ return 50*move(2, 0, 0.3)[1]; }, tol: 0.03 } ],
+      f: [ { lab: 'R<sub>in</sub> (&Omega;)', ans: function(){ return 50*move(2, 0, 0.3)[0]; }, tol: 0.03 },
+           { lab: 'X<sub>in</sub> (&Omega;)', ans: function(){ return 50*move(2, 0, 0.3)[1]; }, tol: 0.03 } ],
       why: 'A real load does not stay real: $0.3\\lambda$ is $216^\\circ$ of rotation, which lands well off the real axis. Only multiples of $\\lambda/4$ return a real impedance, which is the whole reason quarter-wave sections are singled out.' },
 
     { lvl: 'medium',
@@ -815,14 +815,14 @@
 
     { lvl: 'hard',
       q: 'A line of unknown $Z_0$ and length is measured at one frequency: shorted it presents $+j60\\ \\Omega$, and open it presents $-j41.67\\ \\Omega$. Give $Z_0$ and the electrical length.',
-      f: [ { lab: 'Z&#8320; (&Omega;)',  ans: function(){ return Math.sqrt(60*41.67); }, tol: 0.03 },
+      f: [ { lab: 'Z<sub>0</sub> (&Omega;)',  ans: function(){ return Math.sqrt(60*41.67); }, tol: 0.03 },
            { lab: '&beta;&#8467; (&deg;)', ans: function(){
                return Math.atan(Math.sqrt(60/41.67))*180/Math.PI; }, tol: 0.03 } ],
       why: '$Z_{sc} = jZ_0\\tan\\beta\\ell$ and $Z_{oc} = -jZ_0\\cot\\beta\\ell$, so their product is $Z_0^2$ and their ratio is $-\\tan^2\\beta\\ell$. Hence $Z_0 = \\sqrt{Z_{sc}Z_{oc}}$ in magnitude and $\\tan\\beta\\ell = \\sqrt{60/41.67} = 1.2$. Two measurements on a line you cannot see inside recover both of its properties -- the standard way a cable of unknown type is characterised.' },
 
     { lvl: 'hard',
       q: 'A $50\\ \\Omega$ line of length $0.2\\lambda$ feeds $Z_L = 100 - j50\\ \\Omega$. Give $|Z_{\\text{in}}|$ and its angle.',
-      f: [ { lab: '|Z_in| (&Omega;)', ans: function(){
+      f: [ { lab: '|Z<sub>in</sub>| (&Omega;)', ans: function(){
                var z = move(2, -1, 0.2); return 50*Math.hypot(z[0], z[1]); }, tol: 0.03 },
            { lab: 'angle (&deg;)', ans: function(){
                var z = move(2, -1, 0.2);
@@ -831,7 +831,7 @@
 
     { lvl: 'stretch',
       q: 'A generator of source impedance $50\\ \\Omega$ drives $0.15\\lambda$ of $50\\ \\Omega$ line into $Z_L = 20 + j35\\ \\Omega$. Give $R_{\\text{in}}$ and the fraction of the generator\'s available power that reaches the load.',
-      f: [ { lab: 'R_in (&Omega;)', ans: function(){ return 50*move(0.4, 0.7, 0.15)[0]; }, tol: 0.04 },
+      f: [ { lab: 'R<sub>in</sub> (&Omega;)', ans: function(){ return 50*move(0.4, 0.7, 0.15)[0]; }, tol: 0.04 },
            { lab: 'fraction delivered', ans: function(){
                var z = move(0.4, 0.7, 0.15), R = 50*z[0], X = 50*z[1];
                return 4*50*R/((50 + R)*(50 + R) + X*X); }, tol: 0.05 } ],
@@ -842,7 +842,7 @@
   'line-lengths.html': [
     { lvl: 'easy',
       q: 'A quarter-wave transformer is to match a $200\\ \\Omega$ resistive load to a $50\\ \\Omega$ line.',
-      f: [ { lab: 'Z&#8321; (&Omega;)', ans: function(){ return Math.sqrt(50*200); } } ],
+      f: [ { lab: 'Z<sub>1</sub> (&Omega;)', ans: function(){ return Math.sqrt(50*200); } } ],
       why: 'Setting $Z_1^2/Z_L = Z_0$ gives $Z_1 = \\sqrt{Z_0 Z_L}$ -- the geometric mean, not the average.' },
 
     { lvl: 'easy',
@@ -892,7 +892,7 @@
 
     { lvl: 'hard',
       q: 'Two cascaded quarter-wave sections match $200\\ \\Omega$ to $50\\ \\Omega$, with the binomial split $\\ln(Z_1/Z_0) = \\tfrac14\\ln(Z_L/Z_0)$ and $\\ln(Z_2/Z_0) = \\tfrac34\\ln(Z_L/Z_0)$. Give both impedances, $Z_1$ nearest the line.',
-      f: [ { lab: 'Z&#8321; (&Omega;)', ans: function(){ return 50*Math.pow(4, 0.25); }, tol: 0.03 },
+      f: [ { lab: 'Z<sub>1</sub> (&Omega;)', ans: function(){ return 50*Math.pow(4, 0.25); }, tol: 0.03 },
            { lab: 'Z&#8322; (&Omega;)', ans: function(){ return 50*Math.pow(4, 0.75); }, tol: 0.03 } ],
       why: '$Z_1 = 50(4)^{1/4} = 70.7\\ \\Omega$ and $Z_2 = 50(4)^{3/4} = 141.4\\ \\Omega$. Check it closes: the section nearest the load turns $200$ into $Z_2^2/200 = 100$, and the next turns that into $Z_1^2/100 = 50$. Two sections buy a much wider band than one, and this is the split that makes the response maximally flat rather than equal-ripple.' },
 
@@ -988,7 +988,7 @@
   'matching.html': [
     { lvl: 'easy',
       q: 'A resistive load $Z_L = 100\\ \\Omega$ is matched to $50\\ \\Omega$ with a quarter-wave transformer.',
-      f: [ { lab: 'Z&#8321; (&Omega;)', ans: function(){ return Math.sqrt(50*100); }, tol: 0.02 } ],
+      f: [ { lab: 'Z<sub>1</sub> (&Omega;)', ans: function(){ return Math.sqrt(50*100); }, tol: 0.02 } ],
       why: 'A real load needs no travel: $Z_1 = \\sqrt{Z_0 Z_L} = 70.7\\ \\Omega$. The section is a quarter wave at the design frequency and only there, which is where its bandwidth limit comes from.' },
 
     { lvl: 'easy',
@@ -1018,7 +1018,7 @@
       f: [ { lab: 'd (&lambda;)', ans: function(){
                var g = gam(2, 1.5), th = Math.atan2(g[1], g[0]);
                return wrapHalf(th/(2*TAU)); }, tol: 0.05 },
-           { lab: 'Z&#8321; (&Omega;)', ans: function(){
+           { lab: 'Z<sub>1</sub> (&Omega;)', ans: function(){
                var g = gam(2, 1.5), m = mag(g), th = Math.atan2(g[1], g[0]);
                var a = wrapHalf(th/(2*TAU)), b = wrapHalf((th - Math.PI)/(2*TAU));
                var r = (a < b) ? swrOf(m) : 1/swrOf(m);

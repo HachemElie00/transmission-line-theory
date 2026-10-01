@@ -101,15 +101,37 @@ const H = require('./lib/harness');
         png : [...document.querySelectorAll('.figbar button')].filter(x => /PNG/.test(x.textContent)).length,
         strayPause: document.querySelectorAll('#pause, #pause2').length,
         wordy: [...document.querySelectorAll('.figbar [data-play]')]
-                 .filter(x => /pause|play/i.test(x.textContent)).length
+                 .filter(x => /pause|play/i.test(x.textContent)).length,
+        /* a toolbar must never be a flex item in a row of canvases: two
+           figures put theirs between the two canvases they belong to */
+        wedged: [...document.querySelectorAll('.figbar')].filter(x => {
+          const par = x.parentElement, cs = getComputedStyle(par);
+          return cs.display.indexOf('flex') >= 0 && cs.flexDirection.indexOf('row') === 0 &&
+                 !par.classList.contains('figbars') && par.querySelectorAll(':scope > canvas').length > 0;
+        }).length
       }));
       total += r.bars;
-      if (r.canvases && (!r.bars || !r.png || r.strayPause || r.wordy))
+      if (r.canvases && (!r.bars || !r.png || r.strayPause || r.wordy || r.wedged))
         bad.push(pg + ' ' + JSON.stringify(r));
     }
     bad.forEach(x => s.note('FAIL ' + x));
-    s.check('every figure has a toolbar, symbols not words, no stray pause buttons',
+    s.check('every figure has a toolbar, symbols not words, no stray pause buttons, none wedged between canvases',
             bad.length === 0, total + ' toolbars across the site');
+
+    /* EM.rich draws real subscripts on canvas. It must hand the context back
+       as it found it: it once left c.font at its last subscript size, and a
+       figure sizing its next label from c.font shrank every label after it. */
+    await p.goto(H.fileUrl('line-lengths.html'), { waitUntil: 'load' });
+    await p.waitForTimeout(800);
+    const rich = await p.evaluate(() => {
+      const c = document.createElement('canvas').getContext('2d');
+      c.font = '13px serif'; c.textAlign = 'right';
+      const before = c.font + '|' + c.textAlign;
+      const w = EM.rich(c, [['Z','n'], ['0','b'], ['+','p'], ['0|+','bp'], [' tail','n']], 50, 50, 11, 'center');
+      return { before, after: c.font + '|' + c.textAlign, w };
+    });
+    s.check('EM.rich leaves font and alignment as it found them',
+            rich.before === rich.after && rich.w > 0, rich.before + '  ->  ' + rich.after);
     await ctx.close();
   }
 

@@ -52,7 +52,7 @@
   --ok:#57c98a; --warn:#ff9a52;
   --f-disp:"IBM Plex Sans Condensed",system-ui,sans-serif;
   --f-body:"IBM Plex Sans",system-ui,sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,monospace;
+  --f-mono:"IBM Plex Mono","IBM Plex Sans",ui-monospace,SFMono-Regular,monospace;
   --col:min(100% - 40px, 880px);
 }
 :root[data-theme="light"]{
@@ -283,6 +283,10 @@ button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:v
 /* the play/pause symbol stands alone, so give it a comfortable target */
 .figbar button[data-play]{padding:7px 12px}
 .fig .figbar:last-of-type{border-bottom:0}
+/* two canvases side by side: their bars share one row beneath them */
+.figbars{display:flex;flex-wrap:wrap;border-top:1px solid var(--line);background:var(--surface)}
+.figbars .figbar{min-width:0;border-top:0}
+.figbars .figbar + .figbar{border-left:1px solid var(--line)}
 
 .legend{display:flex;flex-wrap:wrap;gap:7px 20px;padding:11px 17px;
   border-top:1px solid var(--line);font-family:var(--f-mono);font-size:11.5px;color:var(--ink2)}

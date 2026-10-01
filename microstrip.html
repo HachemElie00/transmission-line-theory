@@ -108,18 +108,18 @@
     </div>
     <dl class="readout">
       <div class="rd"><dt>&epsilon;<sub>eff</sub></dt><dd id="m-ee">3.34</dd></div>
-      <div class="rd"><dt>Z&#8320;</dt><dd id="m-z0">48.9</dd></div>
+      <div class="rd"><dt>Z<sub>0</sub></dt><dd id="m-z0">48.9</dd></div>
       <div class="rd"><dt>W</dt><dd id="m-w">3.20</dd></div>
       <div class="rd"><dt>&lambda;<sub>g</sub></dt><dd id="m-lg">68.4</dd></div>
       <div class="rd"><dt>&lambda;<sub>g</sub>/4</dt><dd id="m-q">17.1</dd></div>
     </dl>
     <div class="btns">
       <button data-m="2,4.4,1.6,2.4">FR-4, 50 &#937;-ish</button>
-      <button data-m="0.6,4.4,1.6,2.4">narrow &rarr; high Z&#8320;</button>
-      <button data-m="6,4.4,1.6,2.4">wide &rarr; low Z&#8320;</button>
+      <button data-m="0.6,4.4,1.6,2.4">narrow &rarr; high Z<sub>0</sub></button>
+      <button data-m="6,4.4,1.6,2.4">wide &rarr; low Z<sub>0</sub></button>
       <button data-m="2.2,2.2,0.79,10">RO5880 at 10 GHz</button>
     </div>
-    <figcaption class="cap">W, &lambda;<sub>g</sub> and &lambda;<sub>g</sub>/4 in mm; the cross-section is drawn to the computed proportions. The frequency slider moves &lambda;<sub>g</sub> and &lambda;<sub>g</sub>/4 only &mdash; it deliberately leaves the curve alone, because Hammerstad's Z&#8320; carries no frequency dependence at all.</figcaption>
+    <figcaption class="cap">W, &lambda;<sub>g</sub> and &lambda;<sub>g</sub>/4 in mm; the cross-section is drawn to the computed proportions. The frequency slider moves &lambda;<sub>g</sub> and &lambda;<sub>g</sub>/4 only &mdash; it deliberately leaves the curve alone, because Hammerstad's Z<sub>0</sub> carries no frequency dependence at all.</figcaption>
   </figure>
 
   <p class="t">Try the narrow and wide presets and watch two things move together: as the track narrows, $Z_0$ climbs <i>and</i> $\varepsilon_{\text{eff}}$ falls. The second happens because a narrow track holds proportionally more of its field in the air, dragging the effective permittivity down toward 1.</p>
@@ -214,7 +214,7 @@
 <script src="assets/site.js"></script>
 <script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
 <script>
-var MONO = 'IBM Plex Mono, monospace';
+var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
 
 function epsEff(er, wh){
   var e = (er+1)/2 + ((er-1)/2)*Math.pow(1 + 12/wh, -0.5);
@@ -272,15 +272,15 @@ function z0ms(er, wh){
     c.fillText('track, width W', cx, sy - th - 16);
     c.fillStyle = C.ink3; c.font = '13px ' + MONO;
     c.fillText('ground plane', cx, gy + 28);
+    /* beside the substrate rather than on it: inside the block the outer
+       fringing curves run through every height the label could sit at */
+    c.fillStyle = C.acc; c.font = '14px ' + MONO; c.textAlign = 'right';
+    c.fillText('substrate  εᵣ', 112, (sy+gy)/2 + 5);
     c.fillStyle = C.h; c.font = '14px ' + MONO;
     c.textAlign = 'left';
     c.fillText('air  ε = 1', 20, 40);
     c.fillStyle = C.ink3; c.font = '12px ' + MONO;
     c.fillText('fringing field', 20, 58);
-    /* kept off the substrate block itself -- the fringing-field curves sweep
-       through it at every height the earlier inline label tried */
-    c.fillStyle = C.acc; c.font = '14px ' + MONO;
-    c.fillText('substrate  εᵣ', 20, 82);
 
     /* h dimension */
     c.strokeStyle = C.ink3; c.lineWidth = 1;
@@ -356,9 +356,12 @@ function z0ms(er, wh){
     c.font = '11px ' + MONO; c.textAlign = 'center'; c.fillStyle = C.ink;
     c.fillText('W = ' + (wh*h).toFixed(2) + ' mm', cx, sy - 19);
     c.fillStyle = C.ink3;
-    c.fillText('W/h = ' + wh.toFixed(2) + '   εᵣ = ' + er.toFixed(1), cx, gy + 22);
+    EM.rich(c, [['W/h = ' + wh.toFixed(2) + '   ε','n'], ['r','b'], [' = ' + er.toFixed(1),'n']], cx, gy + 22, 11, 'center');
+    c.fillText('h = ' + h.toFixed(2) + ' mm', cx, gy + 38);
+    /* only the letter beside the dimension: the full value is too wide for
+       the gap before the plot's axis, and ran across it */
     c.textAlign = 'left';
-    c.fillText('h = ' + h.toFixed(2) + ' mm', cx + boxW*0.44, (sy+gy)/2 + 4);
+    c.fillText('h', cx + boxW*0.47, (sy+gy)/2 + 4);
     c.strokeStyle = C.ink3; c.lineWidth = 1;
     c.beginPath();
     c.moveTo(cx + boxW*0.435, sy); c.lineTo(cx + boxW*0.435, gy);
@@ -393,9 +396,9 @@ function z0ms(er, wh){
     c.textAlign = 'center';
     c.fillText('W/h', (L+W-R)/2, H-8);
     c.textAlign = 'left'; c.fillStyle = C.e;
-    c.fillText('Z₀ vs W/h', L+7, T+10);
-    c.fillStyle = C.acc; c.textAlign = 'right';
-    c.fillText('εeff = ' + ee.toFixed(2), W-R, T+10);
+    EM.rich(c, [['Z','n'], ['0','b'], [' vs W/h','n']], L+7, T+10, parseFloat(c.font), 'left');
+    c.fillStyle = C.acc;
+    EM.rich(c, [['ε','n'], ['eff','b'], [' = ' + ee.toFixed(2),'n']], W-R, T+10, 11, 'right');
   }, false);
 
   sync();

@@ -206,11 +206,16 @@ details.note .hint{margin-top:5px}
           <span class="fld"><label for="i-x" id="lab-x">X&nbsp;&Omega;</label><input id="i-x" type="number" value="-30" step="any"></span>
         </div>
         <div class="row">
-          <span class="fld"><label for="i-z0">Z&#8320;&nbsp;&Omega;</label><input id="i-z0" type="number" value="50" step="any" min="1"></span>
-          <span class="fld"><label for="i-f">f&nbsp;MHz</label><input id="i-f" type="number" value="1000" step="any" min="0"></span>
+          <span class="fld"><label for="i-z0">Z<sub>0</sub>&nbsp;&Omega;</label><input id="i-z0" type="number" value="50" step="any" min="1"></span>
+          <span class="fld"><label for="i-ee">&epsilon;<sub>eff</sub></label><input id="i-ee" type="number" value="1" step="any" min="1"></span>
         </div>
         <div class="row">
-          <span class="fld"><label for="i-ee">&epsilon;<sub>eff</sub></label><input id="i-ee" type="number" value="1" step="any" min="1"></span>
+          <span class="fld"><label for="i-f">f</label><input id="i-f" type="number" value="1000" step="any" min="0">
+            <select id="i-funit" aria-label="Frequency unit" style="flex:none;width:auto">
+              <option value="kHz">kHz</option>
+              <option value="MHz" selected>MHz</option>
+              <option value="GHz">GHz</option>
+            </select></span>
           <span class="fld" style="justify-content:flex-end"><span class="hint" style="margin:0" id="lam">&lambda; = 300.0 mm</span></span>
         </div>
         <div class="row" style="margin-top:11px">
@@ -254,13 +259,13 @@ details.note .hint{margin-top:5px}
             </select></span>
         </div>
         <div class="row" style="margin-top:9px">
-          <span class="fld"><label for="i-blim">holds to SWR</label>
+          <span class="fld" title="The bandwidth is measured over the frequencies where the SWR stays at or below this"><label for="i-blim">band at SWR &le;</label>
             <select id="i-blim" style="flex:1;min-width:0">
               <option value="1.5">1.5</option>
               <option value="2" selected>2</option>
               <option value="3">3</option>
             </select></span>
-          <span class="fld"><label for="i-bspan">span</label>
+          <span class="fld" title="How far either side of f0 the frequency-response plot sweeps"><label for="i-bspan">sweep</label>
             <select id="i-bspan" style="flex:1;min-width:0">
               <option value="0.25">&plusmn;25%</option>
               <option value="0.5" selected>&plusmn;50%</option>
@@ -506,7 +511,7 @@ details.note .hint{margin-top:5px}
 <script>
 (function(){
 "use strict";
-var MONO = 'ui-monospace, "IBM Plex Mono", monospace';
+var MONO = 'ui-monospace, "IBM Plex Mono", "IBM Plex Sans", monospace';
 var TAU = Math.PI*2, C0 = 299792458;
 
 /* ===================== complex / chart mathematics ===================== */
@@ -559,6 +564,8 @@ var S = {
   /* how the load is being typed in. The state is always r + jx normalised;
      this only decides what the two boxes mean. */
   lmode: 'rx',
+  /* the unit the frequency box is typed in. S.f itself stays in MHz. */
+  funit: 'MHz',
   prac: { l1: 0, l2: 0, z1: 50, x1: 0, b1: 0, order: 'series', rotated: false }
 };
 
@@ -572,6 +579,14 @@ function lambda(){ /* metres */
   return C0/(f*Math.sqrt(Math.max(1, S.ee)));
 }
 function omega(){ return TAU*S.f*1e6; }
+
+/* S.f is held in MHz everywhere -- every formula, the shared link and the tests
+   read it that way. The unit only decides what the frequency box means and how
+   a frequency is printed, so switching it rewrites the box and never moves the
+   design, exactly as the load units do. */
+var FUNITS = { kHz: 1e-3, MHz: 1, GHz: 1e3 };
+function fPer(){ return FUNITS[S.funit] || 1; }
+function fShow(mhz){ return +(mhz/fPer()).toPrecision(10); }
 
 /* ===================== solvers =====================
    Every one returns normalised quantities plus the distance d in wavelengths
@@ -1999,6 +2014,11 @@ function drawCircuit(){
     c.fillStyle = col || C.ink2; c.textAlign = al || 'center';
     c.textBaseline = 'middle'; c.fillText(t, x, y);
   }
+  /* the same, with real subscripts (see EM.rich) */
+  function TS(x, y, segs, al, col, size){
+    c.fillStyle = col || C.ink2; c.textBaseline = 'middle';
+    EM.rich(c, segs, x, y, size || FS, al || 'center', MONO);
+  }
   function dot(x, y){
     c.fillStyle = C.ink2;
     c.beginPath(); c.arc(x, y, LWm*1.5, 0, TAU); c.fill();
@@ -2088,8 +2108,8 @@ function drawCircuit(){
   box(XL, LY, BW, 56, 'load', sig(S.r*S.z0) + (S.x < 0 ? ' − j' : ' + j') +
       sig(Math.abs(S.x*S.z0)) + ' Ω');
   T(X0, LY - FS*1.9, 'to source', 'left', C.ink3, FS);
-  T(X0, GY + 4, (S.method === 'lnet' ? 'Z₀ = ' : 'line  Z₀ = ')
-    + sig(S.z0) + ' Ω', 'left', C.ink3, FS);
+  TS(X0, GY + 4, [[S.method === 'lnet' ? 'Z' : 'line  Z','n'], ['0','b'],
+     [' = ' + sig(S.z0) + ' Ω','n']], 'left', C.ink3, FS);
   c.strokeStyle = C.ink2;
 
   if(S.method === 'shunt'){
@@ -2117,12 +2137,12 @@ function drawCircuit(){
     c.fillStyle = C.accfill; c.strokeStyle = C.acc; c.lineWidth = LWm;
     c.beginPath(); c.rect(T0, LY - 11, T1 - T0, 22); c.fill(); c.stroke();
     c.strokeStyle = C.ink2;
-    T((T0 + T1)/2, LY + 30, 'Z₁ = ' + sig(sol.z1*S.z0) + ' Ω', 'center', C.ink, FS);
+    TS((T0 + T1)/2, LY + 30, [['Z','n'], ['1','b'], [' = ' + sig(sol.z1*S.z0) + ' Ω','n']], 'center', C.ink, FS);
     dim(T0, T1, LY - 36, lambda() > 0 ? 'λ/4   ' + n1(mm(0.25)) + 'mm' : 'λ/4');
     dim(T1, XL, LY - 36, 'd = ' + wl(sol.d));
     T(DW*0.50, DH - FS*1.2,
-      'the quarter wave is a quarter of the wavelength on the TRANSFORMER, which '
-      + 'differs from the main line unless both sit in the same medium',
+      'λ/4 is measured on the transformer section itself, whose wavelength differs '
+      + 'from the main line\'s whenever their effective permittivities do',
       'center', C.ink3, FS*0.95);
 
   } else if(S.method === 'lnet'){
@@ -2167,10 +2187,10 @@ function bigRow(){
   var out = [];
   function add(k, v){ out.push('<div><dt>'+k+'</dt><dd>'+v+'</dd></div>'); }
 
-  add('z = Z/Z₀', cpx(z[0], z[1]));
+  add('z = Z/Z<sub>0</sub>', cpx(z[0], z[1]));
   add('Z (Ω)', (Math.abs(z[0]) > 1e6 ? '→ ∞'
         : cpx(z[0]*S.z0, z[1]*S.z0, 1)));
-  add('y = Y·Z₀', cpx(y[0], y[1]));
+  add('y = Y·Z<sub>0</sub>', cpx(y[0], y[1]));
   add('Y (mS)', (Math.abs(y[0]) > 1e6 ? '→ ∞'
         : cpx(y[0]/S.z0*1000, y[1]/S.z0*1000, 2)));
   add('Γ', polar(g));
@@ -2207,7 +2227,7 @@ function solPanel(){
     var why = res.why === 'matched'
       ? 'This load is already matched — Γ = 0, so there is nothing to do.'
       : res.why === 'lossless'
-      ? 'A purely reactive load (R = 0) absorbs no power, so no lossless network can match it to a real Z₀.'
+      ? 'A purely reactive load (R = 0) absorbs no power, so no lossless network can match it to a real Z<sub>0</sub>.'
       : res.why === 'forbidden'
       ? 'This load is in the forbidden region. At a spacing of ' + n3(S.dd) +
         'λ the tuner can only reach loads with g ≤ ' + n2(res.gmax) +
@@ -2242,7 +2262,7 @@ function solPanel(){
       R('put it at the', 'voltage ' + s.at);
       R('distance d', lenTxt(s.d));
       R('z there', n3(s.zr) + '  (real)');
-      R('Z₁', sig(s.z1*S.z0) + ' Ω');
+      R('Z<sub>1</sub>', sig(s.z1*S.z0) + ' Ω');
       R('length', lenTxt(0.25));
     } else {
       R('order', s.order);
@@ -2497,12 +2517,16 @@ function drawResp(){
   c.restore();
 
   c.textAlign = 'center'; c.textBaseline = 'top';
+  /* one precision for all three ticks, set by f0, so an axis never reads
+     0.500 / 1.00 / 1.50 */
+  var f0u = S.f/fPer();
+  var tdp = f0u > 0 ? Math.max(0, Math.min(4, 2 - Math.floor(Math.log10(f0u)))) : 2;
   [k0, 1, k1].forEach(function(k){
     c.fillStyle = C.ink3;
-    c.fillText(S.f > 0 ? n1(S.f*k) : n2(k), px(k), H - B + 6);
+    c.fillText(S.f > 0 ? (f0u*k).toFixed(tdp) : n2(k), px(k), H - B + 6);
   });
   c.fillStyle = C.ink3;
-  c.fillText(S.f > 0 ? 'MHz' : 'f / f0', (L + W - R)/2, H - 13);
+  c.fillText(S.f > 0 ? S.funit : 'f / f0', (L + W - R)/2, H - 13);
 
   function curve(sol, col, alpha, w){
     if(!sol) return;
@@ -2526,7 +2550,7 @@ function drawResp(){
   var txt;
   if(!band) txt = 'not matched at f0';
   else if(S.f > 0)
-    txt = 'holds to SWR ' + n1(S.blim) + ' over ' + n1(S.f*band.frac) + ' MHz'
+    txt = 'holds to SWR ' + n1(S.blim) + ' over ' + sig(S.f*band.frac/fPer()) + ' ' + S.funit
         + '  (' + n1(band.frac*100) + '% of f0)';
   else txt = 'holds over ' + n1(band.frac*100) + '% of f0';
   c.fillStyle = band ? C.ok : C.warn;
@@ -2659,7 +2683,7 @@ function pracFields(){
   if(S.method === 'shunt' || S.method === 'series')
     return [{ k:'l1', lab:'stub λ', step:0.001 }];
   if(S.method === 'qwt')
-    return [{ k:'z1', lab:'Z₁ Ω', step:0.1 }];
+    return [{ k:'z1', lab:'Z<sub>1</sub> Ω', step:0.1 }];
   if(S.method === 'lnet')
     return [{ k:'x1', lab:'series x', step:0.01 },
             { k:'b1', lab:'shunt b', step:0.01 }];
@@ -2761,7 +2785,7 @@ var URL_SPEC = [
   ['method','s'], ['pick','n'], ['openStub','b'],
   /* so a link can hand someone a problem to work rather than an answer */
   ['practice','b'], ['ymode','s'], ['blim','n'], ['bspan','n'],
-  ['lmode','s']
+  ['lmode','s'], ['funit','s']
 ];
 /* captured before any hash is read, so "same as default" always means the
    built-in default and never whatever the link happened to set */
@@ -2796,6 +2820,7 @@ function sanitiseState(){
   if(!isFinite(S.ee) || S.ee < 1)  S.ee = S_DEFAULTS.ee;
   if(['z','y','zy'].indexOf(S.grid) < 0) S.grid = S_DEFAULTS.grid;
   if(['rx','g','swr','rl','rc'].indexOf(S.lmode) < 0) S.lmode = S_DEFAULTS.lmode;
+  if(!FUNITS.hasOwnProperty(S.funit)) S.funit = S_DEFAULTS.funit;
   if(S.ymode !== 'point' && S.ymode !== 'grid') S.ymode = S_DEFAULTS.ymode;
   if(!(S.blim > 1)) S.blim = S_DEFAULTS.blim;
   if(!(S.bspan > 0.02 && S.bspan < 0.99)) S.bspan = S_DEFAULTS.bspan;
@@ -2840,7 +2865,8 @@ function applyHash(h){
 function syncAllInputs(){
   syncLoad();
   document.getElementById('i-z0').value = S.z0;
-  document.getElementById('i-f').value  = S.f;
+  document.getElementById('i-funit').value = S.funit;
+  document.getElementById('i-f').value  = fShow(S.f);
   document.getElementById('i-ee').value = S.ee;
   syncD();
   var dd = document.getElementById('i-dd');
@@ -2905,7 +2931,7 @@ function readLoad(){
   if(isFinite(Z0) && Z0 > 0) S.z0 = Z0;
   /* frequency first: the L and C modes are read against it */
   var f = parseFloat(document.getElementById('i-f').value);
-  if(isFinite(f) && f >= 0) S.f = f;
+  if(isFinite(f) && f >= 0) S.f = f*fPer();
 
   if(S.lmode === 'g' || S.lmode === 'swr'){
     var mm = A;
@@ -2987,6 +3013,12 @@ document.getElementById('i-lmode').addEventListener('change', function(){
   syncLoad();               /* rewrite the boxes in the new units */
   refresh();
 });
+document.getElementById('i-funit').addEventListener('change', function(){
+  S.funit = FUNITS.hasOwnProperty(this.value) ? this.value : 'MHz';
+  /* rewrite the box in the new unit; the frequency itself does not move */
+  document.getElementById('i-f').value = fShow(S.f);
+  refresh();
+});
 document.getElementById('i-blim').addEventListener('change', function(){
   S.blim = parseFloat(this.value) || 2; refresh();
 });
@@ -3021,7 +3053,7 @@ Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'), functio
     S.r = p[0]; S.x = p[1];
     if(b.getAttribute('data-preset') === 'ex'){ S.z0 = 50; S.f = 1000; S.ee = 1;
       document.getElementById('i-z0').value = 50;
-      document.getElementById('i-f').value = 1000;
+      document.getElementById('i-f').value = fShow(S.f);
       document.getElementById('i-ee').value = 1; }
     S.d = 0; S.pick = 0; syncD(); syncLoad(); refresh();
   });

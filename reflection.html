@@ -29,8 +29,8 @@
   <p class="t">Chapter 04 gave the general solution on a lossless line. Put the load at $z = 0$, with the line running off in the $-z$ direction toward the generator:</p>
 
   <figure class="fig">
-    <canvas id="setupfig" class="static" style="height:260px"></canvas>
-    <figcaption class="cap">both waves exist on the same line at once; z = 0 is fixed at the load, so the generator sits somewhere at negative z</figcaption>
+    <canvas id="setupfig" class="static" style="height:330px"></canvas>
+    <figcaption class="cap">both waves are on the line at once &mdash; the incident one above it travelling toward the load, the reflected one below it travelling back. z = 0 is pinned at the load, where the ratio of total voltage to total current has no choice but to equal Z<sub>L</sub>.</figcaption>
   </figure>
 
   <div class="eq">$$\tilde{V}(z) = V_0^+e^{-j\beta z} + V_0^-e^{+j\beta z} \qquad \tilde{I}(z) = \frac{V_0^+}{Z_0}e^{-j\beta z} - \frac{V_0^-}{Z_0}e^{+j\beta z}$$</div>
@@ -102,11 +102,12 @@
     <div class="rail">
       <div class="ctl"><label for="rl">R<sub>L</sub> &Omega;</label><input type="range" id="rl" min="0" max="300" step="1" value="90"><output id="rlv">90</output></div>
       <div class="ctl"><label for="xl">X<sub>L</sub> &Omega;</label><input type="range" id="xl" min="-250" max="250" step="1" value="-120"><output id="xlv">&minus;120</output></div>
+      <div class="ctl"><label for="z0sel">Z<sub>0</sub></label>
       <select id="z0sel" aria-label="Characteristic impedance">
-        <option value="50" selected>Z&#8320; = 50 &#937;</option>
-        <option value="75">Z&#8320; = 75 &#937;</option>
-        <option value="150">Z&#8320; = 150 &#937;</option>
-      </select>
+        <option value="50" selected>50 &#937;</option>
+        <option value="75">75 &#937;</option>
+        <option value="150">150 &#937;</option>
+      </select></div>
     </div>
     <dl class="readout">
       <div class="rd"><dt>|&Gamma;|</dt><dd id="r-gm">0.686</dd></div>
@@ -230,9 +231,13 @@
 <script src="assets/site.js"></script>
 <script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
 <script>
-var MONO = 'IBM Plex Mono, monospace';
+var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
 
-/* ---- the setup: both waves on one line, load fixing z = 0 ---- */
+/* real subscripts on canvas: see EM.rich in site.js */
+var rich = EM.rich;
+
+/* ---- the setup: a generator, the line from z = -l to z = 0, the load, both
+   waves on it at once, and the one condition the load imposes ---- */
 (function(){
   var cv = document.getElementById('setupfig');
   if(!cv) return;
@@ -240,44 +245,92 @@ var MONO = 'IBM Plex Mono, monospace';
     EM.fit(cv);
     var c = cv.getContext('2d');
     c.clearRect(0,0,cv._w,cv._h);
-    EM.design(c, cv, 560, 260);
-    var top = 96, bot = 164, mid = (top+bot)/2, xl = 40, xz = 400;
+    EM.design(c, cv, 640, 330);
+    /* vertical budget, checked against 330: incident label 58, its arrow 72,
+       rails 110 / 200, reflected arrow 238 and label 262, axis 292, ticks 314 */
+    var top = 110, bot = 200, mid = (top+bot)/2;
+    var xs = 46, x0 = 170, x1 = 480, xb = 530, ax = 292;
 
-    /* the two conductors */
-    c.strokeStyle = C.ink2; c.lineWidth = 2; c.lineCap = 'round';
-    c.beginPath(); c.moveTo(xl, top); c.lineTo(xz, top);
-    c.moveTo(xl, bot); c.lineTo(xz, bot); c.stroke();
-    c.fillStyle = C.ink3; c.font = '13px ' + MONO; c.textAlign = 'center';
-    c.fillText('Z0', (xl+xz)/2, mid + 5);
+    function wire(){
+      c.strokeStyle = C.ink2; c.lineWidth = 2; c.beginPath();
+      for(var i = 0; i < arguments.length; i += 4){
+        c.moveTo(arguments[i], arguments[i+1]); c.lineTo(arguments[i+2], arguments[i+3]);
+      }
+      c.stroke();
+    }
 
-    /* the load, bridging the two conductors */
-    c.fillStyle = C.surface; c.fillRect(xz, top-22, 56, (bot-top)+44);
-    c.strokeStyle = C.ink2; c.lineWidth = 2; c.strokeRect(xz, top-22, 56, (bot-top)+44);
-    c.fillStyle = C.ink2; c.font = '15px ' + MONO; c.textAlign = 'center';
-    c.fillText('ZL', xz+28, mid+5);
+    /* generator and its internal impedance */
+    var r = 19;
+    c.strokeStyle = C.ink2; c.lineWidth = 2;
+    c.beginPath(); c.arc(xs, mid, r, 0, EM.TAU); c.stroke();
+    c.beginPath();
+    for(var i = 0; i <= 24; i++){
+      var u = -r*0.45 + i*(r*0.9/24);
+      c.lineTo(xs + u, mid - Math.sin(i/24*EM.TAU)*r*0.36);
+    }
+    c.stroke();
+    wire(xs, mid - r, xs, top,  xs, top, 86, top,  136, top, x0, top,
+         xs, mid + r, xs, bot,  xs, bot, x0, bot);
+    c.fillStyle = C.surface; c.fillRect(86, top - 14, 50, 28);
+    c.strokeStyle = C.ink2; c.strokeRect(86, top - 14, 50, 28);
+    c.fillStyle = C.ink2; rich(c, [['Z','n'], ['g','b']], 111, top + 5, 14, 'center');
+    c.fillStyle = C.ink3; c.font = '12px ' + MONO; c.textAlign = 'center';
+    c.fillText('generator', xs, bot + 24);
 
-    /* z = 0, fixed at the load regardless of how long the line is */
-    c.strokeStyle = C.ink3; c.lineWidth = 1; c.setLineDash([4,4]);
-    c.beginPath(); c.moveTo(xz, top-42); c.lineTo(xz, bot+34); c.stroke();
-    c.setLineDash([]);
-    c.fillStyle = C.ink3; c.font = '13px ' + MONO; c.textAlign = 'center';
-    c.fillText('z = 0', xz, bot + 50);
+    /* the line itself, drawn as in chapter 08 */
+    c.fillStyle = C.accfill; c.strokeStyle = C.acc; c.lineWidth = 1.5;
+    c.fillRect(x0, top - 4, x1 - x0, 8); c.strokeRect(x0, top - 4, x1 - x0, 8);
+    c.fillRect(x0, bot - 4, x1 - x0, 8); c.strokeRect(x0, bot - 4, x1 - x0, 8);
+    c.fillStyle = C.acc;
+    rich(c, [['Z','n'], ['0','b'], [', β','n']], 228, mid + 5, 14, 'center');
 
-    /* toward the generator -- below the rails, mirroring z = 0 on the other side */
-    c.fillStyle = C.ink3; c.font = '12px ' + MONO; c.textAlign = 'left';
-    c.fillText('← toward the generator, z < 0', xl, bot + 50);
+    /* the load, bridging the two conductors at z = 0 */
+    c.fillStyle = C.surface; c.fillRect(x1, top - 20, xb - x1, (bot - top) + 40);
+    c.strokeStyle = C.ink2; c.lineWidth = 2; c.strokeRect(x1, top - 20, xb - x1, (bot - top) + 40);
+    c.fillStyle = C.ink2; rich(c, [['Z','n'], ['L','b']], (x1 + xb)/2, mid + 5, 15, 'center');
 
-    /* forward wave: travels toward the load, toward +z */
+    /* the condition it imposes, beside it */
+    c.fillStyle = C.ink;
+    rich(c, [['V(0)/I(0)','n']], 586, mid - 6, 13, 'center');
+    rich(c, [['= Z','n'], ['L','b']], 586, mid + 16, 13, 'center');
+
+    /* the total voltage and current somewhere along the line */
+    c.fillStyle = C.ink; c.font = '15px ' + MONO; c.textAlign = 'center';
+    c.fillText('+', 380, top + 24);
+    c.fillText('−', 380, bot - 12);
+    rich(c, [['V(z)','n']], 380, mid + 5, 14, 'center');
+    c.strokeStyle = C.ink; c.fillStyle = C.ink; c.lineWidth = 1.6;
+    EM.arrow(c, 300, top - 13, 340, top - 13, 6);
+    rich(c, [['I(z)','n']], 320, top - 20, 13, 'center');
+
+    /* incident wave, above the line: travels toward the load, toward +z */
     c.strokeStyle = C.e; c.fillStyle = C.e; c.lineWidth = 2;
-    EM.arrow(c, 140, top-42, 300, top-42, 7);
-    c.textAlign = 'center'; c.font = '14px ' + MONO;
-    c.fillText('V0+, I0+', 220, top - 50);
+    EM.arrow(c, 200, 72, 450, 72, 7);
+    rich(c, [['V','n'], ['+','p'], [' = V','n'], ['0|+','bp'], [' e','n'], ['−jβz','p'],
+             ['    I','n'], ['+','p'], [' = V','n'], ['+','p'], ['/Z','n'], ['0','b']],
+         325, 58, 14, 'center');
 
-    /* backward wave: reflected, travels toward the generator, toward -z */
+    /* reflected wave, below the line: travels back toward the generator. The
+       minus sign in its current is the whole reason it can exist. */
     c.strokeStyle = C.h; c.fillStyle = C.h; c.lineWidth = 2;
-    EM.arrow(c, 300, top-18, 140, top-18, 7);
-    c.font = '14px ' + MONO;
-    c.fillText('V0-, I0-', 220, top - 26);
+    EM.arrow(c, 450, 238, 200, 238, 7);
+    rich(c, [['V','n'], ['−','p'], [' = V','n'], ['0|−','bp'], [' e','n'], ['+jβz','p'],
+             ['    I','n'], ['−','p'], [' = −V','n'], ['−','p'], ['/Z','n'], ['0','b']],
+         325, 266, 14, 'center');
+
+    /* the z axis, with the load pinned at zero */
+    c.strokeStyle = C.ink3; c.fillStyle = C.ink3; c.lineWidth = 1;
+    c.setLineDash([3, 4]);
+    c.beginPath(); c.moveTo(x0, bot + 6); c.lineTo(x0, ax - 5);
+    c.moveTo(x1, bot + 22); c.lineTo(x1, ax - 5); c.stroke();
+    c.setLineDash([]);
+    EM.arrow(c, x0, ax, 604, ax, 6);
+    c.beginPath(); c.moveTo(x0, ax - 5); c.lineTo(x0, ax + 5);
+    c.moveTo(x1, ax - 5); c.lineTo(x1, ax + 5); c.stroke();
+    c.font = '13px ' + MONO; c.textAlign = 'center';
+    c.fillText('z = −l', x0, ax + 22);
+    c.fillText('z = 0', x1, ax + 22);
+    c.textAlign = 'left'; c.fillText('z', 610, ax + 4);
 
     c.restore();
   }, false);

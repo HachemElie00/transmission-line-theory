@@ -86,10 +86,10 @@
       <div class="ctl"><label for="tol">worst |&Gamma;| you accept</label><input type="range" id="tol" min="0.05" max="0.5" step="0.01" value="0.2"><output id="tolv">0.20</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>Z&#8321; needed</dt><dd id="q-z1">70.7</dd></div>
+      <div class="rd"><dt>Z<sub>1</sub> needed</dt><dd id="q-z1">70.7</dd></div>
       <div class="rd"><dt>SWR unmatched</dt><dd id="q-swr">2.00</dd></div>
       <div class="rd"><dt>limit as SWR</dt><dd id="q-lim">1.50</dd></div>
-      <div class="rd"><dt>usable band</dt><dd id="q-band">0.61&ndash;1.39 f&#8320;</dd></div>
+      <div class="rd"><dt>usable band</dt><dd id="q-band">0.61&ndash;1.39 f<sub>0</sub></dd></div>
       <div class="rd"><dt>bandwidth</dt><dd id="q-bw">78 %</dd></div>
     </dl>
     <div class="btns">
@@ -98,7 +98,7 @@
       <button data-r="200">200 &#937;</button>
       <button data-r="12">12 &#937; &mdash; a hard match</button>
     </div>
-    <figcaption class="cap">|&Gamma;| against frequency &mdash; the transformer is perfect only at f&#8320;, and the further R<sub>L</sub> is from Z&#8320;, the narrower the useful band</figcaption>
+    <figcaption class="cap">|&Gamma;| against frequency &mdash; the transformer is perfect only at f<sub>0</sub>, and the further R<sub>L</sub> is from Z<sub>0</sub>, the narrower the useful band</figcaption>
   </figure>
 
   <p class="t">The figure shows the catch. $|\Gamma|$ is exactly zero at $f_0$ and climbs on both sides, because away from the design frequency the section is no longer a quarter wavelength.</p>
@@ -140,7 +140,7 @@
       <span><i style="border-color:var(--e)"></i>shorted stub</span>
       <span><i style="border-color:var(--h)"></i>open stub</span>
     </div>
-    <figcaption class="cap">normalised reactance X/Z&#8320; against stub length &mdash; above the axis is inductive, below is capacitive</figcaption>
+    <figcaption class="cap">normalised reactance X/Z<sub>0</sub> against stub length &mdash; above the axis is inductive, below is capacitive</figcaption>
   </figure>
 
   <div class="tw"><table>
@@ -212,7 +212,7 @@
 <script src="assets/site.js"></script>
 <script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
 <script>
-var MONO = 'IBM Plex Mono, monospace';
+var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
 var Z0 = 50;
 
 /* |Gamma| of a quarter-wave transformer at normalised frequency f/f0 */
@@ -264,7 +264,7 @@ function qwtGamma(RL, Z1, fr){
       document.getElementById('q-bw').innerHTML = '&gt; 200 %';
     } else {
       document.getElementById('q-band').innerHTML =
-        BAND[0].toFixed(2) + '&ndash;' + BAND[1].toFixed(2) + ' f&#8320;';
+        BAND[0].toFixed(2) + '&ndash;' + BAND[1].toFixed(2) + ' f<sub>0</sub>';
       document.getElementById('q-bw').textContent = ((BAND[1]-BAND[0])*100).toFixed(0) + ' %';
     }
     EM.redrawStatic();
@@ -329,8 +329,9 @@ function qwtGamma(RL, Z1, fr){
     c.fillText(GM.toFixed(2), L-6, py(GM)+4);
     c.fillText('0', L-6, py(0)+4);
     c.textAlign = 'center';
-    ['0','f₀','2f₀'].forEach(function(lab,k){
-      c.fillText(lab, px(k), H-B+16);
+    /* real subscripts: see EM.rich */
+    [[['0','n']], [['f','n'], ['0','b']], [['2f','n'], ['0','b']]].forEach(function(lab,k){
+      EM.rich(c, lab, px(k), H-B+16, parseFloat(c.font), 'center');
     });
     if(BAND && (BAND[1]-BAND[0]) > 0.25){
       /* inside the stripe, clear of the f0 tick on the axis below */
@@ -338,7 +339,7 @@ function qwtGamma(RL, Z1, fr){
       c.fillText('usable band', px((BAND[0]+BAND[1])/2), T + 28);
     }
     c.textAlign = 'left'; c.fillStyle = C.e;
-    c.fillText('|Γ|  with a λ/4 section of Z₁ = ' + Z1.toFixed(1) + ' Ω', L+8, T+11);
+    EM.rich(c, [['|Γ|  with a λ/4 section of Z','n'], ['1','b'], [' = ' + Z1.toFixed(1) + ' Ω','n']], L+8, T+11, parseFloat(c.font), 'left');
     c.textAlign = 'right'; c.fillStyle = C.ink3;
     c.fillText('your limit', W-R-4, py(GM)-6);
   }, false);

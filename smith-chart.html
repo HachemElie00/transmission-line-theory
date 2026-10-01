@@ -128,7 +128,7 @@ canvas#smith{display:block;width:100%;max-width:560px;height:auto;aspect-ratio:1
       <button data-s="2,-1.4">2 &minus; j1.4</button>
       <button data-s="0.4,0.8">0.4 + j0.8</button>
     </div>
-    <figcaption class="cap">normalised throughout &mdash; multiply by Z&#8320; for ohms. The hollow marker is the load; the filled one is where you are standing.</figcaption>
+    <figcaption class="cap">normalised throughout &mdash; multiply by Z<sub>0</sub> for ohms. The hollow marker is the load; the filled one is where you are standing.</figcaption>
   </figure>
 
   <p class="t">Sweep the slider and watch three facts from earlier chapters become one motion. The point travels <b>clockwise</b>; it returns to the start after <b>half a wavelength</b>; and it stays on a circle of <b>constant radius</b>, because a lossless line cannot change $|\Gamma|$. Where that circle crosses the real axis on the left you are at a voltage minimum and $z = 1/S$; where it crosses on the right you are at a maximum and $z = S$.</p>
@@ -260,7 +260,7 @@ canvas#smith{display:block;width:100%;max-width:560px;height:auto;aspect-ratio:1
 <script src="assets/site.js"></script>
 <script id="MathJax-script" async src="assets/mathjax/tex-svg.js"></script>
 <script>
-var MONO = 'IBM Plex Mono, monospace';
+var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
 
 /* ---------- the chart, drawn from its own circle equations ---------- */
 /* constant r: centre (r/(1+r), 0), radius 1/(1+r)
@@ -374,8 +374,11 @@ function fmtZ(z){
     c.strokeStyle = C.ink; c.lineWidth = 1; c.globalAlpha = .55;
     c.beginPath(); c.moveTo(cx, cy + 7); c.lineTo(cx, cy + 28); c.stroke();
     c.globalAlpha = 1;
+    /* z = 1, matching the z = 0 and z = infinity at the ends. It used to say
+       Gamma = 0, but at this size a capital Gamma reads as a lower-case r, and
+       "r = 0" at the centre, under a circle labelled r = 1, is false. */
     c.fillStyle = C.ink; c.textAlign = 'center';
-    c.fillText('Γ = 0', cx, cy + 42);
+    c.fillText('z = 1', cx, cy + 42);
     c.fillStyle = C.ink3;
     c.fillText('matched', cx, cy + 56);
 
