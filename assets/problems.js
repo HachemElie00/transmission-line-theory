@@ -20,7 +20,7 @@
    rather than a fourth hard problem so that nobody feels obliged to finish it. */
 
 (function(){
-  var TAU = Math.PI*2, C0 = 299792458, MU0 = 4e-7*Math.PI;
+  var TAU = Math.PI*2, C0 = 299792458, MU0 = 4e-7*Math.PI, EPS0 = 1/(MU0*C0*C0);
 
   /* ---- shared physics, written once ---- */
   function gam(r, x){                       /* normalised z -> Gamma */
@@ -114,6 +114,146 @@
   }
 
   window.TLT_PROBLEMS = {
+
+  /* ================= P1 Maxwell's equations ================= */
+  'prologue-maxwell.html': [
+    { lvl: 'easy',
+      q: 'A 100 pF capacitor is charged so its voltage rises at $dV/dt = 2\\times10^6$ V/s. Give the displacement current.',
+      f: [ { lab: 'I_d (mA)', ans: function(){ return 100e-12*2e6*1e3; } } ],
+      why: 'A capacitor\'s current is $I = C\\,dV/dt$ by definition, and this is exactly the displacement current that keeps Amp&egrave;re\'s law consistent whichever surface you choose through the loop -- the flat one sees it as conduction current in the lead, the bulging one sees it as $\\partial\\vD/\\partial t$ in the gap.' },
+
+    { lvl: 'easy',
+      q: 'A parallel-plate capacitor with plate area $4\\ \\text{cm}^2$ carries charge $2$ nC. Give $D$ between the plates, ignoring fringing.',
+      f: [ { lab: 'D (&mu;C/m&sup2;)', ans: function(){ return (2e-9/4e-4)*1e6; } } ],
+      why: 'A Gaussian pillbox enclosing one plate gives $D = \\rho_s = Q/A$ directly -- the field between the plates depends only on the charge already there, not on how fast it arrived.' },
+
+    { lvl: 'easy',
+      q: 'A time-harmonic electric field in vacuum has $E(t) = 50\\cos(\\omega t)$ V/m at $f = 300$ MHz. Give the peak displacement current density.',
+      f: [ { lab: 'J_d,max (mA/m&sup2;)', ans: function(){ return EPS0*50*TAU*300e6*1e3; } } ],
+      why: '$\\vJ_d = \\varepsilon_0\\,\\partial\\vE/\\partial t$, and differentiating a cosine peaks at amplitude times $\\omega$, so $J_{d,\\max} = \\varepsilon_0 E_0 \\omega$. No charge moves anywhere in this calculation -- the vacuum itself is "conducting" in Maxwell\'s sense.' },
+
+    { lvl: 'medium',
+      q: 'A capacitor with plate area $10\\ \\text{cm}^2$ charges at a constant current of $8$ mA. Give the rate of change of $D$ between the plates.',
+      f: [ { lab: 'dD/dt (C/(m&sup2;&middot;s))', ans: function(){ return 8e-3/1e-3; } } ],
+      why: 'Since $D = Q/A$ at every instant, differentiating in time gives $dD/dt = (dQ/dt)/A$ directly -- and that is the integrand that makes the displacement current through the gap equal the conduction current in the wire.' },
+
+    { lvl: 'medium',
+      q: 'A straight wire carries $120$ mA toward a capacitor it is charging. On an Amp&egrave;rian loop of radius $4$ cm centred on the wire, give $H$.',
+      f: [ { lab: 'H (mA/m)', ans: function(){ return (0.120/(TAU*0.04))*1000; } } ],
+      why: 'Whichever surface spans the loop -- flat through the wire, or bulging through the gap between the plates -- Amp&egrave;re&ndash;Maxwell must enclose the same current, so $H$ cannot depend on that choice. The flat surface is easiest: it sees only the conduction current $I$, giving the ordinary $H = I/2\\pi r$ of a wire.' },
+
+    { lvl: 'medium',
+      q: 'A uniform $dB/dt = 0.8$ T/s threads a flat circular loop of radius $5$ cm. Give the magnitude of the circulation of $\\vE$ around the loop.',
+      f: [ { lab: 'EMF (mV)', ans: function(){ return Math.PI*0.05*0.05*0.8*1000; } } ],
+      why: 'Faraday\'s law in integral form is $\\oint\\vE\\cdot d\\mathbf{l} = -d\\Phi_B/dt$, and with $dB/dt$ uniform over a flat loop the flux is simply area times $dB/dt$.' },
+
+    { lvl: 'hard',
+      q: 'A circular parallel-plate capacitor of radius $1$ cm and gap $1$ mm, vacuum dielectric, is driven at $f = 500$ MHz with a $10$ V peak across the gap. Give the peak displacement current through it.',
+      f: [ { lab: 'I_d (mA)', ans: function(){
+               var a = 0.01, d = 1e-3, V0 = 10, w = TAU*500e6;
+               var C = EPS0*Math.PI*a*a/d;
+               return C*V0*w*1000; } } ],
+      why: 'Between the plates $E = V/d$ and $D = \\varepsilon_0 E$, so $I_d = A\\,dD/dt = (\\varepsilon_0 A/d)\\,dV/dt$ -- which is exactly $C\\,dV/dt$ with $C = \\varepsilon_0 A/d$. Field and lumped-circuit pictures of the same capacitor have to agree, and this is the arithmetic that shows it.' },
+
+    { lvl: 'hard',
+      q: 'A medium has conductivity $\\sigma = 0.02$ S/m and $\\varepsilon_r = 4$. At $f = 1$ GHz, give the ratio of conduction to displacement current density.',
+      f: [ { lab: 'J_c/J_d', ans: function(){ return 0.02/(TAU*1e9*4*EPS0); } } ],
+      why: 'Amp&egrave;re&ndash;Maxwell\'s right side is $\\vJ + \\partial\\vD/\\partial t$; with $\\vJ = \\sigma\\vE$ and $\\vD = \\varepsilon\\vE$ the two terms have ratio $\\sigma/\\omega\\varepsilon$, the loss tangent. Below 1 the medium behaves mostly like a capacitor; above 1, mostly like a resistor.' },
+
+    { lvl: 'hard',
+      q: 'In a region, $\\vJ = 2x\\,\\hat x - 3y\\,\\hat y + 5z\\,\\hat z$ A/m$^2$ (coefficients in A/m$^3$). Give the rate of change of volume charge density at any point there.',
+      f: [ { lab: 'd&rho;_v/dt (C/(m&sup3;&middot;s))', ans: function(){ return -(2 - 3 + 5); } } ],
+      why: 'Taking the divergence of the corrected Amp&egrave;re law gives the continuity equation $\\dive\\vJ + \\partial\\rho_v/\\partial t = 0$. The divergence of a linear field is just the sum of the three coefficients, $2 - 3 + 5 = 4$ A/m$^3$, so charge drains from every point in this region at that rate.' },
+
+    { lvl: 'stretch',
+      q: 'Maxwell\'s equations fix two constants from completely unrelated experiments: $\\mu_0$ from the force between current-carrying wires, $\\varepsilon_0$ from the force between charged plates. Combine them into a quantity with units of velocity, and give it alongside its ratio to $c = 299{,}792{,}458$ m/s.',
+      f: [ { lab: 'u (&times;10&#8312; m/s)', ans: function(){ return 1/Math.sqrt(MU0*EPS0)/1e8; } },
+           { lab: 'u / c',                    ans: function(){ return 1/Math.sqrt(MU0*EPS0)/C0; } } ],
+      why: 'This is the calculation the chapter sets up and stops short of: $u = 1/\\sqrt{\\mu_0\\varepsilon_0}$ comes out equal, to measurement precision, to the speed of light -- two benchtop constants from electrostatics and magnetostatics, with no optics anywhere in their derivation, predicting exactly how fast light travels. That coincidence is what told Maxwell light itself is an electromagnetic wave, and the next chapter derives why.' }
+  ],
+
+  /* ================= P2 the wave equation and Helmholtz ================= */
+  'prologue-helmholtz.html': [
+    { lvl: 'easy',
+      q: 'Polyethylene has $\\varepsilon_r = 2.1$, $\\mu_r = 1$. Give the propagation speed of a wave inside it.',
+      f: [ { lab: 'u (&times;10&#8312; m/s)', ans: function(){ return C0/Math.sqrt(2.1)/1e8; } } ],
+      why: '$u = 1/\\sqrt{\\mu\\varepsilon} = c/\\sqrt{\\varepsilon_r\\mu_r}$ -- a dielectric with no magnetic response simply divides the free-space speed by $\\sqrt{\\varepsilon_r}$.' },
+
+    { lvl: 'easy',
+      q: 'A lossless medium has $\\varepsilon_r = 4$, $\\mu_r = 1$. Give its intrinsic impedance.',
+      f: [ { lab: '&eta; (&Omega;)', ans: function(){ return Math.sqrt(MU0/EPS0)/Math.sqrt(4); } } ],
+      why: '$\\eta = \\sqrt{\\mu/\\varepsilon}$; with $\\mu_r = 1$ only $\\varepsilon_r$ moves it, and only by $\\sqrt{\\varepsilon_r}$ -- which is why doubling a dielectric\'s permittivity does not halve $\\eta$.' },
+
+    { lvl: 'easy',
+      q: 'A wave has propagation constant $\\gamma = 0.1 + j12$ per metre. Give $\\alpha$ and $\\beta$.',
+      f: [ { lab: '&alpha; (Np/m)', ans: function(){ return 0.1; } },
+           { lab: '&beta; (rad/m)', ans: function(){ return 12; } } ],
+      why: '$\\gamma = \\alpha + j\\beta$ by definition -- the real part decays the amplitude, the imaginary part advances the phase. Nothing to compute, only to recognise which is which.' },
+
+    { lvl: 'medium',
+      q: 'A lossy dielectric has $\\sigma = 1$ mS/m, $\\varepsilon_r = 2.5$, $\\mu_r = 1$, at $f = 500$ MHz. Give $\\alpha$ and $\\beta$.',
+      f: [ { lab: '&alpha; (Np/m)', ans: function(){
+               var sigma = 0.001, eps = 2.5*EPS0, mu = MU0, w = TAU*500e6;
+               var lt = sigma/(w*eps), k = w*Math.sqrt(mu*eps/2);
+               return k*Math.sqrt(Math.sqrt(1+lt*lt) - 1); } },
+           { lab: '&beta; (rad/m)', ans: function(){
+               var sigma = 0.001, eps = 2.5*EPS0, mu = MU0, w = TAU*500e6;
+               var lt = sigma/(w*eps), k = w*Math.sqrt(mu*eps/2);
+               return k*Math.sqrt(Math.sqrt(1+lt*lt) + 1); } } ],
+      why: 'The general lossy-medium solution of $\\gamma^2 = j\\omega\\mu(\\sigma+j\\omega\\varepsilon)$ is $\\alpha,\\beta = \\omega\\sqrt{\\mu\\varepsilon/2}\\,\\sqrt{\\sqrt{1+(\\sigma/\\omega\\varepsilon)^2}\\mp1}$. The loss tangent here is small, so $\\beta$ comes out close to the lossless $\\omega\\sqrt{\\mu\\varepsilon}$ and $\\alpha$ stays small -- a low-loss dielectric, not a conductor.' },
+
+    { lvl: 'medium',
+      q: 'A plane wave in free space has peak $E_0 = 120$ V/m. Give the peak magnetic field.',
+      f: [ { lab: 'H_0 (A/m)', ans: function(){ return 120/Math.sqrt(MU0/EPS0); } } ],
+      why: '$\\eta$ is defined as the ratio $\\tilde E_x/\\tilde H_y$, and in a lossless medium it is real, so the peak fields divide by it directly: $H_0 = E_0/\\eta_0$.' },
+
+    { lvl: 'medium',
+      q: 'A medium has $\\varepsilon_r = 9$, $\\mu_r = 1$. At $f = 3$ GHz, give $\\beta$ and $\\lambda$.',
+      f: [ { lab: '&beta; (rad/m)', ans: function(){ return TAU*3e9/(C0/3); } },
+           { lab: '&lambda; (mm)',  ans: function(){ return (C0/3)/3e9*1000; } } ],
+      why: '$u = c/\\sqrt{\\varepsilon_r} = c/3$ here, then $\\beta = \\omega/u$ and $\\lambda = u/f$ as usual. Loading a line with a higher-permittivity dielectric is exactly how microstrip in chapter 05 packs a given electrical length into a shorter physical one.' },
+
+    { lvl: 'hard',
+      q: 'A medium has $\\sigma = 0.01$ S/m, $\\varepsilon_r = 4$, $\\mu_r = 1$, at $f = 1$ GHz. Give $|\\eta|$ and its angle.',
+      f: [ { lab: '|&eta;| (&Omega;)', ans: function(){
+               var sigma = 0.01, eps = 4*EPS0, mu = MU0, w = TAU*1e9;
+               var denRe = sigma, denIm = w*eps, dd = denRe*denRe + denIm*denIm;
+               var qRe = (w*mu*denIm)/dd, qIm = (w*mu*denRe)/dd;
+               var m = Math.hypot(qRe, qIm);
+               return Math.sqrt(m); } },
+           { lab: 'angle (&deg;)', ans: function(){
+               var sigma = 0.01, eps = 4*EPS0, mu = MU0, w = TAU*1e9;
+               var denRe = sigma, denIm = w*eps, dd = denRe*denRe + denIm*denIm;
+               var qRe = (w*mu*denIm)/dd, qIm = (w*mu*denRe)/dd;
+               var a = Math.atan2(qIm, qRe);
+               return (a/2)*180/Math.PI; } } ],
+      why: 'In a lossy medium $\\eta = \\sqrt{j\\omega\\mu/(\\sigma+j\\omega\\varepsilon)}$ is complex: take the quotient, then the square root by halving the angle and rooting the magnitude. The small nonzero angle means $E$ and $H$ no longer peak at the same instant -- the signature of a medium that dissipates some of what it carries.' },
+
+    { lvl: 'hard',
+      q: 'For the lossy dielectric above ($\\sigma = 1$ mS/m, $\\varepsilon_r = 2.5$, $\\mu_r = 1$, $f = 500$ MHz), give the attenuation per wavelength.',
+      f: [ { lab: 'loss (dB per &lambda;)', ans: function(){
+               var sigma = 0.001, eps = 2.5*EPS0, mu = MU0, w = TAU*500e6;
+               var lt = sigma/(w*eps), k = w*Math.sqrt(mu*eps/2);
+               var alpha = k*Math.sqrt(Math.sqrt(1+lt*lt) - 1);
+               var beta  = k*Math.sqrt(Math.sqrt(1+lt*lt) + 1);
+               return alpha*8.685889638*(TAU/beta); } } ],
+      why: 'One wavelength of travel multiplies the amplitude by $e^{-\\alpha\\lambda}$, and converting $\\alpha$ (Np/m) to dB and multiplying by $\\lambda$ gives the loss per cycle directly. Under half a decibel here -- which is why a low-loss dielectric can be treated as lossless over any one wavelength of a circuit.' },
+
+    { lvl: 'hard',
+      q: 'For that same lossy dielectric, the low-loss approximation gives $\\alpha \\approx (\\sigma/2)\\sqrt{\\mu/\\varepsilon}$. Compare it against the exact $\\alpha$ from the full complex $\\gamma$, as a percentage.',
+      f: [ { lab: 'error (%)', ans: function(){
+               var sigma = 0.001, eps = 2.5*EPS0, mu = MU0, w = TAU*500e6;
+               var lt = sigma/(w*eps), k = w*Math.sqrt(mu*eps/2);
+               var exact = k*Math.sqrt(Math.sqrt(1+lt*lt) - 1);
+               var approx = (sigma/2)*Math.sqrt(mu/eps);
+               return 100*(approx - exact)/exact; }, tol: 0.1 } ],
+      why: 'Expanding $\\sqrt{1+(\\sigma/\\omega\\varepsilon)^2} \\approx 1 + \\tfrac12(\\sigma/\\omega\\varepsilon)^2$ for a small loss tangent collapses the exact formula to $\\alpha \\approx (\\sigma/2)\\sqrt{\\mu/\\varepsilon} = \\sigma\\eta/2$. The two agree to a few thousandths of a percent here, which is why nearly every textbook table of dielectric loss quotes this approximation rather than the exact root.' },
+
+    { lvl: 'stretch',
+      q: 'Everything on this page stopped at the ratio of fields. The time-average power a plane wave carries is $S_{avg} = E_0^2/(2\\eta)$. For free space with $E_0 = 100$ V/m peak, give it.',
+      f: [ { lab: 'S_avg (W/m&sup2;)', ans: function(){ var eta0 = Math.sqrt(MU0/EPS0); return 1e4/(2*eta0); } } ],
+      why: '$\\eta$ was introduced purely as a field ratio, but once you have it, the power follows the same shape as $|V|^2/2Z_0$ on a line -- which is exactly the quantity chapter 07 onward will care about, just not yet in field form.' }
+  ],
 
   /* ================= 01 waves, phasors, complex numbers ================= */
   'waves-phasors.html': [

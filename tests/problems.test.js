@@ -37,6 +37,7 @@ const H = require('./lib/harness');
 
 const s = H.suite('problems');
 const TAU = Math.PI*2, C0 = 299792458, NP2DB = 8.685889638;
+const MU0 = 4e-7*Math.PI, EPS0 = 1/(MU0*C0*C0);
 
 /* load the data file the way the page does */
 const src = fs.readFileSync(path.join(H.SITE, 'assets', 'problems.js'), 'utf8');
@@ -70,8 +71,8 @@ const LEVELS = 'easy,easy,easy,medium,medium,medium,hard,hard,hard,stretch';
   }
   s.check('every problem is complete and every answer finite', bad.length === 0,
           bad.slice(0, 4).join('  '));
-  s.check('nine problems and one stretch on each of the eleven chapters',
-          count === 110 && Object.keys(P).length === 11,
+  s.check('nine problems and one stretch on each of the eleven chapters plus both prologues',
+          count === 130 && Object.keys(P).length === 13,
           count + ' problems, ' + fields + ' answer fields');
 }
 
@@ -156,6 +157,112 @@ function matches(name, z, tol){
   s.check(name, Math.abs(z[0] - 1) < (tol || 3e-3) && Math.abs(z[1]) < (tol || 3e-3),
           '= ' + z[0].toFixed(5) + (z[1] < 0 ? ' - j' : ' + j') + Math.abs(z[1]).toFixed(5) +
           ', wanted 1 + j0');
+}
+
+/* a plain central-difference derivative: used below wherever the independent
+   route is "do the calculus numerically" instead of applying the same rule
+   the page does symbolically */
+function numDeriv(f, t, h){ h = h || 1e-6; return (f(t+h) - f(t-h))/(2*h); }
+
+/* ================================ P1 Maxwell's equations ================ */
+{
+  const p = 'prologue-maxwell.html';
+  /* capacitor current, by numerically differentiating Q(t) = C V(t) instead
+     of applying the symbolic product rule the page uses */
+  {
+    const C = 100e-12, rate = 2e6;
+    const Q = t => C*(rate*t);
+    check('Pm e1: capacitor current, numerically differentiated',
+          A(p,0,0), numDeriv(Q, 1, 1e-9)*1e3, 1e-7);
+  }
+  check('Pm e2: D = Q/A', A(p,1,0), (2e-9/4e-4)*1e6, 1e-9);
+  /* peak displacement current density, found by scanning a numerically
+     differentiated D(t) for its maximum rather than differentiating cosine
+     symbolically */
+  {
+    const w = TAU*300e6;
+    const D = t => EPS0*50*Math.cos(w*t);
+    let peak = 0;
+    for (let i = 0; i <= 2000; i++){
+      const t = (i/2000)*(TAU/w), v = Math.abs(numDeriv(D, t, 1e-13));
+      if (v > peak) peak = v;
+    }
+    check('Pm e3: peak J_d, scanned numerically', A(p,2,0), peak*1e3, 1e-4);
+  }
+  check('Pm m1: dD/dt = (dQ/dt)/A', A(p,3,0), 8e-3/1e-3, 1e-9);
+  check('Pm m2: H = I/2 pi r on the flat surface', A(p,4,0), (0.120/(TAU*0.04))*1000, 1e-9);
+  check('Pm m3: EMF = area times dB/dt', A(p,5,0), Math.PI*0.05*0.05*0.8*1000, 1e-9);
+  /* the circular capacitor's peak current, by scanning a numerically
+     differentiated flux integral D(t)*A rather than using C dV/dt */
+  {
+    const a = 0.01, d = 1e-3, V0 = 10, w = TAU*500e6, area = Math.PI*a*a;
+    const flux = t => EPS0*(V0*Math.cos(w*t)/d)*area;
+    let peak = 0;
+    for (let i = 0; i <= 2000; i++){
+      const t = (i/2000)*(TAU/w), v = Math.abs(numDeriv(flux, t, 1e-13));
+      if (v > peak) peak = v;
+    }
+    check('Pm h1: peak I_d, scanned numerically', A(p,6,0), peak*1e3, 1e-4);
+  }
+  check('Pm h2: loss tangent sigma / (omega eps)', A(p,7,0), 0.02/(TAU*1e9*4*EPS0), 1e-9);
+  /* the divergence of a linear vector field, by central differences at an
+     arbitrary point rather than by reading off the three coefficients */
+  {
+    const Jx = x => 2*x, Jy = y => -3*y, Jz = z => 5*z;
+    const x0 = 1.3, y0 = -0.7, z0 = 2.1, h = 1e-5;
+    const div = (Jx(x0+h) - Jx(x0-h))/(2*h) + (Jy(y0+h) - Jy(y0-h))/(2*h) +
+                (Jz(z0+h) - Jz(z0-h))/(2*h);
+    check('Pm h3: continuity, divergence by finite differences', A(p,8,0), -div, 1e-6);
+  }
+  /* u = 1/sqrt(mu0 eps0) is definitional, like the site's other closed-form
+     identities -- there is nothing else to compare it against */
+  check('Pm s: u = 1/sqrt(mu0 eps0)', A(p,9,0), 1/Math.sqrt(MU0*EPS0)/1e8, 1e-9);
+  check('Pm s: u/c = 1', A(p,9,1), 1, 1e-9);
+}
+
+/* ================================ P2 wave equation and Helmholtz ======== */
+{
+  const p = 'prologue-helmholtz.html';
+  check('Ph e1: u = c / sqrt(eps_r)', A(p,0,0), C0/Math.sqrt(2.1)/1e8, 1e-9);
+  check('Ph e2: eta = eta0 / sqrt(eps_r)', A(p,1,0), Math.sqrt(MU0/EPS0)/Math.sqrt(4), 1e-9);
+  s.check('Ph e3: gamma read off directly', A(p,2,0) === 0.1 && A(p,2,1) === 12,
+          'alpha ' + A(p,2,0) + ', beta ' + A(p,2,1));
+  /* the lossy-medium alpha and beta, from the complex gamma^2 by the
+     rectangular-identity square root rather than the page's closed trig form */
+  {
+    const sigma = 0.001, eps = 2.5*EPS0, mu = MU0, w = TAU*500e6;
+    const gamma = csqrt([-(w*w*mu*eps), w*mu*sigma]);
+    check('Ph m1: alpha, via csqrt of gamma^2', A(p,3,0), gamma[0], 1e-6);
+    check('Ph m1: beta, via csqrt of gamma^2', A(p,3,1), gamma[1], 1e-6);
+  }
+  /* the reciprocal arrangement E0 sqrt(eps/mu), not E0 / sqrt(mu/eps) */
+  check('Ph m2: H0 = E0 sqrt(eps0/mu0)', A(p,4,0), 120*Math.sqrt(EPS0/MU0), 1e-9);
+  check('Ph m3: beta = omega / u', A(p,5,0), TAU*3e9/(C0/3), 1e-9);
+  check('Ph m3: lambda = u / f', A(p,5,1), (C0/3)/3e9*1000, 1e-9);
+  /* the complex eta, via cdiv then csqrt -- the rectangular route, not the
+     page's halve-the-angle route */
+  {
+    const sigma = 0.01, eps = 4*EPS0, mu = MU0, w = TAU*1e9;
+    const eta = csqrt(cdiv([0, w*mu], [sigma, w*eps]));
+    check('Ph h1: |eta|, via cdiv+csqrt', A(p,6,0), cabs(eta), 1e-6);
+    check('Ph h1: angle(eta), via cdiv+csqrt', A(p,6,1), carg(eta)*180/Math.PI, 1e-6);
+  }
+  /* dB per wavelength, from the same csqrt route */
+  {
+    const sigma = 0.001, eps = 2.5*EPS0, mu = MU0, w = TAU*500e6;
+    const gamma = csqrt([-(w*w*mu*eps), w*mu*sigma]);
+    check('Ph h2: loss per wavelength, via csqrt', A(p,7,0),
+          gamma[0]*NP2DB*(TAU/gamma[1]), 1e-6);
+  }
+  /* the low-loss approximation against the csqrt-exact alpha */
+  {
+    const sigma = 0.001, eps = 2.5*EPS0, mu = MU0, w = TAU*500e6;
+    const gamma = csqrt([-(w*w*mu*eps), w*mu*sigma]);
+    const approx = (sigma/2)*Math.sqrt(mu/eps);
+    check('Ph h3: low-loss alpha against csqrt-exact',
+          A(p,8,0), 100*(approx - gamma[0])/gamma[0], 0.05);
+  }
+  check('Ph s: S_avg = E0^2 / 2 eta0', A(p,9,0), 1e4/(2*Math.sqrt(MU0/EPS0)), 1e-9);
 }
 
 /* ================================ 01 waves, phasors, complex numbers ==== */
