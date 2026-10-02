@@ -333,13 +333,22 @@ function qwtGamma(RL, Z1, fr){
     [[['0','n']], [['f','n'], ['0','b']], [['2f','n'], ['0','b']]].forEach(function(lab,k){
       EM.rich(c, lab, px(k), H-B+16, parseFloat(c.font), 'center');
     });
-    if(BAND && (BAND[1]-BAND[0]) > 0.25){
-      /* inside the stripe, clear of the f0 tick on the axis below */
-      c.fillStyle = C.acc;
-      c.fillText('usable band', px((BAND[0]+BAND[1])/2), T + 28);
+    /* Both labels cross the stripe and the f0 line, which ran through the
+       letters; each gets a backdrop of the plot's own background. rich() is
+       run once invisibly to measure, since only it knows the subscript width. */
+    function backed(segs, x, y, col, align){
+      var fs = parseFloat(c.font);
+      c.globalAlpha = 0; var w = EM.rich(c, segs, x, y, fs, align); c.globalAlpha = 1;
+      var x0 = align === 'center' ? x - w/2 : x;
+      c.fillStyle = C.sunk; c.fillRect(x0 - 4, y - fs, w + 8, fs + 5);
+      c.fillStyle = col; EM.rich(c, segs, x, y, fs, align);
     }
-    c.textAlign = 'left'; c.fillStyle = C.e;
-    EM.rich(c, [['|Γ|  with a λ/4 section of Z','n'], ['1','b'], [' = ' + Z1.toFixed(1) + ' Ω','n']], L+8, T+11, parseFloat(c.font), 'left');
+    if(BAND && (BAND[1]-BAND[0]) > 0.25){
+      /* inside the stripe, clear of the f0 tick on the axis below; on a
+         narrow plot the title reaches the stripe, so one row further down */
+      backed([['usable band','n']], px((BAND[0]+BAND[1])/2), T + (W < 520 ? 34 : 28), C.acc, 'center');
+    }
+    backed([['|Γ|  with a λ/4 section of Z','n'], ['1','b'], [' = ' + Z1.toFixed(1) + ' Ω','n']], L+8, T+11, C.e, 'left');
     c.textAlign = 'right'; c.fillStyle = C.ink3;
     c.fillText('your limit', W-R-4, py(GM)-6);
   }, false);

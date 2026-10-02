@@ -516,8 +516,12 @@ function fmtZ(z){
 
     /* rim labels */
     c.font = '11px ' + MONO; c.fillStyle = C.ink3;
-    c.textAlign = 'left'; c.fillText('short', 4, cy - 8);
-    c.textAlign = 'right'; c.fillText('open', W - 4, cy - 8);
+    /* on a phone the canvas is square and the margin beside the rim is
+       narrower than the word, so the rim ran through it: a halo of the
+       background keeps the letters whole */
+    c.lineJoin = 'round'; c.strokeStyle = C.sunk; c.lineWidth = 4;
+    c.textAlign = 'left'; c.strokeText('short', 4, cy - 8); c.fillText('short', 4, cy - 8);
+    c.textAlign = 'right'; c.strokeText('open', W - 4, cy - 8); c.fillText('open', W - 4, cy - 8);
     c.textAlign = 'center';
     c.fillText('inductive  x > 0', cx, 16);
     c.fillText('capacitive  x < 0', cx, H - 8);

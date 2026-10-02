@@ -9,13 +9,33 @@
 :root{ --col: min(100% - 32px, 1320px); --bleed: 0px; }
 
 /* ---- workbench shell ---- */
+/* clip, not hidden: hidden makes .wb a scroll container, and the panel's
+   position:sticky would then stick to .wb -- which never scrolls -- instead
+   of to the page. hidden stays first as the fallback. */
 .wb{margin:26px 0 0;background:var(--surface);border:1px solid var(--line);
-  border-radius:7px;overflow:hidden}
+  border-radius:7px;overflow:hidden;overflow:clip}
 .wb .grid{display:grid;grid-template-columns:minmax(0,1fr)}
 .wb .chartcol{background:var(--sunk);padding-bottom:8px}
-@media(min-width:1000px){ .wb .grid{grid-template-columns:minmax(0,1fr) 336px} }
 .wb .panel{border-top:1px solid var(--line);min-width:0}
-@media(min-width:1000px){ .wb .panel{border-top:0;border-left:1px solid var(--line)} }
+
+/* Working a problem means watching the chart and reading the panel at once.
+   The panel used to be 1400px tall beside an 800px chart, so the practice
+   steps sat below the fold and every step meant scrolling the chart away.
+
+   Two changes. The panel is sticky and scrolls on its own, a viewport tall,
+   so whatever part of it is in use stays beside the chart. And its width is
+   whatever the chart cannot use: the chart is capped by the display height
+   (sizeChart), so on a wide, short screen -- a laptop at 125% -- the column
+   was wider than the disc, with idle canvas either side. The panel takes that
+   width instead, between 336 and 480px. */
+@media(min-width:1000px){
+  .wb .grid{grid-template-columns:minmax(0,1fr)
+    clamp(336px, calc(100% - 100vh + var(--mast-h, 0px) + 24px), 480px)}
+  .wb .panel{border-top:0;border-left:1px solid var(--line);
+    position:sticky;top:var(--mast-h, 0px);align-self:start;
+    max-height:calc(100vh - var(--mast-h, 0px));overflow-y:auto;
+    overscroll-behavior:contain;scrollbar-width:thin}
+}
 
 /* The chart canvas fills its column rather than being a square centred in it.
 
@@ -51,7 +71,8 @@ canvas#ckt{display:block;width:100%;height:248px;background:var(--sunk);
    rather than disappearing -- it is the thing being read off during a
    matching example. */
 .wb:fullscreen{margin:0;border:0;border-radius:0;height:100vh;background:var(--surface)}
-.wb:fullscreen .grid{grid-template-columns:minmax(0,1fr) 336px;height:100vh}
+.wb:fullscreen .grid{grid-template-columns:minmax(0,1fr)
+  clamp(336px, calc(100% - 100vh + 20px), 480px);height:100vh}
 .wb:fullscreen .chartcol{display:flex;flex-direction:column;align-items:center;
   justify-content:center;height:100vh;padding:10px;overflow:hidden}
 /* The nomograph and the export bars step aside here. Sharing the height with
@@ -63,7 +84,8 @@ canvas#ckt{display:block;width:100%;height:248px;background:var(--sunk);
 .wb:fullscreen .figbar{display:none}
 /* height comes from sizeChart(); only the width rule is needed here */
 .wb:fullscreen canvas#chart{width:100%}
-.wb:fullscreen .panel{height:100vh;overflow-y:auto;overscroll-behavior:contain}
+.wb:fullscreen .panel{position:static;height:100vh;max-height:none;
+  overflow-y:auto;overscroll-behavior:contain}
 @media(max-width:900px){
   .wb:fullscreen .grid{grid-template-columns:minmax(0,1fr)}
   .wb:fullscreen .panel{height:auto}
@@ -116,10 +138,34 @@ details.note .hint{margin-top:5px}
 .fld{display:flex;align-items:center;gap:7px;flex:1 1 120px;min-width:0}
 .fld label{font-family:var(--f-mono);font-size:11.5px;color:var(--ink2);
   white-space:nowrap;flex:none}
-.fld input[type=number]{flex:1;min-width:0;width:100%;font-family:var(--f-mono);
+.fld input[type=number]{flex:1;min-width:0;width:100%}
+/* every number box looks the same and reads from the left, like the text
+   the reader typed into it */
+.fld input[type=number], .lgrid input{font-family:var(--f-mono);
   font-size:13px;color:var(--ink);background:var(--raise);border:1px solid var(--line2);
-  border-radius:4px;padding:6px 8px}
-.fld input[type=number]:focus{border-color:var(--acc)}
+  border-radius:4px;padding:6px 8px;text-align:left;font-variant-numeric:tabular-nums}
+.fld input[type=number]:focus, .lgrid input:focus{border-color:var(--acc)}
+
+/* the load's numbers: label, box, label, box -- both box columns equal */
+.lgrid{display:grid;grid-template-columns:auto minmax(0,1fr) auto minmax(0,1fr);
+  gap:9px 8px;align-items:center;margin-top:9px}
+.lgrid label{font-family:var(--f-mono);font-size:11.5px;color:var(--ink2);white-space:nowrap}
+.lgrid input{min-width:0;width:100%}
+.funit{grid-column:3 / 5;display:flex;align-items:center;gap:9px;min-width:0}
+.funit select{flex:none}
+.funit .hint{margin:0 0 0 auto;white-space:nowrap}
+
+/* the present point, in ohms and normalised */
+table.vals{width:100%;min-width:0;margin-top:11px;border-collapse:collapse;
+  font-family:var(--f-mono);font-size:12px}
+.vals caption{caption-side:top;text-align:left;font-size:10.5px;color:var(--ink3);
+  padding:0 0 4px}
+.vals th,.vals td{padding:3px 0;border:0;vertical-align:baseline}
+.vals th{font-family:var(--f-mono);font-size:12px;letter-spacing:0;text-transform:none;
+  font-weight:400;color:var(--ink3);padding-right:6px;white-space:nowrap}
+.vals td{color:var(--ink);font-variant-numeric:tabular-nums;padding-right:12px}
+.vals td:last-child{padding-right:0}
+.vals tr[data-off] td{color:var(--ink3)}
 .seg{display:flex;gap:0;flex-wrap:nowrap}
 .seg button{border-radius:0;flex:1 1 0;min-width:0;padding:7px 6px;
   border-right-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -201,22 +247,22 @@ details.note .hint{margin-top:5px}
               <option value="rc">R + C</option>
             </select></span>
         </div>
-        <div class="row">
-          <span class="fld"><label for="i-r" id="lab-r">R&nbsp;&Omega;</label><input id="i-r" type="number" value="25" step="any"></span>
-          <span class="fld"><label for="i-x" id="lab-x">X&nbsp;&Omega;</label><input id="i-x" type="number" value="-30" step="any"></span>
-        </div>
-        <div class="row">
-          <span class="fld"><label for="i-z0">Z<sub>0</sub>&nbsp;&Omega;</label><input id="i-z0" type="number" value="50" step="any" min="1"></span>
-          <span class="fld"><label for="i-ee">&epsilon;<sub>eff</sub></label><input id="i-ee" type="number" value="1" step="any" min="1"></span>
-        </div>
-        <div class="row">
-          <span class="fld"><label for="i-f">f</label><input id="i-f" type="number" value="1000" step="any" min="0">
-            <select id="i-funit" aria-label="Frequency unit" style="flex:none;width:auto">
+        <!-- One grid for every number, so the boxes line up in two columns of
+             equal width. The frequency box used to share its cell with the
+             unit menu and came out a third the width of Z0's, about three
+             digits; it now takes the same column, and the unit and the
+             wavelength sit in the space beside it. -->
+        <div class="lgrid">
+          <label for="i-r" id="lab-r">R&nbsp;&Omega;</label><input id="i-r" type="number" value="25" step="any">
+          <label for="i-x" id="lab-x">X&nbsp;&Omega;</label><input id="i-x" type="number" value="-30" step="any">
+          <label for="i-z0">Z<sub>0</sub>&nbsp;&Omega;</label><input id="i-z0" type="number" value="50" step="any" min="1">
+          <label for="i-ee">&epsilon;<sub>eff</sub></label><input id="i-ee" type="number" value="1" step="any" min="1">
+          <label for="i-f">f</label><input id="i-f" type="number" value="1000" step="any" min="0">
+          <span class="funit"><select id="i-funit" aria-label="Frequency unit">
               <option value="kHz">kHz</option>
               <option value="MHz" selected>MHz</option>
               <option value="GHz">GHz</option>
-            </select></span>
-          <span class="fld" style="justify-content:flex-end"><span class="hint" style="margin:0" id="lam">&lambda; = 300.0 mm</span></span>
+            </select><span class="hint" id="lam">&lambda; = 300.0 mm</span></span>
         </div>
         <div class="row" style="margin-top:11px">
           <button class="mini" data-preset="short">short</button>
@@ -227,13 +273,18 @@ details.note .hint{margin-top:5px}
         <p class="hint">Drag on the chart to place the load by hand.</p>
       </div>
 
-      <div class="grp">
+      <div class="grp" id="grp-move">
         <h4>Move along the line</h4>
         <div class="ctl" style="padding:0">
           <label for="i-d">d&nbsp;&rarr;gen</label>
           <input id="i-d" type="range" min="0" max="0.5" step="0.001" value="0">
           <output id="o-d">0.000&lambda;</output>
         </div>
+        <!-- The point the slider is moving, in ohms and normalised side by
+             side: the relation between the two is what a student keeps getting
+             wrong. Here rather than with the load, because this group stays in
+             view while practising and the load group scrolls away. -->
+        <table class="vals" id="vals" aria-label="Impedance and admittance at the present point, physical and normalised"></table>
         <details class="note">
           <summary>which way is which</summary>
           <p class="hint">Toward the generator is clockwise. The point rides the
@@ -259,6 +310,35 @@ details.note .hint{margin-top:5px}
             </select></span>
         </div>
         <div class="row" style="margin-top:9px">
+          <button class="mini" id="b-term" aria-pressed="false">stub: shorted</button>
+          <button class="mini" id="b-clear">clear</button>
+          <button class="mini" id="b-prac" aria-pressed="false">practice</button>
+        </div>
+        <!-- How admittance is reached is part of how the match is worked, not a
+             display preference, so it lives here rather than with the grids. -->
+        <div class="row" style="margin-top:9px">
+          <button class="mini" id="b-ymode" title="Shunt and double-stub methods work in admittance: either turn the point half a turn and keep the impedance grid, or keep the point and turn the grid">y by: turning the point</button>
+        </div>
+
+        <div id="prac" hidden>
+          <details class="note">
+            <summary>dragging on the chart</summary>
+            <p class="hint">Drag on the chart itself: the
+            point rides the constant-SWR circle while you travel, and once you
+            are on the target circle it rides that instead. The sliders and
+            fields do the same job if you would rather type.</p>
+          </details>
+          <ol class="pracsteps" id="prac-steps"></ol>
+          <div class="row" id="prac-rot" hidden>
+            <button class="mini" id="b-rot" aria-pressed="false">rotate to y</button>
+          </div>
+          <div class="row" id="prac-fields"></div>
+          <div class="pracverdict" id="prac-verdict"></div>
+          <div class="row" style="margin-top:7px">
+            <button class="mini" id="b-prac-show">show me</button>
+          </div>
+        </div>
+        <div class="row" style="margin-top:9px">
           <span class="fld" title="The bandwidth is measured over the frequencies where the SWR stays at or below this"><label for="i-blim">band at SWR &le;</label>
             <select id="i-blim" style="flex:1;min-width:0">
               <option value="1.5">1.5</option>
@@ -272,28 +352,7 @@ details.note .hint{margin-top:5px}
               <option value="0.9">&plusmn;90%</option>
             </select></span>
         </div>
-        <div class="row" style="margin-top:9px">
-          <button class="mini" id="b-term" aria-pressed="false">stub: shorted</button>
-          <button class="mini" id="b-clear">clear</button>
-          <button class="mini" id="b-prac" aria-pressed="false">practice</button>
-        </div>
-
-        <div id="prac" hidden>
-          <p class="hint" style="margin-top:8px">Drag on the chart itself: the
-            point rides the constant-SWR circle while you travel, and once you
-            are on the target circle it rides that instead. The sliders and
-            fields do the same job if you would rather type.</p>
-          <ol class="pracsteps" id="prac-steps"></ol>
-          <div class="row" id="prac-rot" hidden>
-            <button class="mini" id="b-rot" aria-pressed="false">rotate to y</button>
-          </div>
-          <div class="row" id="prac-fields"></div>
-          <div class="pracverdict" id="prac-verdict"></div>
-          <div class="row" style="margin-top:7px">
-            <button class="mini" id="b-prac-show">show me</button>
-          </div>
-        </div>
-        <div class="row" style="margin-top:9px">
+        <div class="row" style="margin-top:9px" id="row-dd">
           <span class="fld"><label for="i-dd">spacing</label>
             <select id="i-dd" style="flex:1;min-width:0">
               <option value="0.125">&lambda;/8</option>
@@ -319,9 +378,6 @@ details.note .hint{margin-top:5px}
         <div class="row" style="margin-top:9px">
           <button class="mini" id="b-rings" aria-pressed="true">outer scales</button>
           <button class="mini" id="b-dense" aria-pressed="true">fine grid</button>
-        </div>
-        <div class="row" style="margin-top:7px">
-          <button class="mini" id="b-ymode">y by: turning the point</button>
         </div>
       </div>
 
@@ -415,12 +471,12 @@ details.note .hint{margin-top:5px}
 
 <section class="blk" id="methods">
   <h2>What the solver does</h2>
-  <p class="t">Five methods. Each returns every solution rather than the first one found, and draws the circuit it produces underneath, with lengths in wavelengths and in millimetres at your frequency.</p>
+  <p class="t">Five methods. Each returns every solution rather than the first one found, lists each with its lengths in wavelengths and in millimetres at your frequency, and draws the circuit it produces underneath.</p>
 
   <p class="t">Pozar's chapter on matching also covers <b>binomial</b> and <b>Chebyshev</b> multisection transformers and <b>tapered</b> lines. Those are not here, and not because they are hard: they are broadband designs built by choosing a set of section impedances from a polynomial, and there is nothing for the chart to construct. They belong with the algebra, not the geometry.</p>
 
   <h3>Shunt stub</h3>
-  <p class="t">Travel until the admittance is $y = 1 + jb$, then cancel $b$ with a stub in parallel. The constant-SWR circle crosses the $g = 1$ circle twice, so there are always exactly two answers, and the second is often the more practical one.</p>
+  <p class="t">Travel until the admittance is $y = 1 + jb$, then cancel $b$ with a stub in parallel. The constant-SWR circle crosses the $g = 1$ circle twice, so any load that is neither matched nor purely reactive has exactly two answers per half wavelength, and the second is often the more practical one.</p>
 
   <h3>Series stub</h3>
   <p class="t">The same idea in impedance. Travel until $z = 1 + jx$, then cancel $x$ with a stub in series. Two solutions again, for the same reason. Series stubs are awkward in microstrip &mdash; you have to break the line &mdash; but natural in coax and in slotline.</p>
@@ -441,7 +497,7 @@ details.note .hint{margin-top:5px}
   <p class="t">A transformer needs a <b>real</b> impedance to work on, and a mismatched line offers exactly two per half wavelength: the voltage maximum, where $z = S$, and the voltage minimum, where $z = 1/S$. Put a $\lambda/4$ section of $Z_1 = \sqrt{Z_0 Z_\text{real}}$ at either one.</p>
 
   <h3>L-network</h3>
-  <p class="t">Two lumped reactances, no line length at all. One of them sits across the load and one in series with it; which order depends on the load. The condition is geometric: a series element slides you along a constant-$r$ circle, a shunt element along a constant-$g$ circle, and you need one of those to reach the matching circle. At least one order always works, and each working order has two solutions.</p>
+  <p class="t">Two lumped reactances, no line length at all: one in series with the line and one across it, and which of the two sits next to the load depends on the load. The condition is geometric. A series element slides you along a constant-$r$ circle and a shunt element along a constant-$g$ circle, and the first element has to carry the load onto the circle the second can finish from. With the series element at the load that needs $r_L &lt; 1$; with the shunt element at the load, $g_L &lt; 1$. At least one always holds, and each order that works generally gives two solutions.</p>
 
   <div class="key">
     <span class="lab">Why methods sometimes come up empty</span>
@@ -1525,9 +1581,30 @@ function drawStubArc(c, C, isOpen, ls){
 function sizeChart(){
   var w = cv.getBoundingClientRect().width;
   if(!(w > 0)) return;
-  var cap = Math.min(1000, (window.innerHeight || 800) * 0.96);
+  /* The height below the masthead, less the same 24px the panel's column
+     width allows for: the chart then fits on screen exactly, and the grid
+     column beside it gets every pixel the disc cannot use. */
+  var full = !!(document.fullscreenElement || document.webkitFullscreenElement);
+  var mast = full ? 0 : (parseFloat(getComputedStyle(document.documentElement)
+                           .getPropertyValue('--mast-h')) || 0);
+  var cap = Math.min(1000, (window.innerHeight || 800) - mast - (full ? 20 : 24));
   var px = Math.round(Math.min(w, cap)) + 'px';
   if(cv.style.height !== px) cv.style.height = px;
+}
+
+/* A one-line message, broken at spaces when the canvas is too narrow for it:
+   on a phone both placeholders ran off both edges of their canvases. Expects
+   textAlign centre and textBaseline middle; the block is centred on y. */
+function centreWrap(c, text, x, y, maxW){
+  var words = text.split(' '), lines = [], cur = '';
+  words.forEach(function(w){
+    var t = cur ? cur + ' ' + w : w;
+    if(cur && c.measureText(t).width > maxW){ lines.push(cur); cur = w; }
+    else cur = t;
+  });
+  lines.push(cur);
+  var lh = 18, y0 = y - (lines.length - 1)*lh/2;
+  lines.forEach(function(l, i){ c.fillText(l, x, y0 + i*lh); });
 }
 
 function drawChart(){
@@ -1991,14 +2068,21 @@ function drawCircuit(){
   if(!S.method || !sol){
     c.font = '12.5px ' + MONO; c.fillStyle = C.ink3;
     c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillText(S.method ? 'nothing to build — see the note above'
-                        : 'pick a matching method to see the circuit it describes',
-               W/2, H/2);
+    centreWrap(c, S.method ? 'nothing to build — see the note above'
+                           : 'pick a matching method to see the circuit it describes',
+               W/2, H/2, W - 32);
     return;
   }
 
-  var DW = (W < 640) ? 560 : 980, DH = 250;
-  var sc = EM.design(c, cq, DW, DH);
+  /* nar: on a phone the text is scaled up against the drawing to stay
+     readable, so it no longer fits where it does on a wide screen -- the load's
+     value ran out of its box and off the canvas, and the d dimension's label
+     ran into the load. There the value is left to the panel's R and X boxes
+     and lengths are given in wavelengths only; the solution cards above still
+     carry the millimetres. */
+  var nar = W < 640;
+  var DW = nar ? 560 : 980, DH = nar ? 332 : 250;
+  var sc = EM.design(c, cq, DW, DH, nar);
   var FS = Math.max(9.5, 12.5/sc);            /* captions stay readable when scaled */
   var LWm = Math.max(1.8, 2.4/Math.max(sc, 0.5));
   var LY = 94, GY = 198;                       /* conductor and ground rails */
@@ -2013,6 +2097,23 @@ function drawCircuit(){
     c.font = (size || FS) + 'px ' + MONO;
     c.fillStyle = col || C.ink2; c.textAlign = al || 'center';
     c.textBaseline = 'middle'; c.fillText(t, x, y);
+  }
+  /* the note under a circuit: one line where it fits, broken at spaces and
+     stacked downward under the drawing where it does not */
+  function note(t){
+    var size = FS*0.95;
+    c.font = size + 'px ' + MONO;
+    c.fillStyle = C.ink3; c.textAlign = 'center'; c.textBaseline = 'middle';
+    if(!nar){ c.fillText(t, DW*0.50, DH - FS*1.2); return; }
+    var words = t.split(' '), lines = [], cur = '';
+    words.forEach(function(w){
+      var u = cur ? cur + ' ' + w : w;
+      if(cur && c.measureText(u).width > DW - 24){ lines.push(cur); cur = w; }
+      else cur = u;
+    });
+    lines.push(cur);
+    var lh = size*1.22, n = lines.length;
+    lines.forEach(function(l, i){ c.fillText(l, DW*0.50, DH - 10 - (n - 1 - i)*lh); });
   }
   /* the same, with real subscripts (see EM.rich) */
   function TS(x, y, segs, al, col, size){
@@ -2055,7 +2156,7 @@ function drawCircuit(){
   function box(x, y, w, h, l1, l2){
     c.strokeStyle = C.ink2; c.lineWidth = LWm; c.fillStyle = C.surface;
     c.beginPath(); c.rect(x, y - h/2, w, h); c.fill(); c.stroke();
-    T(x + w/2, y - FS*0.62, l1, 'center', C.ink, FS);
+    T(x + w/2, l2 ? y - FS*0.62 : y, l1, 'center', C.ink, FS);
     if(l2) T(x + w/2, y + FS*0.66, l2, 'center', C.ink2, FS*0.9);
   }
   function indH(x0, x1, y){
@@ -2094,7 +2195,7 @@ function drawCircuit(){
   }
   function wl(v){
     var t = n3(v) + 'λ';
-    if(lambda() > 0) t += '  ' + n1(mm(v)) + 'mm';
+    if(lambda() > 0 && !nar) t += '  ' + n1(mm(v)) + 'mm';
     return t;
   }
   function stub(x, len, label){
@@ -2105,7 +2206,7 @@ function drawCircuit(){
   }
 
   /* the fixed furniture */
-  box(XL, LY, BW, 56, 'load', sig(S.r*S.z0) + (S.x < 0 ? ' − j' : ' + j') +
+  box(XL, LY, BW, 56, 'load', nar ? '' : sig(S.r*S.z0) + (S.x < 0 ? ' − j' : ' + j') +
       sig(Math.abs(S.x*S.z0)) + ' Ω');
   T(X0, LY - FS*1.9, 'to source', 'left', C.ink3, FS);
   TS(X0, GY + 4, [[S.method === 'lnet' ? 'Z' : 'line  Z','n'], ['0','b'],
@@ -2126,9 +2227,11 @@ function drawCircuit(){
     L(Jc - gp, LY, Jc - gp, SY); L(Jc + gp, LY, Jc + gp, SY);
     if(S.openStub){ openEnd(Jc - gp, SY); openEnd(Jc + gp, SY); }
     else L(Jc - gp, SY, Jc + gp, SY);
-    T(Jc + gp + 20, LY + (SY - LY)*0.42,
-      (S.openStub ? 'open' : 'shorted') + ' series stub', 'left', C.acc, FS);
-    T(Jc + gp + 20, LY + (SY - LY)*0.42 + FS*1.35, wl(sol.ls), 'left', C.ink2, FS);
+    /* narrow, the label goes left of the stub: to its right it ran off the canvas */
+    var sx = nar ? Jc - gp - 14 : Jc + gp + 20, sa = nar ? 'right' : 'left';
+    T(sx, LY + (SY - LY)*0.42,
+      (S.openStub ? 'open' : 'shorted') + ' series stub', sa, C.acc, FS);
+    T(sx, LY + (SY - LY)*0.42 + FS*1.35, wl(sol.ls), sa, C.ink2, FS);
     dim(Jc, XL, LY - 36, 'd = ' + wl(sol.d));
 
   } else if(S.method === 'qwt'){
@@ -2138,12 +2241,10 @@ function drawCircuit(){
     c.beginPath(); c.rect(T0, LY - 11, T1 - T0, 22); c.fill(); c.stroke();
     c.strokeStyle = C.ink2;
     TS((T0 + T1)/2, LY + 30, [['Z','n'], ['1','b'], [' = ' + sig(sol.z1*S.z0) + ' Ω','n']], 'center', C.ink, FS);
-    dim(T0, T1, LY - 36, lambda() > 0 ? 'λ/4   ' + n1(mm(0.25)) + 'mm' : 'λ/4');
+    dim(T0, T1, LY - 36, (lambda() > 0 && !nar) ? 'λ/4   ' + n1(mm(0.25)) + 'mm' : 'λ/4');
     dim(T1, XL, LY - 36, 'd = ' + wl(sol.d));
-    T(DW*0.50, DH - FS*1.2,
-      'λ/4 is measured on the transformer section itself, whose wavelength differs '
-      + 'from the main line\'s whenever their effective permittivities do',
-      'center', C.ink3, FS*0.95);
+    note('λ/4 is measured on the transformer section itself, whose wavelength differs '
+      + 'from the main line\'s whenever their effective permittivities do');
 
   } else if(S.method === 'lnet'){
     var seriesFirst = (sol.order === 'series first');
@@ -2156,10 +2257,9 @@ function drawCircuit(){
     seriesEl(E0, E1, LY, sol.xs);
     c.strokeStyle = C.ink2;
     shuntEl(SH, LY, GY - 14, sol.bp); dot(SH, LY); gnd(SH, GY - 14);
-    T(DW*0.50, DH - FS*1.2, seriesFirst
+    note(seriesFirst
         ? 'series element next to the load, shunt element toward the source'
-        : 'shunt element next to the load, series element toward the source',
-      'center', C.ink3, FS*0.95);
+        : 'shunt element next to the load, series element toward the source');
 
   } else if(S.method === 'dstub'){
     var S1 = DW*0.795, S2 = DW*0.45;
@@ -2167,10 +2267,8 @@ function drawCircuit(){
     stub(S1, sol.ls1, 'stub 1');
     stub(S2, sol.ls2, 'stub 2');
     dim(S2, S1, LY - 36, 'd = ' + wl(S.dd));
-    T(DW*0.50, DH - FS*1.2,
-      'both stubs ' + (S.openStub ? 'open' : 'shorted') +
-      ' · stub 1 sits at the load, the spacing is fixed',
-      'center', C.ink3, FS*0.95);
+    note('both stubs ' + (S.openStub ? 'open' : 'shorted') +
+      ' · stub 1 sits at the load, the spacing is fixed');
   }
 
   c.restore();
@@ -2479,8 +2577,8 @@ function drawResp(){
     c.restore();
     c.font = '12.5px ' + MONO; c.fillStyle = C.ink3;
     c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillText('pick a matching method to see how far the match holds',
-               (L + W - R)/2, (T + H - B)/2);
+    centreWrap(c, 'pick a matching method to see how far the match holds',
+               (L + W - R)/2, (T + H - B)/2, W - L - R - 16);
     return;
   }
 
@@ -2646,8 +2744,37 @@ function syncLambda(){
     L > 0 ? 'λ = ' + (L*1000).toFixed(1) + ' mm' : 'λ = —';
 }
 
+/* The present point -- the load, or wherever the reader has travelled to --
+   in ohms and normalised, under the travel slider where it stays in view. The full
+   readout under the chart has the same numbers, a long scroll away. The pair
+   not being worked in is dimmed: impedance on the z grid, admittance once the
+   point has been turned or the y grid is up, neither when both grids show. */
+function valsTable(){
+  var t = document.getElementById('vals');
+  if(!t) return;
+  var g = curG(), z = gToZ(g[0], g[1]), y = gToY(g[0], g[1]);
+  function big(v){ return !isFinite(v[0]) || !isFinite(v[1]) ||
+                          Math.abs(v[0]) > 1e6 || Math.abs(v[1]) > 1e6; }
+  var Zs = big(z) ? '→ ∞' : cpx(z[0]*S.z0, z[1]*S.z0, 1) + ' Ω';
+  var zs = big(z) ? '→ ∞' : cpx(z[0], z[1]);
+  var Ys = big(y) ? '→ ∞' : cpx(y[0]/S.z0*1000, y[1]/S.z0*1000, 2) + ' mS';
+  var ys = big(y) ? '→ ∞' : cpx(y[0], y[1]);
+  var inY = S.grid === 'y' || viewSign() < 0, both = S.grid === 'zy' && viewSign() > 0;
+  var where = S.d < 5e-4 ? 'at the load'
+            : 'at d = ' + n3(S.d) + 'λ toward the generator';
+  t.innerHTML = '<caption>' + where + '</caption>' +
+    '<tr' + (!both && inY ? ' data-off' : '') + '><th>Z</th><td>' + Zs +
+      '</td><th>z</th><td>' + zs + '</td></tr>' +
+    '<tr' + (!both && !inY ? ' data-off' : '') + '><th>Y</th><td>' + Ys +
+      '</td><th>y</th><td>' + ys + '</td></tr>';
+}
+
 function refresh(){
-  drawChart(); drawNomo(); drawCircuit(); drawResp(); bigRow(); solPanel(); legend(); syncLambda();
+  drawChart(); drawNomo(); drawCircuit(); drawResp(); bigRow(); valsTable(); solPanel(); legend(); syncLambda();
+  /* spacing means something to the double-stub tuner only. style, not the
+     hidden attribute: .row sets display, which would beat [hidden]. */
+  var rdd = document.getElementById('row-dd');
+  if(rdd) rdd.style.display = (S.method === 'dstub') ? '' : 'none';
   Array.prototype.forEach.call(document.querySelectorAll('[data-grid]'), function(b){
     b.setAttribute('aria-pressed', b.getAttribute('data-grid') === S.grid ? 'true' : 'false');
   });
@@ -3007,6 +3134,7 @@ function pickMethod(m){
 }
 document.getElementById('i-method').addEventListener('change', function(){
   pickMethod(this.value);
+  if(S.practice) requestAnimationFrame(panelToWork);
 });
 document.getElementById('i-lmode').addEventListener('change', function(){
   S.lmode = this.value || 'rx';
@@ -3244,6 +3372,18 @@ EM.register(function(){ drawResp(); }, false);
   });
 })();
 
+/* Once practice starts, the load is set and the work is travel plus the
+   steps. Scroll the PANEL -- never the page, which would move the chart --
+   so it opens at "Move along the line": the slider and every step then fit
+   beside the chart on a laptop screen. Does nothing where the panel is not
+   its own scroller (narrow layouts, where it sits under the chart). */
+function panelToWork(){
+  var pn = document.querySelector('.wb .panel'), mv = document.getElementById('grp-move');
+  if(!pn || !mv || pn.scrollHeight <= pn.clientHeight + 1) return;
+  if(getComputedStyle(pn).overflowY === 'visible') return;
+  pn.scrollTop += mv.getBoundingClientRect().top - pn.getBoundingClientRect().top;
+}
+
 /* Practice mode toggle, and the escape hatch out of it. */
 (function(){
   var pb = document.getElementById('b-prac');
@@ -3257,6 +3397,7 @@ EM.register(function(){ drawResp(); }, false);
       S.prac.rotated = false;
       var fw = document.getElementById('prac-fields');
       if(fw) fw.removeAttribute('data-for');
+      requestAnimationFrame(panelToWork);
     } else if(S.method){
       /* leaving practice puts the solved construction back, which is what the
          reader is asking for by turning it off */

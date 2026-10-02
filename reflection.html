@@ -245,11 +245,25 @@ var rich = EM.rich;
     EM.fit(cv);
     var c = cv.getContext('2d');
     c.clearRect(0,0,cv._w,cv._h);
-    EM.design(c, cv, 640, 330);
-    /* vertical budget, checked against 330: incident label 58, its arrow 72,
-       rails 110 / 200, reflected arrow 238 and label 262, axis 292, ticks 314 */
-    var top = 110, bot = 200, mid = (top+bot)/2;
-    var xs = 46, x0 = 170, x1 = 480, xb = 530, ax = 292;
+    /* Two layouts. The wide one keeps the load condition beside the load; on
+       a phone that box is 640 units scaled into ~390px and every label came
+       out near 6px, so the narrow one is 440 wide and taller, and states the
+       condition under the z = 0 tick -- the same point, the load. */
+    var nar = cv._w < 560;
+    var DW = nar ? 440 : 640, DH = nar ? 348 : 330;
+    EM.design(c, cv, DW, DH, true);
+    /* vertical budget, wide (narrow): incident label 58 (40), its arrow 72
+       (56), rails 110/200 (100/190), reflected arrow 238 (226) and label 262
+       (252), axis 292 (282), ticks 314 (304), condition - (330/350) */
+    var top = nar ? 100 : 110, bot = nar ? 190 : 200, mid = (top+bot)/2;
+    var xs = nar ? 30 : 46, r = nar ? 17 : 19;
+    var gz0 = nar ? 56 : 86, gz1 = nar ? 100 : 136;
+    var x0 = nar ? 120 : 170, x1 = nar ? 350 : 480, xb = x1 + (nar ? 44 : 50);
+    var ax = nar ? 282 : 292, xm = (x0 + x1)/2;
+    var yInc = nar ? 56 : 72, yIncL = nar ? 40 : 58;
+    var yRef = nar ? 226 : 238, yRefL = nar ? 252 : 266;
+    /* along the line, as fractions of its length */
+    function at(f){ return x0 + f*(x1 - x0); }
 
     function wire(){
       c.strokeStyle = C.ink2; c.lineWidth = 2; c.beginPath();
@@ -260,7 +274,6 @@ var rich = EM.rich;
     }
 
     /* generator and its internal impedance */
-    var r = 19;
     c.strokeStyle = C.ink2; c.lineWidth = 2;
     c.beginPath(); c.arc(xs, mid, r, 0, EM.TAU); c.stroke();
     c.beginPath();
@@ -269,68 +282,74 @@ var rich = EM.rich;
       c.lineTo(xs + u, mid - Math.sin(i/24*EM.TAU)*r*0.36);
     }
     c.stroke();
-    wire(xs, mid - r, xs, top,  xs, top, 86, top,  136, top, x0, top,
+    wire(xs, mid - r, xs, top,  xs, top, gz0, top,  gz1, top, x0, top,
          xs, mid + r, xs, bot,  xs, bot, x0, bot);
-    c.fillStyle = C.surface; c.fillRect(86, top - 14, 50, 28);
-    c.strokeStyle = C.ink2; c.strokeRect(86, top - 14, 50, 28);
-    c.fillStyle = C.ink2; rich(c, [['Z','n'], ['g','b']], 111, top + 5, 14, 'center');
-    c.fillStyle = C.ink3; c.font = '12px ' + MONO; c.textAlign = 'center';
-    c.fillText('generator', xs, bot + 24);
+    c.fillStyle = C.surface; c.fillRect(gz0, top - 14, gz1 - gz0, 28);
+    c.strokeStyle = C.ink2; c.strokeRect(gz0, top - 14, gz1 - gz0, 28);
+    c.fillStyle = C.ink2; rich(c, [['Z','n'], ['g','b']], (gz0 + gz1)/2, top + 5, 14, 'center');
+    c.fillStyle = C.ink3; c.font = '12px ' + MONO;
+    c.textAlign = nar ? 'left' : 'center';
+    c.fillText('generator', nar ? xs - r : xs, bot + 24);
 
     /* the line itself, drawn as in chapter 08 */
     c.fillStyle = C.accfill; c.strokeStyle = C.acc; c.lineWidth = 1.5;
     c.fillRect(x0, top - 4, x1 - x0, 8); c.strokeRect(x0, top - 4, x1 - x0, 8);
     c.fillRect(x0, bot - 4, x1 - x0, 8); c.strokeRect(x0, bot - 4, x1 - x0, 8);
     c.fillStyle = C.acc;
-    rich(c, [['Z','n'], ['0','b'], [', β','n']], 228, mid + 5, 14, 'center');
+    rich(c, [['Z','n'], ['0','b'], [', β','n']], at(0.19), mid + 5, 14, 'center');
 
     /* the load, bridging the two conductors at z = 0 */
     c.fillStyle = C.surface; c.fillRect(x1, top - 20, xb - x1, (bot - top) + 40);
     c.strokeStyle = C.ink2; c.lineWidth = 2; c.strokeRect(x1, top - 20, xb - x1, (bot - top) + 40);
     c.fillStyle = C.ink2; rich(c, [['Z','n'], ['L','b']], (x1 + xb)/2, mid + 5, 15, 'center');
 
-    /* the condition it imposes, beside it */
+    /* the condition it imposes: beside the load, or under its tick */
     c.fillStyle = C.ink;
-    rich(c, [['V(0)/I(0)','n']], 586, mid - 6, 13, 'center');
-    rich(c, [['= Z','n'], ['L','b']], 586, mid + 16, 13, 'center');
+    if(nar){
+      rich(c, [['V(0)/I(0) = Z','n'], ['L','b']], Math.min(x1, DW - 66), ax + 50, 13, 'center');
+    } else {
+      rich(c, [['V(0)/I(0)','n']], 586, mid - 6, 13, 'center');
+      rich(c, [['= Z','n'], ['L','b']], 586, mid + 16, 13, 'center');
+    }
 
     /* the total voltage and current somewhere along the line */
     c.fillStyle = C.ink; c.font = '15px ' + MONO; c.textAlign = 'center';
-    c.fillText('+', 380, top + 24);
-    c.fillText('−', 380, bot - 12);
-    rich(c, [['V(z)','n']], 380, mid + 5, 14, 'center');
+    c.fillText('+', at(0.68), top + 24);
+    c.fillText('−', at(0.68), bot - 12);
+    rich(c, [['V(z)','n']], at(0.68), mid + 5, 14, 'center');
     c.strokeStyle = C.ink; c.fillStyle = C.ink; c.lineWidth = 1.6;
-    EM.arrow(c, 300, top - 13, 340, top - 13, 6);
-    rich(c, [['I(z)','n']], 320, top - 20, 13, 'center');
+    EM.arrow(c, at(0.42), top - 13, at(0.42) + 40, top - 13, 6);
+    rich(c, [['I(z)','n']], at(0.42) + 20, top - 20, 13, 'center');
 
     /* incident wave, above the line: travels toward the load, toward +z */
     c.strokeStyle = C.e; c.fillStyle = C.e; c.lineWidth = 2;
-    EM.arrow(c, 200, 72, 450, 72, 7);
+    EM.arrow(c, at(0.1), yInc, at(0.9), yInc, 7);
     rich(c, [['V','n'], ['+','p'], [' = V','n'], ['0|+','bp'], [' e','n'], ['−jβz','p'],
-             ['    I','n'], ['+','p'], [' = V','n'], ['+','p'], ['/Z','n'], ['0','b']],
-         325, 58, 14, 'center');
+             [nar ? '   I' : '    I','n'], ['+','p'], [' = V','n'], ['+','p'], ['/Z','n'], ['0','b']],
+         xm, yIncL, 14, 'center');
 
     /* reflected wave, below the line: travels back toward the generator. The
        minus sign in its current is the whole reason it can exist. */
     c.strokeStyle = C.h; c.fillStyle = C.h; c.lineWidth = 2;
-    EM.arrow(c, 450, 238, 200, 238, 7);
+    EM.arrow(c, at(0.9), yRef, at(0.1), yRef, 7);
     rich(c, [['V','n'], ['−','p'], [' = V','n'], ['0|−','bp'], [' e','n'], ['+jβz','p'],
-             ['    I','n'], ['−','p'], [' = −V','n'], ['−','p'], ['/Z','n'], ['0','b']],
-         325, 266, 14, 'center');
+             [nar ? '   I' : '    I','n'], ['−','p'], [' = −V','n'], ['−','p'], ['/Z','n'], ['0','b']],
+         xm, yRefL, 14, 'center');
 
     /* the z axis, with the load pinned at zero */
+    var axEnd = nar ? DW - 22 : 604;
     c.strokeStyle = C.ink3; c.fillStyle = C.ink3; c.lineWidth = 1;
     c.setLineDash([3, 4]);
     c.beginPath(); c.moveTo(x0, bot + 6); c.lineTo(x0, ax - 5);
     c.moveTo(x1, bot + 22); c.lineTo(x1, ax - 5); c.stroke();
     c.setLineDash([]);
-    EM.arrow(c, x0, ax, 604, ax, 6);
+    EM.arrow(c, x0, ax, axEnd, ax, 6);
     c.beginPath(); c.moveTo(x0, ax - 5); c.lineTo(x0, ax + 5);
     c.moveTo(x1, ax - 5); c.lineTo(x1, ax + 5); c.stroke();
     c.font = '13px ' + MONO; c.textAlign = 'center';
     c.fillText('z = −l', x0, ax + 22);
     c.fillText('z = 0', x1, ax + 22);
-    c.textAlign = 'left'; c.fillText('z', 610, ax + 4);
+    c.textAlign = 'left'; c.fillText('z', axEnd + 6, ax + 4);
 
     c.restore();
   }, false);
@@ -405,12 +424,12 @@ var rich = EM.rich;
     c.fillStyle = C.e;
     c.beginPath(); c.arc(cx+Rr*g.re, cy-Rr*g.im, 5, 0, EM.TAU); c.fill();
     c.font = '11px ' + MONO; c.fillStyle = C.ink3;
-    c.textAlign = 'right'; c.fillText('Re Γ', cx+Rr-3, cy-8);
+    c.textAlign = 'right'; c.fillText('Re Γ', cx+Rr-7, cy-8);
     c.textAlign = 'left'; c.fillText('Im Γ', cx+9, cy-Rr+15);
     c.textAlign = 'center'; c.fillText('|Γ| = 1', cx, cy+Rr+16);
     c.fillStyle = C.ink3; c.textAlign = 'left';
-    c.fillText('short', cx-Rr+2, cy+15);
-    c.textAlign = 'right'; c.fillText('open', cx+Rr-2, cy+15);
+    c.fillText('short', cx-Rr+7, cy+15);
+    c.textAlign = 'right'; c.fillText('open', cx+Rr-7, cy+15);
   }, false);
 
   EM.register(function(C){
@@ -442,7 +461,7 @@ var rich = EM.rich;
     if(full - wd > 58){ c.fillStyle = '#fff'; c.fillText('reflected ' + (refl*100).toFixed(0) + '%', L + wd + (full-wd)/2, y2 + barH/2 + 4); }
 
     c.fillStyle = C.ink3; c.textAlign = 'left'; c.font = '11.5px ' + MONO;
-    c.fillText('reflected fraction = |Γ|²', L, y2 + barH + 26);
+    EM.rich(c, [['reflected fraction = |Γ|','n'], ['2','p']], L, y2 + barH + 26, 11.5, 'left');
   }, false);
 
   sync();

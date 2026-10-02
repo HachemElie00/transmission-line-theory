@@ -177,6 +177,54 @@
   <p class="t">Note that $S$ carries only $|\Gamma|$ &mdash; the phase is thrown away. Two quite different loads can have identical SWR, which is exactly why a single SWR reading cannot identify a load, and why the position of a minimum has to be measured too.</p>
 </section>
 
+<section class="blk" id="load">
+  <h2>The load sets the pattern</h2>
+  <p class="t">Everything so far was written in terms of $\Gamma$. Start from the load instead and the chain runs forward: $Z_L$ fixes $\Gamma_L = (Z_L - Z_0)/(Z_L + Z_0)$, its magnitude fixes how deep the ripple is, and its angle fixes where along the line the ripple sits.</p>
+
+  <figure class="fig">
+    <canvas id="zlfig" style="height:340px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="zr">R<sub>L</sub> &Omega;</label><input type="range" id="zr" min="0" max="300" step="1" value="100"><output id="zrv">100</output></div>
+      <div class="ctl"><label for="zx">X<sub>L</sub> &Omega;</label><input type="range" id="zx" min="-250" max="250" step="1" value="0"><output id="zxv">0</output></div>
+      <div class="ctl"><label for="zz0">Z<sub>0</sub></label>
+      <select id="zz0" aria-label="Characteristic impedance">
+        <option value="50" selected>50 &#937;</option>
+        <option value="75">75 &#937;</option>
+      </select></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>&Gamma;<sub>L</sub></dt><dd id="zl-g">0.333&ang;0&deg;</dd></div>
+      <div class="rd"><dt>SWR</dt><dd id="zl-s">2.00</dd></div>
+      <div class="rd"><dt>first max</dt><dd id="zl-mx">0.000&lambda;</dd></div>
+      <div class="rd"><dt>first min</dt><dd id="zl-mn">0.250&lambda;</dd></div>
+      <div class="rd"><dt>Z at a max</dt><dd id="zl-zmx">100 &Omega;</dd></div>
+      <div class="rd"><dt>Z at a min</dt><dd id="zl-zmn">25 &Omega;</dd></div>
+    </dl>
+    <div class="btns">
+      <button data-zr="1" data-zx="0">matched</button>
+      <button data-zr="2" data-zx="0">R<sub>L</sub> = 2Z<sub>0</sub></button>
+      <button data-zr="0.5" data-zx="0">R<sub>L</sub> = Z<sub>0</sub>/2</button>
+      <button data-zr="1" data-zx="1">Z<sub>0</sub>(1 + j)</button>
+      <button data-zr="1" data-zx="-1">Z<sub>0</sub>(1 &minus; j)</button>
+      <button data-zr="0" data-zx="0">short</button>
+      <button data-zopen="1">open</button>
+    </div>
+    <p class="cap" id="zl-case" aria-live="polite">a real load above Z<sub>0</sub>: the load sits at a voltage maximum</p>
+    <figcaption class="cap">the envelope against distance from the load, and &Gamma; at the probe in the circle: it turns clockwise as the probe walks toward the generator, and its distance from &minus;1 is the envelope&rsquo;s height there. move your pointer across the envelope to place the probe yourself</figcaption>
+  </figure>
+
+  <p class="t">Two things to read off it. Only $|\Gamma_L|$ sets the heights: every load on one constant-$|\Gamma|$ circle gives the same $V_{\max}$ and $V_{\min}$, shifted along the line. The angle sets the shift. The first maximum sits where $\Gamma$ has turned clockwise onto the positive real axis, and the first minimum a quarter wavelength from it:</p>
+
+  <div class="eq">$$l_{\max} = \frac{\theta_r}{4\pi}\,\lambda, \qquad l_{\min} = l_{\max} \pm \frac{\lambda}{4}, \qquad \theta_r \in [0, 2\pi)$$</div>
+
+  <p class="t">The inset is the reason. $|V|/|V_0^+| = |1 + \Gamma|$, and $|1 + \Gamma|$ is the distance from the point $\Gamma$ to the point $-1$. That distance is largest where $\Gamma$ is on the positive real axis and smallest on the negative one, so every maximum and minimum is a crossing of the real axis, and the crossings come a half turn &mdash; a quarter wavelength &mdash; apart.</p>
+
+  <div class="key">
+    <span class="lab">The resistive load, and which comes first</span>
+    <p>A real load has a real $\Gamma_L$, so it starts on the real axis. If $R_L > Z_0$ then $\Gamma_L > 0$ and <b>the load sits at a voltage maximum</b>, with $S = R_L/Z_0$ and the first minimum $\lambda/4$ away. If $R_L &lt; Z_0$ then $\Gamma_L &lt; 0$ and <b>the load sits at a voltage minimum</b>, with $S = Z_0/R_L$. An inductive load puts $\Gamma_L$ in the upper half of the plane, which clockwise travel reaches the positive axis from first, so a maximum comes first, within $\lambda/4$ of the load; a capacitive load puts the minimum first. The short and the open are the limits: $|\Gamma_L| = 1$, the minima become true nulls, and the short puts one at the load itself.</p>
+  </div>
+</section>
+
 <section class="blk" id="reading">
   <h2>Reading a line backwards</h2>
   <p class="t">A detector cannot follow the carrier; it reads the envelope. That is enough, because the envelope's shape encodes $\Gamma$ completely. This figure is the one to keep in front of you.</p>
@@ -423,15 +471,256 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
   });
 })();
 
+/* ---- the load sets the pattern ----
+   Driven by Z_L rather than by Gamma: the reader sets a load and watches the
+   envelope's depth and position follow. The circle beside it is the reason:
+   |V|/|V0+| = |1 + Gamma| is the distance from Gamma to the point -1, so every
+   maximum and minimum is Gamma crossing the real axis. A probe walks the line
+   on its own and the pointer takes it over. */
+(function(){
+  var cv = document.getElementById('zlfig');
+  if(!cv) return;
+  var R = 100, X = 0, Z0 = 50, isOpen = false, hover = null, lp = 0;
+  var XLZ = 0.75;                      /* three quarter-wavelengths of line */
+  var geo = null;                      /* plot geometry, kept for the pointer */
+
+  function gam(){
+    if(isOpen) return [1, 0];
+    var dr = R + Z0, den = dr*dr + X*X;
+    return [((R - Z0)*dr + X*X)/den, (X*dr - (R - Z0)*X)/den];
+  }
+  /* angle of Gamma_L in [0, 2pi), and the first maximum and minimum in lambda */
+  function where(){
+    var g = gam(), m = Math.hypot(g[0], g[1]);
+    var th = Math.atan2(g[1], g[0]); if(th < 0) th += TAU2;
+    var lmx = norm(th/(2*TAU2)), lmn = norm(lmx + 0.25);
+    if(lmx > 0.5 - 5e-4) lmx = 0;
+    if(lmn > 0.5 - 5e-4) lmn = 0;
+    return { g: g, m: m, th: th, lmx: lmx, lmn: lmn };
+  }
+  function ohm(v){
+    if(!isFinite(v) || v > 1e6) return '∞';
+    return (v < 10 ? v.toFixed(2) : v < 1000 ? v.toFixed(1) : v.toFixed(0)) + ' Ω';
+  }
+
+  function sync(){
+    document.getElementById('zrv').textContent = isOpen ? '∞' : R;
+    document.getElementById('zxv').textContent = isOpen ? '—' : ((X < 0 ? '−' : '') + Math.abs(X));
+    var w = where(), m = w.m, S = m >= 0.9995 ? Infinity : (1 + m)/(1 - m);
+    var deg = w.th*180/Math.PI; if(deg > 180) deg -= 360;
+    document.getElementById('zl-g').innerHTML = m < 5e-4 ? '0'
+      : m.toFixed(3) + '&ang;' + (deg < -0.5 ? '&minus;' : '') + Math.abs(deg).toFixed(0) + '&deg;';
+    document.getElementById('zl-s').textContent = isFinite(S) ? S.toFixed(2) : '∞';
+    var none = m < 5e-4;
+    document.getElementById('zl-mx').innerHTML = none ? '&mdash;' : w.lmx.toFixed(3) + '&lambda;';
+    document.getElementById('zl-mn').innerHTML = none ? '&mdash;' : w.lmn.toFixed(3) + '&lambda;';
+    /* the line looks real at both: S Z0 at a maximum, Z0/S at a minimum */
+    document.getElementById('zl-zmx').textContent = none ? '—' : ohm(S*Z0);
+    document.getElementById('zl-zmn').textContent = none ? '—' : ohm(isFinite(S) ? Z0/S : 0);
+
+    var real = Math.abs(w.g[1]) < 5e-4, tot = m > 0.9995, txt;
+    if(none) txt = 'matched: nothing returns, the envelope is flat at 1 and there is no maximum or minimum to place';
+    else if(isOpen) txt = 'an open: &Gamma; = 1, a voltage maximum at the load and true nulls a quarter wavelength from it';
+    else if(tot && R === 0 && X === 0) txt = 'a short: &Gamma; = &minus;1, a true null at the load itself';
+    else if(tot) txt = 'a pure reactance: |&Gamma;| = 1, so every minimum is a true null; ' +
+                       (X > 0 ? 'inductive, so a maximum comes first' : 'capacitive, so a minimum comes first');
+    else if(real && w.g[0] > 0) txt = 'a real load above Z<sub>0</sub>: &Gamma;<sub>L</sub> is positive and the load sits at a voltage maximum, S = R<sub>L</sub>/Z<sub>0</sub>';
+    else if(real) txt = 'a real load below Z<sub>0</sub>: &Gamma;<sub>L</sub> is negative and the load sits at a voltage minimum, S = Z<sub>0</sub>/R<sub>L</sub>';
+    else if(X > 0) txt = 'inductive: &Gamma;<sub>L</sub> is in the upper half, so turning clockwise it reaches the positive axis first, and a maximum comes before a minimum';
+    else txt = 'capacitive: &Gamma;<sub>L</sub> is in the lower half, so turning clockwise it reaches the negative axis first, and a minimum comes before a maximum';
+    document.getElementById('zl-case').innerHTML = txt;
+  }
+
+  var zr = document.getElementById('zr'), zx = document.getElementById('zx'), zz = document.getElementById('zz0');
+  zr.addEventListener('input', function(){ R = +this.value; isOpen = false; sync(); });
+  zx.addEventListener('input', function(){ X = +this.value; isOpen = false; sync(); });
+  zz.addEventListener('change', function(){ Z0 = +this.value; sync(); });
+  Array.prototype.forEach.call(cv.parentNode.querySelectorAll('.btns button'), function(b){
+    b.addEventListener('click', function(){
+      if(b.hasAttribute('data-zopen')){ isOpen = true; X = 0; zx.value = 0; sync(); return; }
+      /* presets are written in units of Z0, so they mean the same on 75 ohms */
+      isOpen = false;
+      R = Math.round(+b.getAttribute('data-zr')*Z0); X = Math.round(+b.getAttribute('data-zx')*Z0);
+      zr.value = R; zx.value = X;
+      sync();
+    });
+  });
+  cv.addEventListener('pointermove', function(e){
+    if(!geo) return;
+    var r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    var l = (x - geo.L)/(geo.Rr - geo.L)*XLZ;
+    hover = (l >= 0 && l <= XLZ && y <= geo.B + 20) ? l : null;
+  });
+  cv.addEventListener('pointerleave', function(){ hover = null; });
+  sync();
+
+  EM.register(function(C, t){
+    EM.fit(cv);
+    /* Beside each other on a wide screen; on a phone the circle goes under the
+       plot, in a taller canvas, or both would be too small to read. */
+    var stack = cv._w < 620, want = stack ? 500 : 340;
+    if(Math.abs(cv._h - want) > 1){ cv.style.height = want + 'px'; EM.fit(cv); }
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var w = where(), m = w.m, gL = w.g;
+
+    var L = 46, Rr = stack ? W - 18 : W - 262, T = 22, B = stack ? 214 : H - 82;
+    geo = { L: L, Rr: Rr, B: B };
+    var YM = 2.2;
+    function px(l){ return L + l/XLZ*(Rr - L); }
+    function py(v){ return B - v/YM*(B - T); }
+    function env(l){ var p = w.th - 2*TAU2*l; return Math.hypot(1 + m*Math.cos(p), m*Math.sin(p)); }
+
+    /* the probe: walks on its own, or follows the pointer */
+    lp = hover !== null ? hover : (t*0.03) % XLZ;
+
+    /* quarter-wave gridlines and their labels */
+    c.font = '11px ' + MONO; c.textAlign = 'center'; c.fillStyle = C.ink3;
+    c.strokeStyle = C.line; c.lineWidth = 1;
+    ['0', 'λ/4', 'λ/2', '3λ/4'].forEach(function(lab, i){
+      var x = px(i*0.25);
+      if(i){ c.beginPath(); c.moveTo(x + .5, T); c.lineTo(x + .5, B); c.stroke(); }
+      c.fillText(lab, x, B + 14);
+    });
+
+    /* the envelope, filled to the axis */
+    c.beginPath(); c.moveTo(px(0), B);
+    for(var i = 0; i <= 300; i++){ var l = i/300*XLZ; c.lineTo(px(l), py(env(l))); }
+    c.lineTo(px(XLZ), B); c.closePath(); c.fillStyle = C.accfill; c.fill();
+    c.beginPath();
+    for(var j = 0; j <= 300; j++){ var l2 = j/300*XLZ; c.lineTo(px(l2), py(env(l2))); }
+    c.strokeStyle = C.acc; c.lineWidth = 2.4; c.stroke();
+
+    /* axes */
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L, B + .5); c.lineTo(Rr, B + .5);
+    c.moveTo(L + .5, T); c.lineTo(L + .5, B); c.stroke();
+    c.textAlign = 'right'; c.fillStyle = C.ink3;
+    c.fillText('1', L - 6, py(1) + 4); c.fillText('2', L - 6, py(2) + 4);
+
+    /* Vmax and Vmin. Vmax is labelled above its line and Vmin below its own,
+       where the envelope can never be; a Vmin line too close to the axis is
+       labelled above it instead, at the right-hand end. */
+    if(m > 5e-4){
+      c.setLineDash([4, 4]); c.lineWidth = 1;
+      c.strokeStyle = C.h; c.beginPath(); c.moveTo(L, py(1 + m)); c.lineTo(Rr, py(1 + m)); c.stroke();
+      c.strokeStyle = C.e; c.beginPath(); c.moveTo(L, py(1 - m)); c.lineTo(Rr, py(1 - m)); c.stroke();
+      c.setLineDash([]);
+      c.fillStyle = C.h;
+      EM.rich(c, [['V','n'], ['max','b'], [' = 1 + |Γ| = ' + (1 + m).toFixed(2),'n']], Rr, py(1 + m) - 9, 11.5, 'right');
+      c.fillStyle = C.e;
+      if(1 - m > 0.25)
+        EM.rich(c, [['V','n'], ['min','b'], [' = 1 − |Γ| = ' + (1 - m).toFixed(2),'n']], Rr, py(1 - m) + 19, 11.5, 'right');
+      else
+        EM.rich(c, [['V','n'], ['min','b'], [' = ' + (1 - m).toFixed(2),'n']], Rr, py(1 - m) - 6, 11.5, 'right');
+
+      /* every maximum and minimum on the plot */
+      for(var n = 0; n < 2; n++){
+        [[w.lmx + n*0.5, C.h, 1 + m], [w.lmn + n*0.5, C.e, 1 - m]].forEach(function(q){
+          if(q[0] > XLZ + 1e-9) return;
+          c.fillStyle = q[1];
+          c.beginPath(); c.arc(px(q[0]), py(q[2]), 4.5, 0, TAU2); c.fill();
+        });
+      }
+
+      /* distances from the load to the first of each */
+      var dim = function(l, y, segs, col){
+        c.strokeStyle = col; c.fillStyle = col; c.lineWidth = 1.2;
+        if(l < 5e-4){
+          EM.rich(c, segs.concat([[' = 0, at the load','n']]), L, y + 4, 11.5, 'left');
+          return;
+        }
+        var x1 = px(0), x2 = px(l);
+        c.beginPath(); c.moveTo(x1, y); c.lineTo(x2, y);
+        c.moveTo(x1, y - 4); c.lineTo(x1, y + 4); c.moveTo(x2, y - 4); c.lineTo(x2, y + 4); c.stroke();
+        segs = segs.concat([[' = ' + l.toFixed(3) + 'λ','n']]);
+        c.globalAlpha = 0; var tw = EM.rich(c, segs, 0, 0, 11.5, 'left'); c.globalAlpha = 1;
+        /* beside the bar when the bar is too short to carry its own label */
+        var lx = (x2 - x1 > tw + 16) ? (x1 + x2)/2 - tw/2 : x2 + 8;
+        c.fillStyle = C.sunk; c.fillRect(lx - 4, y - 8, tw + 8, 16);
+        c.fillStyle = col; EM.rich(c, segs, lx, y + 4, 11.5, 'left');
+      };
+      dim(w.lmx, B + 32, [['l','n'], ['max','b']], C.h);
+      dim(w.lmn, B + 52, [['l','n'], ['min','b']], C.e);
+    }
+    var yl = B + (m > 5e-4 ? 72 : 34);
+    c.fillStyle = C.ink3; c.font = '11px ' + MONO; c.textAlign = 'left';
+    c.fillText('load', L - 14, yl);
+    c.textAlign = 'right';
+    c.fillText('toward generator →', Rr, yl);
+    c.fillStyle = C.ink3;
+    EM.rich(c, [['|V|/|V','n'], ['0|+','bp'], ['|','n']], 8, T - 6, 11, 'left');
+
+    /* the probe on the envelope */
+    var ev = env(lp);
+    c.strokeStyle = C.ink; c.lineWidth = 1; c.setLineDash([1, 3]);
+    c.beginPath(); c.moveTo(px(lp), T); c.lineTo(px(lp), B); c.stroke(); c.setLineDash([]);
+    c.fillStyle = C.ink; c.beginPath(); c.arc(px(lp), py(ev), 4, 0, TAU2); c.fill();
+
+    /* ---- the circle: Gamma at the probe, and its distance from -1 ---- */
+    var cx, cy, Rc;
+    if(stack){ Rc = Math.min(92, (W - 60)/2.4); cx = W/2; cy = H - Rc - 40; }
+    else { Rc = Math.min(98, (H - 84)/2.3); cx = W - 131; cy = T + 14 + Rc; }
+    function P(u, v){ return [cx + u*Rc, cy - v*Rc]; }
+    c.strokeStyle = C.line2; c.lineWidth = 1.2;
+    c.beginPath(); c.arc(cx, cy, Rc, 0, TAU2); c.stroke();
+    c.strokeStyle = C.line; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(cx - Rc, cy); c.lineTo(cx + Rc, cy); c.moveTo(cx, cy - Rc); c.lineTo(cx, cy + Rc); c.stroke();
+    var a0 = Math.atan2(gL[1], gL[0]), ap = a0 - 2*TAU2*lp;
+    var gp = [m*Math.cos(ap), m*Math.sin(ap)], pg = P(gp[0], gp[1]), pm = P(-1, 0);
+    if(m > 5e-4){
+      c.strokeStyle = C.acc; c.lineWidth = 1; c.setLineDash([3, 4]);
+      c.beginPath(); c.arc(cx, cy, m*Rc, 0, TAU2); c.stroke(); c.setLineDash([]);
+      /* the clockwise walk from the load to the probe */
+      c.globalAlpha = .45; c.lineWidth = 3;
+      c.beginPath(); c.arc(cx, cy, m*Rc, -a0, -ap, false); c.stroke(); c.globalAlpha = 1;
+      /* where every maximum and minimum is */
+      var qx = P(m, 0), qn = P(-m, 0);
+      c.fillStyle = C.h; c.beginPath(); c.arc(qx[0], qx[1], 3.5, 0, TAU2); c.fill();
+      c.fillStyle = C.e; c.beginPath(); c.arc(qn[0], qn[1], 3.5, 0, TAU2); c.fill();
+      /* outside the |Gamma| circle, below the axis, clear of the circle and
+         of the load's own label above it */
+      c.font = '10.5px ' + MONO;
+      c.fillStyle = C.h; c.textAlign = 'left';  c.fillText('max', qx[0] + 7, qx[1] + 14);
+      c.fillStyle = C.e; c.textAlign = 'right'; c.fillText('min', qn[0] - 7, qn[1] + 14);
+    }
+    /* the envelope's height, as a length */
+    c.strokeStyle = C.ink; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(pm[0], pm[1]); c.lineTo(pg[0], pg[1]); c.stroke();
+    c.fillStyle = C.ink;
+    c.beginPath(); c.arc(pm[0], pm[1], 3, 0, TAU2); c.fill();
+    c.beginPath(); c.arc(pg[0], pg[1], 4.5, 0, TAU2); c.fill();
+    /* the load itself, hollow */
+    var pl = P(gL[0], gL[1]);
+    c.strokeStyle = C.ink; c.lineWidth = 1.6;
+    c.beginPath(); c.arc(pl[0], pl[1], 6, 0, TAU2); c.stroke();
+    c.fillStyle = C.ink2;
+    EM.rich(c, [['|1 + Γ| = ' + ev.toFixed(2) + ' at l = ' + lp.toFixed(3) + 'λ','n']], cx, cy + Rc + 20, 11, 'center');
+    /* a load at -1 (a short) would put its label on top of the -1 label */
+    if(Math.hypot(gL[0] + 1, gL[1]) < 0.2){
+      EM.rich(c, [['Γ','n'], ['L','b'], [' = −1','n']], pm[0] + 10, pm[1] - 10, 11.5, 'left');
+    } else {
+      c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
+      c.fillText('−1', pm[0] - 6, pm[1] - 6);
+      c.fillStyle = C.ink2;
+      EM.rich(c, [['Γ','n'], ['L','b']], pl[0] + (gL[0] >= 0 ? 9 : -9), pl[1] - 8, 11.5, gL[0] >= 0 ? 'left' : 'right');
+    }
+  }, true);
+})();
+
 /* anatomy reference figure */
 (function(){
   var cv = document.getElementById('anat');
   if(!cv) return;
   EM.register(function(C){
     EM.fit(cv);
+    /* Narrow, the two formulas have no margin to sit in. Written across the
+       plot they crossed the curve and the 1st-max marker, so they go in rows
+       under the axis instead, in a taller canvas. */
+    var narrow = cv._w < 580, want = narrow ? 400 : 320;
+    if(Math.abs(cv._h - want) > 1){ cv.style.height = want + 'px'; EM.fit(cv); }
     var c = cv.getContext('2d'), W = cv._w, H = cv._h;
-    var narrow = W < 580;
-    var L = 46, RM = narrow ? 18 : 148, T = 26, B = 78, XL2 = 0.7;
+    var L = 46, RM = narrow ? 18 : 148, T = 26, B = narrow ? 150 : 78, XL2 = 0.7;
     var m = 0.5, a = -0.6*Math.PI;
     var sx = (W-L-RM)/XL2, base = H-B, sy = (H-T-B)/1.72;
     function px(x){ return L + x*sx; }
@@ -455,7 +744,8 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
     c.fillStyle = C.e; c.beginPath(); c.arc(px(xmn1),py(0.5),4.2,0,TAU2); c.fill();
     c.fillText('1st min', px(xmn1), py(0.5)+19);
     c.fillStyle = C.h; c.beginPath(); c.arc(px(xmx),py(1.5),4.2,0,TAU2); c.fill();
-    c.fillText('1st max', px(xmx), py(1.5)-11);
+    if(narrow) EM.rich(c, [['V','n'], ['max','b'], [', 1st max','n']], px(xmx), py(1.5)-11, 11.5, 'center');
+    else c.fillText('1st max', px(xmx), py(1.5)-11);
     c.fillStyle = C.e; c.beginPath(); c.arc(px(xmn2),py(0.5),4.2,0,TAU2); c.fill();
     c.fillText('2nd min', px(xmn2), py(0.5)+19);
     dim(px(xmn1), px(xmx), base+22, 'λ/4');
@@ -474,11 +764,13 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
     c.textAlign = 'right'; c.fillText('distance from load →', W-RM, base+70);
     c.fillText('|V|', L-8, T+10);
     if(narrow){
-      var fsN = parseFloat(c.font);
+      var y0 = base + 98;
       c.fillStyle = C.h;
-      EM.rich(c, [['V','n'], ['max','b'], [' = (1+|Γ|)·V','n'], ['0|+','bp']], L+6, py(1.5)-9, fsN, 'left');
+      EM.rich(c, [['V','n'], ['max','b'], [' = (1+|Γ|)·V','n'], ['0|+','bp']], L, y0, 12, 'left');
       c.fillStyle = C.e;
-      EM.rich(c, [['V','n'], ['min','b'], [' = (1−|Γ|)·V','n'], ['0|+','bp']], L+6, py(0.5)-9, fsN, 'left');
+      EM.rich(c, [['V','n'], ['min','b'], [' = (1−|Γ|)·V','n'], ['0|+','bp']], L, y0 + 20, 12, 'left');
+      c.fillStyle = C.ink;
+      EM.rich(c, [['S = V','n'], ['max','b'], ['/V','n'], ['min','b'], [' = (1+|Γ|)/(1−|Γ|)','n']], L, y0 + 40, 12, 'left');
     } else {
       var lx = W-RM+14;
       c.textAlign = 'left';

@@ -417,7 +417,8 @@ function lineConstants(Rp, Gp, Lp, Cp, f){
     EM.rich(c, [['Z','n'], ['0','b'], [' = ' + k.z0m.toFixed(1) + ' Ω','n']], L + 7, T + 28, parseFloat(c.font), 'left');
     if(k.a > 0.01){
       c.textAlign = 'right'; c.fillStyle = C.acc;
-      c.fillText('e⁻ᵅᶻ → ' + (env(1)*100).toFixed(0) + '% at 1 m', W-R, H - B + 15);
+      EM.rich(c, [['e','n'], ['−αz','p'], [' → ' + (env(1)*100).toFixed(0) + '% at 1 m','n']],
+              W-R, H - B + 15, parseFloat(c.font), 'right');
     }
   }, true);
 })();

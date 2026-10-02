@@ -811,7 +811,16 @@ var EM = (function(){
   /* Draw a schematic in fixed design coordinates (dw x dh), scaled and centred
      inside the canvas. Guarantees the layout can never clip or collide,
      whatever the viewport. Caller must c.restore() when finished. */
-  function design(c, cv, dw, dh){
+  function design(c, cv, dw, dh, snug){
+    /* snug: once the width is what limits the scale, the authored height is
+       mostly empty bands above and below the drawing -- on a phone a 330px
+       canvas carried a 180px schematic. Shrink the canvas to the drawing and
+       re-fit; the authored height is remembered, so widening restores it. */
+    if(snug){
+      if(cv._h0 == null) cv._h0 = cv._h;
+      var want = Math.ceil(dh * Math.min(cv._w/dw, cv._h0/dh));
+      if(Math.abs(want - cv._h) > 1){ cv.style.height = want + 'px'; fit(cv); }
+    }
     var W = cv._w, H = cv._h, s = Math.min(W/dw, H/dh);
     c.save();
     c.translate((W - dw*s)/2, (H - dh*s)/2);
@@ -1095,13 +1104,39 @@ var EM = (function(){
             fig.insertBefore(row, wrap.nextSibling);
             wrap._barRow = row;
           }
-          try{ bar.style.flex = getComputedStyle(cv).flex; }catch(e){}
+          try{ bar._flex = getComputedStyle(cv).flex; }catch(e){ bar._flex = ''; }
+          bar.style.flex = bar._flex;
+          bar._cv = cv;
           row.appendChild(bar);
+          (wrap._bars = wrap._bars || []).push(bar);
+          if(barWraps.indexOf(wrap) < 0) barWraps.push(wrap);
         } else if(cv.nextSibling) cv.parentNode.insertBefore(bar, cv.nextSibling);
         else cv.parentNode.appendChild(bar);
       });
     });
+    placeBars();
     syncBars();
+  }
+
+  /* The shared row is right only while the canvases really are side by side.
+     On a phone the wrapper wraps and they stack, and two bars in one row
+     beneath both read as two copies of the same toolbar, belonging to
+     neither. Stacked, each bar goes back under its own canvas as a full-width
+     row of the wrapper -- not wedged, because nothing sits beside it. */
+  var barWraps = [];
+  function placeBars(){
+    barWraps.forEach(function(wrap){
+      var cvs = wrap._bars.map(function(b){ return b._cv; });
+      var row = wrap._barRow;
+      /* measure with the bars out of the wrapper, or they push the canvases */
+      wrap._bars.forEach(function(b){ row.appendChild(b); b.style.flex = b._flex; });
+      var stacked = cvs.some(function(cv){ return cv.offsetTop !== cvs[0].offsetTop; });
+      row.style.display = stacked ? 'none' : '';
+      if(stacked) wrap._bars.forEach(function(b){
+        b.style.flex = '1 1 100%';
+        wrap.insertBefore(b, b._cv.nextSibling);
+      });
+    });
   }
 
   function boot(){
@@ -1109,7 +1144,7 @@ var EM = (function(){
     checks();
     var rt;
     window.addEventListener('resize', function(){
-      clearTimeout(rt); rt = setTimeout(function(){ readColors(); redrawStatic(); }, 90);
+      clearTimeout(rt); rt = setTimeout(function(){ placeBars(); readColors(); redrawStatic(); }, 90);
     });
     try{
       /* data-theme is now the only thing that changes the palette, so the

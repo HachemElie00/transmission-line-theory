@@ -146,4 +146,23 @@ function prose(html){
           wrong.length === 0, wrong.slice(0, 4).join('  '));
 }
 
+/* ---- 6. no Unicode subscript or superscript characters ----
+   In the monospace face a subscript l is a 1 and a subscript 0 a raised dot,
+   so Z-sub-L reads as Z-one. Markup uses <sub>, canvases use EM.rich. Scans
+   the scripts too: three canvas labels ('substrate  e-sub-r', 'e^-az',
+   '|Gamma|^2') were found by eye, long after every other check had passed. */
+{
+  const SCRIPTS = /[⁰-₟²³¹ᴬ-ᵪᶜ-ᶿ]/;
+  const files = pages.concat(['assets/site.js', 'assets/problems.js']);
+  const bad = [];
+  for (const f of files){
+    read(f).split(/\n/).forEach((line, i) => {
+      const m = line.match(SCRIPTS);
+      if (m) bad.push(f + ':' + (i + 1) + ' U+' + m[0].charCodeAt(0).toString(16).toUpperCase());
+    });
+  }
+  s.check('no Unicode subscript or superscript characters, in markup or on a canvas',
+          bad.length === 0, bad.slice(0, 4).join('  '));
+}
+
 s.done();

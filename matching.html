@@ -24,7 +24,7 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
 <div class="hero">
   <p class="kicker">Chapter 11 &middot; the last one</p>
   <h1>Impedance matching</h1>
-  <p class="lead">Every chapter so far has been describing what a mismatched line does. This one undoes it. Two tools &mdash; a length of line, and a stub &mdash; are enough to turn any passive load into a perfect match, and the Smith chart turns the design into a two-step construction.</p>
+  <p class="lead">Every chapter so far has been describing what a mismatched line does. This one undoes it. Two tools &mdash; a length of line, and a stub &mdash; are enough to turn any load that absorbs power into a perfect match, and the Smith chart turns the design into a two-step construction.</p>
   <p class="t" style="margin-top:20px"><b>Assumes:</b> chapters 09 and 10 &mdash; stubs, and reading the chart.</p>
 </div>
 
@@ -76,7 +76,7 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
 
   <div class="eq box">
     $$\textbf{1. Travel} \;\; d \;\text{ along the line until } \; y = 1 + jb$$
-    $$\textbf{2. Add a shunt stub } \; \text{of susceptance } -jb \;\Rightarrow\; y_{\text{total}} = 1$$
+    $$\textbf{2. Add a shunt stub } \; \text{of susceptance } -b \;\Rightarrow\; y_{\text{total}} = 1$$
     <span class="note">the line fixes the real part; the stub cancels what is left</span>
   </div>
 
@@ -154,7 +154,7 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
 
   <p class="t">The last readout is the check that matters: after the stub, $y = 1.00 + j0.00$ exactly, for every load you can set. Press <b>Other solution</b> to see the second intersection &mdash; both match perfectly, and choosing between them is a practical question. The shorter travel usually wins, but a stub length near zero or near $\lambda/2$ is awkward to fabricate, so the other branch sometimes gives a more comfortable pair of dimensions.</p>
 
-  <p class="t">To design one against a real chart &mdash; with the wavelength scales round the rim, the stub drawn as its own arc, and the series-stub and L-network versions of the same load side by side &mdash; use the <a href="smith-tool.html">workbench</a>.</p>
+  <p class="t">To design one against a real chart &mdash; with the wavelength scales round the rim, the stub drawn as its own arc, and the series-stub, transformer, L-network and double-stub designs for the same load one menu choice away &mdash; use the <a href="smith-tool.html">workbench</a>.</p>
 
   <figure class="fig">
     <canvas id="layout" class="static" style="height:260px"></canvas>
@@ -236,7 +236,7 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
     </div>
   </details>
 
-  <p class="t">To see the forbidden region drawn on the chart, and both crossings at once, use the <a href="smith-tool.html">workbench</a>'s double-stub method.</p>
+  <p class="t">To see the forbidden region and the rotated target circle drawn on the chart, use the <a href="smith-tool.html">workbench</a>'s double-stub method; its two designs are a click apart.</p>
 </section>
 
 <section class="blk" id="lumped">
@@ -513,14 +513,20 @@ function solveStub(rL, xL, which, openStub){
     c.fillStyle = C.ink;
     c.beginPath(); c.arc(cx, cy, 6, 0, Math.PI*2); c.fill();
 
-    c.font = '11px ' + MONO;
-    c.fillStyle = C.ink; c.textAlign = pl[0] > cx ? 'left' : 'right';
-    c.fillText('load', pl[0] + (pl[0] > cx ? 9 : -9), pl[1] + 4);
-    c.fillStyle = C.e; c.textAlign = pd[0] > cx ? 'left' : 'right';
-    c.fillText('y = 1 + jb', pd[0] + (pd[0] > cx ? 9 : -9), pd[1] + 4);
-    /* to the right of the centre: the stub arc leaves it downward and left */
-    c.fillStyle = C.ink3; c.textAlign = 'left';
-    c.fillText('matched', cx + 12, cy + 4);
+    /* each label sits on a halo of the background, so a grid line or the
+       SWR circle running under it does not cut through the letters */
+    c.font = '11px ' + MONO; c.lineJoin = 'round';
+    function label(t, x, y, col, align){
+      c.textAlign = align;
+      c.strokeStyle = C.sunk; c.lineWidth = 4; c.strokeText(t, x, y);
+      c.fillStyle = col; c.fillText(t, x, y);
+    }
+    label('load', pl[0] + (pl[0] > cx ? 9 : -9), pl[1] + 4, C.ink, pl[0] > cx ? 'left' : 'right');
+    label('y = 1 + jb', pd[0] + (pd[0] > cx ? 9 : -9), pd[1] + 4, C.e, pd[0] > cx ? 'left' : 'right');
+    /* Above or below the centre, on the side the stub arc does not arrive
+       from. Beside it collided with the load whenever the load was real and
+       near the centre -- the default r = 2 put both words on one spot. */
+    label('matched', cx, gd[1] < 0 ? cy - 13 : cy + 21, C.ink3, 'center');
   }, false);
 
   sync();
@@ -541,7 +547,12 @@ function layoutFigure(id, dh, draw){
     EM.fit(cv);
     var c = cv.getContext('2d');
     c.clearRect(0, 0, cv._w, cv._h);
-    EM.design(c, cv, 560, dh);
+    /* On a phone the 560-unit box scaled every label to about 7px. The narrow
+       box is 400 wide: X() pulls the horizontal positions in, while sizes --
+       text, the load, the parts -- stay as drawn, so they come out larger. */
+    var nar = cv._w < 520, DW = nar ? 400 : 560;
+    function X(x){ return nar ? 16 + (x - 40)*0.68 : x; }
+    EM.design(c, cv, DW, dh, true);
     var k = {
       line: function(x1, y1, x2, y2){
         c.strokeStyle = C.ink2; c.lineWidth = 3; c.lineCap = 'round';
@@ -609,17 +620,17 @@ function layoutFigure(id, dh, draw){
         c.moveTo(x - 4, y + 66); c.lineTo(x + 4, y + 66); c.stroke();
       },
       note: function(segs, y){
-        c.fillStyle = C.ink3; rich(c, segs, 280, y, 12, 'center');
+        c.fillStyle = C.ink3; rich(c, segs, DW/2, y, 12, 'center');
       }
     };
-    draw(c, C, k);
+    draw(c, C, k, X);
     c.restore();
   }, false);
 }
 
 /* single shunt stub */
-layoutFigure('layout', 260, function(c, C, k){
-  var y = 110, tee = 330, load = 500, src = 40, end = y + 96;
+layoutFigure('layout', 260, function(c, C, k, X){
+  var y = 110, tee = X(330), load = X(500), src = X(40), end = y + 96;
   k.line(src, y, load, y);
   k.stub(tee, y, end);
   k.tee(tee, y);
@@ -631,8 +642,8 @@ layoutFigure('layout', 260, function(c, C, k){
 });
 
 /* single series stub: spliced into the line, current runs through it */
-layoutFigure('lay-series', 260, function(c, C, k){
-  var y = 110, s0 = 300, s1 = 360, load = 500, src = 40, end = y + 96;
+layoutFigure('lay-series', 260, function(c, C, k, X){
+  var y = 110, s0 = X(300), s1 = s0 + 60*(X(1) - X(0)), load = X(500), src = X(40), end = y + 96;
   k.line(src, y, s0, y);
   k.line(s1, y, load, y);
   c.strokeStyle = C.h; c.lineWidth = 3; c.lineCap = 'round'; c.lineJoin = 'round';
@@ -643,12 +654,12 @@ layoutFigure('lay-series', 260, function(c, C, k){
   k.source(src, y);
   k.dimH((s0 + s1)/2, load, y - 44, [['d','n']], C.e);
   k.dimV(s1 + 28, y, end, [['l','n'], ['s','b']], C.h);
-  k.note([['the line is cut, and the stub completes the circuit in series','n']], 250);
+  k.note([['the line is cut and the stub completes it in series','n']], 250);
 });
 
 /* double stub: fixed positions, two lengths */
-layoutFigure('lay-dstub', 260, function(c, C, k){
-  var y = 110, t1 = 470, t2 = 250, load = 500, src = 40;
+layoutFigure('lay-dstub', 260, function(c, C, k, X){
+  var y = 110, t1 = X(470), t2 = X(250), load = X(500), src = X(40);
   k.line(src, y, load, y);
   k.stub(t2, y, y + 96, 'stub 2');
   k.stub(t1, y, y + 66, 'stub 1');
@@ -662,8 +673,8 @@ layoutFigure('lay-dstub', 260, function(c, C, k){
 });
 
 /* quarter-wave transformer, at the first voltage minimum or maximum */
-layoutFigure('lay-qwt', 220, function(c, C, k){
-  var y = 110, q0 = 220, q1 = 370, load = 500, src = 40;
+layoutFigure('lay-qwt', 220, function(c, C, k, X){
+  var y = 110, q0 = X(220), q1 = X(370), load = X(500), src = X(40);
   k.line(src, y, q0, y);
   k.line(q1, y, load, y);
   c.fillStyle = C.accfill; c.fillRect(q0, y - 8, q1 - q0, 16);
@@ -678,12 +689,12 @@ layoutFigure('lay-qwt', 220, function(c, C, k){
 });
 
 /* L-network, both orders */
-layoutFigure('lay-lnet', 300, function(c, C, k){
-  var load = 470, src = 40;
+layoutFigure('lay-lnet', 300, function(c, C, k, X){
+  var load = X(470), src = X(40);
   function row(y, title, seriesAtLoad){
     c.fillStyle = C.ink3; rich(c, title, src, y - 30, 12, 'left');
-    var xs0 = seriesAtLoad ? 360 : 190, xs1 = xs0 + 60;
-    var xp = seriesAtLoad ? 270 : 420;
+    var xs0 = X(seriesAtLoad ? 360 : 190), xs1 = xs0 + (X(100) - X(40));
+    var xp = X(seriesAtLoad ? 270 : 420);
     k.line(src, y, xs0, y);
     k.line(xs1, y, load, y);
     k.partH(xs0, xs1, y, [['jx','n']]);

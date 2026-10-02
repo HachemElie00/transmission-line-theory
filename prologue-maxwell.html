@@ -196,7 +196,7 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     EM.fit(cv);
     var c = cv.getContext('2d');
     c.clearRect(0, 0, cv._w, cv._h);
-    EM.design(c, cv, 560, 300);
+    EM.design(c, cv, 560, 300, true);
 
     /* wire and plates */
     c.strokeStyle = C.ink2; c.lineWidth = 2.6; c.lineCap = 'round';

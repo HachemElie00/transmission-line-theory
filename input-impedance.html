@@ -341,7 +341,11 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     c.beginPath(); c.arc(cx+Rr*gd[0], cy-Rr*gd[1], 5, 0, EM.TAU); c.fill();
     c.font = '11px ' + MONO; c.fillStyle = C.ink3;
     c.textAlign = 'center'; c.fillText('Γ plane', cx, cy+Rr+16);
-    c.textAlign = 'left'; c.fillText('load', cx+Rr*gl[0]+8, cy-Rr*gl[1]+4);
+    /* on the side away from the centre: placed to the right, the label sat on
+       the vector whenever the load was left of centre, as the default is */
+    var out = gl[0] < -0.02;
+    c.textAlign = out ? 'right' : 'left';
+    c.fillText('load', cx+Rr*gl[0] + (out ? -8 : 8), cy-Rr*gl[1]+4);
   }, true);
 
   EM.register(function(C){
@@ -401,7 +405,7 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     EM.fit(cv);
     var c = cv.getContext('2d');
     c.clearRect(0,0,cv._w,cv._h);
-    EM.design(c, cv, 560, 350);
+    EM.design(c, cv, 560, 350, true);
     /* vertical budget, checked against 350: upper rails 62/164, arrow 196-216,
        lower rails 238/300, deepest ink at 300 + generator radius = 320. */
     var top = 62, bot = 164, t2 = 238, b2 = 300;
@@ -470,8 +474,11 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     /* --- the collapse --- */
     c.strokeStyle = C.ink3; c.fillStyle = C.ink3; c.lineWidth = 1.6;
     EM.arrow(c, 214, 196, 214, 216, 7);
+    /* beside the equivalent circuit, on two lines: as one line from the arrow
+       it ran 40 units past the right edge of the design box */
     c.font = '12px ' + MONO; c.textAlign = 'left';
-    c.fillText('everything right of the plane becomes one impedance', 232, 212);
+    c.fillText('everything right of the plane', 270, t2 + 26);
+    c.fillText('becomes this one impedance', 270, t2 + 44);
 
     /* --- lower: the equivalent lumped circuit --- */
     source(48, t2, b2, 19);

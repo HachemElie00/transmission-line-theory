@@ -53,7 +53,7 @@
   <p class="t">Microstrip is a track on top of a substrate with a ground plane underneath. It is the dominant line in practice &mdash; it is simply what a circuit board <i>is</i> &mdash; and it breaks the assumption every formula above relies on.</p>
 
   <figure class="fig">
-    <canvas id="xsecfig" class="static" style="height:300px"></canvas>
+    <canvas id="xsecfig" class="static" style="height:240px"></canvas>
     <figcaption class="cap">the field does not stay in one material &mdash; most of it in the substrate, some fringing through the air above</figcaption>
   </figure>
 
@@ -235,7 +235,10 @@ function z0ms(er, wh){
     EM.fit(cv);
     var c = cv.getContext('2d');
     c.clearRect(0,0,cv._w,cv._h);
-    EM.design(c, cv, 560, 300);
+    /* the top 64 units held only the air label, far from anything it named;
+       it now sits level with the outermost fringe and the band is cropped */
+    EM.design(c, cv, 560, 222, true);
+    c.translate(0, -64);
     var gy = 232, sy = 176, tw = 96, cx = 280, th = 10;
 
     /* substrate block */
@@ -275,12 +278,12 @@ function z0ms(er, wh){
     /* beside the substrate rather than on it: inside the block the outer
        fringing curves run through every height the label could sit at */
     c.fillStyle = C.acc; c.font = '14px ' + MONO; c.textAlign = 'right';
-    c.fillText('substrate  εᵣ', 112, (sy+gy)/2 + 5);
+    EM.rich(c, [['substrate ε','n'], ['r','b']], 112, (sy+gy)/2 + 5, 14, 'right');
     c.fillStyle = C.h; c.font = '14px ' + MONO;
     c.textAlign = 'left';
-    c.fillText('air  ε = 1', 20, 40);
+    c.fillText('air  ε = 1', 20, 100);
     c.fillStyle = C.ink3; c.font = '12px ' + MONO;
-    c.fillText('fringing field', 20, 58);
+    c.fillText('fringing field', 20, 118);
 
     /* h dimension */
     c.strokeStyle = C.ink3; c.lineWidth = 1;
@@ -337,14 +340,19 @@ function z0ms(er, wh){
 
   EM.register(function(C){
     EM.fit(cv);
+    /* Side by side the plot got about 140px on a phone and its title ran into
+       the readout beside it. Narrow, the two stack: section above, plot below,
+       in a taller canvas. */
+    var stack = cv._w < 520, want = stack ? 470 : 280;
+    if(Math.abs(cv._h - want) > 1){ cv.style.height = want + 'px'; EM.fit(cv); }
     var c = cv.getContext('2d'), W = cv._w, H = cv._h;
     c.clearRect(0,0,W,H);
     var z = z0ms(er, wh), ee = epsEff(er, wh);
 
-    /* left: cross-section drawn to the current W/h */
-    var boxW = Math.min(W*0.46, 320);
-    var hpx = 46, gy = H*0.66, sy = gy - hpx;
-    var cx = boxW/2;
+    /* left (or top): cross-section drawn to the current W/h */
+    var boxW = stack ? Math.min(W*0.72, 320) : Math.min(W*0.46, 320);
+    var hpx = 46, gy = stack ? 112 : H*0.66, sy = gy - hpx;
+    var cx = stack ? W/2 : boxW/2;
     var wpx = Math.max(4, Math.min(boxW*0.82, wh*hpx));
     c.fillStyle = C.accfill; c.fillRect(cx - boxW*0.42, sy, boxW*0.84, hpx);
     c.strokeStyle = C.line2; c.lineWidth = 1; c.strokeRect(cx - boxW*0.42, sy, boxW*0.84, hpx);
@@ -369,7 +377,7 @@ function z0ms(er, wh){
     c.moveTo(cx + boxW*0.42, gy); c.lineTo(cx + boxW*0.45, gy); c.stroke();
 
     /* right: Z0 against W/h, with the current point marked */
-    var L = boxW + 34, R = 20, T = 22, B = 40;
+    var L = stack ? 44 : boxW + 34, R = 20, T = stack ? 196 : 22, B = 40;
     if(W - L - R < 80){ return; }
     var x0 = 0.1, x1 = 8, y0 = 0, y1 = 200;
     function px(v){ return L + (v-x0)/(x1-x0)*(W-L-R); }
