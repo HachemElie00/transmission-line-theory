@@ -127,6 +127,11 @@ details.note .hint{margin-top:5px}
   font-family:var(--f-mono);background:var(--sunk);color:var(--ink2)}
 .pracverdict[data-ok="1"]{color:var(--ok);background:var(--surface);
   border:1px solid var(--ok)}
+/* the circuit in miniature, where the eye is while working; its height is set
+   by the drawing (EM.design, snug), this is only the starting value */
+.cktmini{display:block;width:100%;height:130px;margin-top:10px;
+  border:1px solid var(--line);border-radius:5px;background:var(--sunk)}
+.cktmini[hidden]{display:none}
 
 /* ---- control panel ---- */
 .grp{padding:15px 17px;border-bottom:1px solid var(--line)}
@@ -338,6 +343,8 @@ table.vals{width:100%;min-width:0;margin-top:11px;border-collapse:collapse;
             <button class="mini" id="b-prac-show">show me</button>
           </div>
         </div>
+        <canvas id="ckt-mini" class="cktmini" hidden
+                aria-label="The circuit being built, in miniature"></canvas>
         <div class="row" style="margin-top:9px">
           <span class="fld" title="The bandwidth is measured over the frequencies where the SWR stays at or below this"><label for="i-blim">band at SWR &le;</label>
             <select id="i-blim" style="flex:1;min-width:0">
@@ -628,6 +635,10 @@ var S = {
 var cv = document.getElementById('chart'), ctx = cv.getContext('2d');
 var nv = document.getElementById('nomo'), nctx = nv.getContext('2d');
 var cq = document.getElementById('ckt'), qctx = cq.getContext('2d');
+/* no figure toolbar for the miniature: it is a view of the circuit below,
+   which has its own; buildBars() skips any canvas already marked */
+var cqm = document.getElementById('ckt-mini'), qmctx = cqm.getContext('2d');
+cqm._bar = true;
 var rv = document.getElementById('resp'), rctx = rv.getContext('2d');
 
 function lambda(){ /* metres */
@@ -897,8 +908,17 @@ function pracSteps(){
         hint: 'press admittance, or both' };
   var circleName = (S.ymode === 'point') ? 'r = 1 circle, which now reads g = 1'
                                          : 'g = 1 circle';
+  /* The half turn is a move the reader makes, not a state they must stay in.
+     Once the rest of the construction holds, the point is at the centre, where
+     y = 1 and z = 1 are the same point -- turning back to read the answer as an
+     impedance is the last paper move, and must not untick the first. Before
+     that, turning back really does leave the reader reading the wrong grid. */
+  function latch(arr){
+    if(arr.slice(1).every(function(s){ return s.ok; })) arr[0].ok = true;
+    return arr;
+  }
 
-  if(S.method === 'shunt') return [
+  if(S.method === 'shunt') return latch([
     toY,
     { t: 'Travel toward the generator until the point lands on the ' + circleName + '.',
       ok: near(y[0], 1),
@@ -907,7 +927,7 @@ function pracSteps(){
          n2(-y[1]) + '.',
       ok: near(y[0], 1) && Math.abs(stubSusc(Pp.l1, open) + y[1]) <= 0.03,
       hint: 'your stub gives b = ' + n2(stubSusc(Pp.l1, open)) }
-  ];
+  ]);
 
   if(S.method === 'series') return [
     { t: 'Work on the impedance grid — a series element adds to z.',
@@ -945,8 +965,12 @@ function pracSteps(){
         hint: seriesFirst ? 'r > 1, so series first cannot reach the centre'
                           : 'g > 1, so shunt first cannot reach the centre' },
       { t: seriesFirst
-            ? 'Add the series element to land on the g = 1 circle.'
-            : 'Add the shunt element to land on the r = 1 circle.',
+            ? 'Add the series element: the point rides its constant-r circle ' +
+              '(dashed) until it lands on the g = 1 circle. That circle is not ' +
+              'printed on an impedance chart, so it is drawn: it is the r = 1 ' +
+              'circle turned half a turn.'
+            : 'Add the shunt element: the point rides its constant-g circle ' +
+              '(dashed) until it lands on the r = 1 circle.',
         ok: seriesFirst ? near(inv(mid[0], mid[1])[0], 1)
                         : near(inv(midY[0], midY[1])[0], 1),
         hint: seriesFirst
@@ -964,7 +988,7 @@ function pracSteps(){
     var ga = yToG(ya[0], ya[1]);
     var mm = mag(ga), th = Math.atan2(ga[1], ga[0]) - 2*TAU*S.dd;
     var yb = gToY(mm*Math.cos(th), mm*Math.sin(th));
-    return [
+    return latch([
       toY,
       { t: 'Stub 1 sits at the load, so it can only change b. It must put you ' +
            'where the spacing will carry you onto the ' + circleName + '.',
@@ -973,7 +997,7 @@ function pracSteps(){
       { t: 'Stub 2 cancels the susceptance that is left: b = ' + n2(-yb[1]) + '.',
         ok: near(yb[0], 1, 0.03) && Math.abs(stubSusc(Pp.l2, open) + yb[1]) <= 0.03,
         hint: 'your stub 2 gives b = ' + n2(stubSusc(Pp.l2, open)) }
-    ];
+    ]);
   }
   return [];
 }
@@ -1546,7 +1570,10 @@ function pathG(g, b0, b1){
    curve. Termination: short -> Gamma_z = -1 (left); open -> +1 (right), for
    shunt (admittance) and series (impedance) stubs alike. */
 function drawStubArc(c, C, isOpen, ls){
-  var a0 = isOpen ? 0 : Math.PI, rad = stubR();
+  /* With the point turned to y, the grid is being read as admittance, where a
+     short (y -> infinity) sits on the right and an open on the left: the stub
+     starts from the opposite end of the diameter. */
+  var a0 = (isOpen ? 0 : Math.PI) + (viewSign() < 0 ? Math.PI : 0), rad = stubR();
   var a1 = a0 - 2*TAU*ls;
   c.save();
   c.strokeStyle = C.acc; c.lineWidth = Math.max(3, G.size*0.006);
@@ -1566,6 +1593,21 @@ function drawStubArc(c, C, isOpen, ls){
     c.lineTo(p1[0] - hh*Math.cos(tan-0.42), p1[1] - hh*Math.sin(tan-0.42));
     c.lineTo(p1[0] - hh*Math.cos(tan+0.42), p1[1] - hh*Math.sin(tan+0.42));
     c.closePath(); c.fill();
+  }
+  /* Named on the chart, because nothing else says what it is: it is the stub's
+     own length, measured from its own termination, so it starts at the short
+     (or open) and not at the load. Set just inside the rim at the arc's middle,
+     on a backdrop so the fine grid does not run through it. */
+  if(ls > 0.02 && G.size >= 440){
+    var am = (a0 + a1)/2, pm = rimPt(am, G.R - Math.max(16, G.size*0.03));
+    var txt = 'stub ' + n3(ls) + 'λ from the ' + (isOpen ? 'open' : 'short');
+    c.font = Math.max(9, Math.min(11.5, G.size*0.0155)) + 'px ' + MONO;
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    var tw = c.measureText(txt).width;
+    c.fillStyle = C.sunk; c.globalAlpha = 0.85;
+    c.fillRect(pm[0] - tw/2 - 4, pm[1] - 8, tw + 8, 16);
+    c.globalAlpha = 1; c.fillStyle = C.acc;
+    c.fillText(txt, pm[0], pm[1]);
   }
   c.restore();
 }
@@ -1677,6 +1719,49 @@ function drawChart(){
     c.beginPath(); c.arc(rc[0], rc[1], G.R*0.5, 0, TAU); c.stroke(); c.restore();
   }
 
+  /* --- L-network: the circles the construction runs on ---
+     Series first rides the load's constant-r circle onto g = 1; shunt first
+     rides its constant-g circle onto r = 1. On a plain impedance chart only the
+     r circles are printed, so the g circles are drawn here: g = 1 is the r = 1
+     circle turned half a turn, centred at Gamma = -0.5 -- which is how it is
+     drawn on paper when no admittance grid is to hand. A constant-r circle has
+     centre r/(1+r) and radius 1/(1+r); a constant-g one is the same turned
+     half round. */
+  if(S.method === 'lnet'){
+    var seriesFirst = S.practice && !S.reveal ? S.prac.order === 'series'
+                                              : !!(sol && sol.midIsZ);
+    var yl0 = inv(S.r, S.x);
+    var guide = function(cu, rad, label, at, strong){
+      var pc0 = P(cu, 0);
+      c.save();
+      c.strokeStyle = C.acc; c.globalAlpha = strong ? 0.55 : 0.35;
+      c.lineWidth = Math.max(1.6, G.size*0.0026);
+      if(!strong) c.setLineDash([6, 5]);
+      c.beginPath(); c.arc(pc0[0], pc0[1], G.R*rad, 0, TAU); c.stroke();
+      c.restore();
+      if(G.size >= 440){
+        var lp = P(cu + rad*Math.cos(at), rad*Math.sin(at));
+        c.save();
+        c.font = Math.max(9, Math.min(11.5, G.size*0.0155)) + 'px ' + MONO;
+        c.textAlign = 'center'; c.textBaseline = 'middle';
+        var tw = c.measureText(label).width;
+        c.fillStyle = C.sunk; c.globalAlpha = 0.85;
+        c.fillRect(lp[0] - tw/2 - 4, lp[1] - 8, tw + 8, 16);
+        c.globalAlpha = 1; c.fillStyle = C.acc; c.fillText(label, lp[0], lp[1]);
+        c.restore();
+      }
+    };
+    if(seriesFirst){
+      guide(-0.5, 0.5, 'g = 1', -Math.PI/2, true);
+      if(S.practice && !S.reveal)
+        guide(S.r/(1 + S.r), 1/(1 + S.r), 'r = ' + n2(S.r), Math.PI*0.62, false);
+    } else {
+      guide(0.5, 0.5, 'r = 1', -Math.PI/2, true);
+      if(S.practice && !S.reveal)
+        guide(-yl0[0]/(1 + yl0[0]), 1/(1 + yl0[0]), 'g = ' + n2(yl0[0]), Math.PI*0.38, false);
+    }
+  }
+
   /* --- the construction --- */
   if(sol){
     if(S.method === 'dstub'){
@@ -1747,8 +1832,14 @@ function drawChart(){
      The band between them is the distance travelled, read straight off the
      wavelength ring the way you would with dividers on paper. */
   if(m > 0.004){
-    var angC = Math.atan2(gC[1], gC[0]);
-    var angL = Math.atan2(gL[1], gL[0]);
+    /* Read where the point is DRAWN. With the point turned to y, that is half a
+       turn from its z position, and on paper the wavelength ring is read at the
+       turned point -- a uniform 0.25 lambda shift, so the distance travelled is
+       unchanged. Marking the z angles instead put the sweep on the far side of
+       the chart from the point it measures. */
+    var rot = viewSign() < 0 ? Math.PI : 0;
+    var angC = Math.atan2(gC[1], gC[0]) + rot;
+    var angL = Math.atan2(gL[1], gL[0]) + rot;
     var moved = Math.abs(angC - angL) > 1e-4;
 
     /* radial line to the rim, so the angle ring can be read */
@@ -1856,13 +1947,17 @@ function drawChart(){
   c.font = fs + 'px ' + MONO; c.fillStyle = C.ink3;
   c.textBaseline = 'alphabetic';
   var yb = G.cy - 6;
-  c.textAlign = 'left';  c.fillText(S.grid === 'y' ? 'y → ∞' : 'short', G.cx - G.R + 3, yb);
-  c.textAlign = 'right'; c.fillText(S.grid === 'y' ? 'y = 0' : 'open',  G.cx + G.R - 3, yb);
+  /* turned to y, the impedance grid is read as admittance: its left end is
+     y = 0, an open, and its right end y -> infinity, a short */
+  var turned = viewSign() < 0;
+  c.textAlign = 'left';  c.fillText(S.grid === 'y' ? 'y → ∞' : turned ? 'open'  : 'short', G.cx - G.R + 3, yb);
+  c.textAlign = 'right'; c.fillText(S.grid === 'y' ? 'y = 0' : turned ? 'short' : 'open',  G.cx + G.R - 3, yb);
   /* Upper half is x > 0. Because y is read on the same disc turned half round,
      the SAME upper half is b < 0 — so the two labels must disagree. */
   c.textAlign = 'center';
   var topTxt, botTxt;
-  if(S.grid === 'z'){ topTxt = 'inductive  x > 0';  botTxt = 'capacitive  x < 0'; c.fillStyle = C.z; }
+  if(S.grid === 'z' && turned){ topTxt = 'capacitive  b > 0'; botTxt = 'inductive  b < 0'; c.fillStyle = C.z; }
+  else if(S.grid === 'z'){ topTxt = 'inductive  x > 0';  botTxt = 'capacitive  x < 0'; c.fillStyle = C.z; }
   else if(S.grid === 'y'){ topTxt = 'inductive  b < 0'; botTxt = 'capacitive  b > 0'; c.fillStyle = C.h; }
   else { topTxt = 'inductive:  x > 0,  b < 0'; botTxt = 'capacitive:  x < 0,  b > 0'; c.fillStyle = C.ink3; }
   /* outside the chart, at top and bottom centre, where no point can reach
@@ -2053,10 +2148,17 @@ function pracSol(){
   return null;
 }
 
-function drawCircuit(){
+/* Drawn twice: full size under the chart, and as a miniature in the panel,
+   which is where the eye is while a match is being worked. The miniature is
+   the same drawing -- same function, narrow layout -- minus the note and the
+   Z0 line, so the two can never disagree about what has been built. */
+function drawCircuit(cvs, ctx2, mini){
+  cvs = cvs || cq; ctx2 = ctx2 || qctx;
+  if(mini && cvs.hidden) return;
   var C = EM.colors();
-  EM.fit(cq);
-  var c = qctx, W = cq._w, H = cq._h;
+  EM.fit(cvs);
+  var c = ctx2, W = cvs._w, H = cvs._h;
+  if(!(W > 0)) return;
   c.clearRect(0, 0, W, H);
   c.fillStyle = C.sunk; c.fillRect(0, 0, W, H);
 
@@ -2068,6 +2170,7 @@ function drawCircuit(){
   if(!S.method || !sol){
     c.font = '12.5px ' + MONO; c.fillStyle = C.ink3;
     c.textAlign = 'center'; c.textBaseline = 'middle';
+    if(mini){ centreWrap(c, 'nothing built yet', W/2, H/2, W - 24); return; }
     centreWrap(c, S.method ? 'nothing to build — see the note above'
                            : 'pick a matching method to see the circuit it describes',
                W/2, H/2, W - 32);
@@ -2080,9 +2183,13 @@ function drawCircuit(){
      ran into the load. There the value is left to the panel's R and X boxes
      and lengths are given in wavelengths only; the solution cards above still
      carry the millimetres. */
-  var nar = W < 640;
-  var DW = nar ? 560 : 980, DH = nar ? 332 : 250;
-  var sc = EM.design(c, cq, DW, DH, nar);
+  var nar = mini || W < 640;
+  /* the miniature drops the note and the Z0 line, so it needs only the band
+     from the dimension line to the ground symbols: 22 design units are cut
+     off the top and the box ends just under the lowest symbol */
+  var DW = nar ? 560 : 980, DH = mini ? 198 : nar ? 332 : 250;
+  var sc = EM.design(c, cvs, DW, DH, nar);
+  if(mini) c.translate(0, -22);
   var FS = Math.max(9.5, 12.5/sc);            /* captions stay readable when scaled */
   var LWm = Math.max(1.8, 2.4/Math.max(sc, 0.5));
   var LY = 94, GY = 198;                       /* conductor and ground rails */
@@ -2101,6 +2208,7 @@ function drawCircuit(){
   /* the note under a circuit: one line where it fits, broken at spaces and
      stacked downward under the drawing where it does not */
   function note(t){
+    if(mini) return;
     var size = FS*0.95;
     c.font = size + 'px ' + MONO;
     c.fillStyle = C.ink3; c.textAlign = 'center'; c.textBaseline = 'middle';
@@ -2172,11 +2280,15 @@ function drawCircuit(){
     L(x0, y, xc - g, y); L(xc + g, y, x1, y);
     L(xc - g, y - h, xc - g, y + h); L(xc + g, y - h, xc + g, y + h);
   }
+  /* Leads at both ends, as the capacitor has: the coil used to run right to
+     the ground symbol, and its last turn sat on the ground bar. */
   function indV(x, y0, y1){
-    var n = 4, h = (y1 - y0)/n;
-    c.strokeStyle = C.ink2; c.lineWidth = LWm;
-    c.beginPath(); c.moveTo(x, y0);
-    for(var i = 0; i < n; i++) c.arc(x, y0 + h*(i + 0.5), h/2, -Math.PI/2, Math.PI/2, false);
+    var ld = (y1 - y0)*0.14, a = y0 + ld, b = y1 - ld, n = 4, h = (b - a)/n;
+    c.strokeStyle = C.ink2;
+    L(x, y0, x, a); L(x, b, x, y1);
+    c.lineWidth = LWm;
+    c.beginPath(); c.moveTo(x, a);
+    for(var i = 0; i < n; i++) c.arc(x, a + h*(i + 0.5), h/2, -Math.PI/2, Math.PI/2, false);
     c.stroke();
   }
   function capV(x, y0, y1){
@@ -2209,7 +2321,7 @@ function drawCircuit(){
   box(XL, LY, BW, 56, 'load', nar ? '' : sig(S.r*S.z0) + (S.x < 0 ? ' − j' : ' + j') +
       sig(Math.abs(S.x*S.z0)) + ' Ω');
   T(X0, LY - FS*1.9, 'to source', 'left', C.ink3, FS);
-  TS(X0, GY + 4, [[S.method === 'lnet' ? 'Z' : 'line  Z','n'], ['0','b'],
+  if(!mini) TS(X0, GY + 4, [[S.method === 'lnet' ? 'Z' : 'line  Z','n'], ['0','b'],
      [' = ' + sig(S.z0) + ' Ω','n']], 'left', C.ink3, FS);
   c.strokeStyle = C.ink2;
 
@@ -2301,7 +2413,8 @@ function bigRow(){
   add('d → V min', m < 1e-6 ? '—' : n3(wrapHalf((thL - Math.PI)/(2*TAU))) + 'λ');
   add('d → V max', m < 1e-6 ? '—' : n3(wrapHalf(thL/(2*TAU))) + 'λ');
   /* where the present point reads on the toward-generator ring */
-  var th = Math.atan2(g[1], g[0]);
+  /* read at the point as drawn -- half a turn round while it is turned to y */
+  var th = Math.atan2(g[1], g[0]) + (viewSign() < 0 ? Math.PI : 0);
   add('ring: WTG', m < 1e-6 ? '—' : n3(wrapHalf((Math.PI - th)/(2*TAU))) + 'λ');
 
   /* How far the match holds, in the readout as well as on the plot: it is a
@@ -2770,7 +2883,9 @@ function valsTable(){
 }
 
 function refresh(){
-  drawChart(); drawNomo(); drawCircuit(); drawResp(); bigRow(); valsTable(); solPanel(); legend(); syncLambda();
+  cqm.hidden = !S.method;
+  drawChart(); drawNomo(); drawCircuit(); drawCircuit(cqm, qmctx, true);
+  drawResp(); bigRow(); valsTable(); solPanel(); legend(); syncLambda();
   /* spacing means something to the double-stub tuner only. style, not the
      hidden attribute: .row sets display, which would beat [hidden]. */
   var rdd = document.getElementById('row-dd');
@@ -2884,7 +2999,12 @@ function pracPanel(){
   var v = document.getElementById('prac-verdict');
   if(off <= PRAC_TOL){
     v.setAttribute('data-ok', '1');
-    v.textContent = 'matched — z = ' + cpx(z[0], z[1]);
+    /* read as y while the point is turned; at the centre the two agree, and
+       saying so is the answer to "but I wanted z" */
+    var yy = inv(z[0], z[1]);
+    v.textContent = S.prac.rotated
+      ? 'matched — y = ' + cpx(yy[0], yy[1]) + ', so z = ' + cpx(z[0], z[1]) + ' too'
+      : 'matched — z = ' + cpx(z[0], z[1]);
   } else {
     v.removeAttribute('data-ok');
     v.textContent = isFinite(off)
@@ -3343,7 +3463,7 @@ Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'), functio
 /* register both canvases with the shared runtime so resize and theme redraw them */
 EM.register(function(){ drawChart(); }, false);
 EM.register(function(){ drawNomo(); }, false);
-EM.register(function(){ drawCircuit(); }, false);
+EM.register(function(){ drawCircuit(); drawCircuit(cqm, qmctx, true); }, false);
 EM.register(function(){ drawResp(); }, false);
 
 /* Which of the two equivalent pictures of admittance to work in. Switching it

@@ -59,6 +59,14 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
     <li><div>There the line looks like a pure resistance: $R = Z_0/S$ at the minimum, $R = S Z_0$ at the maximum.</div></li>
     <li><div>Insert a quarter-wave section of $Z_1 = \sqrt{Z_0 R}$ at that point &mdash; $Z_1 = Z_0/\sqrt{S}$ at the minimum, $Z_1 = Z_0\sqrt{S}$ at the maximum.</div></li>
   </ol>
+  <p class="t">On an impedance chart both points are where the constant-SWR circle crosses the horizontal axis: on the right at $r = S$, the voltage maximum, and on the left at $r = 1/S$, the minimum. Plot $z_L$, read the wavelengths-toward-generator scale on the radius through it, travel clockwise to whichever crossing you want, and read the scale again. The difference is $d$, and the value at the crossing is $R/Z_0$. The workbench's <a href="smith-tool.html#practice=1&amp;method=qwt">practice mode</a> takes you through it.</p>
+  <details class="deriv">
+    <summary>On an admittance chart &mdash; the axis reads the other way</summary>
+    <div class="body">
+      <p>The crossings are the same two points and $d$ comes out the same, but the axis now reads conductance, and the roles swap. Where it reads $g = S$, the impedance there is $z = 1/S$, so that crossing is the voltage <b>minimum</b>; where it reads $g = 1/S$ is the maximum.</p>
+      <p>Convert before choosing the section, $R = Z_0/g$: either $Z_1 = Z_0/\sqrt{S}$ or $Z_1 = Z_0\sqrt{S}$, as above. Reading $g$ as if it were $r$ gives the right number for the wrong point, and a transformer $S$ times off.</p>
+    </div>
+  </details>
 
   <figure class="fig">
     <canvas id="lay-qwt" class="static" style="height:220px"></canvas>
@@ -116,14 +124,31 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
 
   <p class="t">On the chart the construction is therefore two arcs. Rotate clockwise along the constant-SWR circle until you strike the $g = 1$ circle; then ride that circle to the centre. The first arc is the length of line; the second is the stub.</p>
 
-  <p class="t">That description assumes an admittance grid to read $g$ off. On a plain impedance chart &mdash; which is what you will usually have in front of you &mdash; the same construction is done with the other convention from chapter 10, and it is worth being able to work either way.</p>
-
-  <div class="key">
-    <span class="lab">The same two arcs on a plain impedance chart</span>
-    <p>Plot $z_L$, then turn it half a turn about the centre to get $y_L$: same $|\Gamma|$, opposite side, already sitting on the constant-SWR circle you were going to travel round anyway.</p>
-    <p>From there nothing changes except what you call the grid. You read the impedance circles and treat what you read as $g$ and $b$, so the circle marked $r = 1$ <i>is</i> the $g = 1$ circle for a turned point: travel clockwise until you strike it, then ride it to the centre.</p>
-    <p>The numbers come out identical &mdash; same $d$, same stub length &mdash; because the two conventions differ only in where the half turn is applied. The one thing to avoid is applying it twice.</p>
-  </div>
+  <p class="t">On a plain impedance chart, which is what you will usually have in front of you, $g$ is not printed. The same design is done with chapter 10's other convention: turn the point instead of the grid. Step by step:</p>
+  <ol class="steps">
+    <li><div><b>Plot the load.</b> Normalise, $z_L = Z_L/Z_0$, mark it, and draw the constant-SWR circle through it, centred on the chart.</div></li>
+    <li><div><b>Turn it half a turn.</b> $y_L$ is diametrically opposite $z_L$ on the same circle. From here on, read every printed curve as admittance: the circles marked $r$ are now $g$, the arcs marked $x$ are now $b$, and the upper half of the chart holds $b > 0$, which is capacitive.</div></li>
+    <li><div><b>Read the starting position.</b> Extend the radius through $y_L$ to the wavelengths-toward-generator scale and read it.</div></li>
+    <li><div><b>Travel to g = 1.</b> Go clockwise round the constant-SWR circle until it meets the circle marked $r = 1$, which for a turned point is $g = 1$. It meets it twice in every half turn, and either crossing is a design. Read the scale again: $d$ is the second reading minus the first, plus $0.5\lambda$ if that comes out negative.</div></li>
+    <li><div><b>Read what is left.</b> The arc through the crossing gives $y = 1 + jb$. The stub must supply $-jb$.</div></li>
+    <li><div><b>Size the stub.</b> A stub is its own line, ending in a short or an open, so its input sits on the rim, $|\Gamma| = 1$. Read as admittance, a short ($y \to \infty$) is the <b>right-hand</b> end of the horizontal axis, at $0.25\lambda$ on the scale, and an open ($y = 0$) is the left-hand end, at $0$. Start at the stub's end, go clockwise round the rim to the arc that reads $-b$, and read the scale: the stub length is that reading minus the starting one, plus $0.5\lambda$ if negative.</div></li>
+    <li><div><b>Check, and turn back.</b> $1 + jb - jb = 1$, the centre. The centre is its own half turn, so $y = 1$ there is also $z = 1$: the line is matched as an impedance too, and turning back changes nothing.</div></li>
+  </ol>
+  <p class="t">The figure below computes the same $d$ and stub length for any load, and the workbench's <a href="smith-tool.html#practice=1&amp;method=shunt">practice mode</a> checks each of these moves as you make it.</p>
+  <details class="deriv">
+    <summary>On an admittance chart &mdash; the same design without the half turn</summary>
+    <div class="body">
+      <p>An admittance chart prints the grid already turned: its circles are constant $g$, its arcs constant $b$, and the point does not move. Find $g_L + jb_L$ on that grid. It lands where $z_L$ would on an impedance chart, so the wavelength scale reads exactly as it would for the load itself.</p>
+      <ol class="steps">
+        <li><div>Draw the constant-SWR circle through $y_L$ and read the wavelengths-toward-generator scale there.</div></li>
+        <li><div>Travel clockwise to the printed $g = 1$ circle, which passes through the centre and the <b>left</b>-hand end of the axis. Read the scale again; the difference is $d$.</div></li>
+        <li><div>Read $b$ on the arc through the crossing. The stub must add $-b$.</div></li>
+        <li><div>On this grid the short ($y \to \infty$) is the <b>left</b>-hand end of the axis, at $0$ on the scale, and the open is the right-hand end, at $0.25\lambda$. Go clockwise round the rim from the stub's end to the arc reading $-b$; the scale difference is the stub length.</div></li>
+      </ol>
+      <p>Both routes give the same $d$ and the same stub length. Turning the point shifts every scale reading by the same $\lambda/4$, and differences cancel it. The mistake to avoid is doing both: turning the point <i>and</i> reading an admittance grid applies the minus sign twice, and what you read is $z_L$ again.</p>
+      <p>The combined chart of chapter 10 prints both grids at once. Read $g$ and $b$ off the admittance family and leave the point where it is. The workbench does this with <b>y by: turning the grid</b>.</p>
+    </div>
+  </details>
 
   <figure class="fig">
     <div style="background:var(--sunk);padding-block:6px"><canvas id="match"></canvas></div>
@@ -177,6 +202,22 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
   <p class="t">cancelled by a stub presenting $-x$. A shorted series stub looks like $Z = jZ_0\tan\beta l_s$ at its base and an open one $Z = -jZ_0\cot\beta l_s$ &mdash; the reverse of the shunt case, because a stub's own input admittance and input impedance swap which one is $\tan$ and which is $-\cot$. Setting either equal to $-x$ gives the length directly:</p>
 
   <div class="eq">$$\text{shorted:}\;\; \tan\beta l_s = -x \qquad\qquad \text{open:}\;\; \cot\beta l_s = x$$</div>
+  <p class="t">On an impedance chart nothing has to be turned, since a series element adds impedance:</p>
+  <ol class="steps">
+    <li><div><b>Plot the load</b> $z_L$, draw its constant-SWR circle, and read the wavelengths-toward-generator scale on the radius through it.</div></li>
+    <li><div><b>Travel to r = 1.</b> Go clockwise to the circle marked $r = 1$; again there are two crossings. Read the scale there; the difference is $d$.</div></li>
+    <li><div><b>Read what is left.</b> The arc through the crossing gives $z = 1 + jx$. The stub must present $-x$.</div></li>
+    <li><div><b>Size the stub.</b> A shorted stub starts at $z = 0$, the left-hand end of the axis, at $0$ on the scale; an open one at $z \to \infty$, the right-hand end, at $0.25\lambda$. Go clockwise round the rim to the arc reading $-x$; the scale difference is the stub length.</div></li>
+  </ol>
+  <p class="t">The workbench's <a href="smith-tool.html#practice=1&amp;method=series">practice mode</a> runs the same four moves.</p>
+  <details class="deriv">
+    <summary>On an admittance chart &mdash; turning the point the other way</summary>
+    <div class="body">
+      <p>This is the shunt-stub case reflected. A series element adds impedance, so on an admittance chart the point has to be turned half a turn before the grid can be read as impedance. Find $y_L$ on the admittance grid and turn it to $z_L$. The circle marked $g = 1$ now reads $r = 1$, and the arcs read $x$.</p>
+      <p>Travel clockwise to that circle, read $x$ off the arc through the crossing, and size the stub from its end. The ends swap with the turn: read as impedance, a short ($z = 0$) is the right-hand end of the axis and an open the left. As before, $d$ and the stub length are scale differences, so they come out the same as on an impedance chart.</p>
+      <p>On the combined chart, read $r$ and $x$ off the impedance family and turn nothing.</p>
+    </div>
+  </details>
 
   <figure class="fig">
     <canvas id="lay-series" class="static" style="height:260px"></canvas>
@@ -217,6 +258,27 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
     <li><div><b>Let the fixed spacing do the rest.</b> Travelling $d$ from either crossing lands exactly on $g = 1$, by construction.</div></li>
     <li><div><b>Stub 2 finishes it</b> the same way a single stub would: cancel whatever susceptance is left.</div></li>
   </ol>
+  <p class="t">On a plain impedance chart, with the point turned as for the single stub:</p>
+  <ol class="steps">
+    <li><div><b>Plot and turn.</b> Plot $z_L$ and turn it half a turn to $y_L$. Read every printed curve as admittance from here on.</div></li>
+    <li><div><b>Draw the target circle.</b> Take the circle marked $r = 1$ and rotate it counter-clockwise, toward the load, by the spacing. A length $d$ turns the chart through $2\beta d$, which is $720^\circ \times d/\lambda$: $90^\circ$ for $d = \lambda/8$.</div></li>
+    <li><div><b>Stub 1.</b> It changes $b$ only, so $y_L$ moves along its own printed circle, the one marked $r = g_L$. Follow that circle to the target circle. If the two never meet, the load is in the forbidden region at this spacing. Read the arc through the crossing, $b_1$: stub 1 adds $b_1 - b_L$, and is sized from its end on the rim exactly as the single stub was.</div></li>
+    <li><div><b>The spacing.</b> From the crossing, travel clockwise by $720^\circ \times d/\lambda$ round the constant-SWR circle through that point. It is a new circle, because stub 1 changed $|\Gamma|$. You land on the circle marked $r = 1$, which reads $g = 1$.</div></li>
+    <li><div><b>Stub 2.</b> Read the arc there, $b_2$. Stub 2 adds $-b_2$ and finishes at the centre.</div></li>
+  </ol>
+  <p class="t">The workbench's <a href="smith-tool.html#practice=1&amp;method=dstub">practice mode</a> draws the rotated target circle and the forbidden region for the spacing you set.</p>
+  <details class="deriv">
+    <summary>On an admittance chart &mdash; the target circle without the half turn</summary>
+    <div class="body">
+      <p>On an admittance grid the point is not turned. The target is the printed $g = 1$ circle, through the centre and the left-hand end of the axis, rotated counter-clockwise by the same $720^\circ \times d/\lambda$.</p>
+      <ol class="steps">
+        <li><div>Find $y_L$ on the grid and follow its own circle, $g = g_L$, to the rotated target circle. Read $b_1$ there; stub 1 adds $b_1 - b_L$.</div></li>
+        <li><div>Travel the spacing clockwise round the constant-SWR circle through the crossing. You land on the printed $g = 1$ circle.</div></li>
+        <li><div>Read $b_2$; stub 2 adds $-b_2$. Both stubs are sized from their ends on the rim, with the short at the left-hand end of the axis on this grid.</div></li>
+      </ol>
+      <p>The forbidden region is easy to see on this grid. It is the inside of the printed circle $g = 1/\sin^2\beta d$, which is $g = 2$ for $\lambda/8$. That circle just touches the rotated target circle, so a load whose own $g$ circle lies inside it never reaches the target.</p>
+    </div>
+  </details>
 
   <figure class="fig">
     <canvas id="lay-dstub" class="static" style="height:260px"></canvas>
@@ -296,6 +358,25 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
   </figure>
 
   <p class="t"><b>At least one of the two orders always works</b>, because both failing would need $r_L > 1$ and $g_L > 1$ at once &mdash; and $g_L = r_L/(r_L^2+x_L^2) > 1$ already forces $r_L > r_L^2 + x_L^2 \ge r_L^2$, so $r_L &lt; 1$. The two cannot both fail. Whichever order works generally offers two roots, which is again why there are two solutions. The one load no L-network can reach is a purely reactive one, $r_L = 0$: it absorbs no power, so nothing lossless can match it.</p>
+  <p class="t">On a plain impedance chart only the $r$ circles are printed, so the $g = 1$ circle has to be drawn by hand. It is the circle marked $r = 1$ turned half a turn, through the centre and the left-hand end of the axis. With that one auxiliary circle both orders can be worked:</p>
+  <ol class="steps">
+    <li><div><b>Series first</b> ($r_L &lt; 1$). Plot $z_L$. The series element moves it along its own printed circle, $r = r_L$. Follow that circle to the auxiliary circle; it crosses twice, once above the axis and once below. Read the arc there, $x_1$. The series element is $x_1 - x_L$.</div></li>
+    <li><div>Turn that point half a turn. It lands on the circle marked $r = 1$, now read as $g = 1$. Read the arc, $b$. The shunt element is $-b$, and carries the point along $g = 1$ to the centre.</div></li>
+    <li><div><b>Shunt first</b> ($g_L &lt; 1$). Plot $z_L$ and turn it to $y_L$. The shunt element moves it along the printed circle through it, read as $g = g_L$. Follow that circle to the auxiliary circle and read the arc, $b_1$. The shunt element is $b_1 - b_L$.</div></li>
+    <li><div>Turn back half a turn. The point lands on the circle marked $r = 1$. Read the arc, $x$. The series element is $-x$.</div></li>
+  </ol>
+  <p class="t">The workbench's <a href="smith-tool.html#practice=1&amp;method=lnet">practice mode</a> draws the auxiliary circle and the circle the first element rides, for either order.</p>
+  <details class="deriv">
+    <summary>On a combined chart &mdash; no half turns at all</summary>
+    <div class="body">
+      <p>The combined chart of chapter 10 prints both families, and the L-network is where it earns its place. Nothing is turned. A series element moves the point along a constant-$r$ circle, a shunt element along a constant-$g$ circle, and both target circles, $r = 1$ and $g = 1$, are already printed.</p>
+      <ol class="steps">
+        <li><div><b>Series first.</b> From $z_L$ along $r = r_L$ to the $g = 1$ circle, reading the series reactance off the impedance arcs. Then along $g = 1$ to the centre, reading the shunt susceptance off the admittance arcs.</div></li>
+        <li><div><b>Shunt first.</b> From $z_L$ along $g = g_L$ to the $r = 1$ circle, reading the susceptance off the admittance arcs. Then along $r = 1$ to the centre, reading the reactance off the impedance arcs.</div></li>
+      </ol>
+      <p>Every element value is the difference between the arc readings at the two ends of its move, and the signs follow the table below. On an admittance-only chart the same construction runs with the roles swapped: the $g$ circles are printed, and the $r = 1$ circle is the one drawn by hand. The workbench's <b>both</b> grid is the combined chart.</p>
+    </div>
+  </details>
 
   <p class="t">The chart gives a normalised reactance $x$ and susceptance $b$, and turning them into parts is where the frequency comes in. <b>The sign decides the kind of part:</b></p>
 

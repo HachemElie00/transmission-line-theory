@@ -97,13 +97,30 @@ function prose(html){
 {
   const ids = {};
   for (const f of pages) ids[f] = new Set([...read(f).matchAll(/id="([^"]+)"/g)].map(m => m[1]));
+  /* A workbench link can carry a whole problem in its hash
+     (smith-tool.html#practice=1&method=shunt). That fragment is state, not an
+     anchor, so it is checked against the keys the workbench actually reads: a
+     renamed key would otherwise leave the link opening a plain chart with
+     nothing to say it had stopped working. */
+  const wbSrc = read('smith-tool.html');
+  const wbKeys = new Set([...wbSrc.matchAll(/\['(\w+)','[nsb]'\]/g)].map(m => m[1]));
+  const wbMethods = new Set((/\[([^\]]*)\]\.indexOf\(S\.method\)/.exec(wbSrc) || ['', ''])[1]
+                              .split(',').map(s => s.trim().replace(/'/g, '')));
   const bad = [];
   for (const f of pages){
     for (const m of read(f).matchAll(/href="([^"]+)"/g)){
-      const href = m[1];
+      const href = m[1].replace(/&amp;/g, '&');
       if (/^(https?:|mailto:)/.test(href)) continue;
       const [tgt, frag] = href.split('#');
       if (tgt && !fs.existsSync(path.join(H.SITE, tgt))) bad.push(f + ' -> ' + href + ' (no file)');
+      else if (frag && tgt === 'smith-tool.html' && frag.includes('=')){
+        for (const kv of frag.split('&')){
+          const [k, v] = kv.split('=');
+          if (!wbKeys.has(k)) bad.push(f + ' -> ' + href + ' (workbench reads no "' + k + '")');
+          /* sanitiseState() silently drops a method it does not know */
+          if (k === 'method' && !wbMethods.has(v)) bad.push(f + ' -> ' + href + ' (no method "' + v + '")');
+        }
+      }
       else if (frag){
         const owner = tgt || f;
         if (ids[owner] && !ids[owner].has(frag)) bad.push(f + ' -> ' + href + ' (no anchor)');

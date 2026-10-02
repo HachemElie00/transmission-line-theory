@@ -50,6 +50,11 @@ const WIDTHS = [1920, 1440, 1200, 1100, 900, 700, 390];
         else if (!/width=device-width/.test(vp.content)) head.push('viewport-content');
         const blank = [];
         document.querySelectorAll('canvas').forEach(c => {
+          /* a canvas the page has hidden on purpose (the workbench's circuit
+             miniature, before a method is chosen) is not a figure that failed
+             to draw. Only the explicit attribute is excused: a canvas merely
+             out of layout, say in a closed fold, is still checked. */
+          if (c.hidden) return;
           try {
             const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
             let n = 0;
@@ -62,13 +67,18 @@ const WIDTHS = [1920, 1440, 1200, 1100, 900, 700, 390];
           ovf  : de.scrollWidth - de.clientWidth,
           head,
           blank,
+          /* "all maths typeset" is only an invariant on a page that has maths.
+             A page that never loads MathJax (the bug report form) would fail it
+             forever while being perfectly correct, so ask whether the page asked
+             for MathJax at all before holding it to the result. */
+          math : !!document.getElementById('MathJax-script'),
           tex  : de.classList.contains('tex-ok'),
           raw  : (document.body.innerText.match(/\$[^$\n]{2,}\$/g) || []).length,
           bars : document.querySelectorAll('.figbar').length
         };
       });
 
-      if (r.ovf > 1 || r.head.length || r.blank.length || !r.tex || r.raw > 0 || errs.length)
+      if (r.ovf > 1 || r.head.length || r.blank.length || (r.math && !r.tex) || r.raw > 0 || errs.length)
         bad.push(pg + ' ' + JSON.stringify(r) + (errs.length ? ' ' + errs[0] : ''));
 
       p.off('pageerror', onErr);

@@ -61,8 +61,14 @@ window.MathJax = {
 };
 
 /* If MathJax never arrives (blocked CDN, offline), fall back to a monospace
-   presentation so the raw TeX at least reads as a formula block. */
+   presentation so the raw TeX at least reads as a formula block.
+
+   A page that never asks for MathJax is not a page whose maths failed: the
+   form carries no formulas and must not be flagged as a broken chapter. The
+   script tag is at the end of the body, so it is only safe to look for it
+   once parsing is long finished -- which is exactly when this fires. */
 setTimeout(function(){
+  if(!document.getElementById('MathJax-script')) return;
   if(!document.documentElement.classList.contains('tex-ok')){
     document.documentElement.classList.add('notex');
   }
@@ -74,6 +80,7 @@ setTimeout(function(){
    --------------------------------------------------------------- */
 var SITE_PAGES = [
   ['Start',     'index.html',             '',          'Contents'],
+  ['Start',     'report.html',            '',          'Report a bug'],
   ['Tools',     'smith-tool.html',        '\u2699',    'Smith chart workbench'],
   ['Prologue',  'prologue-maxwell.html',  'P1',        "Maxwell's equations"],
   ['Prologue',  'prologue-helmholtz.html','P2',        'The wave equation and Helmholtz'],
@@ -322,6 +329,36 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
     document.addEventListener('keydown', function(e){
       if(e.key === 'Escape' && !panel.hidden){ open(false); btn.focus(); }
     });
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build);
+  else build();
+})();
+
+/* ---------------------------------------------------------------
+   The report link in every footer. Built here, not written into
+   fifteen files, for the same reason as everything else in this file.
+
+   It carries where the reader was: the file name, which preselects the
+   page on the form, and the whole address including the hash. That hash
+   is what makes a workbench report reproducible -- the chart's entire
+   state is encoded in it, so the link is the bug.
+   --------------------------------------------------------------- */
+(function(){
+  function here(){
+    var f = location.pathname.split('/').pop();
+    return f || 'index.html';
+  }
+  function build(){
+    var page = here();
+    if(page === 'report.html') return;                 /* not on the form itself */
+    var foot = document.querySelector('footer.site');
+    if(!foot || foot.querySelector('.fbug')) return;
+    var a = document.createElement('a');
+    a.className = 'fbug';
+    a.href = 'report.html?from=' + encodeURIComponent(page)
+           + '&u=' + encodeURIComponent(location.href);
+    a.textContent = 'Found a bug on this page? Report it.';
+    foot.appendChild(a);
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build);
   else build();

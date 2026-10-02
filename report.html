@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Report a bug &middot; Transmission Line Theory</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="mast"><div class="in">
+  <a class="home" href="index.html">Transmission Line Theory</a>
+  <span class="sep"></span>
+  <span class="ch">Report a bug</span>
+</div></header>
+
+<div class="wrap">
+
+<div class="hero">
+  <p class="kicker">Feedback</p>
+  <h1>Report a bug</h1>
+  <p class="lead">If a figure draws wrongly, a control does nothing, or a number looks off, this is where to say so. The more exactly you can say what you did, the faster it gets fixed.</p>
+</div>
+
+<section class="blk">
+  <h2>What happened</h2>
+
+  <form class="rep" id="rep" novalidate>
+
+    <div class="rfield">
+      <label for="r-page">Where</label>
+      <select id="r-page" name="page"></select>
+    </div>
+
+    <div class="rfield">
+      <span class="rlab" id="r-steps-lab">What you did</span>
+      <p class="rhint">One action per line, in the order you did them.</p>
+      <ol class="rsteps" id="r-steps" aria-labelledby="r-steps-lab"></ol>
+      <button type="button" class="radd" id="r-add">Add a step</button>
+    </div>
+
+    <div class="rfield">
+      <label for="r-exp">What you expected</label>
+      <textarea id="r-exp" name="expected" rows="2"></textarea>
+    </div>
+
+    <div class="rfield">
+      <label for="r-act">What happened instead</label>
+      <textarea id="r-act" name="actual" rows="2"></textarea>
+    </div>
+
+    <div class="rfield">
+      <label for="r-who">Your name or email, if you want a reply</label>
+      <input type="text" id="r-who" name="who" autocomplete="off">
+    </div>
+
+    <!-- A bot fills every field it is given. A person never sees this one, so
+         anything in it means the submission is not a person's. -->
+    <div class="rpot" aria-hidden="true">
+      <label for="r-url2">Leave this empty</label>
+      <input type="text" id="r-url2" name="url2" tabindex="-1" autocomplete="off">
+    </div>
+
+    <details class="rdiag">
+      <summary>What gets sent with your report</summary>
+      <pre id="r-diag"></pre>
+      <p class="rhint">Collected from the browser so the bug can be reproduced on the same kind of screen. Nothing else is recorded, and nothing is sent until you press the button.</p>
+    </details>
+
+    <div class="rbtns">
+      <button type="submit" class="rsend" id="r-send" hidden>Send report</button>
+      <button type="button" class="rcopy" id="r-copy">Copy the report</button>
+      <a class="rmail" id="r-mail" href="#" hidden>Email it instead</a>
+    </div>
+
+    <p class="rnote" id="r-note" role="status" aria-live="polite"></p>
+
+  </form>
+</section>
+
+<nav class="pager">
+  <a href="index.html"><span class="dir">Back to</span><span class="ttl">Contents</span></a>
+</nav>
+
+<footer class="site">
+  Reports go straight to the author. There is no account to make and nothing to install.
+  <span class="cr">&copy; 2026 Elie Hachem &middot; all rights reserved</span>
+</footer>
+
+</div>
+
+<script src="assets/site.js"></script>
+<script>
+/* ---- the bug report form ----
+   The page sends nothing on load: every hard rule about running offline still
+   holds, and the page sweep's "zero external requests" assertion is untouched.
+   The one request this file can make happens on a click, and if it fails the
+   report is not lost -- the copy button still carries the whole thing.
+
+   ENDPOINT is the only line to edit. Empty means "no service configured yet",
+   in which case the send button stays hidden and the page works by copy and by
+   email, which need nothing at all. */
+var ENDPOINT = '';
+
+(function(){
+  var form = document.getElementById('rep');
+  if(!form) return;
+
+  var MAILTO = ['hachemelie00', 'gmail.com'].join('@');   /* never written whole: address harvesters read page source */
+  var STEPS  = document.getElementById('r-steps');
+  var NOTE   = document.getElementById('r-note');
+  var SEND   = document.getElementById('r-send');
+  var MAIL   = document.getElementById('r-mail');
+
+  /* ---- where: the page list comes from the navigation model, so it can never
+     drift from the site itself ---- */
+  var sel = document.getElementById('r-page');
+  function fillPages(){
+    var seen = {}, opt;
+    opt = document.createElement('option');
+    opt.value = ''; opt.textContent = 'choose a page';
+    sel.appendChild(opt);
+    (window.SITE_PAGES || []).forEach(function(p){
+      if(p[1] === 'report.html') return;           /* not a place a bug happens */
+      if(seen[p[1]]) return;
+      seen[p[1]] = 1;
+      var o = document.createElement('option');
+      o.value = p[1];
+      o.textContent = (p[2] ? p[2] + ' - ' : '') + p[3];
+      sel.appendChild(o);
+    });
+    var o2 = document.createElement('option');
+    o2.value = 'other'; o2.textContent = 'somewhere else, or the whole site';
+    sel.appendChild(o2);
+  }
+  fillPages();
+
+  /* ---- the page they came from, and the state they were in ----
+     The workbench encodes its whole state in the location hash, so for a chart
+     bug that link is the reproduction. It is carried here verbatim. */
+  var qs = new URLSearchParams(location.search);
+  var from = qs.get('from') || '';
+  var fullUrl = qs.get('u') || '';
+  if(from){
+    for(var i = 0; i < sel.options.length; i++){
+      if(sel.options[i].value === from){ sel.selectedIndex = i; break; }
+    }
+  }
+
+  /* ---- steps ---- */
+  function stepRow(){
+    var li = document.createElement('li');
+    var inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'rstep';
+    li.appendChild(inp);
+    STEPS.appendChild(li);
+    return inp;
+  }
+  function stepValues(){
+    var out = [];
+    [].forEach.call(STEPS.querySelectorAll('.rstep'), function(i){
+      var v = i.value.trim();
+      if(v) out.push(v);
+    });
+    return out;
+  }
+  for(var k = 0; k < 3; k++) stepRow();
+  document.getElementById('r-add').addEventListener('click', function(){
+    stepRow().focus();
+  });
+  /* Enter in the last box adds the next one, so a list can be typed without
+     reaching for the mouse. */
+  STEPS.addEventListener('keydown', function(e){
+    if(e.key !== 'Enter') return;
+    e.preventDefault();
+    var all = STEPS.querySelectorAll('.rstep');
+    if(e.target === all[all.length - 1]) stepRow().focus();
+    else {
+      for(var i = 0; i < all.length - 1; i++) if(all[i] === e.target){ all[i+1].focus(); break; }
+    }
+  });
+
+  /* ---- what the browser can say for itself ---- */
+  function diag(){
+    var d = {};
+    d.page = sel.value || '(not chosen)';
+    if(fullUrl) d.link = fullUrl;
+    d.screen = window.innerWidth + ' x ' + window.innerHeight
+             + ' css px, ratio ' + (window.devicePixelRatio || 1);
+    d.theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    d.browser = navigator.userAgent;
+    return d;
+  }
+  function diagText(){
+    var d = diag(), out = [];
+    for(var key in d) if(Object.prototype.hasOwnProperty.call(d, key)) out.push(key + ': ' + d[key]);
+    return out.join('\n');
+  }
+  function paintDiag(){ document.getElementById('r-diag').textContent = diagText(); }
+  paintDiag();
+  sel.addEventListener('change', paintDiag);
+
+  /* ---- the report itself, in one shape used by every route out ---- */
+  function report(){
+    var steps = stepValues();
+    return {
+      page: sel.value,
+      steps: steps,
+      expected: document.getElementById('r-exp').value.trim(),
+      actual: document.getElementById('r-act').value.trim(),
+      who: document.getElementById('r-who').value.trim(),
+      diagnostics: diag()
+    };
+  }
+  function asText(){
+    var r = report(), L = [];
+    L.push('Where: ' + (r.page || '(not chosen)'));
+    L.push('');
+    L.push('What I did:');
+    if(r.steps.length) r.steps.forEach(function(s, i){ L.push('  ' + (i+1) + '. ' + s); });
+    else L.push('  (not given)');
+    L.push('');
+    L.push('Expected: ' + (r.expected || '(not given)'));
+    L.push('Happened: ' + (r.actual || '(not given)'));
+    if(r.who) L.push('From: ' + r.who);
+    L.push('');
+    L.push('--');
+    L.push(diagText());
+    return L.join('\n');
+  }
+
+  function say(msg, kind){
+    NOTE.textContent = msg;
+    NOTE.className = 'rnote' + (kind ? ' ' + kind : '');
+  }
+
+  /* Enough to be worth sending: a page, and either the steps or both outcomes.
+     Stricter than that and a reader with a real bug gets argued with. */
+  function missing(){
+    var r = report();
+    if(!r.page) return 'Please say which page it happened on.';
+    if(!r.steps.length) return 'Please give at least one step.';
+    if(!r.actual) return 'Please say what happened instead.';
+    return '';
+  }
+
+  function syncMail(){
+    var subj = 'Bug report: ' + (sel.value || 'Transmission Line Theory');
+    MAIL.href = 'mailto:' + MAILTO
+              + '?subject=' + encodeURIComponent(subj)
+              + '&body=' + encodeURIComponent(asText());
+  }
+
+  /* ---- copy, which needs nothing and never fails silently ---- */
+  document.getElementById('r-copy').addEventListener('click', function(){
+    var txt = asText();
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = txt;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try{ ok = document.execCommand('copy'); }catch(e){}
+      document.body.removeChild(ta);
+      say(ok ? 'Copied. Paste it into an email or a message.'
+             : 'Could not copy automatically. Select the text and copy it by hand.',
+          ok ? 'ok' : 'warn');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){
+        say('Copied. Paste it into an email or a message.', 'ok');
+      }, fallback);
+    } else fallback();
+  });
+
+  /* ---- send ---- */
+  if(ENDPOINT){
+    SEND.hidden = false;
+  } else {
+    MAIL.hidden = false;
+    syncMail();
+    form.addEventListener('input', syncMail);
+    form.addEventListener('change', syncMail);
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    if(!ENDPOINT) return;
+    if(document.getElementById('r-url2').value){ say('Thank you.', 'ok'); return; }
+
+    var gap = missing();
+    if(gap){ say(gap, 'warn'); return; }
+
+    SEND.disabled = true;
+    say('Sending...');
+
+    fetch(ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ report: asText(), fields: report() })
+    }).then(function(res){
+      if(!res.ok) throw new Error('status ' + res.status);
+      form.querySelectorAll('input, textarea').forEach(function(i){ i.value = ''; });
+      say('Sent. Thank you - that is genuinely useful.', 'ok');
+      SEND.disabled = false;
+    }).catch(function(){
+      SEND.disabled = false;
+      MAIL.hidden = false;
+      syncMail();
+      say('That did not go through - you may be offline, or the form service may be down. '
+        + 'Your report is still here: copy it, or email it with the button beside this one.', 'warn');
+    });
+  });
+})();
+</script>
+</body>
+</html>

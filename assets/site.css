@@ -532,6 +532,47 @@ details.fold > summary:hover{color:var(--ui)}
   footer.site{border-top:1px solid var(--line);font-size:9pt}
 }
 
+/* ---- the bug report form ----
+   Built only from the existing custom properties, so both themes follow and no
+   new colour enters the palette. */
+.rep{margin-top:22px;max-width:64ch}
+.rfield{margin-bottom:22px}
+.rfield>label,.rlab{display:block;font-family:var(--f-mono);font-size:12px;
+  color:var(--ink2);margin-bottom:7px}
+.rhint{color:var(--ink3);font-size:12.5px;margin:0 0 9px}
+.rep input[type=text],.rep textarea,.rep select{width:100%;box-sizing:border-box;
+  font-family:var(--f-body);font-size:14px;color:var(--ink);background:var(--sunk);
+  border:1px solid var(--line2);border-radius:4px;padding:9px 11px}
+.rep textarea{resize:vertical;line-height:1.5}
+.rep input[type=text]:focus,.rep textarea:focus,.rep select:focus{
+  outline:2px solid var(--ui);outline-offset:1px;border-color:var(--ui)}
+ol.rsteps{margin:0 0 10px;padding-left:26px}
+ol.rsteps li{margin-bottom:7px}
+ol.rsteps li::marker{font-family:var(--f-mono);font-size:12px;color:var(--ink3)}
+.radd{font-size:12px;padding:6px 11px}
+/* off-screen rather than display:none -- a bot reads the markup, not the paint */
+.rpot{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+details.rdiag{margin:0 0 22px;border:1px solid var(--line);border-radius:5px;
+  background:var(--surface)}
+details.rdiag>summary{cursor:pointer;padding:10px 13px;font-family:var(--f-mono);
+  font-size:12px;color:var(--ink2)}
+details.rdiag>summary:hover{color:var(--ink)}
+details.rdiag pre{margin:0;padding:0 13px;font-family:var(--f-mono);font-size:11.5px;
+  line-height:1.65;color:var(--ink3);white-space:pre-wrap;word-break:break-word}
+details.rdiag .rhint{padding:9px 13px 12px;margin:0}
+.rbtns{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.rsend{background:var(--ui);border-color:var(--ui);color:var(--bg);font-size:13px;
+  padding:9px 16px}
+.rsend:hover{filter:brightness(1.08)}
+.rsend[disabled]{opacity:.55;cursor:default}
+.rcopy{font-size:13px;padding:9px 16px}
+.rmail{font-family:var(--f-mono);font-size:12px;color:var(--ink2);
+  text-underline-offset:3px}
+.rnote{margin-top:14px;font-size:13.5px;color:var(--ink2);min-height:1.2em}
+.rnote.ok{color:var(--ink)}
+.rnote.warn{color:var(--acc)}
+footer.site .fbug{display:block;margin-top:9px;font-family:var(--f-mono);font-size:12px}
+
 /* ---- wide-screen bleed ----
    The text column stays at a comfortable reading measure. The figures are the
    point of the site, so on a wide screen they are allowed to break out past

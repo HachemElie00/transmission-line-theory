@@ -30,6 +30,10 @@ const H = require('./lib/harness');
       let loaded = 0;
       try { document.fonts.forEach(f => { if (f.status === 'loaded') loaded++; }); } catch (e) {}
       return {
+        /* a page with no MathJax script has no maths to typeset, so the
+           typeset-maths assertions below do not apply to it; everything else
+           -- fonts, overflow, no blocked requests -- still does */
+        math   : !!document.getElementById('MathJax-script'),
         texok  : de.classList.contains('tex-ok'),
         notex  : de.classList.contains('notex'),
         mj     : document.querySelectorAll('mjx-container').length,
@@ -39,7 +43,7 @@ const H = require('./lib/harness');
       };
     });
 
-    const ok = st.texok && !st.notex && st.mj > 0 && st.rawTeX === 0 &&
+    const ok = (!st.math || (st.texok && !st.notex && st.mj > 0)) && st.rawTeX === 0 &&
                st.fonts > 0 && st.ovf < 2 && errs.length === 0 && blocked.length === 0;
 
     s.check(pg, ok,
