@@ -47,7 +47,7 @@
 
   <div class="key">
     <span class="lab">The same argument as the prologue</span>
-    <p>In chapter 01 of the prologue, a single travelling wave forced $V/I = Z_0$ and the load demanded something else, so a second wave had to exist. This is that argument again with the field quantities replaced by circuit ones &mdash; and the minus sign in the current is once more what makes the escape possible.</p>
+    <p>In part two of the prologue, a single plane wave forced $E/H = \eta_1$ while the medium beyond the boundary demanded $\eta_2$, so a reflected wave had to exist. This is that argument again with the field quantities replaced by circuit ones &mdash; and the minus sign in the current is once more what makes the escape possible.</p>
   </div>
 </section>
 
@@ -122,7 +122,7 @@
       <button data-g="0,120">pure inductor</button>
       <button data-g="90,-120">90 &minus; j120</button>
     </div>
-    <figcaption class="cap">left: &Gamma; inside the unit circle. right: how the incident wave splits into reflected and delivered power.</figcaption>
+    <figcaption class="cap">&Gamma; inside the unit circle, and how the incident wave splits into reflected and delivered power.</figcaption>
   </figure>
 
   <p class="t">Move the load around and note which regions of the disc it reaches. Purely resistive loads land on the <b>real axis</b>: those greater than $Z_0$ to the right of the origin, those smaller to the left. Purely reactive loads land on the <b>unit circle itself</b> &mdash; full reflection, phase set by how reactive. Everything else fills the interior.</p>
@@ -153,9 +153,27 @@
   <p class="t">Note that a <b>larger</b> return loss in dB means a <b>better</b> match, which reads backwards until you remember it is a loss suffered by the reflected wave. A 20 dB return loss means the reflection is a hundredth of the incident power.</p>
 </section>
 
+<section class="blk" id="tau">
+  <h2>The current wave, and a transmission coefficient above one</h2>
+  <p class="t">$\Gamma$ was defined on voltage. The current waves carry the opposite sign, $\tilde{I}^- = -V_0^-/Z_0$, so the reflection coefficient for current is $-\Gamma$. At an open circuit the voltage reflects with $+1$ and doubles; the current reflects with $-1$ and cancels to zero, as an open demands.</p>
+
+  <p class="t">The total voltage at the load, over the incident voltage, is the <b>transmission coefficient</b>, and it can exceed one:</p>
+
+  <div class="eq box">
+    $$\tau = \frac{\tilde{V}(0)}{V_0^+} = 1 + \Gamma \qquad\qquad \frac{\tilde{I}(0)}{V_0^+/Z_0} = 1 - \Gamma$$
+    <span class="note">an open load has $\tau = 2$: twice the incident voltage, and no energy is created</span>
+  </div>
+
+  <p class="t">The resolution is that power needs current as well as voltage. The power delivered to the load is the product of the two factors above, and the cross terms are purely imaginary:</p>
+
+  <div class="eq">$$P_L = \tfrac12\operatorname{Re}\{\tilde{V}(0)\tilde{I}(0)^*\} = \frac{|V_0^+|^2}{2Z_0}\operatorname{Re}\{(1+\Gamma)(1-\Gamma^*)\} = \frac{|V_0^+|^2}{2Z_0}\left(1 - |\Gamma|^2\right)$$</div>
+
+  <p class="t">since $(1+\Gamma)(1-\Gamma^*) = 1 - |\Gamma|^2 + (\Gamma - \Gamma^*)$ and $\Gamma - \Gamma^*$ is imaginary. Where the voltage rises the current falls, and the product comes out exactly as the power balance requires. Part two met the same thing at a boundary between two media: there $\tau$ exceeds one whenever the second medium has the higher impedance.</p>
+</section>
+
 <section class="blk" id="moving">
   <h2>Looking from further up the line</h2>
-  <p class="t">$\Gamma$ was defined at the load. Stand a distance $l$ back toward the generator and the two waves have travelled different distances to reach you &mdash; the reflected one has gone out and come back, an extra $2l$. Chapter 02 showed why only that difference matters, and it gives:</p>
+  <p class="t">$\Gamma$ was defined at the load. Stand a distance $l$ back toward the generator and the two waves have travelled different distances to reach you &mdash; the reflected one has gone out and come back, an extra $2l$. $\Gamma$ is a ratio of the two waves, so only that difference matters, and it gives:</p>
 
   <div class="eq box">
     $$\Gamma(l) = \Gamma_L\,e^{-j2\beta l}$$
@@ -177,6 +195,94 @@
     <span class="lab">This is the Smith chart</span>
     <p>A point inside the unit disc, moving clockwise round a circle of fixed radius as you walk back along the line, one lap per half wavelength. Chapter 10 adds the impedance grid on top; the motion is already fully determined here.</p>
   </div>
+</section>
+
+<section class="blk" id="source">
+  <h2>When the source is mismatched too</h2>
+  <p class="t">So far the generator has been taken for granted, as though it launched a fixed $V_0^+$ and absorbed whatever came back. A real one has an internal impedance $Z_g$, and if $Z_g \ne Z_0$ the reflected wave reflects again at the source, with</p>
+
+  <div class="eq">$$\Gamma_g = \frac{Z_g - Z_0}{Z_g + Z_0}$$</div>
+
+  <p class="t">and the forward wave on the line is the sum of the first launch and every echo of it. The echoes form a geometric series, and it sums in closed form:</p>
+
+  <div class="eq box">
+    $$V_0^+ = \frac{V_g Z_0}{Z_g + Z_0}\cdot\frac{1}{1 - \Gamma_g\Gamma_L e^{-j2\beta l}}$$
+    <span class="note">the first factor is the launched wave; the second sums the round trips, each multiplying by $\Gamma_g\Gamma_L e^{-j2\beta l}$</span>
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; the series, and the power that reaches the load</summary>
+    <div class="body">
+      <p>Put the load at $z = 0$ and the source at $z = -l$. The first wave launched into the line, seen at the source end, is $V_gZ_0/(Z_g + Z_0)$, since the line presents $Z_0$ to the source before any reflection returns. One round trip later it comes back reduced by $\Gamma_L$, delayed by a phase $2\beta l$, and is reflected again by $\Gamma_g$, joining the forward wave. Summing all of them,</p>
+      <div class="eq">$$V^+_{\text{at source}} = \frac{V_gZ_0}{Z_g + Z_0}\sum_{n=0}^{\infty}\left(\Gamma_g\Gamma_Le^{-j2\beta l}\right)^n = \frac{V_gZ_0}{Z_g + Z_0}\cdot\frac{1}{1 - \Gamma_g\Gamma_Le^{-j2\beta l}}$$</div>
+      <p>which converges because $|\Gamma_g\Gamma_L| &lt; 1$ unless both ends reflect totally. The same answer comes from solving the boundary conditions at both ends at once, without any series; the series is the time-domain picture of chapter 03's bounce diagram, summed in steady state.</p>
+      <p>The power reaching the load follows from the previous section, $P_L = |V_0^+|^2(1 - |\Gamma_L|^2)/2Z_0$. Divided by the most the source could ever deliver, its available power $|V_g|^2/8R_g$, it takes a symmetric form:</p>
+      <div class="eq">$$\frac{P_L}{P_{\text{av}}} = \frac{\left(1 - |\Gamma_g|^2\right)\left(1 - |\Gamma_L|^2\right)}{\left|1 - \Gamma_g\Gamma_Le^{-j2\beta l}\right|^2}$$</div>
+    </div>
+  </details>
+
+  <figure class="fig">
+    <canvas id="srcfig" class="static" style="height:260px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="sg-r">R<sub>g</sub> &Omega;</label><input type="range" id="sg-r" min="5" max="200" step="1" value="20"><output id="sg-rv">20</output></div>
+      <div class="ctl"><label for="sg-l">R<sub>L</sub> &Omega;</label><input type="range" id="sg-l" min="5" max="300" step="1" value="120"><output id="sg-lv">120</output></div>
+      <div class="ctl"><label for="sg-x">X<sub>L</sub> &Omega;</label><input type="range" id="sg-x" min="-150" max="150" step="1" value="40"><output id="sg-xv">40</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>|&Gamma;<sub>g</sub>|</dt><dd id="sg-gg">0.429</dd></div>
+      <div class="rd"><dt>|&Gamma;<sub>L</sub>|</dt><dd id="sg-gl">0.427</dd></div>
+      <div class="rd"><dt>least delivered</dt><dd id="sg-min">0.48</dd></div>
+      <div class="rd"><dt>most delivered</dt><dd id="sg-max">1.00</dd></div>
+    </dl>
+    <figcaption class="cap">power reaching the load as a fraction of the source's available power, against the length of a 50 &Omega; line between them. it repeats every half wavelength. the dashed line is 1 &minus; |&Gamma;<sub>L</sub>|<sup>2</sup>, what a matched source would deliver</figcaption>
+  </figure>
+
+  <p class="t">Three things show here. With either end matched the ripple vanishes and the length stops mattering. With both mismatched, the delivered power swings between two limits as the echoes add in and out of step. And the top of the swing reaches the full available power only when $|\Gamma_g| = |\Gamma_L|$: a length of line can then turn the load into the conjugate of the source, which is chapter 08's conjugate match reached by choosing $l$ alone.</p>
+</section>
+
+<section class="blk" id="complexz0">
+  <h2>When Z<sub>0</sub> is complex, |&Gamma;| can exceed one</h2>
+  <p class="t">The statement that $|\Gamma| \le 1$ for every passive load rests on $Z_0$ being real. On a lossy line at low frequency it is not (chapter 04), and then the bound fails. Take $Z_0 = 40 - j30\ \Omega$ and a pure reactance $Z_L = j30\ \Omega$:</p>
+
+  <div class="eq">$$\Gamma = \frac{j30 - (40 - j30)}{j30 + (40 - j30)} = \frac{-40 + j60}{40} = -1 + j1.5, \qquad |\Gamma| = 1.80$$</div>
+
+  <p class="t">The load is passive, yet the reflected wave is larger than the incident one. Nothing is wrong: with a complex $Z_0$ the power in the two waves is no longer $|V^+|^2$ and $|V^-|^2$ separately, because the incident and reflected waves exchange power through cross terms. $\Gamma$ still correctly gives the ratio of the voltage waves; it just no longer measures power.</p>
+
+  <p class="t">The cure is to define waves that do measure power, Kurokawa's <b>power waves</b>, referred to an impedance $Z_r$ with positive real part:</p>
+
+  <div class="eq box">
+    $$a = \frac{V + Z_rI}{2\sqrt{\operatorname{Re}Z_r}}, \qquad b = \frac{V - Z_r^*I}{2\sqrt{\operatorname{Re}Z_r}}, \qquad \Gamma_p = \frac{b}{a} = \frac{Z_L - Z_r^*}{Z_L + Z_r}$$
+    <span class="note">the power delivered is exactly $|a|^2 - |b|^2$, so $|\Gamma_p| \le 1$ for every passive load, whatever $Z_r$</span>
+  </div>
+
+  <p class="t">For the example above, $\Gamma_p = (j30 - 40 - j30)/(j30 + 40 - j30) = -1$: magnitude exactly one, as a lossless load requires. When $Z_r$ is real, $Z_r^* = Z_r$ and $\Gamma_p$ reduces to the familiar $\Gamma$, which is why the distinction never arises on the lossless lines of the rest of this site. It matters for lossy lines, and it is one of the two definitions on which the scattering parameters of microwave networks are built.</p>
+</section>
+
+<section class="blk" id="tdr">
+  <h2>Reflections in time: what a TDR sees</h2>
+  <p class="t">A time-domain reflectometer sends a fast step down a line from a matched source and records the voltage at its own end. Until the reflection returns it sees only the launched step; after a round trip of $2t_d$ it sees the step plus whatever the load sent back. A resistor sends back a step scaled by $\Gamma$. A reactive load sends back something that changes with time, and its shape names the load:</p>
+
+  <figure class="fig">
+    <canvas id="tdrfig" class="static" style="height:260px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="td-k">load</label>
+        <select id="td-k" aria-label="Load">
+          <option value="r">resistor R</option>
+          <option value="rl" selected>R in series with L</option>
+          <option value="rc">R in parallel with C</option>
+        </select></div>
+      <div class="ctl"><label for="td-r">R &Omega;</label><input type="range" id="td-r" min="0" max="250" step="1" value="50"><output id="td-rv">50</output></div>
+      <div class="ctl"><label for="td-x" id="td-xl">L nH</label><input type="range" id="td-x" min="1" max="60" step="1" value="20"><output id="td-xv">20</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>&Gamma; as it arrives</dt><dd id="td-g0">+1.000</dd></div>
+      <div class="rd"><dt>&Gamma; once settled</dt><dd id="td-g1">0.000</dd></div>
+      <div class="rd"><dt>time constant</dt><dd id="td-tau">0.20 ns</dd></div>
+    </dl>
+    <figcaption class="cap">the voltage at the TDR's own end for a 1 V step through a matched 50 &Omega; source, on a line with a one-way delay of 1 ns. the trace is computed from the load's own differential equation, driven by the Th&eacute;venin equivalent of the arriving wave</figcaption>
+  </figure>
+
+  <p class="t">An inductor carries no current at first, so it looks like an open: the reflection starts at $+1$ and relaxes to $\Gamma_R$ with time constant $L/(R + Z_0)$. A capacitor holds its voltage at first, so it looks like a short: the reflection starts at $-1$ and relaxes with time constant $C\,RZ_0/(R + Z_0)$. The size and direction of each bump and dip along a real cable read off, in this way, the inductive connector, the capacitive pad, the resistive end, and from the time at which each appears, where it is.</p>
 </section>
 
 <section class="blk" id="check">
@@ -465,6 +571,137 @@ var rich = EM.rich;
   }, false);
 
   sync();
+})();
+
+/* ---- delivered power with both ends mismatched ----
+   P_L / P_av = (1 - |Gg|^2)(1 - |GL|^2) / |1 - Gg GL e^{-j2 beta l}|^2, from the
+   summed echoes. Z0 = 50, Zg = Rg real. */
+(function(){
+  var cv = document.getElementById('srcfig');
+  if(!cv) return;
+  var Z0 = 50, Rg = 20, RL = 120, XL = 40;
+  function gs(){
+    var gg = (Rg - Z0)/(Rg + Z0), dr = RL + Z0, den = dr*dr + XL*XL;
+    var glr = ((RL - Z0)*dr + XL*XL)/den, gli = 2*XL*Z0/den;
+    return { gg: gg, glr: glr, gli: gli, ml: Math.hypot(glr, gli) };
+  }
+  function ratio(l, g){
+    var a = -4*Math.PI*l, pr = g.gg*g.glr, pi = g.gg*g.gli;      /* Gg GL */
+    var er = Math.cos(a), ei = Math.sin(a);
+    var qr = 1 - (pr*er - pi*ei), qi = -(pr*ei + pi*er);
+    return (1 - g.gg*g.gg)*(1 - g.ml*g.ml)/(qr*qr + qi*qi);
+  }
+  function sync(){
+    var g = gs(), mn = Infinity, mx = 0;
+    for(var k = 0; k <= 400; k++){ var r = ratio(0.5*k/400, g); mn = Math.min(mn, r); mx = Math.max(mx, r); }
+    document.getElementById('sg-rv').textContent = Rg;
+    document.getElementById('sg-lv').textContent = RL;
+    document.getElementById('sg-xv').textContent = (XL < 0 ? '−' : '') + Math.abs(XL);
+    document.getElementById('sg-gg').textContent = Math.abs(g.gg).toFixed(3);
+    document.getElementById('sg-gl').textContent = g.ml.toFixed(3);
+    document.getElementById('sg-min').textContent = mn.toFixed(3);
+    document.getElementById('sg-max').textContent = mx.toFixed(3);
+  }
+  [['sg-r', function(v){ Rg = v; }], ['sg-l', function(v){ RL = v; }], ['sg-x', function(v){ XL = v; }]].forEach(function(q){
+    document.getElementById(q[0]).addEventListener('input', function(){ q[1](+this.value); sync(); EM.redrawStatic(); });
+  });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 40, R = 14, T = 14, B = 34, g = gs();
+    function px(l){ return L + l*(W - L - R); }
+    function py(v){ return (H - B) - v*(H - T - B); }
+    c.strokeStyle = C.line; c.lineWidth = 1;
+    [0.25, 0.5, 0.75].forEach(function(l){ c.beginPath(); c.moveTo(px(l) + .5, T); c.lineTo(px(l) + .5, H - B); c.stroke(); });
+    c.strokeStyle = C.line2;
+    c.beginPath(); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.lineTo(W - R, H - B); c.stroke();
+    c.beginPath(); c.moveTo(L, py(1) + .5); c.lineTo(W - R, py(1) + .5); c.stroke();
+    var ref = 1 - g.ml*g.ml;
+    c.strokeStyle = C.ink3; c.setLineDash([5, 4]);
+    c.beginPath(); c.moveTo(L, py(ref)); c.lineTo(W - R, py(ref)); c.stroke(); c.setLineDash([]);
+    c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
+    for(var k = 0; k <= 400; k++){ var l = k/400; c.lineTo(px(l), py(ratio(l, g))); }
+    c.stroke();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
+    c.fillText('1', L - 6, py(1) + 4); c.fillText('0', L - 6, py(0) + 4);
+    c.textAlign = 'center';
+    [['0', 0], ['λ/4', 0.25], ['λ/2', 0.5], ['3λ/4', 0.75], ['λ', 1]].forEach(function(q){
+      c.textAlign = q[1] === 1 ? 'right' : q[1] === 0 ? 'left' : 'center';
+      c.fillText(q[0], px(q[1]), H - B + 15);
+    });
+    c.textAlign = 'right'; c.fillText('line length l', W - R, H - 5);
+    c.textAlign = 'left';
+    EM.rich(c, [['P','n'], ['L','b'], [' / P','n'], ['av','b']], L + 6, T + 12, 11, 'left');
+  }, false);
+})();
+
+/* ---- a TDR trace ----
+   Matched source, so V+ = 0.5 V for a 1 V step and nothing re-reflects at the
+   source. At the load the arriving wave is a Thevenin source 2V+ behind Z0;
+   each load's own first-order response gives v_L(t), and v- = v_L - V+. */
+(function(){
+  var cv = document.getElementById('tdrfig');
+  if(!cv) return;
+  var Z0 = 50, VP = 0.5, TD = 1, TM = 6, kind = 'rl', R = 50, X = 20;
+  var xs = document.getElementById('td-x');
+  function resp(){
+    /* returns {g0, g1, tau (ns), g(t)} with t in ns after arrival */
+    var gR = (R - Z0)/(R + Z0);
+    if(kind === 'r') return { g0: gR, g1: gR, tau: 0, g: function(){ return gR; } };
+    if(kind === 'rl'){
+      var tau = X*1e-9/(R + Z0)*1e9;                           /* L in nH */
+      return { g0: 1, g1: gR, tau: tau, g: function(t){
+        var i = 2*VP/(R + Z0)*(1 - Math.exp(-t/tau)); return (VP - Z0*i)/VP; } };
+    }
+    var rp = R*Z0/(R + Z0), tau2 = Math.max(1e-6, X*1e-12*rp*1e9);   /* C in pF */
+    return { g0: -1, g1: gR, tau: tau2, g: function(t){
+      var vl = 2*VP*R/(R + Z0)*(1 - Math.exp(-t/tau2)); return (vl - VP)/VP; } };
+  }
+  function f3(v){ return Math.abs(v) < 5e-4 ? '0.000' : (v > 0 ? '+' : '−') + Math.abs(v).toFixed(3); }
+  function sync(){
+    document.getElementById('td-rv').textContent = R;
+    document.getElementById('td-xv').textContent = X;
+    var lab = document.getElementById('td-xl');
+    lab.textContent = kind === 'rc' ? 'C pF' : 'L nH';
+    xs.disabled = kind === 'r';
+    var r = resp();
+    document.getElementById('td-g0').textContent = f3(r.g0);
+    document.getElementById('td-g1').textContent = f3(r.g1);
+    document.getElementById('td-tau').textContent = kind === 'r' ? '—' : r.tau.toFixed(2) + ' ns';
+  }
+  document.getElementById('td-k').addEventListener('change', function(){ kind = this.value; sync(); EM.redrawStatic(); });
+  document.getElementById('td-r').addEventListener('input', function(){ R = +this.value; sync(); EM.redrawStatic(); });
+  xs.addEventListener('input', function(){ X = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 40, Rm = 14, T = 16, B = 34, r = resp();
+    function px(t){ return L + t/TM*(W - L - Rm); }
+    function py(v){ return (H - B) - v/1.1*(H - T - B); }
+    function v(t){ if(t < 0) return 0; if(t < 2*TD) return VP; return VP*(1 + r.g(t - 2*TD)); }
+    c.strokeStyle = C.line; c.lineWidth = 1;
+    [0.5, 1].forEach(function(y){ c.beginPath(); c.moveTo(L, py(y) + .5); c.lineTo(W - Rm, py(y) + .5); c.stroke(); });
+    c.strokeStyle = C.line2;
+    c.beginPath(); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.lineTo(W - Rm, H - B); c.stroke();
+    c.strokeStyle = C.ink3; c.setLineDash([3, 3]);
+    c.beginPath(); c.moveTo(px(2*TD), T); c.lineTo(px(2*TD), H - B); c.stroke(); c.setLineDash([]);
+    c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
+    c.moveTo(px(0), py(0)); c.lineTo(px(0), py(VP));
+    for(var k = 0; k <= 600; k++){ var t = TM*k/600; c.lineTo(px(t), py(v(t))); }
+    c.stroke();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
+    c.fillText('1 V', L - 6, py(1) + 4); c.fillText('0.5', L - 6, py(0.5) + 4); c.fillText('0', L - 6, py(0) + 4);
+    c.textAlign = 'center';
+    for(var n = 0; n <= TM; n++){ c.textAlign = n === TM ? 'right' : 'center'; c.fillText(n + (n ? ' ns' : ''), px(n), H - B + 15); }
+    c.textAlign = 'left';
+    EM.rich(c, [['reflection arrives, 2t','n'], ['d','b']], px(2*TD) + 6, T + 10, 11, 'left');
+  }, false);
 })();
 </script>
 </body>

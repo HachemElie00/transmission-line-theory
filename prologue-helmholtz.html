@@ -20,7 +20,7 @@
 <div class="hero">
   <p class="kicker">Prologue &middot; part two of two</p>
   <h1>The wave equation and Helmholtz</h1>
-  <p class="lead">Chapter 01 argued in words that the two curl laws feed each other. Here that argument is made algebraically: take the curl of one, substitute the other, and the coupled pair collapses into a single equation whose solutions travel at a speed fixed entirely by the medium.</p>
+  <p class="lead">Part one argued in words that the two curl laws feed each other. Here that argument is made algebraically: take the curl of one, substitute the other, and the coupled pair collapses into a single equation whose solutions travel at a speed fixed entirely by the medium.</p>
 </div>
 
 <section class="blk" id="decouple">
@@ -146,7 +146,7 @@
 
   <div class="key">
     <span class="lab">Remember this shape</span>
-    <p>A ratio of field quantities, fixed by the medium, with units of ohms, and the same for every wave travelling through it. When $Z_0 = \sqrt{L/C}$ appears on a transmission line in chapter 05, it is this same idea wearing circuit clothing &mdash; and it is why a line has a characteristic impedance at all.</p>
+    <p>A ratio of field quantities, fixed by the medium, with units of ohms, and the same for every wave travelling through it. When $Z_0 = \sqrt{L/C}$ appears on a transmission line in chapter 04, it is this same idea wearing circuit clothing &mdash; and it is why a line has a characteristic impedance at all.</p>
   </div>
 
   <details class="deriv">
@@ -164,6 +164,163 @@
       <p>which is what the figure's $\angle\eta$ readout reports as you move the attenuation slider. At $\alpha = 0$ it is zero, recovering the in-phase case. At the other extreme, a good conductor has $\alpha \to \beta$, giving $\angle\eta \to 45^\circ$ &mdash; the largest lag any passive medium produces, and the reason a wave entering metal is so quickly spent.</p>
     </div>
   </details>
+</section>
+
+<section class="blk" id="regimes">
+  <h2>One medium, two regimes</h2>
+  <p class="t">The lossy propagation constant above, $\gamma = \sqrt{j\omega\mu(\sigma + j\omega\varepsilon)}$, contains the conduction-to-displacement ratio of part one. Factor out the displacement term and it appears explicitly:</p>
+
+  <div class="eq box">
+    $$\gamma = j\omega\sqrt{\mu\varepsilon}\,\sqrt{1 - j\tan\delta}, \qquad \tan\delta = \frac{\sigma}{\omega\varepsilon}$$
+    <span class="note">$\tan\delta$ is the loss tangent; it decides which of two simple limits the medium is in</span>
+  </div>
+
+  <p class="t">When $\tan\delta \ll 1$ the medium is a <b>low-loss dielectric</b>: $\beta$ is barely changed from $\omega\sqrt{\mu\varepsilon}$, and the attenuation stops depending on frequency at all. When $\tan\delta \gg 1$ it is a <b>good conductor</b>: $\alpha$ and $\beta$ become equal and both grow as $\sqrt{f}$.</p>
+
+  <div class="eq">$$\tan\delta \ll 1:\;\; \alpha \approx \frac{\sigma}{2}\sqrt{\frac{\mu}{\varepsilon}},\;\; \beta \approx \omega\sqrt{\mu\varepsilon} \qquad\qquad \tan\delta \gg 1:\;\; \alpha \approx \beta \approx \sqrt{\pi f\mu\sigma}$$</div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; the two limits</summary>
+    <div class="body">
+      <p><b>Low loss.</b> Expand the square root to first order, $\sqrt{1 - j\tan\delta} \approx 1 - \tfrac{j}{2}\tan\delta$. Then</p>
+      <div class="eq">$$\gamma \approx j\omega\sqrt{\mu\varepsilon} + \frac{\omega\sqrt{\mu\varepsilon}}{2}\cdot\frac{\sigma}{\omega\varepsilon} = j\omega\sqrt{\mu\varepsilon} + \frac{\sigma}{2}\sqrt{\frac{\mu}{\varepsilon}}$$</div>
+      <p>The real part is the attenuation, and $\omega$ has cancelled out of it.</p>
+      <p><b>Good conductor.</b> Drop the displacement term: $\gamma \approx \sqrt{j\omega\mu\sigma} = \sqrt{\omega\mu\sigma}\,e^{j\pi/4}$, because $\sqrt{j} = e^{j\pi/4}$. The real and imaginary parts are equal:</p>
+      <div class="eq">$$\alpha = \beta = \sqrt{\frac{\omega\mu\sigma}{2}} = \sqrt{\pi f\mu\sigma}$$</div>
+      <p><b>At the crossover</b> $\tan\delta = 1$, so $\gamma^2 = j\omega\mu\sigma(1 + j)$ has an angle of $135^\circ$ and $\gamma$ an angle of $67.5^\circ$. Every material therefore crosses over with the same ratio $\alpha/\beta = \tan 22.5^\circ = 0.414$, whatever its $\sigma$ and $\varepsilon$.</p>
+    </div>
+  </details>
+
+  <figure class="fig">
+    <canvas id="abfig" style="height:300px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="abm">medium</label>
+        <select id="abm" aria-label="Medium">
+          <option value="0" selected>sea water</option>
+          <option value="1">wet soil</option>
+          <option value="2">fresh water</option>
+        </select></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>crossover, tan &delta; = 1</dt><dd id="ab-fc">888 MHz</dd></div>
+      <div class="rd"><dt>&alpha;/&beta; there</dt><dd id="ab-r">0.414</dd></div>
+      <div class="rd"><dt>&alpha; at high frequency</dt><dd id="ab-ainf">83.7 Np/m</dd></div>
+      <div class="rd"><dt>the same, in dB</dt><dd id="ab-db">727 dB/m</dd></div>
+    </dl>
+    <figcaption class="cap">&alpha; and &beta; computed exactly from &gamma;, on logarithmic axes, with the two limiting forms dashed. below the crossover they run together as &radic;f; above it &alpha; levels off while &beta; keeps rising as f</figcaption>
+  </figure>
+
+  <p class="t">Sea water's high-frequency attenuation of about 84 Np/m, roughly 700 dB per metre, is why radar does not see submarines. The same physics sets a transmission line's dielectric loss in chapter 04: a good line dielectric sits deep in the low-loss regime, where the attenuation above can be written $\alpha = \tfrac12\beta\tan\delta$.</p>
+</section>
+
+<section class="blk" id="skin">
+  <h2>Into a conductor: skin depth</h2>
+  <p class="t">In a good conductor the wave decays by $e^{-1}$ every $1/\alpha$, and that distance is the <b>skin depth</b>. Because $\alpha = \beta$ there, the wave also turns through one radian of phase in the same distance, so it is spent within about one wavelength of the surface.</p>
+
+  <div class="eq box">
+    $$\delta = \frac{1}{\sqrt{\pi f\mu\sigma}} \qquad\qquad \eta_c \approx \frac{1 + j}{\sigma\delta} = R_s(1 + j)$$
+    <span class="note">the intrinsic impedance of a good conductor is the surface impedance; its real part $R_s = 1/\sigma\delta$ is the surface resistance</span>
+  </div>
+
+  <figure class="fig">
+    <canvas id="skinfig" style="height:270px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="skf">frequency</label><input type="range" id="skf" min="3" max="10" step="0.01" value="9"><output id="skfv">1.00 GHz</output></div>
+      <div class="ctl"><label for="skm">metal</label>
+        <select id="skm" aria-label="Metal">
+          <option value="5.8e7" selected>copper</option>
+          <option value="4.1e7">gold</option>
+          <option value="3.5e7">aluminium</option>
+          <option value="1.45e6">stainless steel</option>
+        </select></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>skin depth &delta;</dt><dd id="sk-d">2.09 &micro;m</dd></div>
+      <div class="rd"><dt>R<sub>s</sub> = 1/&sigma;&delta;</dt><dd id="sk-rs">8.25 m&Omega;</dd></div>
+      <div class="rd"><dt>R&prime; of a 0.45 mm wire</dt><dd id="sk-rp">2.92 &Omega;/m</dd></div>
+    </dl>
+    <figcaption class="cap">current density inside the metal against depth, at one instant and as its envelope e<sup>&minus;z/&delta;</sup>. the shaded strip is the first skin depth. the wire figure uses R&prime; = R<sub>s</sub>/2&pi;a, valid while &delta; is small against the radius a</figcaption>
+  </figure>
+
+  <p class="t">The surface resistance has a useful reading: $R_s$ is exactly the resistance per square of a slab of the metal <b>one skin depth thick</b> carrying uniform current. The real current decays smoothly rather than stopping at $\delta$, but it dissipates the same power. A conductor of perimeter $p$ therefore has a resistance per metre of $R_s/p$, and for coax that gives</p>
+
+  <div class="eq">$$R' = \frac{R_s}{2\pi}\left(\frac{1}{a} + \frac{1}{b}\right) \propto \sqrt{f}$$</div>
+
+  <p class="t">which is the frequency dependence chapter 03 gives $R'$. The surface current $\vJ_s$ of part one's boundary conditions is this same current, idealised to zero thickness.</p>
+</section>
+
+<section class="blk" id="interface">
+  <h2>Meeting a boundary</h2>
+  <p class="t">Send the plane wave from a medium of impedance $\eta_1$ onto a flat boundary with a second medium, $\eta_2$, at normal incidence. Part of it is reflected and part transmitted, and the boundary conditions fix how much: tangential $\vE$ and $\vH$ must both be continuous across the boundary.</p>
+
+  <div class="eq box">
+    $$\Gamma = \frac{E^-}{E^+} = \frac{\eta_2 - \eta_1}{\eta_2 + \eta_1} \qquad\qquad \tau = \frac{E_t}{E^+} = \frac{2\eta_2}{\eta_2 + \eta_1} = 1 + \Gamma$$
+    <span class="note">the same expression chapter 06 derives for a line, with intrinsic impedances where that has $Z_L$ and $Z_0$</span>
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; two continuity conditions</summary>
+    <div class="body">
+      <p>Put the boundary at $z = 0$. In medium 1 there is an incident and a reflected wave, in medium 2 only a transmitted one. Each wave's magnetic field is its electric field over the medium's $\eta$, with a minus sign for the wave travelling in $-z$, because $\vE\times\vH$ must point the way it travels:</p>
+      <div class="eq">$$E_x = E^+e^{-j\beta_1 z} + E^-e^{+j\beta_1 z}, \quad H_y = \frac{E^+e^{-j\beta_1 z} - E^-e^{+j\beta_1 z}}{\eta_1} \qquad (z < 0)$$</div>
+      <div class="eq">$$E_x = E_te^{-j\beta_2 z}, \qquad H_y = \frac{E_t\,e^{-j\beta_2 z}}{\eta_2} \qquad (z > 0)$$</div>
+      <p>Both fields are tangential to the boundary, so both are continuous at $z = 0$:</p>
+      <div class="eq">$$E^+ + E^- = E_t, \qquad \frac{E^+ - E^-}{\eta_1} = \frac{E_t}{\eta_2}$$</div>
+      <p>Eliminate $E_t$ and the boxed $\Gamma$ follows; substitute back for $\tau$. Power balance is automatic: the reflected share is $|\Gamma|^2$ and the transmitted share $(\eta_1/\eta_2)|\tau|^2$, and for real impedances these add to exactly one.</p>
+    </div>
+  </details>
+
+  <figure class="fig">
+    <canvas id="nifig" style="height:280px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="ni-e">&epsilon;<sub>r</sub> beyond</label><input type="range" id="ni-e" min="1" max="81" step="0.5" value="4"><output id="ni-ev">4.0</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>&Gamma;</dt><dd id="ni-g">&minus;0.333</dd></div>
+      <div class="rd"><dt>&tau;</dt><dd id="ni-t">0.667</dd></div>
+      <div class="rd"><dt>reflected power</dt><dd id="ni-pr">11.1 %</dd></div>
+      <div class="rd"><dt>transmitted power</dt><dd id="ni-pt">88.9 %</dd></div>
+    </dl>
+    <div class="btns">
+      <button data-ni="1">no boundary</button>
+      <button data-ni="4">glass, &epsilon;<sub>r</sub> = 4</button>
+      <button data-ni="81">water, &epsilon;<sub>r</sub> = 81</button>
+      <button data-ni="pec">perfect conductor</button>
+    </div>
+    <figcaption class="cap">a wave arriving from free space on the left. on the left: the incident and reflected waves, dashed, their sum, and the envelope of that sum; on the right, the transmitted wave, shorter in wavelength by &radic;&epsilon;<sub>r</sub></figcaption>
+  </figure>
+
+  <p class="t">Every feature of the line chapters is already here. A denser medium has a lower $\eta$, so $\Gamma$ is negative and the envelope has a minimum at the boundary. A perfect conductor has $\eta_2 = 0$, so $\Gamma = -1$, nothing is transmitted, and the incident and reflected waves form a pure standing wave with an electric-field null on the surface, as the boundary condition $E_t = 0$ demands. Changing $\eta$ at a boundary is exactly what changing $Z$ at a load will do.</p>
+</section>
+
+<section class="blk" id="tem">
+  <h2>Why a guided TEM wave needs two conductors</h2>
+  <p class="t">A plane wave fills all of space. To guide one, the fields have to be confined by conductors, and it is worth asking what kind of conductor arrangement can carry a wave whose fields are still entirely transverse. The answer is decisive: at least two conductors, separated.</p>
+
+  <p class="t">For a TEM wave travelling along $z$, with $E_z = H_z = 0$, Faraday's law in the cross-section reduces to $\nabla_t\times\vE_t = 0$, so the transverse field is the gradient of a potential, $\vE_t = -\nabla_t\Phi$. Gauss's law then makes that potential satisfy Laplace's equation in the cross-section:</p>
+
+  <div class="eq box">
+    $$\nabla_t^2\,\Phi(x, y) = 0, \qquad \Phi = \text{constant on each conductor}$$
+    <span class="note">the electrostatic problem, solved in the cross-section; the whole pattern then travels along $z$ at $1/\sqrt{\mu\varepsilon}$</span>
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; from the curl laws to Laplace</summary>
+    <div class="body">
+      <p>Write $\vE = \vE_t(x,y)\,e^{-j\beta z}$ with no $z$ component. The $z$ component of Faraday's law involves only transverse derivatives of transverse components, and it must equal $-j\omega\mu H_z = 0$:</p>
+      <div class="eq">$$\hat{z}\cdot(\nabla_t\times\vE_t) = \frac{\partial E_y}{\partial x} - \frac{\partial E_x}{\partial y} = 0$$</div>
+      <p>A field with no transverse curl is a transverse gradient, $\vE_t = -\nabla_t\Phi$. In a source-free region $\dive\vE = \nabla_t\cdot\vE_t = 0$ (there is no $E_z$ to vary in $z$), so $\nabla_t^2\Phi = 0$. On each conductor the tangential field must vanish, which makes $\Phi$ constant along its surface.</p>
+      <p>Now suppose there is only one conductor, a hollow pipe of any cross-section. $\Phi$ is a single constant $V_0$ all round its wall, and the solution of Laplace's equation inside a closed boundary held at one constant is that constant, everywhere. Then $\vE_t = -\nabla_t\Phi = 0$, and there is no wave. A pipe can still guide waves, but only with a longitudinal field component: the TE and TM modes of a waveguide, each with a cutoff frequency below which it cannot propagate.</p>
+      <p>With two conductors held at different potentials the solution is not constant, a transverse field exists at every frequency down to DC, and the potential difference between the conductors is the same along every path in the cross-section. That last fact is what makes a <b>voltage</b> between the two conductors well defined at each $z$, and it is the foundation of the circuit model in chapter 03.</p>
+    </div>
+  </details>
+
+  <figure class="fig">
+    <canvas id="temfig" class="static" style="height:290px"></canvas>
+    <figcaption class="cap">two wires at different potentials, with the equipotentials and field lines of the cross-section, the wires themselves being equipotentials; and a single hollow pipe, whose wall is one equipotential, so the field inside it is zero</figcaption>
+  </figure>
+
+  <p class="t">This is why chapter 02 can start from two wires and a voltage between them. Coax, twin-lead and microstrip all have two conductors and carry a TEM or nearly-TEM wave with no cutoff; a rectangular waveguide has one and does not.</p>
 </section>
 
 <section class="blk" id="check">
@@ -328,6 +485,333 @@
     c.fillText('z = 0', L, H - B + 14);
     c.textAlign = 'right'; c.fillText('propagation z →', W-R, T + 12);
   }, true);
+})();
+
+/* ---- shared by the figures below ---- */
+var MONO2 = 'IBM Plex Mono, IBM Plex Sans, monospace';
+var MU0 = 4e-7*Math.PI, EPS0 = 8.8541878128e-12, ETA0 = Math.sqrt(MU0/EPS0);
+/* gamma = sqrt(j w mu (sigma + j w eps)), principal root: [alpha, beta] */
+function gammaOf(f, sig, er){
+  var w = 2*Math.PI*f, re = -w*MU0*w*er*EPS0, im = w*MU0*sig;
+  var r = Math.sqrt(Math.hypot(re, im)), th = Math.atan2(im, re)/2;
+  return [r*Math.cos(th), r*Math.sin(th)];
+}
+function fmtFreq(f){
+  var u = [[1e12,'THz'],[1e9,'GHz'],[1e6,'MHz'],[1e3,'kHz'],[1,'Hz']];
+  for(var i = 0; i < u.length; i++) if(f >= u[i][0]*0.9995) return (f/u[i][0]).toPrecision(3) + ' ' + u[i][1];
+  return f.toPrecision(3) + ' Hz';
+}
+
+/* ---- alpha and beta across frequency, one medium ----
+   Exact from gamma; the two limiting forms are drawn dashed so the reader can
+   see where each one holds and where it fails. */
+(function(){
+  var cv = document.getElementById('abfig');
+  if(!cv) return;
+  var MATS = [{ sig: 4, er: 81 }, { sig: 1e-2, er: 15 }, { sig: 1e-3, er: 80 }];
+  var mi = 0;
+  function fc(m){ return m.sig/(2*Math.PI*m.er*EPS0); }
+  function sync(){
+    var m = MATS[mi], f0 = fc(m), g = gammaOf(f0, m.sig, m.er), ainf = m.sig/2*ETA0/Math.sqrt(m.er);
+    document.getElementById('ab-fc').textContent = fmtFreq(f0);
+    document.getElementById('ab-r').textContent = (g[0]/g[1]).toFixed(3);
+    document.getElementById('ab-ainf').textContent = (ainf < 1 ? ainf.toPrecision(3) : ainf.toFixed(1)) + ' Np/m';
+    var db = ainf*20/Math.LN10;
+    document.getElementById('ab-db').textContent = (db < 10 ? db.toPrecision(3) : db.toFixed(0)) + ' dB/m';
+  }
+  document.getElementById('abm').addEventListener('change', function(){ mi = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var m = MATS[mi], X0 = 0, X1 = 12;
+    /* the y range follows the medium: whole decades spanning both curves */
+    var lo = Infinity, hi = -Infinity;
+    for(var k = 0; k <= 60; k++){
+      var g = gammaOf(Math.pow(10, X0 + (X1 - X0)*k/60), m.sig, m.er);
+      lo = Math.min(lo, Math.log10(g[0]), Math.log10(g[1])); hi = Math.max(hi, Math.log10(g[0]), Math.log10(g[1]));
+    }
+    var Y0 = Math.floor(lo), Y1 = Math.ceil(hi);
+    var L = 52, R = 14, T = 14, B = 38;
+    function px(x){ return L + (x - X0)/(X1 - X0)*(W - L - R); }
+    function py(y){ return (H - B) - (y - Y0)/(Y1 - Y0)*(H - T - B); }
+
+    c.strokeStyle = C.line; c.lineWidth = 1;
+    for(var gx = 0; gx <= 12; gx += 3){ c.beginPath(); c.moveTo(px(gx) + .5, T); c.lineTo(px(gx) + .5, H - B); c.stroke(); }
+    var step = Math.max(1, Math.ceil((Y1 - Y0)/6));
+    for(var gy = Y0; gy <= Y1; gy += step){ c.beginPath(); c.moveTo(L, py(gy) + .5); c.lineTo(W - R, py(gy) + .5); c.stroke(); }
+    c.strokeStyle = C.line2;
+    c.beginPath(); c.moveTo(L, H - B + .5); c.lineTo(W - R, H - B + .5); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.stroke();
+    c.font = '11px ' + MONO2; c.fillStyle = C.ink3;
+    ['1 Hz', '1 kHz', '1 MHz', '1 GHz', '1 THz'].forEach(function(t, i){
+      c.textAlign = i === 0 ? 'left' : i === 4 ? 'right' : 'center';
+      c.fillText(t, px(i*3) + (i === 0 ? -4 : 0), H - B + 15);
+    });
+    c.textAlign = 'center'; c.fillText('frequency', (L + W - R)/2, H - 6);
+    for(var ly = Y0; ly <= Y1; ly += step){
+      c.fillStyle = C.ink3;
+      EM.rich(c, [['10','n'], [ly < 0 ? '−' + (-ly) : String(ly),'p']], L - 8, py(ly) + 4, 11, 'right');
+    }
+
+    c.save(); c.beginPath(); c.rect(L, T, W - L - R, H - T - B); c.clip();
+    /* the limits, dashed */
+    c.setLineDash([5, 4]); c.lineWidth = 1.2; c.strokeStyle = C.ink3;
+    c.beginPath();                                   /* good conductor: alpha = beta = sqrt(pi f mu sigma) */
+    c.moveTo(px(X0), py(Math.log10(Math.sqrt(Math.PI*Math.pow(10, X0)*MU0*m.sig))));
+    c.lineTo(px(X1), py(Math.log10(Math.sqrt(Math.PI*Math.pow(10, X1)*MU0*m.sig))));
+    c.stroke();
+    var ainf = m.sig/2*ETA0/Math.sqrt(m.er);          /* low loss: alpha flat, beta = w sqrt(mu eps) */
+    c.beginPath(); c.moveTo(px(X0), py(Math.log10(ainf))); c.lineTo(px(X1), py(Math.log10(ainf))); c.stroke();
+    var bl = function(x){ return Math.log10(2*Math.PI*Math.pow(10, x)*Math.sqrt(m.er)/299792458); };
+    c.beginPath(); c.moveTo(px(X0), py(bl(X0))); c.lineTo(px(X1), py(bl(X1))); c.stroke();
+    c.setLineDash([]);
+    /* exact */
+    [[0, C.h], [1, C.e]].forEach(function(q){
+      c.strokeStyle = q[1]; c.lineWidth = 2.4; c.beginPath();
+      for(var j = 0; j <= 240; j++){
+        var x = X0 + (X1 - X0)*j/240, g2 = gammaOf(Math.pow(10, x), m.sig, m.er);
+        c.lineTo(px(x), py(Math.log10(g2[q[0]])));
+      }
+      c.stroke();
+    });
+    c.restore();
+
+    /* crossover */
+    var xc = Math.log10(fc(m));
+    c.strokeStyle = C.ink; c.lineWidth = 1; c.setLineDash([2, 3]);
+    c.beginPath(); c.moveTo(px(xc), T); c.lineTo(px(xc), H - B); c.stroke(); c.setLineDash([]);
+    c.fillStyle = C.ink2; c.textAlign = 'left'; c.font = '11px ' + MONO2;
+    c.fillText('tan δ = 1', px(xc) + 5, T + 12);
+
+    /* labels near the right end, where the two curves are far apart */
+    var gr = gammaOf(Math.pow(10, 11), m.sig, m.er);
+    c.font = '12px ' + MONO2; c.textAlign = 'right';
+    c.fillStyle = C.e; c.fillText('β', px(11) - 6, py(Math.log10(gr[1])) - 8);
+    c.fillStyle = C.h; c.fillText('α', px(11) - 6, py(Math.log10(gr[0])) + 18);
+    var gl = gammaOf(Math.pow(10, 1), m.sig, m.er);
+    c.fillStyle = C.ink2; c.textAlign = 'left';
+    c.fillText('α = β', px(1) + 4, py(Math.log10(gl[0])) - 10);
+  }, false);
+})();
+
+/* ---- skin depth: current density inside a conductor ----
+   J(z, t)/J(0) = exp(-z/delta) cos(wt - z/delta): decay and phase lag at the
+   same rate, because alpha = beta in a good conductor. */
+(function(){
+  var cv = document.getElementById('skinfig');
+  if(!cv) return;
+  var lf = 9, sig = 5.8e7, A = 0.45e-3;
+  function delta(){ return 1/Math.sqrt(Math.PI*Math.pow(10, lf)*MU0*sig); }
+  function len(v){
+    if(v >= 1e-3) return (v*1e3).toPrecision(3) + ' mm';
+    return (v*1e6).toPrecision(3) + ' µm';
+  }
+  function sync(){
+    var d = delta(), rs = 1/(sig*d);
+    document.getElementById('skfv').textContent = fmtFreq(Math.pow(10, lf));
+    document.getElementById('sk-d').textContent = len(d);
+    document.getElementById('sk-rs').textContent = (rs*1e3).toPrecision(3) + ' mΩ';
+    var ok = d < A/5;
+    document.getElementById('sk-rp').textContent = ok ? (rs/(2*Math.PI*A)).toPrecision(3) + ' Ω/m' : 'δ not small';
+  }
+  document.getElementById('skf').addEventListener('input', function(){ lf = +this.value; sync(); });
+  document.getElementById('skm').addEventListener('change', function(){ sig = +this.value; sync(); });
+  sync();
+
+  EM.register(function(C, t){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 46, R = 16, T = 18, B = 44, ZM = 5;          /* five skin depths across */
+    var y0 = T + (H - T - B)/2, sy = (H - T - B)/2*0.92;
+    function px(z){ return L + z/ZM*(W - L - R); }
+    /* the metal, and the first skin depth */
+    c.fillStyle = C.ink2; c.globalAlpha = 0.08; c.fillRect(L, T, W - L - R, H - T - B);
+    c.globalAlpha = 0.16; c.fillRect(L, T, px(1) - L, H - T - B); c.globalAlpha = 1;
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L, y0 + .5); c.lineTo(W - R, y0 + .5); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.stroke();
+    /* envelope */
+    c.strokeStyle = C.acc; c.lineWidth = 1.2; c.setLineDash([4, 4]);
+    [1, -1].forEach(function(s){
+      c.beginPath();
+      for(var i = 0; i <= 200; i++){ var z = ZM*i/200; c.lineTo(px(z), y0 - s*Math.exp(-z)*sy); }
+      c.stroke();
+    });
+    c.setLineDash([]);
+    /* the instantaneous current density */
+    c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
+    for(var j = 0; j <= 300; j++){ var z2 = ZM*j/300; c.lineTo(px(z2), y0 - Math.exp(-z2)*Math.cos(t - z2)*sy); }
+    c.stroke();
+    /* labels */
+    c.font = '11px ' + MONO2; c.fillStyle = C.ink3; c.textAlign = 'center';
+    for(var k = 1; k <= 4; k++) c.fillText(k + 'δ', px(k), H - B + 15);
+    c.textAlign = 'left'; c.fillText('surface', L - 2, H - B + 15);
+    c.textAlign = 'right'; c.fillText('depth into the metal →', W - R, H - B + 32);
+    c.textAlign = 'left'; c.fillStyle = C.ink2;
+    EM.rich(c, [['δ = ' + len(delta()),'n']], px(1) + 6, T + 14, 12, 'left');
+    c.fillStyle = C.ink3;
+    EM.rich(c, [['J/J','n'], ['0','b']], 6, T + 4, 11, 'left');
+  }, true);
+})();
+
+/* ---- normal incidence on a boundary ----
+   Fields from the continuity solution; the envelope on the left is
+   |1 + Gamma e^(j2 beta1 z)|, the same standing-wave form as chapter 07. */
+(function(){
+  var cv = document.getElementById('nifig');
+  if(!cv) return;
+  var er = 4, pec = false;
+  function coef(){
+    if(pec) return { G: -1, T: 0 };
+    var n1 = ETA0, n2 = ETA0/Math.sqrt(er), G = (n2 - n1)/(n2 + n1);
+    return { G: G, T: 1 + G, n1: n1, n2: n2 };
+  }
+  function pct(v){ return (v*100).toFixed(1) + ' %'; }
+  function sync(){
+    var k = coef();
+    document.getElementById('ni-ev').textContent = pec ? '∞' : er.toFixed(1);
+    document.getElementById('ni-g').textContent = (k.G < 0 ? '−' : '') + Math.abs(k.G).toFixed(3);
+    document.getElementById('ni-t').textContent = k.T.toFixed(3);
+    document.getElementById('ni-pr').textContent = pct(k.G*k.G);
+    document.getElementById('ni-pt').textContent = pec ? '0.0 %' : pct(k.n1/k.n2*k.T*k.T);
+  }
+  var sl = document.getElementById('ni-e');
+  sl.addEventListener('input', function(){ er = +this.value; pec = false; sync(); });
+  Array.prototype.forEach.call(cv.parentNode.querySelectorAll('button[data-ni]'), function(b){
+    b.addEventListener('click', function(){
+      var v = b.getAttribute('data-ni');
+      if(v === 'pec'){ pec = true; }
+      else { pec = false; er = +v; sl.value = er; }
+      sync();
+    });
+  });
+  sync();
+
+  EM.register(function(C, t){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var k = coef(), L = 16, R = 16, T = 26, B = 30;
+    var xb = L + (W - L - R)*0.6, y0 = T + (H - T - B)/2, sy = (H - T - B)/2/2.1;
+    var lam = (xb - L)/2.25;                             /* incident wavelength in pixels */
+    function b1(x){ return 2*Math.PI*(x - xb)/lam; }     /* phase, zero at the boundary */
+    /* the second medium */
+    if(pec){ c.fillStyle = C.ink2; c.globalAlpha = 0.35; }
+    else { c.fillStyle = C.e; c.globalAlpha = Math.min(0.22, 0.03 + 0.19*Math.log(er)/Math.log(81)); }
+    c.fillRect(xb, T - 10, W - R - xb, H - T - B + 20); c.globalAlpha = 1;
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L, y0 + .5); c.lineTo(W - R, y0 + .5); c.stroke();
+    c.strokeStyle = C.ink2; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(xb, T - 10); c.lineTo(xb, H - B + 10); c.stroke();
+    /* envelope of the total field on the left */
+    c.fillStyle = C.accfill; c.beginPath();
+    for(var i = 0; i <= 160; i++){ var x = L + (xb - L)*i/160, p = 2*b1(x);
+      c.lineTo(x, y0 - Math.hypot(1 + k.G*Math.cos(p), k.G*Math.sin(p))*sy); }
+    for(var i2 = 160; i2 >= 0; i2--){ var x2 = L + (xb - L)*i2/160, p2 = 2*b1(x2);
+      c.lineTo(x2, y0 + Math.hypot(1 + k.G*Math.cos(p2), k.G*Math.sin(p2))*sy); }
+    c.closePath(); c.fill();
+    /* incident and reflected, dashed */
+    c.setLineDash([5, 4]); c.lineWidth = 1.4;
+    c.strokeStyle = C.e; c.beginPath();
+    for(var a = 0; a <= 160; a++){ var xa = L + (xb - L)*a/160; c.lineTo(xa, y0 - Math.cos(t - b1(xa))*sy); }
+    c.stroke();
+    c.strokeStyle = C.h; c.beginPath();
+    for(var r = 0; r <= 160; r++){ var xr = L + (xb - L)*r/160; c.lineTo(xr, y0 - k.G*Math.cos(t + b1(xr))*sy); }
+    c.stroke(); c.setLineDash([]);
+    /* total on the left, transmitted on the right */
+    c.strokeStyle = C.ink; c.lineWidth = 2.4; c.beginPath();
+    for(var s = 0; s <= 200; s++){ var xs = L + (xb - L)*s/200;
+      c.lineTo(xs, y0 - (Math.cos(t - b1(xs)) + k.G*Math.cos(t + b1(xs)))*sy); }
+    c.stroke();
+    if(!pec){
+      var n = Math.sqrt(er);
+      c.beginPath();
+      for(var q = 0; q <= 200; q++){ var xq = xb + (W - R - xb)*q/200;
+        c.lineTo(xq, y0 - k.T*Math.cos(t - n*b1(xq))*sy); }
+      c.stroke();
+    }
+    c.font = '11px ' + MONO2; c.fillStyle = C.ink3; c.textAlign = 'left';
+    EM.rich(c, [['free space, η','n'], ['1','b'], [' = 377 Ω','n']], L, T - 8, 11, 'left');
+    c.fillStyle = C.ink2;
+    if(pec) EM.rich(c, [['conductor, η','n'], ['2','b'], [' = 0','n']], xb + 6, T - 8, 11, 'left');
+    else EM.rich(c, [['η','n'], ['2','b'], [' = ' + (ETA0/Math.sqrt(er)).toFixed(0) + ' Ω','n']], xb + 6, T - 8, 11, 'left');
+    c.fillStyle = C.ink3; c.textAlign = 'center';
+    c.fillText('boundary', xb, H - B + 24);
+  }, true);
+})();
+
+/* ---- TEM needs two conductors (static) ----
+   Two line charges at x = -d and +d: the equipotentials are the Apollonius
+   circles r2/r1 = e^k, centre d coth k, radius d / |sinh k|, and the field
+   lines are the circles through both charges. A wire is an equipotential, so
+   two wires are drawn as two of those circles. */
+(function(){
+  var cv = document.getElementById('temfig');
+  if(!cv) return;
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d');
+    c.clearRect(0, 0, cv._w, cv._h);
+    var nar = cv._w < 560;
+    if(nar && !cv._grown){ cv._grown = true; cv.style.height = '560px'; cv._h0 = null; EM.fit(cv); }
+    if(!nar && cv._grown){ cv._grown = false; cv.style.height = '290px'; cv._h0 = null; EM.fit(cv); }
+    var DW = nar ? 320 : 640, DH = nar ? 520 : 260;
+    EM.design(c, cv, DW, DH, true);
+
+    function twoWire(ox, oy){
+      var cx = ox + 150, cy = oy + 128, d = 62, K0 = 1.45;
+      c.save(); c.beginPath(); c.rect(ox, oy + 26, 300, 210); c.clip();
+      /* field lines: circles through both charges */
+      c.strokeStyle = C.e; c.lineWidth = 1.3;
+      [-2.2, -1.1, -0.45, 0, 0.45, 1.1, 2.2].forEach(function(u){
+        if(u === 0){ c.beginPath(); c.moveTo(cx - d, cy); c.lineTo(cx + d, cy); c.stroke(); return; }
+        var yc = cy - d*u, rr = Math.sqrt(d*d + d*u*d*u);
+        c.beginPath(); c.arc(cx, yc, rr, 0, EM.TAU); c.stroke();
+      });
+      /* equipotentials */
+      c.strokeStyle = C.h; c.lineWidth = 1.1; c.setLineDash([4, 3]);
+      [0.35, 0.75, 1.1].forEach(function(k){
+        [1, -1].forEach(function(s){
+          var xc = cx + s*d/Math.tanh(k), rr = d/Math.sinh(k);
+          c.beginPath(); c.arc(xc, cy, rr, 0, EM.TAU); c.stroke();
+        });
+      });
+      c.beginPath(); c.moveTo(cx, oy + 26); c.lineTo(cx, oy + 236); c.stroke();
+      c.setLineDash([]);
+      c.restore();
+      /* the two wires, themselves equipotentials */
+      [1, -1].forEach(function(s){
+        var xc = cx + s*d/Math.tanh(K0), rr = d/Math.sinh(K0);
+        c.fillStyle = C.ink2; c.beginPath(); c.arc(xc, cy, rr, 0, EM.TAU); c.fill();
+        c.fillStyle = C.surface; c.font = '13px ' + MONO2; c.textAlign = 'center';
+        c.fillText(s > 0 ? '−' : '+', xc, cy + 5);
+      });
+      c.fillStyle = C.ink; c.font = '13px ' + MONO2; c.textAlign = 'center';
+      c.fillText('two conductors', cx, oy + 16);
+      c.font = '11px ' + MONO2; c.fillStyle = C.ink3;
+      c.fillText('a transverse field exists at any frequency', cx, oy + 254);
+    }
+    function pipe(ox, oy){
+      var x0 = ox + 70, y0 = oy + 48, w = 160, h = 160;
+      c.strokeStyle = C.ink2; c.lineWidth = 8;
+      c.strokeRect(x0, y0, w, h);
+      c.fillStyle = C.ink; c.font = '13px ' + MONO2; c.textAlign = 'center';
+      c.fillText('one conductor', ox + 150, oy + 16);
+      c.fillStyle = C.ink2; c.font = '12px ' + MONO2;
+      EM.rich(c, [['Φ = V','n'], ['0','b'], [' on the wall','n']], ox + 150, oy + 40, 12, 'center');
+      c.fillStyle = C.h;
+      EM.rich(c, [['Φ = V','n'], ['0','b']], ox + 150, y0 + h/2 - 8, 13, 'center');
+      c.fillStyle = C.e;
+      EM.rich(c, [['E','n'], ['t','b'], [' = 0','n']], ox + 150, y0 + h/2 + 16, 13, 'center');
+      c.font = '11px ' + MONO2; c.fillStyle = C.ink3;
+      c.fillText('no TEM wave, at any frequency', ox + 150, oy + 254);
+    }
+    if(nar){ twoWire(10, 0); pipe(10, 262); }
+    else { twoWire(10, 0); pipe(330, 0); }
+    c.restore();
+  }, false);
 })();
 </script>
 </body>

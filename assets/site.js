@@ -40,6 +40,7 @@ window.MathJax = {
     macros: {
       vE: '{\\mathbf{E}}', vH: '{\\mathbf{H}}', vB: '{\\mathbf{B}}',
       vD: '{\\mathbf{D}}', vJ: '{\\mathbf{J}}', vA: '{\\mathbf{A}}',
+      vS: '{\\mathbf{S}}',
       curl: '{\\nabla\\times}', dive: '{\\nabla\\cdot}'
     }
   },

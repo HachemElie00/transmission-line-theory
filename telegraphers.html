@@ -47,8 +47,83 @@
 
   <div class="key">
     <span class="lab">Where the numbers come from</span>
-    <p>$R'$, $L'$, $G'$ and $C'$ are set entirely by the cross-sectional geometry and the materials &mdash; conductor spacing, diameter, the dielectric between them. Chapter 05 computes them for coax, twin-lead and microstrip. For this chapter they are simply four given numbers.</p>
+    <p>$R'$, $L'$, $G'$ and $C'$ are set entirely by the cross-sectional geometry and the materials &mdash; conductor spacing, diameter, the dielectric between them. The next section derives $L'$ and $C'$ for coax and two-wire line from the fields; microstrip, where no closed form exists, is chapter 05's. For the derivation that follows they are simply four given numbers.</p>
   </div>
+</section>
+
+<section class="blk" id="fields">
+  <h2>L&prime; and C&prime; from the fields</h2>
+  <p class="t">For a two-conductor line in one uniform dielectric, $L'$ and $C'$ follow from the static fields of the prologue, and they come out tied together. For coax, with inner radius $a$ and outer radius $b$, Gauss's law gives the field of a charge $q'$ per metre and Amp&egrave;re's law the field of a current $I$:</p>
+
+  <div class="eq box">
+    $$C' = \frac{2\pi\varepsilon}{\ln(b/a)} \qquad\qquad L' = \frac{\mu}{2\pi}\ln\frac{b}{a} \qquad\qquad L'C' = \mu\varepsilon$$
+    <span class="note">the geometry appears in both and cancels from the product, which depends on the dielectric alone</span>
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; coax, and why the product is universal</summary>
+    <div class="body">
+      <p><b>Capacitance.</b> A charge $q'$ per metre on the inner conductor gives, by Gauss's law on a cylinder of radius $\rho$, $D_\rho = q'/2\pi\rho$. The voltage between the conductors is the line integral of $E = D/\varepsilon$ across the gap:</p>
+      <div class="eq">$$V = \int_a^b \frac{q'}{2\pi\varepsilon\rho}\,d\rho = \frac{q'}{2\pi\varepsilon}\ln\frac{b}{a} \quad\Longrightarrow\quad C' = \frac{q'}{V} = \frac{2\pi\varepsilon}{\ln(b/a)}$$</div>
+      <p><b>Inductance.</b> A current $I$ gives, by Amp&egrave;re's law, $H_\phi = I/2\pi\rho$. The magnetic flux per metre linking the gap is</p>
+      <div class="eq">$$\Phi' = \int_a^b \frac{\mu I}{2\pi\rho}\,d\rho = \frac{\mu I}{2\pi}\ln\frac{b}{a} \quad\Longrightarrow\quad L' = \frac{\Phi'}{I} = \frac{\mu}{2\pi}\ln\frac{b}{a}$$</div>
+      <p>This is the <b>external</b> inductance, from the field in the gap. At high frequency the skin effect keeps the current on the conductor surfaces, there is no field inside the metal, and the external inductance is all there is.</p>
+      <p><b>Why the product does not depend on the shape.</b> Part two showed that the transverse field of any TEM line solves the two-dimensional Laplace equation, and the same solution serves for the electric field (lines from one conductor to the other) and the magnetic field (lines around them, at right angles to the electric ones). Both $C'$ and $1/L'$ are the same geometric ratio of that one solution, scaled by $\varepsilon$ and $1/\mu$ respectively. In the product the ratio cancels, leaving $L'C' = \mu\varepsilon$ for every TEM line, and with it a speed $u_p = 1/\sqrt{L'C'} = 1/\sqrt{\mu\varepsilon}$ that knows nothing about the conductors.</p>
+    </div>
+  </details>
+
+  <figure class="fig">
+    <canvas id="lcfig" class="static" style="height:240px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="lc-g">line</label>
+        <select id="lc-g" aria-label="Geometry">
+          <option value="coax" selected>coax</option>
+          <option value="twin">two-wire</option>
+        </select></div>
+      <div class="ctl"><label for="lc-r" id="lc-rl">b / a</label><input type="range" id="lc-r" min="1.2" max="12" step="0.02" value="3.35"><output id="lc-rv">3.35</output></div>
+      <div class="ctl"><label for="lc-e">&epsilon;<sub>r</sub></label><input type="range" id="lc-e" min="1" max="10" step="0.05" value="2.1"><output id="lc-ev">2.10</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>L&prime;</dt><dd id="lc-l">242 nH/m</dd></div>
+      <div class="rd"><dt>C&prime;</dt><dd id="lc-c">96.6 pF/m</dd></div>
+      <div class="rd"><dt>L&prime;C&prime; / &mu;&epsilon;</dt><dd id="lc-p">1.000</dd></div>
+      <div class="rd"><dt>Z<sub>0</sub> = &radic;(L&prime;/C&prime;)</dt><dd id="lc-z">50.1 &Omega;</dd></div>
+    </dl>
+    <figcaption class="cap">the cross-section drawn to the chosen proportions. for two wires, the ratio is centre spacing to wire radius, D/a, and the formulas use cosh<sup>&minus;1</sup>(D/2a) in place of ln(b/a)</figcaption>
+  </figure>
+
+  <p class="t">For two wires of radius $a$ with centres $D$ apart, the same steps give $C' = \pi\varepsilon/\cosh^{-1}(D/2a)$ and $L' = (\mu/\pi)\cosh^{-1}(D/2a)$; the product is again $\mu\varepsilon$. Geometry sets $Z_0 = \sqrt{L'/C'}$, the material sets the speed, and the two never mix. Microstrip breaks this cleanly because its field is in two materials at once, which is chapter 05's subject.</p>
+</section>
+
+<section class="blk" id="rgfreq">
+  <h2>R&prime; and G&prime; are not constants</h2>
+  <p class="t">The two lossy parameters both depend on frequency, and in different ways. $R'$ comes from the conductors, where the skin effect of part two confines the current to a depth $\delta \propto 1/\sqrt{f}$; for coax</p>
+
+  <div class="eq">$$R' = \frac{R_s}{2\pi}\left(\frac{1}{a} + \frac{1}{b}\right), \qquad R_s = \frac{1}{\sigma\delta} = \sqrt{\frac{\pi f\mu_0}{\sigma}} \;\propto\; \sqrt{f}$$</div>
+
+  <p class="t">$G'$ comes from the dielectric. Real insulators lose energy to the alternating polarisation of their molecules, and that loss is quoted as a loss tangent, the same ratio as part one's $\sigma/\omega\varepsilon$, which for good insulators is nearly constant over wide bands:</p>
+
+  <div class="eq">$$G' = \omega C'\tan\delta \;\propto\; f$$</div>
+
+  <figure class="fig">
+    <canvas id="rgfig" class="static" style="height:300px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="rg-d">dielectric</label>
+        <select id="rg-d" aria-label="Dielectric">
+          <option value="0" selected>polyethylene</option>
+          <option value="1">PTFE</option>
+          <option value="2">FR-4</option>
+        </select></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>R&prime; = 0.1 &omega;L&prime; at</dt><dd id="rg-x">656 kHz</dd></div>
+      <div class="rd"><dt>R&prime;/&omega;L&prime; at 1 GHz</dt><dd id="rg-r">0.0026</dd></div>
+      <div class="rd"><dt>G&prime;/&omega;C&prime;, all f</dt><dd id="rg-g">0.0002</dd></div>
+    </dl>
+    <figcaption class="cap">a coax with a = 0.45 mm, b = 1.47 mm and copper conductors, on logarithmic axes: the series pair in &Omega;/m, the shunt pair in S/m. R&prime; is the skin-effect form, valid once &delta; is small against a (above about 200 kHz here), and is drawn dashed below that. typical loss tangents: polyethylene 2&times;10<sup>&minus;4</sup>, PTFE 2&times;10<sup>&minus;4</sup>, FR-4 0.02</figcaption>
+  </figure>
+
+  <p class="t">Above a few megahertz $R' \ll \omega L'$ and $G' \ll \omega C'$, each by more than an order of magnitude, which is what licenses the lossless model of the rest of this site. The ratios also fall in different ways: $R'/\omega L'$ shrinks as $1/\sqrt{f}$ while $G'/\omega C'$ stays put, so at high enough frequency the dielectric overtakes the conductor as the main source of loss. Chapter 04 turns these into attenuation.</p>
 </section>
 
 <section class="blk" id="derive">
@@ -125,6 +200,52 @@
   </div>
 
   <p class="t">With the loss terms gone, the pair describes something purely conservative: energy shuttling between the magnetic field of the current and the electric field of the voltage, propagating without ever being dissipated. That is a wave, and chapter 04 confirms it by solving them.</p>
+</section>
+
+<section class="blk" id="transient">
+  <h2>The time domain: a step and its echoes</h2>
+  <p class="t">Before moving to phasors, the lossless equations can be solved directly in time. Differentiate one with respect to $z$, the other with respect to $t$, and eliminate $i$:</p>
+
+  <div class="eq box">
+    $$\frac{\partial^2 v}{\partial z^2} = L'C'\,\frac{\partial^2 v}{\partial t^2} \qquad\Longrightarrow\qquad v(z,t) = f\!\left(t - \frac{z}{u}\right) + g\!\left(t + \frac{z}{u}\right), \qquad i = \frac{f - g}{Z_0}$$
+    <span class="note">d'Alembert's solution: any shape at all travels forward unchanged, any shape travels back, at $u = 1/\sqrt{L'C'}$</span>
+  </div>
+
+  <p class="t">That is enough to follow a switched step exactly. Connect a source $V_s$ with resistance $R_s$ to a line of delay $t_d$ ending in $R_L$. At the instant of switching the line looks, from the source, like a resistance $Z_0$, since only the forward wave exists yet; so a step of $V_s Z_0/(Z_0 + R_s)$ is launched. Each time it reaches an end, a fraction of it, the end's reflection coefficient, comes back:</p>
+
+  <div class="eq">$$\Gamma_L = \frac{R_L - Z_0}{R_L + Z_0} \qquad\qquad \Gamma_s = \frac{R_s - Z_0}{R_s + Z_0}$$</div>
+
+  <figure class="fig">
+    <canvas id="latfig" style="height:380px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="lt-s">R<sub>s</sub> &Omega;</label><input type="range" id="lt-s" min="0" max="200" step="1" value="25"><output id="lt-sv">25</output></div>
+      <div class="ctl"><label for="lt-l">R<sub>L</sub> &Omega;</label><input type="range" id="lt-l" min="0" max="305" step="1" value="305"><output id="lt-lv">open</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>launched step</dt><dd id="lt-v1">0.667 V</dd></div>
+      <div class="rd"><dt>&Gamma;<sub>s</sub></dt><dd id="lt-gs">&minus;0.333</dd></div>
+      <div class="rd"><dt>&Gamma;<sub>L</sub></dt><dd id="lt-gl">1.000</dd></div>
+      <div class="rd"><dt>settles to</dt><dd id="lt-fin">1.000 V</dd></div>
+    </dl>
+    <figcaption class="cap">a 1 V step on a 50 &Omega; line. the bounce diagram runs time downward: each sloping segment is one wave crossing the line, labelled with the step it carries. the snapshot gives the voltage along the line at the moment marked by the horizontal cursor, and the traces the voltage at each end against time. at the far right of the slider the load is an open circuit</figcaption>
+  </figure>
+
+  <p class="t">The far-end voltage climbs in steps, each one a further reflection, and converges on $V_sR_L/(R_s + R_L)$, the answer DC circuit theory gives directly. The line only delays and shapes the approach. Two special cases are worth trying. A matched load absorbs the first wave and the line settles after one delay. A source with $R_s = 0$ and an open load gives $\Gamma_s\Gamma_L = -1$: the reflections never shrink and a lossless line rings forever, which is the transient face of the resonant line sections of chapter 08.</p>
+
+  <p class="t">This also explains chapter 02's overshoot. With $R_s = Z_0/2$ and an open end, the first wave of $\tfrac23 V_s$ doubles at the open end to $\tfrac43 V_s$, and every later echo carries $\Gamma_s = -\tfrac13$ of the one before.</p>
+</section>
+
+<section class="blk" id="energy">
+  <h2>Energy on the line</h2>
+  <p class="t">A slice of line stores energy in both of its reactive elements. Per unit length, at an instant,</p>
+
+  <div class="eq">$$w_e = \tfrac12 C'v^2 \qquad\qquad w_m = \tfrac12 L'i^2$$</div>
+
+  <p class="t">For a single travelling wave $i = v/Z_0$, and with $Z_0^2 = L'/C'$ the magnetic term becomes $\tfrac12 L'v^2 C'/L' = \tfrac12 C'v^2$. <b>The two stores are always equal</b> in a travelling wave, the circuit version of $\tfrac12\varepsilon|\vE|^2 = \tfrac12\mu|\vH|^2$ in a plane wave. The total, $C'v^2$ per metre, moves at $u$, so the power carried is</p>
+
+  <div class="eq">$$P = u\,C'v^2 = \frac{C'}{\sqrt{L'C'}}\,v^2 = \frac{v^2}{Z_0} = v\,i$$</div>
+
+  <p class="t">which is the instantaneous form of part one's Poynting integral. In a standing wave the two stores are no longer equal at each point; energy sloshes between electric and magnetic form between the nodes, and chapter 07 shows where.</p>
 </section>
 
 <section class="blk" id="check">
@@ -344,6 +465,287 @@ function resistorV(c, x, y1, y2, col){
     c.fillStyle = C.ink3; c.font = '11.5px ' + MONO;
     c.textAlign = 'left'; c.fillText('node voltages', L, 15);
     c.textAlign = 'right'; c.fillText('dashed: the continuous line', W-R, 15);
+  }, true);
+})();
+
+var MU0 = 4e-7*Math.PI, EPS0 = 8.8541878128e-12;
+
+/* ---- L' and C' of coax and two-wire line ----
+   Both from the static field formulas; the product is checked against
+   mu eps rather than assumed. */
+(function(){
+  var cv = document.getElementById('lcfig');
+  if(!cv) return;
+  var geo = 'coax', ratio = 3.35, er = 2.1;
+  var sl = document.getElementById('lc-r');
+  function g(){ return geo === 'coax' ? Math.log(ratio) : Math.acosh(ratio/2); }
+  function vals(){
+    var e = er*EPS0, k = g();
+    var Lp = geo === 'coax' ? MU0/(2*Math.PI)*k : MU0/Math.PI*k;
+    var Cp = geo === 'coax' ? 2*Math.PI*e/k : Math.PI*e/k;
+    return { L: Lp, C: Cp };
+  }
+  function sync(){
+    var v = vals();
+    document.getElementById('lc-rl').textContent = geo === 'coax' ? 'b / a' : 'D / a';
+    document.getElementById('lc-rv').textContent = ratio.toFixed(2);
+    document.getElementById('lc-ev').textContent = er.toFixed(2);
+    document.getElementById('lc-l').textContent = (v.L*1e9).toPrecision(3) + ' nH/m';
+    document.getElementById('lc-c').textContent = (v.C*1e12).toPrecision(3) + ' pF/m';
+    document.getElementById('lc-p').textContent = (v.L*v.C/(MU0*er*EPS0)).toFixed(3);
+    document.getElementById('lc-z').textContent = Math.sqrt(v.L/v.C).toFixed(1) + ' Ω';
+  }
+  document.getElementById('lc-g').addEventListener('change', function(){
+    geo = this.value;
+    /* two wires cannot be closer than touching: D/a > 2 */
+    sl.min = geo === 'coax' ? 1.2 : 2.1;
+    if(ratio < +sl.min){ ratio = +sl.min; sl.value = ratio; }
+    sync(); EM.redrawStatic();
+  });
+  sl.addEventListener('input', function(){ ratio = +this.value; sync(); EM.redrawStatic(); });
+  document.getElementById('lc-e').addEventListener('input', function(){ er = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var cx = W/2, cy = H/2, tint = Math.min(0.28, 0.05 + 0.23*(er - 1)/9);
+    c.font = '12px ' + MONO; c.lineWidth = 1;
+    if(geo === 'coax'){
+      var Rb = Math.min(H/2 - 16, W/2 - 40), Ra = Rb/ratio;
+      c.fillStyle = C.e; c.globalAlpha = tint;
+      c.beginPath(); c.arc(cx, cy, Rb, 0, EM.TAU); c.fill(); c.globalAlpha = 1;
+      c.strokeStyle = C.ink2; c.lineWidth = 6; c.beginPath(); c.arc(cx, cy, Rb + 3, 0, EM.TAU); c.stroke();
+      c.fillStyle = C.ink2; c.beginPath(); c.arc(cx, cy, Ra, 0, EM.TAU); c.fill();
+      /* radii */
+      c.strokeStyle = C.ink; c.fillStyle = C.ink; c.lineWidth = 1.2;
+      EM.arrow(c, cx, cy, cx + Ra*Math.cos(-0.6), cy + Ra*Math.sin(-0.6), 5);
+      EM.arrow(c, cx, cy, cx + Rb*Math.cos(0.5), cy + Rb*Math.sin(0.5), 6);
+      c.textAlign = 'left';
+      c.fillText('b', cx + Rb*0.55*Math.cos(0.5) + 4, cy + Rb*0.55*Math.sin(0.5) + 14);
+      c.fillStyle = C.surface; c.fillText('a', cx + 4, cy - 4);
+    } else {
+      var r = Math.min(H*0.2, (W - 60)/(2*ratio + 2)), D = ratio*r;
+      c.fillStyle = C.e; c.globalAlpha = tint; c.fillRect(0, 0, W, H); c.globalAlpha = 1;
+      [-1, 1].forEach(function(s){
+        c.fillStyle = C.ink2; c.beginPath(); c.arc(cx + s*D/2, cy, r, 0, EM.TAU); c.fill();
+      });
+      c.strokeStyle = C.ink; c.fillStyle = C.ink; c.lineWidth = 1.2;
+      var yd = cy + r + 22;
+      c.beginPath(); c.moveTo(cx - D/2, cy + r + 6); c.lineTo(cx - D/2, yd + 6);
+      c.moveTo(cx + D/2, cy + r + 6); c.lineTo(cx + D/2, yd + 6); c.stroke();
+      EM.arrow(c, cx, yd, cx - D/2, yd, 6); EM.arrow(c, cx, yd, cx + D/2, yd, 6);
+      c.textAlign = 'center'; c.fillText('D', cx, yd - 6);
+      EM.arrow(c, cx + D/2, cy, cx + D/2 + r, cy, 5);
+      c.textAlign = 'left'; c.fillText('a', cx + D/2 + r + 5, cy + 4);
+    }
+    c.fillStyle = C.ink3; c.textAlign = 'left';
+    EM.rich(c, [['dielectric, ε','n'], ['r','b'], [' = ' + er.toFixed(2),'n']], 10, 18, 11, 'left');
+  }, false);
+})();
+
+/* ---- R', wL', G', wC' across frequency for one coax ---- */
+(function(){
+  var cv = document.getElementById('rgfig');
+  if(!cv) return;
+  var A = 0.45e-3, B = 1.47e-3, SIG = 5.8e7;
+  var DIEL = [{ er: 2.25, td: 2e-4 }, { er: 2.1, td: 2e-4 }, { er: 4.4, td: 0.02 }], di = 0;
+  var X0 = 3, X1 = 11;
+  function Lp(){ return MU0/(2*Math.PI)*Math.log(B/A); }
+  function Cp(){ return 2*Math.PI*DIEL[di].er*EPS0/Math.log(B/A); }
+  function Rp(f){ return Math.sqrt(Math.PI*f*MU0/SIG)/(2*Math.PI)*(1/A + 1/B); }
+  function delta(f){ return 1/Math.sqrt(Math.PI*f*MU0*SIG); }
+  function sync(){
+    /* R' = 0.1 wL': R' grows as sqrt(f), wL' as f, so solve directly */
+    var k = Rp(1), m = 2*Math.PI*Lp(), f1 = Math.pow(k/(0.1*m), 2);
+    function fq(f){ return f >= 1e9 ? (f/1e9).toPrecision(3) + ' GHz' : f >= 1e6 ? (f/1e6).toPrecision(3) + ' MHz' : (f/1e3).toPrecision(3) + ' kHz'; }
+    document.getElementById('rg-x').textContent = fq(f1);
+    document.getElementById('rg-r').textContent = (Rp(1e9)/(2*Math.PI*1e9*Lp())).toPrecision(2);
+    document.getElementById('rg-g').textContent = String(DIEL[di].td);
+  }
+  document.getElementById('rg-d').addEventListener('change', function(){ di = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 54, R = 14, gap = 26, top = 12, bot = 34;
+    var ph = (H - top - bot - gap)/2;
+    function px(x){ return L + (x - X0)/(X1 - X0)*(W - L - R); }
+    function panel(y0, pairs, unit, Ylo, Yhi){
+      function py(v){ return y0 + ph - (Math.log10(v) - Ylo)/(Yhi - Ylo)*ph; }
+      c.strokeStyle = C.line; c.lineWidth = 1;
+      for(var gx = X0; gx <= X1; gx++){ c.beginPath(); c.moveTo(px(gx) + .5, y0); c.lineTo(px(gx) + .5, y0 + ph); c.stroke(); }
+      c.strokeStyle = C.line2;
+      c.beginPath(); c.moveTo(L + .5, y0); c.lineTo(L + .5, y0 + ph); c.lineTo(W - R, y0 + ph); c.stroke();
+      for(var ly = Ylo; ly <= Yhi; ly += 2){
+        c.fillStyle = C.ink3;
+        EM.rich(c, [['10','n'], [ly < 0 ? '−' + (-ly) : String(ly),'p']], L - 8, py(Math.pow(10, ly)) + 4, 10.5, 'right');
+      }
+      c.fillStyle = C.ink3; c.font = '11px ' + MONO; c.textAlign = 'left';
+      c.fillText(unit, L + 6, y0 + 12);
+      c.save(); c.beginPath(); c.rect(L, y0, W - L - R, ph); c.clip();
+      pairs.forEach(function(p){
+        c.strokeStyle = C[p.col]; c.lineWidth = 2.2;
+        var prevDash = null;
+        c.beginPath();
+        for(var j = 0; j <= 200; j++){
+          var x = X0 + (X1 - X0)*j/200, f = Math.pow(10, x), dash = p.valid ? !p.valid(f) : false;
+          if(prevDash !== null && dash !== prevDash){ c.stroke(); c.beginPath(); c.moveTo(px(x), py(p.fn(f))); }
+          c.setLineDash(dash ? [5, 4] : []);
+          c.lineTo(px(x), py(p.fn(f))); prevDash = dash;
+        }
+        c.stroke(); c.setLineDash([]);
+      });
+      c.restore();
+      /* labels at the right end */
+      pairs.forEach(function(p){
+        var f = Math.pow(10, X1 - 0.6), y = py(p.fn(f)) + p.dy;
+        c.font = '11.5px ' + MONO; c.textAlign = 'right';
+        var tw = c.measureText(p.name).width;
+        c.fillStyle = C.sunk; c.fillRect(px(X1 - 0.6) - tw - 4, y - 11, tw + 6, 15);
+        c.fillStyle = C[p.col]; c.fillText(p.name, px(X1 - 0.6) - 2, y);
+      });
+    }
+    var w = function(f){ return 2*Math.PI*f; };
+    var td = DIEL[di].td;
+    panel(top, [
+      { name: 'ωL′', col: 'e', fn: function(f){ return w(f)*Lp(); }, dy: -6 },
+      { name: 'R′', col: 'h', fn: Rp, valid: function(f){ return delta(f) < A/3; }, dy: 16 }
+    ], 'Ω/m', -4, 6);
+    panel(top + ph + gap, [
+      { name: 'ωC′', col: 'e', fn: function(f){ return w(f)*Cp(); }, dy: -6 },
+      { name: 'G′', col: 'h', fn: function(f){ return w(f)*Cp()*td; }, dy: 16 }
+    ], 'S/m', -12, 2);
+    c.fillStyle = C.ink3; c.font = '11px ' + MONO;
+    ['1 kHz', '1 MHz', '1 GHz'].forEach(function(t, i){ c.textAlign = 'center'; c.fillText(t, px(3 + 3*i), H - bot + 15); });
+    c.textAlign = 'right'; c.fillText('frequency', W - R, H - 5);
+  }, false);
+})();
+
+/* ---- the bounce diagram ----
+   Wave k crosses the line between t = k and t = k + 1 (units of td), forward
+   when k is even. Its amplitude is the launched step times the product of
+   the reflection coefficients met so far. v(z, t) is the sum of every wave
+   that has reached z by t: exact for a lossless line and an ideal step. */
+(function(){
+  var cv = document.getElementById('latfig');
+  if(!cv) return;
+  var Z0 = 50, Rs = 25, RLs = 305, TM = 8, OPEN = 305;
+  function gl(){ return RLs >= OPEN ? 1 : (RLs - Z0)/(RLs + Z0); }
+  function gs(){ return (Rs - Z0)/(Rs + Z0); }
+  function amps(n){
+    var a = [Z0/(Z0 + Rs)], G = gl(), S = gs();
+    for(var k = 1; k < n; k++) a.push(a[k - 1]*(k % 2 ? G : S));
+    return a;
+  }
+  function v(z, t, a){
+    var s = 0;
+    for(var k = 0; k < a.length; k++){
+      var arr = k + (k % 2 === 0 ? z : 1 - z);
+      if(arr > t) break;
+      s += a[k];
+    }
+    return s;
+  }
+  function f3(x){ return (Math.abs(x) < 5e-4 ? 0 : x).toFixed(3).replace('-', '−'); }
+  function sync(){
+    document.getElementById('lt-sv').textContent = Rs;
+    document.getElementById('lt-lv').textContent = RLs >= OPEN ? 'open' : RLs;
+    document.getElementById('lt-v1').textContent = f3(Z0/(Z0 + Rs)) + ' V';
+    document.getElementById('lt-gs').textContent = f3(gs());
+    document.getElementById('lt-gl').textContent = f3(gl());
+    var ring = Math.abs(gs()*gl()) > 0.9999;
+    document.getElementById('lt-fin').textContent = ring ? 'never settles'
+      : f3(RLs >= OPEN ? 1 : RLs/(Rs + RLs)) + ' V';
+  }
+  document.getElementById('lt-s').addEventListener('input', function(){ Rs = +this.value; sync(); });
+  document.getElementById('lt-l').addEventListener('input', function(){ RLs = +this.value; sync(); });
+  sync();
+
+  EM.register(function(C, t){
+    EM.fit(cv);
+    var stack = cv._w < 640, want = stack ? 600 : 380;
+    if(Math.abs(cv._h - want) > 1){ cv.style.height = want + 'px'; EM.fit(cv); }
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var a = amps(TM + 1), now = (t*0.25) % TM;
+    var vals = [0, 1];
+    for(var k = 0; k <= 400; k++){ var tt = TM*k/400; vals.push(v(0, tt, a), v(1, tt, a)); }
+    var vmin = Math.min.apply(null, vals), vmax = Math.max.apply(null, vals);
+
+    /* layout */
+    var LX0, LX1, LY0, LY1, SN, TR;
+    if(stack){
+      LX0 = 60; LX1 = W - 60; LY0 = 30; LY1 = 280;
+      SN = { x0: 44, x1: W - 16, y0: 340, y1: 430 };
+      TR = { x0: 44, x1: W - 16, y0: 476, y1: H - 30 };
+    } else {
+      var half = W*0.46;
+      LX0 = 64; LX1 = half - 40; LY0 = 30; LY1 = H - 24;
+      SN = { x0: half + 40, x1: W - 16, y0: 30, y1: H*0.42 };
+      TR = { x0: half + 40, x1: W - 16, y0: H*0.56, y1: H - 30 };
+    }
+    function lx(z){ return LX0 + z*(LX1 - LX0); }
+    function ly(tt){ return LY0 + tt/TM*(LY1 - LY0); }
+
+    /* lattice */
+    c.strokeStyle = C.ink2; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(lx(0), LY0); c.lineTo(lx(0), LY1); c.moveTo(lx(1), LY0); c.lineTo(lx(1), LY1); c.stroke();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'center';
+    c.fillText('source', lx(0), LY0 - 10); c.fillText('load', lx(1), LY0 - 10);
+    c.textAlign = 'right';
+    for(var m = 0; m <= TM; m += 2) c.fillText(String(m), lx(0) - 8, ly(m) + 4);
+    EM.rich(c, [['t / t','n'], ['d','b']], lx(0) - 8, LY1 + 18, 11, 'right');
+    for(var w = 0; w < TM; w++){
+      if(Math.abs(a[w]) < 1e-4) break;
+      var x0 = lx(w % 2 ? 1 : 0), x1 = lx(w % 2 ? 0 : 1);
+      c.strokeStyle = w % 2 ? C.h : C.e; c.lineWidth = 1.8;
+      c.beginPath(); c.moveTo(x0, ly(w)); c.lineTo(x1, ly(w + 1)); c.stroke();
+      var mx = (x0 + x1)/2, my = (ly(w) + ly(w + 1))/2, lab = (a[w] < 0 ? '−' : '+') + Math.abs(a[w]).toFixed(3);
+      c.font = '11px ' + MONO; var tw = c.measureText(lab).width;
+      c.fillStyle = C.sunk; c.fillRect(mx - tw/2 - 3, my - 9, tw + 6, 14);
+      c.fillStyle = w % 2 ? C.h : C.e; c.textAlign = 'center'; c.fillText(lab, mx, my + 2);
+    }
+    /* the time cursor */
+    c.strokeStyle = C.ink; c.lineWidth = 1; c.setLineDash([3, 3]);
+    c.beginPath(); c.moveTo(lx(0) - 4, ly(now)); c.lineTo(lx(1) + 4, ly(now)); c.stroke(); c.setLineDash([]);
+    var wn = Math.floor(now), fr = now - wn, zw = wn % 2 ? 1 - fr : fr;
+    if(Math.abs(a[wn] || 0) >= 1e-4){ c.fillStyle = C.ink; c.beginPath(); c.arc(lx(zw), ly(now), 4.5, 0, EM.TAU); c.fill(); }
+
+    /* snapshot along the line */
+    function sy(val, box){ return box.y1 - (val - vmin)/(vmax - vmin || 1)*(box.y1 - box.y0); }
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    [SN, TR].forEach(function(box){
+      c.beginPath(); c.moveTo(box.x0 + .5, box.y0); c.lineTo(box.x0 + .5, box.y1); c.lineTo(box.x1, box.y1); c.stroke();
+      if(vmin < 0){ c.strokeStyle = C.line; c.beginPath(); c.moveTo(box.x0, sy(0, box)); c.lineTo(box.x1, sy(0, box)); c.stroke(); c.strokeStyle = C.line2; }
+    });
+    c.strokeStyle = C.ink; c.lineWidth = 2.4; c.beginPath();
+    for(var i = 0; i <= 300; i++){ var z = i/300; c.lineTo(SN.x0 + z*(SN.x1 - SN.x0), sy(v(z, now, a), SN)); }
+    c.stroke();
+    c.fillStyle = C.ink3; c.font = '11px ' + MONO;
+    c.textAlign = 'left'; c.fillText('v along the line at the cursor', SN.x0 + 6, SN.y0 - 8);
+    c.fillText('source', SN.x0, SN.y1 + 14); c.textAlign = 'right'; c.fillText('load', SN.x1, SN.y1 + 14);
+
+    /* both ends against time */
+    function tx(tt){ return TR.x0 + tt/TM*(TR.x1 - TR.x0); }
+    [[0, C.e, 'at the source'], [1, C.h, 'at the load']].forEach(function(q, n){
+      c.strokeStyle = q[1]; c.lineWidth = 2.2; c.beginPath();
+      for(var k2 = 0; k2 <= 800; k2++){ var tt = TM*k2/800; c.lineTo(tx(tt), sy(v(q[0], tt, a), TR)); }
+      c.stroke();
+      c.fillStyle = q[1]; c.textAlign = 'left'; c.fillText(q[2], TR.x0 + 6 + n*110, TR.y0 - 8);
+    });
+    c.strokeStyle = C.ink; c.lineWidth = 1; c.setLineDash([3, 3]);
+    c.beginPath(); c.moveTo(tx(now), TR.y0); c.lineTo(tx(now), TR.y1); c.stroke(); c.setLineDash([]);
+    c.fillStyle = C.ink3; c.textAlign = 'right';
+    EM.rich(c, [['time / t','n'], ['d','b']], TR.x1, TR.y1 + 16, 11, 'right');
+    [SN, TR].forEach(function(box){
+      c.textAlign = 'right';
+      c.fillText(vmax.toFixed(2), box.x0 - 4, sy(vmax, box) + 4);
+      c.fillText(vmin.toFixed(2), box.x0 - 4, sy(vmin, box) + 4);
+    });
   }, true);
 })();
 </script>

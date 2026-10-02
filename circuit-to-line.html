@@ -126,6 +126,38 @@
   </details>
 </section>
 
+<section class="blk" id="rise">
+  <h2>Edges instead of frequencies</h2>
+  <p class="t">A digital signal has no single frequency, so "how many wavelengths long" needs a substitute. The edge supplies one. A step that rises in a time $t_r$ (10 % to 90 %) carries most of its energy below about</p>
+
+  <div class="eq box">
+    $$f_{\text{edge}} \approx \frac{0.35}{t_r} \qquad\Longrightarrow\qquad \frac{l}{\lambda_{\text{edge}}} = f_{\text{edge}}\,t_d \approx 0.35\,\frac{t_d}{t_r}$$
+    <span class="note">0.35 is $2.2/2\pi$: a single-pole response with time constant $\tau$ rises in $2.2\tau$ and has its &minus;3 dB point at $1/2\pi\tau$</span>
+  </div>
+
+  <p class="t">So the comparison that matters is the line's delay against the edge, and the $\lambda/10$ rule becomes $t_r \gtrsim 3.5\,t_d$. Below that, the far end does not follow the source smoothly. It waits a full delay, then arrives in steps as the wave bounces between the mismatched ends.</p>
+
+  <figure class="fig">
+    <canvas id="risefig" style="height:270px"></canvas>
+    <div class="legend">
+      <span><i style="border-color:var(--ink3);border-top-style:dashed"></i>source edge</span>
+      <span><i style="border-color:var(--e)"></i>far end, line model</span>
+      <span><i style="border-color:var(--h)"></i>far end, one lumped capacitor</span>
+    </div>
+    <div class="rail">
+      <div class="ctl"><label for="rs-r">t<sub>r</sub> / t<sub>d</sub></label><input type="range" id="rs-r" min="-0.7" max="1.3" step="0.01" value="0"><output id="rs-rv">1.00</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>l / &lambda; at 0.35/t<sub>r</sub></dt><dd id="rs-l">0.350</dd></div>
+      <div class="rd"><dt>peak, line model</dt><dd id="rs-pk">1.333</dd></div>
+      <div class="rd"><dt>peak, lumped model</dt><dd id="rs-pl">1.000</dd></div>
+    </dl>
+    <figcaption class="cap">a 50 &Omega; line driven through 25 &Omega; and open at the far end, so the far end should settle at the source voltage. the line model sums the reflections exactly; the lumped model treats the whole line as one capacitor C&prime;l = t<sub>d</sub>/Z<sub>0</sub> charged through the source resistance. time runs in units of the one-way delay t<sub>d</sub></figcaption>
+  </figure>
+
+  <p class="t">With a slow edge the two models agree and the line is a capacitor. With a fast one the line model shows the staircase and the overshoot to 4/3 that the capacitor cannot produce at all. The overshoot is set by the two reflection coefficients, here $+1$ at the open end and $-1/3$ at the source, and chapter 03 draws the bounce diagram that produces it.</p>
+</section>
+
 <section class="blk" id="fix">
   <h2>The way out</h2>
   <p class="t">If the failure is that a single lumped element cannot represent something whose voltage varies along its length, there is an obvious repair: <b>use more elements</b>. Chop the line into short pieces, each short enough for lumped theory to hold inside it, and chain them.</p>
@@ -147,6 +179,45 @@
   <div class="key">
     <span class="lab">What has actually changed</span>
     <p>Nothing about the physics. Kirchhoff's laws are still used &mdash; they are simply applied over a length short enough for their assumption to hold, rather than over the whole cable at once. The distributed model is not a replacement for circuit theory; it is circuit theory applied honestly.</p>
+  </div>
+</section>
+
+<section class="blk" id="ladder">
+  <h2>How finely to chop</h2>
+  <p class="t">The ladder is exact only in the limit, so it is worth knowing how quickly a finite one converges. Split a line of electrical length $\beta l$ into $N$ sections, each a series inductance $L'\Delta z$ between two shunt capacitances of $C'\Delta z/2$ (a $\pi$-section), terminate it, and compare its input impedance with the exact line's from chapter 08.</p>
+
+  <figure class="fig">
+    <canvas id="ladfig" style="height:290px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="ld-z">load</label>
+        <select id="ld-z" aria-label="Load">
+          <option value="0" selected>100 &Omega; on 50 &Omega;</option>
+          <option value="1">25 &Omega; on 50 &Omega;</option>
+          <option value="2">50 + j50 &Omega; on 50 &Omega;</option>
+        </select></div>
+    </div>
+    <dl class="readout" id="ld-ro"></dl>
+    <figcaption class="cap">relative error in the input impedance of a lumped ladder against the exact line, on logarithmic axes, for 1, 2, 4 and 8 sections. the readouts give the longest line each ladder models to within 1 %</figcaption>
+  </figure>
+
+  <p class="t">Two scalings are visible. For a fixed ladder the error grows roughly as the cube of the line's electrical length, and for a fixed line it falls as $1/N^2$: doubling the sections quarters it. With the 100 $\Omega$ load, one $\pi$-section is good to 1 % up to about $\lambda/17$ and eight up to about $\lambda/4$. This is the same convergence a circuit simulator relies on when it models a line as a ladder, and the reason it needs many sections per wavelength.</p>
+</section>
+
+<section class="blk" id="limits">
+  <h2>Where the line model itself stops</h2>
+  <p class="t">The distributed model fixes the lumped model's failure, but it has assumptions of its own, and both of them fail at high enough frequency.</p>
+
+  <p class="t"><b>Only one field pattern.</b> The model assumes the fields in the cross-section have the static shape of part two's TEM solution. A coaxial cable can also carry higher-order modes, with field patterns that vary around and across the cross-section, once their cutoff is passed. The first, TE<sub>11</sub>, appears when the mean circumference is about one wavelength in the dielectric:</p>
+
+  <div class="eq">$$f_c \approx \frac{c}{\pi(a + b)\sqrt{\varepsilon_r}}$$</div>
+
+  <p class="t">For an SMA connector, with $a = 0.635$ mm, $b = 2.05$ mm and $\varepsilon_r = 2.05$, that is about 25 GHz, which is why the connector's specifications stop in the high teens to mid twenties of gigahertz. Above $f_c$ a second wave with its own $\beta$ and its own $Z_0$ shares the cable, and a single $V$ and $I$ no longer describe it.</p>
+
+  <p class="t"><b>No radiation.</b> The model also assumes all the energy stays between the conductors. In coax it does, by construction. On an open two-wire line it does only while the spacing $s$ is small against $\lambda$: the currents in the two wires are equal and opposite, their fields cancel at a distance, but the cancellation is imperfect by an amount of order $s/\lambda$ and the radiated power grows as $(s/\lambda)^2$. Twin-lead is a good line at HF and a poor one at microwave frequencies, where the same structure starts to behave like an antenna.</p>
+
+  <div class="key">
+    <span class="lab">Two scales, two tests</span>
+    <p>Lumped theory needs the <b>length</b> to be small against $\lambda$. The line model needs the <b>cross-section</b> to be small against $\lambda$. Every transmission line is long and thin in exactly this sense, and the whole subject lives in the gap between the two.</p>
   </div>
 </section>
 
@@ -282,6 +353,152 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     c.fillStyle = C.e;
     c.fillText('v(z,t) along the wire', L + 6, H - B - 6);
   }, true);
+})();
+
+/* ---- an edge into a mismatched line ----
+   Line model: the far end is the sum of the wave arriving after each round
+   trip, 2 V_inc Gs^n s(t - (2n+1) td), exact for a lossless line with an open
+   end. Lumped model: one capacitor C'l = td/Z0 charged through Rs, integrated
+   numerically. Rs = Z0/2, so Gs = -1/3 and V_inc = 2/3 of the source. */
+(function(){
+  var cv = document.getElementById('risefig');
+  if(!cv) return;
+  var lr = 0, GS = -1/3, VI = 2/3, TAUc = 0.5;          /* Rs C'l / td = Rs/Z0 */
+  function ramp(t, tr){ return t <= 0 ? 0 : Math.min(t/tr, 1); }
+  function vLine(t, tr){
+    var s = 0;
+    for(var n = 0; n < 400; n++){
+      var tt = t - (2*n + 1);
+      if(tt <= 0) break;
+      s += 2*VI*Math.pow(GS, n)*ramp(tt, tr);
+    }
+    return s;
+  }
+  function vLumped(T, tr, dt){
+    var out = [], v = 0;
+    for(var t = 0; t <= T + 1e-9; t += dt){ out.push(v); v += dt*(ramp(t + dt/2, tr) - v)/TAUc; }
+    return out;
+  }
+  function win(tr){ return Math.max(14, 2.2*tr + 8); }
+  function sync(){
+    var tr = Math.pow(10, lr), T = win(tr), pk = 0, pl = 0;
+    for(var t = 0; t <= T; t += T/4000) pk = Math.max(pk, vLine(t, tr));
+    vLumped(T, tr, T/4000).forEach(function(v){ pl = Math.max(pl, v); });
+    document.getElementById('rs-rv').textContent = tr < 10 ? tr.toFixed(2) : tr.toFixed(1);
+    document.getElementById('rs-l').textContent = (0.35/tr).toFixed(3);
+    document.getElementById('rs-pk').textContent = pk.toFixed(3);
+    document.getElementById('rs-pl').textContent = pl.toFixed(3);
+  }
+  document.getElementById('rs-r').addEventListener('input', function(){ lr = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var tr = Math.pow(10, lr), T = win(tr);
+    var L = 34, R = 14, T0 = 14, B = 32, YM = 1.5;
+    function px(t){ return L + t/T*(W - L - R); }
+    function py(v){ return (H - B) - v/YM*(H - T0 - B); }
+    c.strokeStyle = C.line; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L, py(1) + .5); c.lineTo(W - R, py(1) + .5); c.stroke();
+    c.strokeStyle = C.line2;
+    c.beginPath(); c.moveTo(L, py(0) + .5); c.lineTo(W - R, py(0) + .5); c.moveTo(L + .5, T0); c.lineTo(L + .5, H - B); c.stroke();
+    c.strokeStyle = C.ink3; c.lineWidth = 1.4; c.setLineDash([5, 4]); c.beginPath();
+    for(var i = 0; i <= 300; i++){ var t = T*i/300; c.lineTo(px(t), py(ramp(t, tr))); } c.stroke();
+    c.setLineDash([]);
+    var lump = vLumped(T, tr, T/600);
+    c.strokeStyle = C.h; c.lineWidth = 2.2; c.beginPath();
+    lump.forEach(function(v, k){ c.lineTo(px(k*T/600), py(v)); }); c.stroke();
+    c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
+    for(var j = 0; j <= 1200; j++){ var t2 = T*j/1200; c.lineTo(px(t2), py(vLine(t2, tr))); } c.stroke();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
+    c.fillText('1', L - 6, py(1) + 4); c.fillText('0', L - 6, py(0) + 4);
+    c.textAlign = 'center';
+    var step = T > 30 ? 10 : 2;
+    for(var k = 0; k <= T; k += step) c.fillText(String(k), px(k), H - B + 15);
+    EM.rich(c, [['time / t','n'], ['d','b']], W - R, H - 4, 11, 'right');
+  }, false);
+})();
+
+/* ---- convergence of the lumped ladder ----
+   Exact Zin from the line formula; ladder Zin by cascading pi-sections from
+   the load: shunt Y/2, series Z, shunt Y/2, with Z = Y = j beta dz (Z0 = 1). */
+(function(){
+  var cv = document.getElementById('ladfig');
+  if(!cv) return;
+  var LOADS = [[2, 0], [0.5, 0], [1, 1]], li = 0, NS = [1, 2, 4, 8], COLS = ['e', 'h', 'acc', 'ink2'];
+  function cdiv(a, b){ var d = b[0]*b[0] + b[1]*b[1]; return [(a[0]*b[0] + a[1]*b[1])/d, (a[1]*b[0] - a[0]*b[1])/d]; }
+  function inv(a){ return cdiv([1, 0], a); }
+  function exact(z, bl){ var t = Math.tan(bl); return cdiv([z[0], z[1] + t], [1 - t*z[1], t*z[0]]); }
+  function ladder(z, bl, N){
+    var d = bl/N, w = z;
+    for(var k = 0; k < N; k++){
+      w = inv([inv(w)[0], inv(w)[1] + d/2]);
+      w = [w[0], w[1] + d];
+      w = inv([inv(w)[0], inv(w)[1] + d/2]);
+    }
+    return w;
+  }
+  function err(x, N){
+    var bl = 2*Math.PI*x, e = exact(LOADS[li], bl), l = ladder(LOADS[li], bl, N);
+    return Math.hypot(l[0] - e[0], l[1] - e[1])/Math.hypot(e[0], e[1]);
+  }
+  function at1(N){ for(var x = 0.002; x < 0.5; x *= 1.005) if(err(x, N) > 0.01) return x; return null; }
+  function sync(){
+    document.getElementById('ld-ro').innerHTML = NS.map(function(N){
+      var x = at1(N);
+      return '<div class="rd"><dt>' + N + (N > 1 ? ' sections' : ' section') + '</dt><dd>' +
+        (x ? 'l &lt; ' + x.toFixed(3) + '&lambda;' : '&mdash;') + '</dd></div>';
+    }).join('');
+  }
+  document.getElementById('ld-z').addEventListener('change', function(){ li = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 52, R = 14, T = 14, B = 38, X0 = Math.log10(0.005), X1 = Math.log10(0.5), Y0 = -7, Y1 = 1;
+    function px(x){ return L + (Math.log10(x) - X0)/(X1 - X0)*(W - L - R); }
+    function py(y){ return (H - B) - (y - Y0)/(Y1 - Y0)*(H - T - B); }
+    c.strokeStyle = C.line; c.lineWidth = 1;
+    [0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5].forEach(function(x){ c.beginPath(); c.moveTo(px(x) + .5, T); c.lineTo(px(x) + .5, H - B); c.stroke(); });
+    for(var gy = Y0; gy <= Y1; gy++){ c.beginPath(); c.moveTo(L, py(gy) + .5); c.lineTo(W - R, py(gy) + .5); c.stroke(); }
+    c.strokeStyle = C.line2;
+    c.beginPath(); c.moveTo(L, H - B + .5); c.lineTo(W - R, H - B + .5); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.stroke();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'center';
+    [[0.005, '0.005'], [0.02, '0.02'], [0.1, '0.1'], [0.5, '0.5']].forEach(function(q){ c.fillText(q[1], px(q[0]), H - B + 15); });
+    c.fillText('l / λ', (L + W - R)/2, H - 6);
+    for(var ly = Y0; ly <= Y1; ly += 2){
+      c.fillStyle = C.ink3;
+      EM.rich(c, [['10','n'], [ly < 0 ? '−' + (-ly) : String(ly),'p']], L - 8, py(ly) + 4, 11, 'right');
+    }
+    c.strokeStyle = C.ink2; c.setLineDash([4, 4]);
+    c.beginPath(); c.moveTo(L, py(-2)); c.lineTo(W - R, py(-2)); c.stroke(); c.setLineDash([]);
+    c.fillStyle = C.ink2; c.textAlign = 'left'; c.fillText('1 %', L + 6, py(-2) - 5);
+    c.save(); c.beginPath(); c.rect(L, T, W - L - R, H - T - B); c.clip();
+    NS.forEach(function(N, i){
+      c.strokeStyle = C[COLS[i]]; c.lineWidth = 2.2; c.beginPath();
+      for(var j = 0; j <= 300; j++){
+        var x = Math.pow(10, X0 + (X1 - X0)*j/300), e = err(x, N);
+        c.lineTo(px(x), py(Math.log10(Math.max(e, 1e-12))));
+      }
+      c.stroke();
+    });
+    c.restore();
+    /* each curve named where it is lowest on screen, near the left edge */
+    NS.forEach(function(N, i){
+      var x = 0.007, e = err(x, N);
+      c.fillStyle = C[COLS[i]]; c.textAlign = 'left'; c.font = '11.5px ' + MONO;
+      var y = py(Math.log10(Math.max(e, 1e-12)));
+      if(y > T + 8 && y < H - B - 4){
+        var tw = c.measureText('N = ' + N).width;
+        c.fillStyle = C.sunk; c.fillRect(px(x) + 3, y - 18, tw + 6, 14);
+        c.fillStyle = C[COLS[i]]; c.fillText('N = ' + N, px(x) + 6, y - 7);
+      }
+    });
+  }, false);
 })();
 </script>
 </body>

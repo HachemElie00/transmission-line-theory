@@ -157,6 +157,115 @@
   </details>
 </section>
 
+<section class="blk" id="power">
+  <h2>Power, the one product phasors cannot take directly</h2>
+  <p class="t">Power is a product of two time-varying quantities, $p(t) = v(t)\,i(t)$, and the real part does not commute with products. So average power needs its own formula. Write the voltage and current with their own phases, multiply, and use $\cos A\cos B = \tfrac12[\cos(A-B) + \cos(A+B)]$:</p>
+
+  <div class="eq">$$p(t) = |V||I|\cos(\omega t + \phi_v)\cos(\omega t + \phi_i) = \tfrac12|V||I|\cos(\phi_v - \phi_i) + \tfrac12|V||I|\cos(2\omega t + \phi_v + \phi_i)$$</div>
+
+  <p class="t">The second term oscillates at twice the frequency and averages to zero over a cycle. The first is constant, and it is the average power. It is also what $\tfrac12\operatorname{Re}\{\tilde{V}\tilde{I}^*\}$ produces, because the conjugate subtracts the current's phase from the voltage's:</p>
+
+  <div class="eq box">
+    $$P_{av} = \tfrac12|V||I|\cos\theta = \tfrac12\operatorname{Re}\{\tilde{V}\tilde{I}^*\}, \qquad Q = \tfrac12\operatorname{Im}\{\tilde{V}\tilde{I}^*\}, \qquad \theta = \phi_v - \phi_i$$
+    <span class="note">the half is there because these are peak phasors; with rms phasors it disappears</span>
+  </div>
+
+  <figure class="fig">
+    <canvas id="pwrfig" style="height:270px"></canvas>
+    <div class="legend">
+      <span><i style="border-color:var(--e);border-top-style:dashed"></i>v(t)</span>
+      <span><i style="border-color:var(--h);border-top-style:dashed"></i>i(t)</span>
+      <span><i style="border-color:var(--ink);border-top-width:3px"></i>p(t) = v i</span>
+      <span><i style="border-color:var(--acc)"></i>its average</span>
+    </div>
+    <div class="rail">
+      <div class="ctl"><label for="pw-th">&theta; = &phi;<sub>v</sub> &minus; &phi;<sub>i</sub></label><input type="range" id="pw-th" min="-90" max="90" step="1" value="40"><output id="pw-thv">40&deg;</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>mean of v i, integrated</dt><dd id="pw-avg">0.383</dd></div>
+      <div class="rd"><dt>&frac12;Re{V I*}</dt><dd id="pw-re">0.383</dd></div>
+      <div class="rd"><dt>Q = &frac12;Im{V I*}</dt><dd id="pw-q">0.321</dd></div>
+      <div class="rd"><dt>time p(t) &lt; 0</dt><dd id="pw-neg">22 %</dd></div>
+    </dl>
+    <figcaption class="cap">|V| = |I| = 1. the average is computed by integrating p(t) over a period, independently of the phasor formula beside it. where p(t) dips below zero, energy is flowing back to the source</figcaption>
+  </figure>
+
+  <p class="t">At $\theta = 0$ the power never goes negative and all of it is delivered. At $\theta = \pm90^\circ$ it averages to zero: energy flows in for a quarter cycle and back out for the next, which is what a pure inductor or capacitor does. In between, $Q$ measures the energy that sloshes back and forth without being delivered. A transmission line with a reflected wave does exactly this, and chapter 06's $1 - |\Gamma|^2$ is this formula applied to it.</p>
+</section>
+
+<section class="blk" id="neper">
+  <h2>Attenuation: nepers and decibels</h2>
+  <p class="t">On a lossy line the phasor carries a decaying factor, $\tilde{V}(z) = V^+e^{-\alpha z}e^{-j\beta z}$, and $\alpha$ has the unit nepers per metre: one neper is a fall in amplitude by a factor $e$. Engineers quote losses in decibels instead, which are defined on <b>power</b>, and the two convert by a fixed factor:</p>
+
+  <div class="eq box">
+    $$\text{loss in dB} = 10\log_{10}\frac{P_1}{P_2} = 20\log_{10}\frac{V_1}{V_2} = 20\log_{10}e^{\alpha z} = 8.686\,\alpha z$$
+    <span class="note">1 Np = 8.686 dB, the same number whether you start from voltage or from power, because power goes as voltage squared</span>
+  </div>
+
+  <figure class="fig">
+    <canvas id="npfig" style="height:250px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="np-a">&alpha; (Np/m)</label><input type="range" id="np-a" min="0.1" max="3" step="0.05" value="1"><output id="np-av">1.00</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>loss per metre</dt><dd id="np-db">8.69 dB/m</dd></div>
+      <div class="rd"><dt>amplitude after 1 m</dt><dd id="np-v">36.8 %</dd></div>
+      <div class="rd"><dt>power after 1 m</dt><dd id="np-p">13.5 %</dd></div>
+    </dl>
+    <figcaption class="cap">the same decay twice: the amplitude e<sup>&minus;&alpha;z</sup> on a linear scale, which curves, and the loss in decibels, which is a straight line &mdash; the reason losses are quoted in dB per metre</figcaption>
+  </figure>
+
+  <p class="t">The straight line is the practical point. Decibels add along a cascade: two metres of a 0.5 dB/m cable and a 0.3 dB connector lose 1.3 dB, with no multiplication. Every loss figure in later chapters is quoted this way.</p>
+</section>
+
+<section class="blk" id="group">
+  <h2>Phase velocity and group velocity</h2>
+  <p class="t">A single sinusoid carries no information: it has been going forever and will go on forever. A signal is a group of frequencies, and when the medium makes $u_p = \omega/\beta$ depend on frequency, that group does not move at the speed of any one of its crests. Two tones close together make the point:</p>
+
+  <div class="eq">$$\cos(\omega_1t - \beta_1z) + \cos(\omega_2t - \beta_2z) = 2\cos\!\left(\frac{\Delta\omega}{2}t - \frac{\Delta\beta}{2}z\right)\cos(\bar{\omega}t - \bar{\beta}z)$$</div>
+
+  <p class="t">The second factor is a carrier at the mean frequency, whose crests move at $\bar{\omega}/\bar{\beta}$. The first is an envelope, and it moves at $\Delta\omega/\Delta\beta$. In the limit of a narrow band, that is the <b>group velocity</b>:</p>
+
+  <div class="eq box">
+    $$u_p = \frac{\omega}{\beta} \qquad\qquad u_g = \frac{d\omega}{d\beta}$$
+    <span class="note">equal when $\omega$ is proportional to $\beta$; different whenever the medium is dispersive</span>
+  </div>
+
+  <figure class="fig">
+    <canvas id="grpfig" style="height:260px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="gp-m">medium</label>
+        <select id="gp-m" aria-label="Dispersion">
+          <option value="0" selected>not dispersive</option>
+          <option value="1">waveguide-like</option>
+        </select></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>u<sub>p</sub> / c, a crest</dt><dd id="gp-up">1.000</dd></div>
+      <div class="rd"><dt>u<sub>g</sub> / c, the envelope</dt><dd id="gp-ug">1.000</dd></div>
+      <div class="rd"><dt>u<sub>p</sub> u<sub>g</sub> / c<sup>2</sup></dt><dd id="gp-pr">1.000</dd></div>
+    </dl>
+    <figcaption class="cap">two equal tones, 12.5 % apart in &beta;. the round marker rides one crest; the bar rides the peak of the envelope. waveguide-like means &omega;<sup>2</sup> = &omega;<sub>c</sub><sup>2</sup> + c<sup>2</sup>&beta;<sup>2</sup>, the dispersion of the hollow guides in part two</figcaption>
+  </figure>
+
+  <p class="t">In the waveguide-like medium the crests outrun the envelope, sliding forward through it and vanishing at its front, while the envelope itself travels slower than light. Their product is exactly $c^2$, and since energy and information travel with the envelope, nothing is outrun by a crest moving faster than $c$. A lossless TEM line is not dispersive: $\beta = \omega\sqrt{LC}$ is proportional to $\omega$, so the two velocities agree. Loss changes that, which chapter 04 takes up as distortion.</p>
+</section>
+
+<section class="blk" id="convention">
+  <h2>The other sign convention</h2>
+  <p class="t">Engineering writes the time dependence as $e^{j\omega t}$. Most physics texts write $e^{-i\omega t}$. Both describe the same fields, but every phasor expression comes out conjugated, and a formula copied from one convention into the other silently changes sign.</p>
+
+  <div class="tw"><table>
+    <tr><th></th><th>this site, engineering</th><th>physics</th></tr>
+    <tr><td>time factor</td><td>$e^{j\omega t}$</td><td>$e^{-i\omega t}$</td></tr>
+    <tr><td>forward wave</td><td>$e^{-j\beta z}$</td><td>$e^{+ikz}$</td></tr>
+    <tr><td>inductor</td><td>$Z = j\omega L$</td><td>$Z = -i\omega L$</td></tr>
+    <tr><td>lossy medium</td><td>$\varepsilon = \varepsilon' - j\varepsilon''$</td><td>$\varepsilon = \varepsilon' + i\varepsilon''$</td></tr>
+  </table></div>
+
+  <p class="t">The rule that converts between them is $j \to -i$, applied to every phasor quantity. A physical result, anything you could measure, is identical either way; only the bookkeeping differs. When a textbook's reactance or reflection coefficient seems to have the wrong sign, check this before anything else.</p>
+</section>
+
 <section class="blk" id="spectrum">
   <h2>Where the numbers land</h2>
   <p class="t">The same equations describe the entire electromagnetic spectrum; only the numbers change. What changes with them is which approximations survive.</p>
@@ -377,6 +486,169 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
       c.textAlign = 'left'; c.fillText('now', PL, H - 8);
       c.textAlign = 'right'; c.fillText('time →', W-PR, H - 8);
     }
+  }, true);
+})();
+
+var TAU = Math.PI*2;
+
+/* ---- instantaneous and average power ----
+   The average is found two ways: by integrating p(t) = v(t) i(t) over one
+   period (Simpson), and from 1/2 Re{V I*}. They are different computations,
+   which is the point of showing both. */
+(function(){
+  var cv = document.getElementById('pwrfig');
+  if(!cv) return;
+  var th = 40*Math.PI/180;
+  function sync(){
+    document.getElementById('pw-thv').innerHTML = (th < 0 ? '&minus;' : '') + Math.abs(Math.round(th*180/Math.PI)) + '&deg;';
+    /* |V| = |I| = 1, phi_v = th, phi_i = 0 */
+    var N = 400, h = 2*Math.PI/N, s = 0, neg = 0;
+    for(var k = 0; k <= N; k++){
+      var p = Math.cos(k*h + th)*Math.cos(k*h);
+      s += p*(k === 0 || k === N ? 1 : (k % 2 ? 4 : 2));
+      if(k < N && p < 0) neg++;
+    }
+    var avg = s*h/3/(2*Math.PI);
+    var re = 0.5*Math.cos(th), im = 0.5*Math.sin(th);    /* V I* = e^{j th} */
+    function f3(v){ return (Math.abs(v) < 5e-4 ? 0 : v).toFixed(3).replace('-', '−'); }
+    document.getElementById('pw-avg').textContent = f3(avg);
+    document.getElementById('pw-re').textContent = f3(re);
+    document.getElementById('pw-q').textContent = f3(im);
+    document.getElementById('pw-neg').textContent = Math.round(100*neg/N) + ' %';
+  }
+  document.getElementById('pw-th').addEventListener('input', function(){ th = +this.value*Math.PI/180; sync(); });
+  sync();
+
+  EM.register(function(C, t){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 34, R = 14, T = 14, B = 26, y0 = T + (H - T - B)/2, sy = (H - T - B)/2*0.9;
+    var XS = 2*TAU;                                     /* two periods across */
+    function px(x){ return L + x/XS*(W - L - R); }
+    function py(v){ return y0 - v*sy; }
+    var ph = t*0.35;
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L, y0 + .5); c.lineTo(W - R, y0 + .5); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.stroke();
+    /* p(t), with the part below zero shaded */
+    c.fillStyle = C.accfill; c.beginPath(); c.moveTo(px(0), py(0));
+    for(var i = 0; i <= 300; i++){ var x = XS*i/300, p = Math.cos(x + ph + th)*Math.cos(x + ph); c.lineTo(px(x), py(Math.min(p, 0))); }
+    c.lineTo(px(XS), py(0)); c.closePath(); c.fill();
+    c.setLineDash([5, 4]); c.lineWidth = 1.4;
+    c.strokeStyle = C.e; c.beginPath();
+    for(var a = 0; a <= 300; a++){ var xa = XS*a/300; c.lineTo(px(xa), py(Math.cos(xa + ph + th))); } c.stroke();
+    c.strokeStyle = C.h; c.beginPath();
+    for(var b = 0; b <= 300; b++){ var xb = XS*b/300; c.lineTo(px(xb), py(Math.cos(xb + ph))); } c.stroke();
+    c.setLineDash([]);
+    c.strokeStyle = C.ink; c.lineWidth = 2.4; c.beginPath();
+    for(var d = 0; d <= 300; d++){ var xd = XS*d/300; c.lineTo(px(xd), py(Math.cos(xd + ph + th)*Math.cos(xd + ph))); } c.stroke();
+    c.strokeStyle = C.acc; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(L, py(0.5*Math.cos(th))); c.lineTo(W - R, py(0.5*Math.cos(th))); c.stroke();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
+    c.fillText('1', L - 6, py(1) + 4); c.fillText('0', L - 6, py(0) + 4); c.fillText('−1', L - 6, py(-1) + 4);
+    c.textAlign = 'right'; c.fillText('time →', W - R, H - 8);
+  }, true);
+})();
+
+/* ---- the same decay on two scales ---- */
+(function(){
+  var cv = document.getElementById('npfig');
+  if(!cv) return;
+  var al = 1, ZM = 2;
+  function sync(){
+    document.getElementById('np-av').textContent = al.toFixed(2);
+    document.getElementById('np-db').textContent = (20*al/Math.LN10).toFixed(2) + ' dB/m';
+    document.getElementById('np-v').textContent = (100*Math.exp(-al)).toFixed(1) + ' %';
+    document.getElementById('np-p').textContent = (100*Math.exp(-2*al)).toFixed(1) + ' %';
+  }
+  document.getElementById('np-a').addEventListener('input', function(){ al = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 40, R = 56, T = 20, B = 34;
+    var DBM = 20*3*ZM/Math.LN10;                        /* the dB axis spans the largest alpha */
+    function px(z){ return L + z/ZM*(W - L - R); }
+    function pyA(v){ return T + (1 - v)*(H - T - B); }
+    function pyD(db){ return T + db/DBM*(H - T - B); }
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.lineTo(W - R, H - B);
+    c.moveTo(W - R + .5, T); c.lineTo(W - R + .5, H - B); c.stroke();
+    /* a faint carrier under the envelope, so it reads as a decaying wave */
+    c.strokeStyle = C.e; c.globalAlpha = 0.3; c.lineWidth = 1.2; c.beginPath();
+    for(var i = 0; i <= 400; i++){ var z = ZM*i/400; c.lineTo(px(z), pyA(Math.exp(-al*z)*(0.5 + 0.5*Math.cos(2*TAU*z)))); }
+    c.stroke(); c.globalAlpha = 1;
+    c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
+    for(var j = 0; j <= 200; j++){ var z2 = ZM*j/200; c.lineTo(px(z2), pyA(Math.exp(-al*z2))); }
+    c.stroke();
+    c.strokeStyle = C.h; c.lineWidth = 2.4; c.beginPath();
+    c.moveTo(px(0), pyD(0)); c.lineTo(px(ZM), pyD(20*al*ZM/Math.LN10)); c.stroke();
+    c.font = '11px ' + MONO; c.fillStyle = C.e; c.textAlign = 'right';
+    c.fillText('1', L - 6, pyA(1) + 4); c.fillText('0', L - 6, pyA(0) + 4);
+    EM.rich(c, [['e','n'], ['−αz','p']], px(0.25) + 8, pyA(Math.exp(-al*0.25)) + 22, 12, 'left');
+    c.fillStyle = C.h; c.textAlign = 'left';
+    for(var db = 0; db <= DBM; db += 10) c.fillText(db ? '−' + db : '0', W - R + 6, pyD(db) + 4);
+    c.fillText('dB', W - R + 6, T - 6);
+    c.textAlign = 'right';
+    var zl = Math.min(ZM*0.92, (DBM*0.8)*Math.LN10/(20*al));
+    c.fillText('loss, dB', px(zl) - 6, pyD(20*al*zl/Math.LN10) + 16);
+    c.fillStyle = C.ink3; c.textAlign = 'center';
+    c.fillText('0', px(0), H - B + 15); c.fillText('1 m', px(1), H - B + 15); c.fillText('2 m', px(2), H - B + 15);
+  }, false);
+})();
+
+/* ---- two tones: crest against envelope ----
+   omega(beta) is either v beta or sqrt(wc^2 + v^2 beta^2). The tones sit at
+   beta-bar (1 -/+ 1/16), so the envelope repeats every 8 carrier wavelengths
+   and the window is exactly one envelope period. */
+(function(){
+  var cv = document.getElementById('grpfig');
+  if(!cv) return;
+  var mode = 0, BB = TAU, DB = TAU/8, WC = 0.8*TAU;
+  function w(b){ return mode ? Math.sqrt(WC*WC + b*b) : b; }       /* c = 1 */
+  var b1 = BB - DB/2, b2 = BB + DB/2;
+  function sync(){
+    var up = w(BB)/BB, ug = mode ? BB/w(BB) : 1;
+    document.getElementById('gp-up').textContent = up.toFixed(3);
+    document.getElementById('gp-ug').textContent = ug.toFixed(3);
+    document.getElementById('gp-pr').textContent = (up*ug).toFixed(3);
+  }
+  document.getElementById('gp-m').addEventListener('change', function(){ mode = +this.value; sync(); });
+  sync();
+
+  EM.register(function(C, t){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 14, R = 14, T = 16, B = 20, ZW = 8;          /* window: 8 carrier wavelengths */
+    var y0 = T + (H - T - B)/2, sy = (H - T - B)/2/2.15;
+    function px(z){ return L + z/ZW*(W - L - R); }
+    var tau = t*0.15;
+    var w1 = w(b1), w2 = w(b2), wb = (w1 + w2)/2, dw = w2 - w1, bb = (b1 + b2)/2;
+    function f(z){ return Math.cos(w1*tau - b1*z) + Math.cos(w2*tau - b2*z); }
+    function env(z){ return 2*Math.abs(Math.cos(dw/2*tau - DB/2*z)); }
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L, y0 + .5); c.lineTo(W - R, y0 + .5); c.stroke();
+    c.strokeStyle = C.acc; c.lineWidth = 1.2; c.setLineDash([4, 4]);
+    [1, -1].forEach(function(s){
+      c.beginPath();
+      for(var i = 0; i <= 300; i++){ var z = ZW*i/300; c.lineTo(px(z), y0 - s*env(z)*sy); }
+      c.stroke();
+    });
+    c.setLineDash([]);
+    c.strokeStyle = C.ink; c.lineWidth = 2; c.beginPath();
+    for(var j = 0; j <= 600; j++){ var z2 = ZW*j/600; c.lineTo(px(z2), y0 - f(z2)*sy); }
+    c.stroke();
+    /* the envelope's peak moves at dw/dB; one crest at wb/bb */
+    var ze = ((dw/DB)*tau) % ZW; if(ze < 0) ze += ZW;
+    c.fillStyle = C.acc; c.fillRect(px(ze) - 2, T - 4, 4, H - T - B + 8);
+    var zc = ((wb/bb)*tau) % ZW; if(zc < 0) zc += ZW;
+    c.fillStyle = C.e;
+    c.beginPath(); c.arc(px(zc), y0 - f(zc)*sy, 5.5, 0, TAU); c.fill();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
+    c.fillText('z →', W - R, H - 5);
   }, true);
 })();
 </script>

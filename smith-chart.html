@@ -103,6 +103,48 @@ canvas#smith{display:block;width:100%;max-width:560px;height:auto;aspect-ratio:1
   </table></div>
 </section>
 
+<section class="blk" id="conformal">
+  <h2>What survives the map</h2>
+  <p class="t">The map $\Gamma = (z - 1)/(z + 1)$ is not just any change of variable. Three of its properties do real work on the chart, and all three follow from its form.</p>
+
+  <p class="t"><b>It preserves angles.</b> Its derivative, $d\Gamma/dz = 2/(z+1)^2$, is finite and non-zero everywhere in the right half-plane, and a complex function with a non-zero derivative is conformal: it turns small neighbourhoods by a fixed angle and scales them by a fixed factor, so the angle between two crossing curves survives. Lines of constant $r$ and constant $x$ cross at right angles in the $z$ plane, so <b>their circles cross at right angles on the chart</b>, which is what makes a grid point easy to read.</p>
+
+  <p class="t"><b>It maps circles to circles.</b> Every Möbius map does, counting a straight line as a circle through infinity. That is why the grid is circles, why a constant-$|\Gamma|$ locus is a circle, and why the frequency loci below are circles for simple loads.</p>
+
+  <p class="t"><b>Changing $Z_0$ is another map of the same kind.</b> Express the same physical impedance relative to a new reference $Z_0'$ and the reflection coefficient changes by a Möbius map of the disc onto itself:</p>
+
+  <div class="eq box">
+    $$\Gamma' = \frac{\Gamma - \Gamma_r}{1 - \Gamma_r\Gamma}, \qquad \Gamma_r = \frac{Z_0' - Z_0}{Z_0' + Z_0}$$
+    <span class="note">for real $Z_0$ and $Z_0'$; the old centre moves to $-\Gamma_r$, the rim stays the rim, and every circle stays a circle</span>
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; renormalisation</summary>
+    <div class="body">
+      <p>The physical impedance is $Z = Z_0(1 + \Gamma)/(1 - \Gamma)$. Its reflection coefficient against $Z_0'$ is $\Gamma' = (Z - Z_0')/(Z + Z_0')$. Substitute and multiply top and bottom by $(1 - \Gamma)$:</p>
+      <div class="eq">$$\Gamma' = \frac{Z_0(1+\Gamma) - Z_0'(1-\Gamma)}{Z_0(1+\Gamma) + Z_0'(1-\Gamma)} = \frac{(Z_0 - Z_0') + \Gamma(Z_0 + Z_0')}{(Z_0 + Z_0') + \Gamma(Z_0 - Z_0')}$$</div>
+      <p>Divide top and bottom by $Z_0 + Z_0'$ and write $\Gamma_r = (Z_0' - Z_0)/(Z_0' + Z_0)$:</p>
+      <div class="eq">$$\Gamma' = \frac{\Gamma - \Gamma_r}{1 - \Gamma_r\Gamma}$$</div>
+      <p>With $\Gamma_r$ real and $|\Gamma_r| &lt; 1$, $|\Gamma| = 1$ gives $|\Gamma'| = 1$: the rim, where every lossless load lives, maps to itself.</p>
+    </div>
+  </details>
+
+  <p class="t">The figure uses that map to draw the quarter-wave transformer of chapter 09 as a construction. Renormalise the load to the section's impedance $Z_1$, turn half a revolution for the quarter wavelength, and renormalise back to $Z_0$. Only one $Z_1$ brings the point home to the centre.</p>
+
+  <figure class="fig">
+    <canvas id="rnfig" class="static" style="height:320px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="rn-z">Z<sub>1</sub> &Omega;</label><input type="range" id="rn-z" min="52" max="98" step="0.1" value="62"><output id="rn-zv">62.0</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>load</dt><dd>R<sub>L</sub> = 100 &Omega; on 50 &Omega;</dd></div>
+      <div class="rd"><dt>|&Gamma;| at the input</dt><dd id="rn-g">&mdash;</dd></div>
+      <div class="rd"><dt>&radic;(Z<sub>0</sub>R<sub>L</sub>)</dt><dd id="rn-s">70.7 &Omega;</dd></div>
+    </dl>
+    <figcaption class="cap">everything drawn on the 50 &Omega; chart. the hollow marker is the load and the cross is the impedance Z<sub>1</sub>, the centre the section turns about. the dashed arc is the impedance seen along the quarter-wave section: half a turn about Z<sub>1</sub>, which renormalisation shows is a circle on this chart too, though not one centred on the middle. the filled marker is the input</figcaption>
+  </figure>
+</section>
+
 <section class="blk" id="chart">
   <h2>The chart itself</h2>
   <p class="t">Drag anywhere inside the circle to set a load. The dashed circle through your point is the <b>constant-SWR circle</b>: the path the impedance follows as you move along the line, because $|\Gamma|$ never changes on a lossless line.</p>
@@ -206,6 +248,62 @@ canvas#smith{display:block;width:100%;max-width:560px;height:auto;aspect-ratio:1
     <span class="lab">The one thing to hold onto</span>
     <p>A point inside a disc, turning clockwise on a fixed circle as you walk back along the line, one lap per half wavelength. Everything else &mdash; the grid, the overlay, the scales round the rim &mdash; is bookkeeping laid on top of that single motion.</p>
   </div>
+</section>
+
+<section class="blk" id="loci">
+  <h2>A load across frequency</h2>
+  <p class="t">A real load is not one point but a curve, traced as the frequency sweeps. For a series RLC, $r$ is fixed and $x$ runs from $-\infty$ to $+\infty$, so the locus is the whole constant-$r$ circle; for a parallel RLC it is a constant-$g$ circle. Both are traced <b>clockwise</b> as frequency rises, and so is the locus of any passive network made of lossless reactances and resistors in this way: it is chapter 08's Foster theorem, $dX/d\omega > 0$, drawn on the chart.</p>
+
+  <figure class="fig">
+    <canvas id="lcifig" style="height:320px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="lc-n">load</label>
+        <select id="lc-n" aria-label="Load network">
+          <option value="s" selected>series RLC</option>
+          <option value="p">parallel RLC</option>
+        </select></div>
+      <div class="ctl"><label for="lc-q">Q at resonance</label><input type="range" id="lc-q" min="0.5" max="10" step="0.1" value="2"><output id="lc-qv">2.0</output></div>
+      <div class="ctl"><label for="lc-r">R / Z<sub>0</sub></label><input type="range" id="lc-r" min="0.2" max="5" step="0.05" value="1"><output id="lc-rv">1.00</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>z at the moving point</dt><dd id="lc-z">&mdash;</dd></div>
+      <div class="rd"><dt>its frequency</dt><dd id="lc-f">&mdash;</dd></div>
+      <div class="rd"><dt>|&Gamma;| &le; 1/3 for</dt><dd id="lc-b">&mdash;</dd></div>
+    </dl>
+    <figcaption class="cap">the load&rsquo;s locus from f<sub>0</sub>/4 to 4f<sub>0</sub>, with the resonance and the two octave points marked. the moving point sweeps the frequency; the shaded disc is |&Gamma;| &le; 1/3, an SWR of 2, and the last readout is the width of the band around f<sub>0</sub> over which the load stays inside it</figcaption>
+  </figure>
+
+  <p class="t">The higher the Q, the faster the point races round the circle as frequency moves, and the less of the band it spends near the centre. That is the bandwidth of the load itself, before any matching network: a high-Q load can only ever be matched over a narrow band, and the next section names that limit.</p>
+</section>
+
+<section class="blk" id="qarcs">
+  <h2>Constant-Q arcs</h2>
+  <p class="t">At any point on the chart, the ratio of reactance to resistance is a <b>node Q</b>, $Q = |x|/r$. The points with the same Q lie on circular arcs through the short and open points, one above the axis and one below:</p>
+
+  <div class="eq box">
+    $$Q = \frac{|x|}{r} = \frac{2|v|}{1 - u^2 - v^2} \qquad\Longleftrightarrow\qquad u^2 + \left(v \pm \frac1Q\right)^2 = 1 + \frac{1}{Q^2}$$
+    <span class="note">circles centred on the imaginary axis at $\mp 1/Q$, passing through $\Gamma = \pm 1$</span>
+  </div>
+
+  <figure class="fig">
+    <canvas id="qafig" class="static" style="height:320px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="qa-r">r</label><input type="range" id="qa-r" min="0.1" max="4" step="0.05" value="0.5"><output id="qa-rv">0.50</output></div>
+      <div class="ctl"><label for="qa-x">x</label><input type="range" id="qa-x" min="-4" max="4" step="0.05" value="1"><output id="qa-xv">1.00</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>node Q = |x|/r</dt><dd id="qa-q">2.00</dd></div>
+      <div class="rd"><dt>rough bandwidth, 2/Q</dt><dd id="qa-b">100 %</dd></div>
+    </dl>
+    <figcaption class="cap">arcs of constant node Q at 0.5, 1, 2 and 5, over a faint impedance grid, and a point set by its normalised impedance</figcaption>
+  </figure>
+
+  <p class="t">The arcs matter because a lumped matching network moves along constant-$r$ and constant-$g$ circles, and the highest node Q it passes through sets its bandwidth, roughly $\Delta f/f_0 \approx 2/Q$ for a network loaded equally from both sides. A path that stays inside a low-Q arc is a broadband match; one that swings out near the rim is a narrowband one. Chapter 11 uses the arcs to choose between L-network solutions and to see why three elements can do better than two.</p>
+</section>
+
+<section class="blk" id="compressed">
+  <h2>Outside the circle</h2>
+  <p class="t">Every passive load on a real $Z_0$ sits inside the unit circle. A negative resistance does not: with $r &lt; 0$, $|\Gamma| = |z - 1|/|z + 1| > 1$, and the point lies outside. Oscillator and amplifier design deal with exactly such impedances, the input of a transistor biased into instability, and use a <b>compressed</b> Smith chart that continues the grid beyond the rim, typically out to $|\Gamma| = 3.16$, a reflection 10 dB above the incident wave. Nothing in the construction changes: the constant-$r$ circles for $r &lt; 0$ are still circles through $\Gamma = 1$, now lying outside the unit disc, with centres at $r/(1+r)$ and radii $1/|1+r|$.</p>
 </section>
 
 <section class="blk" id="check">
@@ -538,6 +636,166 @@ function fmtZ(z){
       });
     }
   }, true);
+})();
+
+/* ---- shared for the three figures below ---- */
+var FAINT = { rs: [0.2, 0.5, 1, 2, 5], xs: [-5, -2, -1, -0.5, -0.2, 0.2, 0.5, 1, 2, 5] };
+function chartBase(c, C, cx, cy, R){
+  c.fillStyle = C.sunk; c.beginPath(); c.arc(cx, cy, R, 0, Math.PI*2); c.fill();
+  c.save(); c.globalAlpha = 0.45;
+  drawGrid(c, cx, cy, R, { rs: FAINT.rs, xs: FAINT.xs, color: C.z, lw: 1 });
+  c.restore();
+  c.strokeStyle = C.line2; c.lineWidth = 1.5; c.beginPath(); c.arc(cx, cy, R, 0, Math.PI*2); c.stroke();
+}
+function cdivg(a, b){ var d = b[0]*b[0] + b[1]*b[1]; return [(a[0]*b[0] + a[1]*b[1])/d, (a[1]*b[0] - a[0]*b[1])/d]; }
+/* Gamma' = (Gamma - gr)/(1 - gr Gamma), gr real */
+function renorm(g, gr){ return cdivg([g[0] - gr, g[1]], [1 - gr*g[0], -gr*g[1]]); }
+
+/* ---- the quarter-wave transformer as a construction on the chart ---- */
+(function(){
+  var cv = document.getElementById('rnfig');
+  if(!cv) return;
+  var Z0 = 50, RL = 100, Z1 = 62;
+  function path(){
+    var gr = (Z1 - Z0)/(Z1 + Z0), gL = [(RL - Z0)/(RL + Z0), 0], g1 = renorm(gL, gr), pts = [];
+    for(var k = 0; k <= 120; k++){
+      var t = Math.PI*k/120, gt = [g1[0]*Math.cos(t) + g1[1]*Math.sin(t), g1[1]*Math.cos(t) - g1[0]*Math.sin(t)];
+      pts.push(renorm(gt, -gr));                 /* back to the 50-ohm reference */
+    }
+    return { gr: gr, gL: gL, pts: pts };
+  }
+  function sync(){
+    var p = path(), e = p.pts[p.pts.length - 1];
+    document.getElementById('rn-zv').textContent = Z1.toFixed(1);
+    document.getElementById('rn-g').textContent = Math.hypot(e[0], e[1]).toFixed(4);
+    document.getElementById('rn-s').textContent = Math.sqrt(Z0*RL).toFixed(1) + ' Ω';
+  }
+  document.getElementById('rn-z').addEventListener('input', function(){ Z1 = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var R = Math.min(W, H)/2 - 22, cx = W/2, cy = H/2;
+    function P(g){ return [cx + g[0]*R, cy - g[1]*R]; }
+    chartBase(c, C, cx, cy, R);
+    var p = path();
+    c.strokeStyle = C.acc; c.lineWidth = 2.4; c.setLineDash([6, 4]); c.beginPath();
+    p.pts.forEach(function(g){ var q = P(g); c.lineTo(q[0], q[1]); }); c.stroke(); c.setLineDash([]);
+    var z1 = P([p.gr, 0]);
+    c.strokeStyle = C.ink; c.lineWidth = 1.6;
+    c.beginPath(); c.moveTo(z1[0] - 6, z1[1] - 6); c.lineTo(z1[0] + 6, z1[1] + 6); c.moveTo(z1[0] + 6, z1[1] - 6); c.lineTo(z1[0] - 6, z1[1] + 6); c.stroke();
+    var l = P(p.gL); c.beginPath(); c.arc(l[0], l[1], 6, 0, Math.PI*2); c.stroke();
+    var e = P(p.pts[p.pts.length - 1]); c.fillStyle = C.ink; c.beginPath(); c.arc(e[0], e[1], 5, 0, Math.PI*2); c.fill();
+    c.fillStyle = C.ink2; c.beginPath(); c.arc(cx, cy, 2.5, 0, Math.PI*2); c.fill();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink2; c.textAlign = 'left';
+    c.fillText('load', l[0] + 9, l[1] - 8);
+    EM.rich(c, [['Z','n'], ['1','b']], z1[0] - 4, z1[1] + 20, 11, 'left');
+    c.textAlign = 'right'; c.fillText('input', e[0] - 9, e[1] - 8);
+  }, false);
+})();
+
+/* ---- the locus of an RLC load across frequency ---- */
+(function(){
+  var cv = document.getElementById('lcifig');
+  if(!cv) return;
+  var kind = 's', Q = 2, rr = 1, F0 = 0.25, F1 = 4;
+  function zAt(f){
+    var d = Q*(f - 1/f);
+    if(kind === 's') return [rr, rr*d];
+    var g = 1/rr, y = [g, g*d]; return cdivg([1, 0], y);
+  }
+  function gAt(f){ return zToGamma(zAt(f)[0], zAt(f)[1]); }
+  function band(){
+    var lim = 1/3, g0 = gAt(1);
+    if(Math.hypot(g0[0], g0[1]) > lim) return null;
+    var lo = 1, hi = 1, st = 1.0005;
+    while(lo > F0 && Math.hypot.apply(null, gAt(lo/st)) <= lim) lo /= st;
+    while(hi < F1 && Math.hypot.apply(null, gAt(hi*st)) <= lim) hi *= st;
+    return hi - lo;
+  }
+  function sync(){
+    document.getElementById('lc-qv').textContent = Q.toFixed(1);
+    document.getElementById('lc-rv').textContent = rr.toFixed(2);
+    var b = band();
+    document.getElementById('lc-b').innerHTML = b === null ? 'never' : (100*b).toFixed(1) + ' % of f<sub>0</sub>';
+  }
+  document.getElementById('lc-n').addEventListener('change', function(){ kind = this.value; sync(); });
+  document.getElementById('lc-q').addEventListener('input', function(){ Q = +this.value; sync(); });
+  document.getElementById('lc-r').addEventListener('input', function(){ rr = +this.value; sync(); });
+  sync();
+
+  EM.register(function(C, t){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var R = Math.min(W, H)/2 - 22, cx = W/2, cy = H/2;
+    function P(g){ return [cx + g[0]*R, cy - g[1]*R]; }
+    chartBase(c, C, cx, cy, R);
+    c.fillStyle = C.accfill; c.beginPath(); c.arc(cx, cy, R/3, 0, Math.PI*2); c.fill();
+    c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
+    for(var k = 0; k <= 600; k++){ var f = F0*Math.pow(F1/F0, k/600), q = P(gAt(f)); c.lineTo(q[0], q[1]); }
+    c.stroke();
+    /* direction of travel, at the resonance */
+    var a = P(gAt(1.3)), b = P(gAt(1.42));
+    c.fillStyle = C.e; c.strokeStyle = C.e; EM.arrow(c, a[0], a[1], b[0], b[1], 9);
+    c.font = '11px ' + MONO;
+    [[0.5, [['f','n'], ['0','b'], ['/2','n']]], [1, [['f','n'], ['0','b']]], [2, [['2f','n'], ['0','b']]]].forEach(function(m){
+      var q = P(gAt(m[0]));
+      c.fillStyle = C.ink; c.beginPath(); c.arc(q[0], q[1], 3.5, 0, Math.PI*2); c.fill();
+      EM.rich(c, m[1], q[0] + 7, q[1] - 6, 11, 'left');
+    });
+    /* the moving point sweeps the band on a log scale */
+    var s = (t*0.06) % 1, fm = F0*Math.pow(F1/F0, s), pm = P(gAt(fm));
+    c.fillStyle = C.acc; c.beginPath(); c.arc(pm[0], pm[1], 6, 0, Math.PI*2); c.fill();
+    var z = zAt(fm);
+    document.getElementById('lc-z').textContent = fmtZ(z);
+    document.getElementById('lc-f').innerHTML = fm.toFixed(2) + ' f<sub>0</sub>';
+  }, true);
+})();
+
+/* ---- arcs of constant node Q ---- */
+(function(){
+  var cv = document.getElementById('qafig');
+  if(!cv) return;
+  var r = 0.5, x = 1, QS = [0.5, 1, 2, 5];
+  function sync(){
+    document.getElementById('qa-rv').textContent = r.toFixed(2);
+    document.getElementById('qa-xv').textContent = (x < 0 ? '−' : '') + Math.abs(x).toFixed(2);
+    var q = Math.abs(x)/r;
+    document.getElementById('qa-q').textContent = q.toFixed(2);
+    document.getElementById('qa-b').textContent = q < 0.02 ? 'very wide' : (200/q).toFixed(0) + ' %';
+  }
+  document.getElementById('qa-r').addEventListener('input', function(){ r = +this.value; sync(); EM.redrawStatic(); });
+  document.getElementById('qa-x').addEventListener('input', function(){ x = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var R = Math.min(W, H)/2 - 22, cx = W/2, cy = H/2;
+    chartBase(c, C, cx, cy, R);
+    c.save(); c.beginPath(); c.arc(cx, cy, R, 0, Math.PI*2); c.clip();
+    c.strokeStyle = C.h; c.lineWidth = 1.8;
+    QS.forEach(function(q){
+      [1, -1].forEach(function(s){
+        c.beginPath(); c.arc(cx, cy + s*R/q, R*Math.sqrt(1 + 1/(q*q)), 0, Math.PI*2); c.stroke();
+      });
+    });
+    c.restore();
+    c.font = '11px ' + MONO; c.textAlign = 'center';
+    QS.forEach(function(q){
+      /* on the arc, left of centre, clear of where loads usually sit */
+      var u = -0.6, v = -1/q + Math.sqrt(1 + 1/(q*q) - u*u), xl = cx + u*R, y = cy - v*R + 4;
+      var lab = 'Q = ' + q, tw = c.measureText(lab).width;
+      c.fillStyle = C.sunk; c.fillRect(xl - tw/2 - 3, y - 11, tw + 6, 14);
+      c.fillStyle = C.h; c.fillText(lab, xl, y);
+    });
+    var g = zToGamma(r, x), px = cx + g[0]*R, py = cy - g[1]*R;
+    c.fillStyle = C.ink; c.beginPath(); c.arc(px, py, 5.5, 0, Math.PI*2); c.fill();
+  }, false);
 })();
 </script>
 </body>

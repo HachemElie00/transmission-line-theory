@@ -123,6 +123,52 @@
   </details>
 </section>
 
+<section class="blk" id="multi">
+  <h2>More sections, more bandwidth</h2>
+  <p class="t">One quarter-wave section matches perfectly at one frequency. Several, each stepping the impedance part of the way, can hold a good match over a wide band. The design rests on one approximation: when every step is small, each junction reflects a little and the reflections barely interact, so the total is simply their sum, each delayed by its round trip:</p>
+
+  <div class="eq box">
+    $$\Gamma(\theta) \approx \Gamma_0 + \Gamma_1e^{-j2\theta} + \Gamma_2e^{-j4\theta} + \cdots + \Gamma_Ne^{-j2N\theta}, \qquad \Gamma_n = \frac{Z_{n+1} - Z_n}{Z_{n+1} + Z_n} \approx \tfrac12\ln\frac{Z_{n+1}}{Z_n}$$
+    <span class="note">the theory of small reflections; $\theta = \beta l$ is each section's electrical length, $\pi/2$ at the design frequency</span>
+  </div>
+
+  <p class="t">That is a polynomial in $e^{-j2\theta}$, and choosing the $\Gamma_n$ is choosing its shape. Two choices are standard.</p>
+
+  <p class="t"><b>Binomial</b> makes $\Gamma(\theta)$ as flat as possible at the centre: all its first $N-1$ derivatives vanish there. The coefficients are binomial coefficients, $\Gamma_n \propto \binom{N}{n}$, so $\ln Z_{n+1} - \ln Z_n = 2^{-N}\binom{N}{n}\ln(Z_L/Z_0)$.</p>
+
+  <p class="t"><b>Chebyshev</b> instead lets $|\Gamma|$ ripple up to a chosen ceiling $\Gamma_m$ across the band, which buys considerably more bandwidth for the same number of sections. The response is a Chebyshev polynomial, which has exactly that equal-ripple property:</p>
+
+  <div class="eq">$$\Gamma(\theta) = \Gamma_m\,e^{-jN\theta}\,T_N\!\left(\sec\theta_m\cos\theta\right), \qquad \sec\theta_m = \cosh\!\left[\frac1N\cosh^{-1}\frac{|\Gamma(0)|}{\Gamma_m}\right]$$</div>
+
+  <figure class="fig">
+    <canvas id="mtfig" class="static" style="height:280px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="mt-k">design</label>
+        <select id="mt-k" aria-label="Design">
+          <option value="bin">binomial</option>
+          <option value="cheb" selected>Chebyshev</option>
+          <option value="taper">exponential taper</option>
+        </select></div>
+      <div class="ctl"><label for="mt-n">sections N</label><input type="range" id="mt-n" min="1" max="6" step="1" value="3"><output id="mt-nv">3</output></div>
+      <div class="ctl"><label for="mt-r">R<sub>L</sub> &Omega;</label><input type="range" id="mt-r" min="10" max="300" step="1" value="100"><output id="mt-rv">100</output></div>
+    </div>
+    <dl class="readout" id="mt-ro"></dl>
+    <figcaption class="cap">|&Gamma;| against frequency for a 50 &Omega; line matched to R<sub>L</sub>. the solid curve is exact, from cascading the sections as real lines; the dashed curve is the small-reflection formula the design came from. the shaded band is where the exact response stays below &Gamma;<sub>m</sub> = 0.05. for the taper, N sets its length, N quarter wavelengths at f<sub>0</sub></figcaption>
+  </figure>
+
+  <p class="t">Three things show. The design formula and the exact response agree closely, which is what justifies designing with the approximation. More sections widen the band, and Chebyshev's equal ripple uses the allowance better than binomial's flatness. And an <b>exponential taper</b>, the limit of infinitely many infinitesimal steps with $\ln Z$ rising linearly, behaves like a high-pass match: poor at low frequency where it is short in wavelengths, and good above, its reflection falling as $|\sin\beta L/\beta L|$. Klopfenstein's taper refines it into the continuous counterpart of Chebyshev, the shortest taper for a given ripple.</p>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; the sum of small reflections</summary>
+    <div class="body">
+      <p>At each junction a wave arriving from the left is partly reflected, by $\Gamma_n$, and partly transmitted, by $1 + \Gamma_n$. The first-order reflection from junction $n$ has crossed $n$ sections twice, picking up $e^{-j2n\theta}$, and every transmission factor on the way is $1 + O(\Gamma)$. Keeping only terms first order in the $\Gamma$'s, and so ignoring the waves that bounce more than once inside the transformer, every junction's contribution simply adds. Second-order terms are products of two small reflections; with steps of a few percent they are a few tenths of a percent, which the exact curve above confirms.</p>
+      <p>For a continuous taper the sum becomes an integral over the line, with the local reflection per unit length $\tfrac12\,d(\ln Z)/dz$:</p>
+      <div class="eq">$$\Gamma(\theta) = \frac12\int_0^L e^{-j2\beta z}\,\frac{d}{dz}\ln\frac{Z(z)}{Z_0}\,dz$$</div>
+      <p>which for the exponential taper, $d(\ln Z)/dz$ constant, integrates to $\tfrac12\ln(Z_L/Z_0)\,e^{-j\beta L}\sin(\beta L)/\beta L$.</p>
+    </div>
+  </details>
+</section>
+
 <section class="blk" id="stubs">
   <h2>Stubs: reactance to order</h2>
   <p class="t">Chapter 08 gave the input impedance of a shorted and an open line. Both are <b>purely imaginary</b>, and both sweep every value as the length changes:</p>
@@ -158,6 +204,48 @@
     <span class="lab">Where this is going</span>
     <p>A stub can supply any reactance. Chapter 08 showed the line can turn any load into a point with the right resistance. Put those together &mdash; slide along the line until the real part is correct, then cancel the imaginary part with a stub &mdash; and you have single-stub matching. That is chapter 11, and the Smith chart of chapter 10 is what makes it a two-minute construction instead of an algebra problem.</p>
   </div>
+</section>
+
+<section class="blk" id="richards">
+  <h2>Stubs as lumped components: Richards and Kuroda</h2>
+  <p class="t">A shorted stub has $X = Z_0\tan\beta l$; a lumped inductor has $X = \omega L$. Richards noticed that these become the same function under one change of frequency variable, $\Omega = \tan\beta l$. Fix every stub at $\lambda/8$ long at a chosen frequency $f_c$, so that $\Omega = 1$ there, and</p>
+
+  <div class="eq box">
+    $$jX_L = j\Omega L \;\longleftrightarrow\; \text{shorted stub of } Z_0 = L \qquad\qquad jB_C = j\Omega C \;\longleftrightarrow\; \text{open stub of } Y_0 = C$$
+    <span class="note">Richards' transformation: any lumped LC filter becomes a stub filter with the same response, with $\omega/\omega_c$ replaced by $\tan(\pi f/4f_c)$</span>
+  </div>
+
+  <figure class="fig">
+    <canvas id="rcfig" class="static" style="height:260px"></canvas>
+    <dl class="readout">
+      <div class="rd"><dt>loss at f<sub>c</sub>, both</dt><dd id="rc-c">3.01 dB</dd></div>
+      <div class="rd"><dt>stub version repeats every</dt><dd id="rc-p">4 f<sub>c</sub></dd></div>
+      <div class="rd"><dt>at 2f<sub>c</sub>, lumped / stubs</dt><dd id="rc-2">18.1 / &infin; dB</dd></div>
+    </dl>
+    <figcaption class="cap">a third-order maximally flat low-pass filter (series L, shunt C, series L, all of normalised value 1, 2, 1, between 1 &Omega; ends), as lumped components and as Richards stubs. both curves are computed by cascading the actual networks, not by mapping one response onto the other</figcaption>
+  </figure>
+
+  <p class="t">Below $f_c$ the two filters are indistinguishable. Above it the mapping shows: $\tan$ races to infinity at $2f_c$, so the stub filter has an infinitely deep stop at twice the cutoff, then repeats its whole response every $4f_c$. A distributed filter is always periodic in frequency, which is the price of building it from lengths.</p>
+
+  <p class="t">One practical problem remains. Richards' transformation turns a series inductor into a <b>series</b> stub, which microstrip cannot build without breaking the line. Kuroda's identities fix that. Add a <b>unit element</b>, a plain length of line $\lambda/8$ long at $f_c$ like the stubs, and a series stub on one side of it can be traded for a shunt stub on the other. One of the four identities reads</p>
+
+  <div class="eq">$$\text{UE}(Z_1)\;\to\;\text{shunt open stub}(Z_2) \;\equiv\; \text{series shorted stub}\!\left(\frac{Z_1}{n^2}\right)\;\to\;\text{UE}\!\left(\frac{Z_2}{n^2}\right), \qquad n^2 = 1 + \frac{Z_2}{Z_1}$$</div>
+
+  <figure class="fig">
+    <canvas id="kufig" class="static" style="height:220px"></canvas>
+    <dl class="readout">
+      <div class="rd"><dt>Z<sub>1</sub>, Z<sub>2</sub> tried</dt><dd>1.3, 0.7</dd></div>
+      <div class="rd"><dt>largest ABCD difference, 0 to 4f<sub>c</sub></dt><dd id="ku-d">&mdash;</dd></div>
+    </dl>
+    <figcaption class="cap">the identity above, read left to right as the two networks. every stub and unit element is &lambda;/8 at f<sub>c</sub>. the readout multiplies out both networks' ABCD matrices across the band and reports the largest disagreement, which is rounding error</figcaption>
+  </figure>
+
+  <p class="t">Read right to left, it turns a series stub into a shunt one. Applied stage by stage, the identities move every series stub to a shunt position and leave a filter of shunt stubs separated by unit elements, which is a printable layout. The unit elements also physically separate the stubs, which the lumped prototype never had to do.</p>
+</section>
+
+<section class="blk" id="guided">
+  <h2>A quarter wave on the board</h2>
+  <p class="t">Every length in this chapter is in <b>guide</b> wavelengths, $\lambda_g = \lambda_0/\sqrt{\varepsilon_{\text{eff}}}$, measured along the line itself. On microstrip that brings in chapter 05's two corrections. $\varepsilon_{\text{eff}}$ depends on the track's width, so a quarter-wave transformer section, narrower or wider than the line it matches, has a different $\lambda_g$ and must be cut to its own length rather than the main line's. And dispersion raises $\varepsilon_{\text{eff}}$ with frequency, so the section is electrically slightly longer above $f_0$ than a non-dispersive model predicts, which shifts and tilts the band in the figures above.</p>
 </section>
 
 <section class="blk" id="check">
@@ -413,6 +501,247 @@ function qwtGamma(RL, Z1, fr){
     c.textAlign = 'left'; c.fillStyle = C.ink3;
     c.fillText('inductive', L+8, py(2.6));
     c.fillText('capacitive', L+8, py(-2.6));
+  }, false);
+})();
+
+/* ---- complex arithmetic for the figures below ---- */
+function q9(r, i){ return { r: r, i: i }; }
+function qa(a, b){ return q9(a.r + b.r, a.i + b.i); }
+function qs(a, b){ return q9(a.r - b.r, a.i - b.i); }
+function qm(a, b){ return q9(a.r*b.r - a.i*b.i, a.r*b.i + a.i*b.r); }
+function qd(a, b){ var d = b.r*b.r + b.i*b.i; return q9((a.r*b.r + a.i*b.i)/d, (a.i*b.r - a.r*b.i)/d); }
+function qabs(a){ return Math.hypot(a.r, a.i); }
+function mm2(A, B){
+  return [[qa(qm(A[0][0], B[0][0]), qm(A[0][1], B[1][0])), qa(qm(A[0][0], B[0][1]), qm(A[0][1], B[1][1]))],
+          [qa(qm(A[1][0], B[0][0]), qm(A[1][1], B[1][0])), qa(qm(A[1][0], B[0][1]), qm(A[1][1], B[1][1]))]];
+}
+
+/* ---- multisection transformers and an exponential taper ----
+   Design from the small-reflection theory; response by cascading every
+   section as an exact line, so the two can be compared. */
+(function(){
+  var cv = document.getElementById('mtfig');
+  if(!cv) return;
+  var Z0 = 50, kind = 'cheb', N = 3, RL = 100, GM = 0.05, FM = 2;
+  function binom(n, k){ var r = 1; for(var i = 1; i <= k; i++) r = r*(n - k + i)/i; return r; }
+  function cheT(n, x){ return Math.abs(x) <= 1 ? Math.cos(n*Math.acos(x)) : (x < 0 && n % 2 ? -1 : 1)*Math.cosh(n*Math.acosh(Math.abs(x))); }
+  /* the junction reflections Gamma_0..Gamma_N, in the ln form */
+  function gammas(){
+    var r = Math.log(RL/Z0), g = [];
+    var useBin = kind === 'bin' || Math.abs(r/2) <= GM;
+    if(useBin){ for(var n = 0; n <= N; n++) g.push(0.5*Math.pow(2, -N)*binom(N, n)*r); return { g: g, cheb: false }; }
+    var g0 = r/2, sec = Math.cosh(Math.acosh(Math.abs(g0)/GM)/N), A = (g0 < 0 ? -1 : 1)*GM, M = 256, ck = [];
+    for(var k = 0; k <= N; k++){
+      var s = 0; for(var m = 0; m < M; m++){ var th = Math.PI*m/M; s += cheT(N, sec*Math.cos(th))*Math.cos(k*th); }
+      ck.push((k === 0 ? 1 : 2)*s/M);
+    }
+    for(var n2 = 0; n2 <= N; n2++){ var kk = Math.abs(N - 2*n2); g.push(kk === 0 ? A*ck[0] : A*ck[kk]/2); }
+    return { g: g, cheb: true, sec: sec };
+  }
+  function sections(){
+    var g = gammas().g, z = [], lz = Math.log(Z0);
+    for(var n = 0; n < N; n++){ lz += 2*g[n]; z.push(Math.exp(lz)); }
+    return z;
+  }
+  /* exact |Gamma| at f/f0: cascade from the load, each section a line of its own Z */
+  function exact(f){
+    var zl = q9(RL, 0), secs, th;
+    if(kind === 'taper'){
+      var K = 200, Lq = N, r = Math.log(RL/Z0); secs = [];
+      for(var k = 0; k < K; k++) secs.push(Z0*Math.exp(r*(k + 0.5)/K));
+      th = Math.PI/2*f*Lq/K;
+    } else { secs = sections(); th = Math.PI/2*f; }
+    var t = Math.tan(th);
+    for(var i = secs.length - 1; i >= 0; i--){
+      var Zi = secs[i];
+      zl = qm(q9(Zi, 0), qd(qa(zl, q9(0, Zi*t)), qa(q9(Zi, 0), qm(q9(0, t), zl))));
+    }
+    return qabs(qd(qs(zl, q9(Z0, 0)), qa(zl, q9(Z0, 0))));
+  }
+  function theory(f){
+    if(kind === 'taper'){ var bl = Math.PI/2*f*N; return 0.5*Math.abs(Math.log(RL/Z0))*Math.abs(bl < 1e-9 ? 1 : Math.sin(bl)/bl); }
+    var g = gammas().g, th = Math.PI/2*f, re = 0, im = 0;
+    for(var n = 0; n <= N; n++){ re += g[n]*Math.cos(2*n*th); im -= g[n]*Math.sin(2*n*th); }
+    return Math.hypot(re, im);
+  }
+  function band(){
+    /* the contiguous run below GM around f0 (or, for the taper, from its lower edge up) */
+    var lo = null, hi = null, st = 0.001;
+    if(kind === 'taper'){
+      /* scanning down from the top: the band is everything above the last excursion */
+      for(var f = FM; f > 0; f -= 0.002) if(exact(f) > GM){ lo = f + 0.002; break; }
+      if(lo === null) lo = 0;
+      return { lo: lo < FM ? lo : null, hi: lo < FM ? FM : null };
+    }
+    if(exact(1) > GM) return { lo: null, hi: null };
+    for(lo = 1; lo > 0 && exact(lo - st) <= GM; lo -= st);
+    for(hi = 1; hi < FM && exact(hi + st) <= GM; hi += st);
+    return { lo: lo, hi: hi };
+  }
+  function sync(){
+    document.getElementById('mt-nv').textContent = N;
+    document.getElementById('mt-rv').textContent = RL;
+    var b = band(), cells = [];
+    if(kind === 'taper'){
+      cells.push(['length', N + ' &times; &lambda;/4']);
+      cells.push(['|&Gamma;| &le; 0.05 above', b.lo === null ? '&mdash;' : b.lo.toFixed(2) + ' f<sub>0</sub>']);
+    } else {
+      var z = sections(), gg = gammas();
+      cells.push(['sections, &Omega;', z.map(function(v){ return v.toFixed(1); }).join(', ')]);
+      cells.push(['band at |&Gamma;| &le; 0.05', b.lo === null ? '&mdash;' : (100*(b.hi - b.lo)).toFixed(0) + ' %']);
+      if(kind === 'cheb' && !gg.cheb) cells.push(['note', 'mismatch below the ripple: binomial used']);
+    }
+    var mx = 0; for(var f = 0.02; f <= FM; f += 0.005) mx = Math.max(mx, Math.abs(exact(f) - theory(f)));
+    cells.push(['theory vs exact, worst', mx.toFixed(4)]);
+    document.getElementById('mt-ro').innerHTML = cells.map(function(c){ return '<div class="rd"><dt>' + c[0] + '</dt><dd>' + c[1] + '</dd></div>'; }).join('');
+  }
+  document.getElementById('mt-k').addEventListener('change', function(){ kind = this.value; sync(); EM.redrawStatic(); });
+  document.getElementById('mt-n').addEventListener('input', function(){ N = +this.value; sync(); EM.redrawStatic(); });
+  document.getElementById('mt-r').addEventListener('input', function(){ RL = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 46, R = 14, T = 16, B = 34, YM = Math.max(0.2, Math.ceil(Math.abs((RL - Z0)/(RL + Z0))*10)/10);
+    function px(f){ return L + f/FM*(W - L - R); }
+    function py(v){ return (H - B) - v/YM*(H - T - B); }
+    var b = band();
+    if(b.lo !== null){ c.fillStyle = C.accfill; c.fillRect(px(b.lo), T, px(b.hi) - px(b.lo), H - T - B); }
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.lineTo(W - R, H - B); c.stroke();
+    c.strokeStyle = C.ink3; c.setLineDash([3, 3]);
+    c.beginPath(); c.moveTo(L, py(GM)); c.lineTo(W - R, py(GM)); c.stroke(); c.setLineDash([]);
+    c.save(); c.beginPath(); c.rect(L, T, W - L - R, H - T - B); c.clip();
+    c.strokeStyle = C.ink2; c.lineWidth = 1.4; c.setLineDash([5, 4]); c.beginPath();
+    for(var k = 0; k <= 400; k++){ var f = FM*k/400; c.lineTo(px(f), py(theory(f))); }
+    c.stroke(); c.setLineDash([]);
+    c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
+    for(var k2 = 0; k2 <= 400; k2++){ var f2 = FM*k2/400; c.lineTo(px(f2), py(exact(f2))); }
+    c.stroke();
+    c.restore();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
+    c.fillText(YM.toFixed(1), L - 6, py(YM) + 8); c.fillText('0.05', L - 6, py(GM) + 4); c.fillText('0', L - 6, py(0) + 4);
+    c.textAlign = 'center';
+    c.fillText('0', px(0), H - B + 15);
+    EM.rich(c, [['f','n'], ['0','b']], px(1), H - B + 15, 11, 'center');
+    EM.rich(c, [['2f','n'], ['0','b']], px(2) - 8, H - B + 15, 11, 'center');
+    c.textAlign = 'left'; EM.rich(c, [['|Γ|','n']], L + 6, T + 10, 11, 'left');
+  }, false);
+})();
+
+/* ---- a third-order low-pass, lumped against Richards stubs ----
+   Both cascaded as networks between 1-ohm ends; S21 = 2/(A + B + C + D). */
+(function(){
+  var cv = document.getElementById('rcfig');
+  if(!cv) return;
+  var G = [1, 2, 1], FM = 4.5, YM = 40;
+  function s21(f, stubs){
+    var w = stubs ? Math.tan(Math.PI/4*f) : f, ONE = q9(1, 0), ZERO = q9(0, 0);
+    var Ms = [[[ONE, q9(0, w*G[0])], [ZERO, ONE]], [[ONE, ZERO], [q9(0, w*G[1]), ONE]], [[ONE, q9(0, w*G[2])], [ZERO, ONE]]];
+    var M = mm2(mm2(Ms[0], Ms[1]), Ms[2]);
+    var den = qa(qa(M[0][0], M[0][1]), qa(M[1][0], M[1][1]));
+    return 2/qabs(den);
+  }
+  function db(v){ return -20*Math.log10(Math.max(v, 1e-12)); }
+  (function sync(){
+    document.getElementById('rc-c').textContent = db(s21(1, false)).toFixed(2) + ' / ' + db(s21(1, true)).toFixed(2) + ' dB';
+    /* the stub filter's response returns to zero loss once per period: find
+       where, beyond the stop at 2fc, the loss is smallest */
+    var per = null, best = Infinity;
+    for(var f = 2.5; f < 6; f += 0.0005){ var v = db(s21(f, true)); if(v < best){ best = v; per = f; } }
+    document.getElementById('rc-p').innerHTML = per ? per.toFixed(2) + ' f<sub>c</sub>' : '&mdash;';
+    var two = db(s21(2 - 1e-9, true));
+    document.getElementById('rc-2').innerHTML = db(s21(2, false)).toFixed(1) + ' / ' + (two > 200 ? '&infin;' : two.toFixed(0)) + ' dB';
+  })();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 46, R = 14, T = 16, B = 34;
+    function px(f){ return L + f/FM*(W - L - R); }
+    function py(d){ return T + Math.min(d, YM)/YM*(H - T - B); }
+    c.strokeStyle = C.line; c.lineWidth = 1;
+    [1, 2, 3, 4].forEach(function(f){ c.beginPath(); c.moveTo(px(f) + .5, T); c.lineTo(px(f) + .5, H - B); c.stroke(); });
+    for(var d = 10; d <= YM; d += 10){ c.beginPath(); c.moveTo(L, py(d) + .5); c.lineTo(W - R, py(d) + .5); c.stroke(); }
+    c.strokeStyle = C.line2;
+    c.beginPath(); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.moveTo(L, py(0) + .5); c.lineTo(W - R, py(0) + .5); c.stroke();
+    [[false, C.h], [true, C.e]].forEach(function(q){
+      c.strokeStyle = q[1]; c.lineWidth = 2.4; c.beginPath();
+      for(var k = 0; k <= 900; k++){ var f = FM*k/900 + 1e-6; c.lineTo(px(f), py(db(s21(f, q[0])))); }
+      c.stroke();
+    });
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
+    for(var d2 = 0; d2 <= YM; d2 += 10) c.fillText(d2 ? '−' + d2 : '0', L - 6, py(d2) + 4);
+    c.textAlign = 'center';
+    [[1, 'f'], [2, '2f'], [3, '3f'], [4, '4f']].forEach(function(q){ EM.rich(c, [[q[1], 'n'], ['c', 'b']], px(q[0]), H - B + 15, 11, 'center'); });
+    c.textAlign = 'left';
+    c.fillStyle = C.h; c.fillText('lumped', px(2.6), py(36));
+    c.fillStyle = C.e; c.fillText('stubs', px(3.55), py(6));
+    c.fillStyle = C.ink3; c.fillText('dB', L + 6, T + 10);
+  }, false);
+})();
+
+/* ---- a Kuroda identity, drawn and checked ---- */
+(function(){
+  var cv = document.getElementById('kufig');
+  if(!cv) return;
+  var Z1 = 1.3, Z2 = 0.7, n2 = 1 + Z2/Z1;
+  function ue(Z, th){ var k = Math.cos(th), t = Math.tan(th); return [[q9(k, 0), q9(0, Z*t*k)], [q9(0, t*k/Z), q9(k, 0)]]; }
+  function ser(Z, th){ return [[q9(1, 0), q9(0, Z*Math.tan(th))], [q9(0, 0), q9(1, 0)]]; }
+  function sho(Z, th){ return [[q9(1, 0), q9(0, 0)], [q9(0, Math.tan(th)/Z), q9(1, 0)]]; }
+  (function(){
+    var worst = 0;
+    for(var f = 0.001; f < 4; f += 0.001){
+      var th = Math.PI/4*f;
+      if(Math.abs(Math.cos(th)) < 0.05) continue;            /* skip the stubs' own poles */
+      var A = mm2(ue(Z1, th), sho(Z2, th)), Bm = mm2(ser(Z1/n2, th), ue(Z2/n2, th)), d = 0;
+      for(var i = 0; i < 2; i++) for(var j = 0; j < 2; j++) d = Math.max(d, qabs(qs(A[i][j], Bm[i][j])));
+      worst = Math.max(worst, d);
+    }
+    document.getElementById('ku-d').textContent = worst.toExponential(1);
+  })();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d');
+    c.clearRect(0, 0, cv._w, cv._h);
+    var nar = cv._w < 560;
+    if(nar && !cv._grown){ cv._grown = true; cv.style.height = '360px'; cv._h0 = null; EM.fit(cv); }
+    if(!nar && cv._grown){ cv._grown = false; cv.style.height = '220px'; cv._h0 = null; EM.fit(cv); }
+    var DW = nar ? 320 : 660, DH = nar ? 330 : 170;
+    EM.design(c, cv, DW, DH, true);
+    var rich = EM.rich;
+    function rails(ox, oy, x0, x1){ c.strokeStyle = C.ink2; c.lineWidth = 2; c.beginPath(); c.moveTo(ox + x0, oy + 120); c.lineTo(ox + x1, oy + 120); c.stroke(); }
+    function top(ox, oy, x0, x1){ c.strokeStyle = C.ink2; c.lineWidth = 2; c.beginPath(); c.moveTo(ox + x0, oy + 50); c.lineTo(ox + x1, oy + 50); c.stroke(); }
+    function ueBox(ox, oy, x0, x1, segs){
+      c.fillStyle = C.accfill; c.strokeStyle = C.acc; c.lineWidth = 1.6;
+      c.fillRect(ox + x0, oy + 44, x1 - x0, 12); c.strokeRect(ox + x0, oy + 44, x1 - x0, 12);
+      c.fillRect(ox + x0, oy + 114, x1 - x0, 12); c.strokeRect(ox + x0, oy + 114, x1 - x0, 12);
+      c.fillStyle = C.acc; rich(c, segs, ox + (x0 + x1)/2, oy + 36, 12, 'center');
+    }
+    /* network 1: UE(Z1), then a shunt open stub (Z2) */
+    function net1(ox, oy){
+      top(ox, oy, 0, 30); ueBox(ox, oy, 30, 140, [['UE, Z','n'], ['1','b']]); top(ox, oy, 140, 290);
+      rails(ox, oy, 0, 290);
+      c.strokeStyle = C.h; c.lineWidth = 2.4; c.beginPath(); c.moveTo(ox + 215, oy + 50); c.lineTo(ox + 215, oy + 104); c.stroke();
+      c.fillStyle = C.h; rich(c, [['open stub, Z','n'], ['2','b']], ox + 207, oy + 90, 12, 'right');
+    }
+    /* network 2: a series shorted stub (Z1/n^2), then UE(Z2/n^2) */
+    function net2(ox, oy){
+      top(ox, oy, 0, 50); top(ox, oy, 90, 150);
+      c.strokeStyle = C.h; c.lineWidth = 2.4;
+      c.beginPath(); c.moveTo(ox + 50, oy + 50); c.lineTo(ox + 50, oy + 92); c.lineTo(ox + 90, oy + 92); c.lineTo(ox + 90, oy + 50); c.stroke();
+      c.fillStyle = C.h; rich(c, [['shorted, Z','n'], ['1','b'], ['/n','n'], ['2','p']], ox + 70, oy + 108, 12, 'center');
+      ueBox(ox, oy, 150, 260, [['UE, Z','n'], ['2','b'], ['/n','n'], ['2','p']]); top(ox, oy, 260, 290);
+      rails(ox, oy, 0, 290);
+    }
+    c.font = '20px ' + MONO; c.fillStyle = C.ink; c.textAlign = 'center';
+    if(nar){ net1(15, 0); c.fillText('≡', 160, 168); net2(15, 170); }
+    else { net1(10, 10); c.fillText('≡', 330, 98); net2(360, 10); }
+    c.restore();
   }, false);
 })();
 </script>

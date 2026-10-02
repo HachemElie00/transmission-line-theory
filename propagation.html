@@ -177,9 +177,9 @@
     <figcaption class="cap">one fixed metre of line at 1 GHz &mdash; the window never rescales, so changing L&prime; or C&prime; changes how many cycles fit inside it. &alpha; in Np/m, &beta; in rad/m, &lambda; in cm, Z<sub>0</sub> in &Omega;.</figcaption>
   </figure>
 
-  <p class="t">The window is a <b>fixed metre of line</b>, so it never rescales under you. Three things are worth doing deliberately:</p>
+  <p class="t">The window is a <b>fixed metre of line</b>, so it never rescales under you.</p>
 
-  <p class="t">The two presets on the right are the ones worth understanding, because together they separate the two things $L'$ and $C'$ control. <b>$Z_0$ depends on their ratio; $\lambda$ depends on their product.</b> So you can move one while holding the other fixed:</p>
+  <p class="t">The last two presets are the ones worth understanding, because together they separate the two things $L'$ and $C'$ control. <b>$Z_0$ depends on their ratio; $\lambda$ depends on their product.</b> So you can move one while holding the other fixed:</p>
 
   <div class="tw"><table>
     <tr><th>Preset</th><th>What changes</th><th>What does not</th></tr>
@@ -225,6 +225,74 @@
       <p>Three things to take from this. The <b>phase</b> constant is unchanged to first order, so a low-loss line still has essentially no dispersion. The attenuation splits cleanly into a conductor term and a dielectric term, which is why datasheets plot two loss mechanisms. And $Z_0$ returns to its real lossless value, which is why treating it as a real number is defensible at RF and indefensible at audio.</p>
     </div>
   </details>
+</section>
+
+<section class="blk" id="heaviside">
+  <h2>A lossy line that does not distort</h2>
+  <p class="t">Loss alone does not spread a pulse. What spreads it is loss and phase velocity that <b>depend on frequency</b>, so that the pulse's components arrive at different strengths and different times. Heaviside noticed that one special balance between the four parameters removes the frequency dependence entirely, loss and all:</p>
+
+  <div class="eq box">
+    $$\frac{R'}{L'} = \frac{G'}{C'} \quad\Longrightarrow\quad \alpha = \sqrt{R'G'}, \qquad \beta = \omega\sqrt{L'C'}, \qquad Z_0 = \sqrt{\frac{L'}{C'}}$$
+    <span class="note">exactly, at every frequency: the line attenuates every component equally and delays every component equally</span>
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; why the balance makes everything frequency-independent</summary>
+    <div class="body">
+      <p>Call the common ratio $k = R'/L' = G'/C'$. Then both per-unit-length quantities share a factor:</p>
+      <div class="eq">$$Z' = R' + j\omega L' = L'(k + j\omega), \qquad Y' = G' + j\omega C' = C'(k + j\omega)$$</div>
+      <p>so the square roots come out exactly, with no approximation:</p>
+      <div class="eq">$$\gamma = \sqrt{Z'Y'} = \sqrt{L'C'}\,(k + j\omega), \qquad Z_0 = \sqrt{\frac{Z'}{Y'}} = \sqrt{\frac{L'}{C'}}$$</div>
+      <p>The real part of $\gamma$ is $k\sqrt{L'C'} = \sqrt{R'G'}$, independent of $\omega$; the imaginary part is $\omega\sqrt{L'C'}$, proportional to $\omega$, so $u_p = 1/\sqrt{L'C'}$ for every component. A signal arrives smaller by $e^{-\alpha z}$ and later by $z\sqrt{L'C'}$, and otherwise unchanged.</p>
+    </div>
+  </details>
+
+  <figure class="fig">
+    <canvas id="hvfig" class="static" style="height:280px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="hv-g">G&prime; / Heaviside value</label><input type="range" id="hv-g" min="0" max="2" step="0.01" value="0"><output id="hv-gv">0.00</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>&alpha; at low f</dt><dd id="hv-a0">0.000</dd></div>
+      <div class="rd"><dt>&alpha; at high f</dt><dd id="hv-a1">0.250</dd></div>
+      <div class="rd"><dt>peak, 4 units on</dt><dd id="hv-pk">0.42</dd></div>
+      <div class="rd"><dt>width, 4 units on</dt><dd id="hv-w">1.30&times;</dd></div>
+    </dl>
+    <figcaption class="cap">a gaussian pulse after travelling 0, 2 and 4 units of line, with L&prime; = C&prime; = 1 and R&prime; = 0.5, each scaled to its own peak and plotted against time measured from its own lossless arrival. each is computed by summing its spectrum through e<sup>&minus;&gamma;z</sup>. at a slider value of 1 the line satisfies R&prime;/L&prime; = G&prime;/C&prime; and the three shapes coincide</figcaption>
+  </figure>
+
+  <p class="t">With $G' = 0$ the low frequencies are hardly attenuated while the high ones are, so the pulse loses its sharp parts and smears into a long tail: this is what limited the first undersea telegraph cables to a few words a minute. A real cable has $G'/C'$ far smaller than $R'/L'$, and Heaviside's remedy was to raise $L'$, not $G'$, since adding leakage wastes signal. Loading coils spaced about every two kilometres did exactly that on telephone lines for most of the twentieth century.</p>
+</section>
+
+<section class="blk" id="lossparts">
+  <h2>Where the loss comes from, across frequency</h2>
+  <p class="t">The low-loss result splits the attenuation into a part from each lossy parameter:</p>
+
+  <div class="eq box">
+    $$\alpha = \alpha_c + \alpha_d, \qquad \alpha_c = \frac{R'}{2Z_0} \propto \sqrt{f}, \qquad \alpha_d = \frac{G'Z_0}{2} = \frac{\beta}{2}\tan\delta \propto f$$
+    <span class="note">conductor loss grows as the square root of frequency, dielectric loss in proportion to it; power falls as $e^{-2\alpha z}$</span>
+  </div>
+
+  <figure class="fig">
+    <canvas id="lpfig" style="height:280px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="lp-f">frequency</label><input type="range" id="lp-f" min="6" max="11" step="0.01" value="9"><output id="lp-fv">1.00 GHz</output></div>
+      <div class="ctl"><label for="lp-d">dielectric</label>
+        <select id="lp-d" aria-label="Dielectric">
+          <option value="0" selected>polyethylene</option>
+          <option value="1">FR-4</option>
+        </select></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>conductor</dt><dd id="lp-c">0.35 dB/m</dd></div>
+      <div class="rd"><dt>dielectric</dt><dd id="lp-dd">0.02 dB/m</dd></div>
+      <div class="rd"><dt>power left after 10 m</dt><dd id="lp-p">43 %</dd></div>
+      <div class="rd"><dt>the two equal at</dt><dd id="lp-x">164 GHz</dd></div>
+    </dl>
+    <figcaption class="cap">the coax of chapter 03, a = 0.45 mm and b = 1.47 mm with smooth copper conductors, on logarithmic axes: the two attenuations and their sum. a real braided cable loses more than this idealised one, but by a factor, not a different slope</figcaption>
+  </figure>
+
+  <p class="t">On a good coax dielectric the conductor dominates through the whole microwave range, and loss per metre roughly doubles for every factor of four in frequency. On FR-4 the dielectric takes over from a few tens of megahertz upward, its loss rising in proportion to frequency, which is why high-speed board design moves to lower-loss laminates long before the copper becomes the problem. In both cases a datasheet's dB per 100 m is this sum, measured.</p>
 </section>
 
 <section class="blk" id="check">
@@ -493,6 +561,160 @@ function lineConstants(Rp, Gp, Lp, Cp, f){
     c.fillText('−45°', W-R+7, pyA(-45)+4);
     c.fillStyle = C.ink3; c.textAlign = 'center';
     c.fillText('frequency (log scale)', (L + W-R)/2, H-4);
+  }, false);
+})();
+
+/* ---- a pulse on a lossy line, against the Heaviside condition ----
+   v(z, t') = (1/pi) Int_0^inf V(w) e^{-alpha z} cos(w t' + w z - beta z) dw,
+   with t' the time after the lossless arrival z sqrt(L'C'). V(w) is the
+   gaussian's spectrum, exp(-w^2/2). L' = C' = 1, R' = 0.5, G' variable. */
+(function(){
+  var cv = document.getElementById('hvfig');
+  if(!cv) return;
+  var R = 0.5, frac = 0, ZS = [0, 2, 4], NW = 500, WM = 6, T0 = -4, T1 = 10;
+  function gam(w, g){
+    var ar = R*g - w*w, ai = w*(g + R), m = Math.sqrt(Math.hypot(ar, ai)), th = Math.atan2(ai, ar)/2;
+    return [m*Math.cos(th), m*Math.sin(th)];
+  }
+  function shapes(){
+    var g = frac*R, out = [];
+    ZS.forEach(function(z){
+      var amp = [], ph = [];
+      for(var k = 0; k <= NW; k++){
+        var w = WM*k/NW, G = gam(w, g), wt = (k === 0 || k === NW ? 1 : (k % 2 ? 4 : 2));
+        amp.push(wt*Math.exp(-w*w/2)*Math.exp(-G[0]*z)); ph.push(w*z - G[1]*z);
+      }
+      var pts = [];
+      for(var i = 0; i <= 280; i++){
+        var t = T0 + (T1 - T0)*i/280, s = 0;
+        for(var k2 = 0; k2 <= NW; k2++) s += amp[k2]*Math.cos(WM*k2/NW*t + ph[k2]);
+        pts.push(s*(WM/NW)/3/Math.PI);
+      }
+      out.push(pts);
+    });
+    return out;
+  }
+  function fwhm(p){
+    var pk = Math.max.apply(null, p), i0 = p.indexOf(pk), a = i0, b = i0;
+    while(a > 0 && p[a] > pk/2) a--;
+    while(b < p.length - 1 && p[b] > pk/2) b++;
+    return (b - a)*(T1 - T0)/280;
+  }
+  var cache = null;
+  function sync(){
+    cache = shapes();
+    var g = frac*R;
+    document.getElementById('hv-gv').textContent = frac.toFixed(2);
+    document.getElementById('hv-a0').textContent = Math.sqrt(R*g).toFixed(3);
+    document.getElementById('hv-a1').textContent = ((R + g)/2).toFixed(3);
+    var p0 = Math.max.apply(null, cache[0]), p2 = Math.max.apply(null, cache[2]);
+    document.getElementById('hv-pk').textContent = (p2/p0).toFixed(3);
+    document.getElementById('hv-w').innerHTML = (fwhm(cache[2])/fwhm(cache[0])).toFixed(2) + '&times;';
+  }
+  document.getElementById('hv-g').addEventListener('input', function(){ frac = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 20, Rr = 16, T = 18, B = 34;
+    function px(t){ return L + (t - T0)/(T1 - T0)*(W - L - Rr); }
+    function py(v){ return (H - B) - v*(H - T - B)*0.95; }
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L, py(0) + .5); c.lineTo(W - Rr, py(0) + .5); c.stroke();
+    c.strokeStyle = C.line; c.beginPath(); c.moveTo(px(0) + .5, T); c.lineTo(px(0) + .5, H - B); c.stroke();
+    var cols = [C.ink3, C.e, C.h], dash = [[5, 4], [], []];
+    cache.forEach(function(p, n){
+      var pk = Math.max.apply(null, p);
+      c.strokeStyle = cols[n]; c.lineWidth = n ? 2.4 : 1.6; c.setLineDash(dash[n]);
+      c.beginPath();
+      p.forEach(function(v, i){ c.lineTo(px(T0 + (T1 - T0)*i/280), py(v/pk)); });
+      c.stroke(); c.setLineDash([]);
+    });
+    c.font = '11.5px ' + MONO; c.textAlign = 'left';
+    [['z = 0', C.ink3], ['z = 2', C.e], ['z = 4', C.h]].forEach(function(q, n){
+      c.fillStyle = q[1]; c.fillText(q[0], W - Rr - 70, T + 14 + n*17);
+    });
+    c.fillStyle = C.ink3; c.textAlign = 'center';
+    c.fillText('lossless arrival', px(0), H - B + 15);
+    c.textAlign = 'right'; c.fillText('later →', W - Rr, H - B + 15);
+  }, false);
+})();
+
+/* ---- conductor and dielectric attenuation across frequency ---- */
+(function(){
+  var cv = document.getElementById('lpfig');
+  if(!cv) return;
+  var MU0 = 4e-7*Math.PI, A = 0.45e-3, B = 1.47e-3, SIG = 5.8e7, C0 = 299792458;
+  var DIEL = [{ er: 2.25, td: 2e-4 }, { er: 4.4, td: 0.02 }], di = 0, lf = 9, X0 = 6, X1 = 11;
+  var NPDB = 20/Math.LN10;
+  function z0(){ return 60/Math.sqrt(DIEL[di].er)*Math.log(B/A); }
+  function ac(f){ return Math.sqrt(Math.PI*f*MU0/SIG)/(2*Math.PI)*(1/A + 1/B)/(2*z0()); }
+  function ad(f){ return Math.PI*f*Math.sqrt(DIEL[di].er)/C0*DIEL[di].td; }     /* beta/2 tan(delta) */
+  function fq(f){ return f >= 1e9 ? (f/1e9).toPrecision(3) + ' GHz' : (f/1e6).toPrecision(3) + ' MHz'; }
+  function db(v){ return v < 0.1 ? v.toPrecision(2) : v.toFixed(2); }
+  function sync(){
+    var f = Math.pow(10, lf), a1 = ac(f), a2 = ad(f);
+    document.getElementById('lp-fv').textContent = fq(f);
+    document.getElementById('lp-c').textContent = db(a1*NPDB) + ' dB/m';
+    document.getElementById('lp-dd').textContent = db(a2*NPDB) + ' dB/m';
+    document.getElementById('lp-p').textContent = (100*Math.exp(-2*(a1 + a2)*10)).toPrecision(3) + ' %';
+    /* ac = k sqrt(f), ad = m f: equal where sqrt(f) = k/m */
+    var k = ac(1), m = ad(1);
+    document.getElementById('lp-x').textContent = fq(Math.pow(k/m, 2));
+  }
+  document.getElementById('lp-f').addEventListener('input', function(){ lf = +this.value; sync(); EM.redrawStatic(); });
+  document.getElementById('lp-d').addEventListener('change', function(){ di = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 54, R = 14, T = 14, Bm = 36;
+    var lo = Infinity, hi = -Infinity;
+    for(var k = 0; k <= 50; k++){
+      var f = Math.pow(10, X0 + (X1 - X0)*k/50);
+      [ac(f), ad(f), ac(f) + ad(f)].forEach(function(v){ var l = Math.log10(v*NPDB); lo = Math.min(lo, l); hi = Math.max(hi, l); });
+    }
+    var Y0 = Math.floor(lo), Y1 = Math.ceil(hi);
+    function px(x){ return L + (x - X0)/(X1 - X0)*(W - L - R); }
+    function py(v){ return (H - Bm) - (Math.log10(v) - Y0)/(Y1 - Y0)*(H - T - Bm); }
+    c.strokeStyle = C.line; c.lineWidth = 1;
+    for(var gx = X0; gx <= X1; gx++){ c.beginPath(); c.moveTo(px(gx) + .5, T); c.lineTo(px(gx) + .5, H - Bm); c.stroke(); }
+    for(var gy = Y0; gy <= Y1; gy++){ c.beginPath(); c.moveTo(L, py(Math.pow(10, gy)) + .5); c.lineTo(W - R, py(Math.pow(10, gy)) + .5); c.stroke(); }
+    c.strokeStyle = C.line2;
+    c.beginPath(); c.moveTo(L + .5, T); c.lineTo(L + .5, H - Bm); c.lineTo(W - R, H - Bm); c.stroke();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3;
+    for(var ly = Y0; ly <= Y1; ly++){
+      EM.rich(c, [['10','n'], [ly < 0 ? '−' + (-ly) : String(ly),'p']], L - 8, py(Math.pow(10, ly)) + 4, 11, 'right');
+    }
+    [['1 MHz', 6], ['1 GHz', 9], ['100 GHz', 11]].forEach(function(q){
+      c.textAlign = q[1] === 11 ? 'right' : 'center'; c.fillText(q[0], px(q[1]), H - Bm + 15);
+    });
+    c.textAlign = 'left'; c.fillText('dB/m', L + 6, T + 12);
+    c.textAlign = 'right'; c.fillText('frequency', W - R, H - 5);
+    var series = [[ac, C.e, 'conductor', 2.2], [ad, C.h, 'dielectric', 2.2], [function(f){ return ac(f) + ad(f); }, C.ink, 'total', 2.8]];
+    c.save(); c.beginPath(); c.rect(L, T, W - L - R, H - T - Bm); c.clip();
+    series.forEach(function(s){
+      c.strokeStyle = s[1]; c.lineWidth = s[3]; c.beginPath();
+      for(var j = 0; j <= 200; j++){ var x = X0 + (X1 - X0)*j/200; c.lineTo(px(x), py(s[0](Math.pow(10, x))*NPDB)); }
+      c.stroke();
+    });
+    c.restore();
+    /* names near the left end, where the conductor and dielectric curves are furthest apart */
+    series.forEach(function(s, n){
+      var x = X0 + 0.3, y = py(s[0](Math.pow(10, x))*NPDB) + (n === 2 ? -8 : 16);
+      if(y < T + 10 || y > H - Bm - 4) return;
+      c.font = '11.5px ' + MONO; c.textAlign = 'left';
+      var tw = c.measureText(s[2]).width;
+      c.fillStyle = C.sunk; c.fillRect(px(x) - 2, y - 11, tw + 4, 15);
+      c.fillStyle = s[1]; c.fillText(s[2], px(x), y);
+    });
+    /* the frequency cursor */
+    c.strokeStyle = C.ink; c.lineWidth = 1; c.setLineDash([2, 3]);
+    c.beginPath(); c.moveTo(px(lf), T); c.lineTo(px(lf), H - Bm); c.stroke(); c.setLineDash([]);
   }, false);
 })();
 </script>

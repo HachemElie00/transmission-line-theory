@@ -225,6 +225,32 @@
   </div>
 </section>
 
+<section class="blk" id="current">
+  <h2>The current pattern, and where the energy sits</h2>
+  <p class="t">The current has a standing pattern too, built from the same two waves with the reflected one subtracted rather than added:</p>
+
+  <div class="eq">$$Z_0|I(l)| = |V_0^+|\;\bigl|1 - \Gamma e^{-j2\beta l}\bigr|$$</div>
+
+  <p class="t">So wherever the voltage's rotating vector lines up with the fixed one, the current's opposes it. <b>Current maxima sit at voltage minima</b> and the reverse, a quarter wavelength apart, and at both kinds of point the two are in phase, so the impedance there is real: $S Z_0$ at a voltage maximum, $Z_0/S$ at a minimum.</p>
+
+  <figure class="fig">
+    <canvas id="vifig" style="height:280px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="vi-m">|&Gamma;|</label><input type="range" id="vi-m" min="0" max="1" step="0.01" value="0.5"><output id="vi-mv">0.50</output></div>
+      <div class="ctl"><label for="vi-p">&theta;<sub>r</sub></label><input type="range" id="vi-p" min="-180" max="180" step="1" value="60"><output id="vi-pv">60&deg;</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>power flow, every l</dt><dd id="vi-pw">0.750</dd></div>
+      <div class="rd"><dt>Z at a V max</dt><dd id="vi-zx">3.00 Z<sub>0</sub></dd></div>
+      <div class="rd"><dt>Z at a V min</dt><dd id="vi-zn">0.33 Z<sub>0</sub></dd></div>
+      <div class="rd"><dt>W<sub>e</sub>/W<sub>m</sub> over &lambda;/2</dt><dd id="vi-we">1.000</dd></div>
+    </dl>
+    <figcaption class="cap">the voltage and current envelopes, both scaled by the incident wave, and below them the time-averaged electric and magnetic energy stored per unit length, against distance from the load. power flow is in units of |V<sub>0</sub><sup>+</sup>|<sup>2</sup>/2Z<sub>0</sub>; the last readout integrates the two energies over half a wavelength</figcaption>
+  </figure>
+
+  <p class="t">Chapter 03 showed that a single travelling wave stores equal electric and magnetic energy at every point. A standing pattern breaks that locally: near a voltage maximum the energy is mostly electric, near a current maximum mostly magnetic. Over any half wavelength the two still balance exactly. And the net power flow, $(1 - |\Gamma|^2)\,|V_0^+|^2/2Z_0$, is the same at every point on a lossless line, because nothing between the points can absorb it. At $|\Gamma| = 1$ it is zero: energy sloshes between electric form at the voltage antinodes and magnetic form at the current antinodes, and none of it moves along the line on average.</p>
+</section>
+
 <section class="blk" id="reading">
   <h2>Reading a line backwards</h2>
   <p class="t">A detector cannot follow the carrier; it reads the envelope. That is enough, because the envelope's shape encodes $\Gamma$ completely. This figure is the one to keep in front of you.</p>
@@ -257,6 +283,80 @@
     <span class="lab">One picture holds the whole method</span>
     <p>Moving along the line rotates $\Gamma$ clockwise about the origin, one lap per $\lambda/2$. A maximum is where you cross the positive real axis, a minimum where you cross the negative one &mdash; half a lap apart, hence $\lambda/4$. That is the Smith chart in embryo, and once the rotation is automatic these problems stop being algebra.</p>
   </div>
+</section>
+
+<section class="blk" id="practice">
+  <h2>Measuring it in practice</h2>
+  <p class="t">Two refinements turn the four steps above into a procedure that works on a real bench.</p>
+
+  <p class="t"><b>A reference instead of a ruler.</b> The distance from a minimum to the load is hard to measure: the load sits behind a connector, and the probe's scale has an unknown zero. So replace the load with a short first. A short puts voltage minima exactly at the load plane and every $\lambda/2$ from it, and those positions on the scale become reference planes that are electrically identical to the load's position. Reconnect the load and measure how far the nearest minimum moved, toward the load or away from it:</p>
+
+  <div class="eq">$$\theta_r = 2\beta\,d_{\text{shift}} - \pi, \qquad d_{\text{shift}} \text{ measured from a reference minimum toward the generator}$$</div>
+
+  <p class="t">The connector, the unknown zero and any extra length of line between probe and load all cancel, because they are the same in both measurements.</p>
+
+  <p class="t"><b>Two points instead of one for a high SWR.</b> When the SWR is large the minimum is a deep, narrow notch and its depth is hard to read: the detector is near the bottom of its range and its square-law response stops being square. Measure its <i>width</i> instead. Find the two points either side of the minimum where the detected power is twice the minimum, a distance $\Delta$ apart:</p>
+
+  <div class="eq box">
+    $$S = \sqrt{1 + \frac{1}{\sin^2(\pi\Delta/\lambda)}} \;\approx\; \frac{\lambda}{\pi\Delta} \quad\text{for large } S$$
+    <span class="note">exact for a lossless line; the approximation is within 1 % once $S$ exceeds about 9</span>
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; the width of the minimum</summary>
+    <div class="body">
+      <p>Measure distance $d$ from the minimum. There the rotating vector points straight back, and the squared envelope is</p>
+      <div class="eq">$$|V(d)|^2 \propto 1 + |\Gamma|^2 - 2|\Gamma|\cos 2\beta d$$</div>
+      <p>which is $(1 - |\Gamma|)^2$ at $d = 0$. Setting it to twice that and using $1 - \cos 2x = 2\sin^2 x$:</p>
+      <div class="eq">$$(1 - |\Gamma|)^2 + 4|\Gamma|\sin^2\beta d = 2(1 - |\Gamma|)^2 \quad\Longrightarrow\quad \sin^2\beta d = \frac{(1-|\Gamma|)^2}{4|\Gamma|}$$</div>
+      <p>With $S = (1+|\Gamma|)/(1-|\Gamma|)$ one has $4|\Gamma|/(1-|\Gamma|)^2 = S^2 - 1$, so $\sin^2\beta d = 1/(S^2 - 1)$. The two points are at $\pm d$, so $\Delta = 2d$ and $\beta d = \pi\Delta/\lambda$; solving for $S$ gives the boxed result.</p>
+    </div>
+  </details>
+</section>
+
+<section class="blk" id="lossy">
+  <h2>On a lossy line, SWR depends on where you look</h2>
+  <p class="t">Everything above assumed a lossless line, where $|\Gamma|$ and the SWR are the same everywhere. With attenuation the reflected wave has travelled further than the incident one to reach any point, and has lost more on the way, so</p>
+
+  <div class="eq box">
+    $$|\Gamma(l)| = |\Gamma_L|\,e^{-2\alpha l} \qquad\Longrightarrow\qquad \text{RL}_{\text{in}} = \text{RL}_{\text{load}} + 2\times\text{(line loss in dB)}$$
+    <span class="note">the return loss seen at the input improves by twice the one-way loss: the reflection pays for the trip out and the trip back</span>
+  </div>
+
+  <figure class="fig">
+    <canvas id="lsfig" class="static" style="height:260px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="ls-a">loss, dB per &lambda;</label><input type="range" id="ls-a" min="0" max="1" step="0.01" value="0.5"><output id="ls-av">0.50</output></div>
+      <div class="ctl"><label for="ls-g">|&Gamma;<sub>L</sub>|</label><input type="range" id="ls-g" min="0.05" max="1" step="0.01" value="1"><output id="ls-gv">1.00</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>SWR at the load</dt><dd id="ls-s0">&infin;</dd></div>
+      <div class="rd"><dt>SWR 6&lambda; back</dt><dd id="ls-s1">3.00</dd></div>
+      <div class="rd"><dt>line loss, one way</dt><dd id="ls-ll">3.00 dB</dd></div>
+    </dl>
+    <figcaption class="cap">the voltage envelope along six wavelengths of lossy line, the load at the left; both waves are drawn shrinking toward the generator&rsquo;s end on the right as their own trip lengthens. the incident wave is taken as 1 at the generator end</figcaption>
+  </figure>
+
+  <p class="t">This is the trap the property brings: an SWR meter at the transmitter end of a long lossy cable reads a flattering number however bad the antenna is. A shorted cable six wavelengths long, with 0.5 dB of loss per wavelength, reads an SWR of 3 at its input instead of infinity. The loss that hides the mismatch is also eating the power, so a good reading there is evidence of loss as much as of a match.</p>
+</section>
+
+<section class="blk" id="buildup">
+  <h2>How the pattern forms</h2>
+  <p class="t">A standing wave is a steady state, and chapter 03's bounce diagram says how it gets there. Switch a sinusoid onto the line and only the incident wave exists at first; after one transit the first reflection starts back; after a round trip it is reflected again at the source, and so on. Each echo adds to the pattern, and the pattern converges geometrically, by a factor $|\Gamma_g\Gamma_L|$ per round trip, onto the envelope of the previous sections.</p>
+
+  <figure class="fig">
+    <canvas id="bufig" style="height:250px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="bu-g">&Gamma;<sub>g</sub></label><input type="range" id="bu-g" min="-0.9" max="0.9" step="0.05" value="-0.5"><output id="bu-gv">&minus;0.50</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>round trips so far</dt><dd id="bu-n">0</dd></div>
+      <div class="rd"><dt>|&Gamma;<sub>g</sub>&Gamma;<sub>L</sub>| per trip</dt><dd id="bu-q">0.40</dd></div>
+    </dl>
+    <figcaption class="cap">a sinusoid switched on at the generator, on the right, travelling toward a load with &Gamma;<sub>L</sub> = 0.8 on the left, 1.25 wavelengths away. every echo is summed exactly. dashed: the steady-state envelope it settles into. the animation restarts after twelve transits</figcaption>
+  </figure>
+
+  <p class="t">With a matched source the pattern is complete after a single round trip, since nothing re-reflects. With a strongly mismatched one it takes many, and on a lossless line with both ends reflecting totally it never settles at all: the steady state of the phasor analysis simply does not exist, and the line is a resonator. Every phasor result on this site describes the state after the echoes have died away, which on a real line is a few nanoseconds to a few microseconds after switch-on.</p>
 </section>
 
 <section class="blk" id="check">
@@ -782,6 +882,207 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
       c.fillStyle = C.ink3; c.font = '11.5px ' + MONO; c.fillText('= (1+|Γ|)/(1−|Γ|)', lx, base+21);
     }
   }, false);
+})();
+
+/* ---- voltage and current envelopes, and the stored energy ----
+   |V|/|V+| = |1 + G e^{-j2bl}|, Z0|I|/|V+| = |1 - G e^{-j2bl}|. The energies
+   are time averages per unit length, scaled by a lone travelling wave's
+   1/4 C'|V+|^2; their ratio over half a wavelength is integrated numerically. */
+(function(){
+  var cv = document.getElementById('vifig');
+  if(!cv) return;
+  var m = 0.5, th = 60*D2R;
+  function vv(l){ var p = th - 2*TAU2*l; return Math.hypot(1 + m*Math.cos(p), m*Math.sin(p)); }
+  function ii(l){ var p = th - 2*TAU2*l; return Math.hypot(1 - m*Math.cos(p), m*Math.sin(p)); }
+  function sync(){
+    document.getElementById('vi-mv').textContent = m.toFixed(2);
+    document.getElementById('vi-pv').innerHTML = (th < 0 ? '&minus;' : '') + Math.abs(Math.round(th/D2R)) + '&deg;';
+    document.getElementById('vi-pw').textContent = (1 - m*m).toFixed(3);
+    var S = m > 0.9995 ? Infinity : (1 + m)/(1 - m);
+    document.getElementById('vi-zx').innerHTML = (isFinite(S) ? S.toFixed(2) : '&infin;') + ' Z<sub>0</sub>';
+    document.getElementById('vi-zn').innerHTML = (isFinite(S) ? (1/S).toFixed(2) : '0') + ' Z<sub>0</sub>';
+    var a = 0, b = 0;
+    for(var k = 0; k < 2000; k++){ var l = 0.5*k/2000; a += vv(l)*vv(l); b += ii(l)*ii(l); }
+    document.getElementById('vi-we').textContent = (a/b).toFixed(3);
+  }
+  document.getElementById('vi-m').addEventListener('input', function(){ m = +this.value; sync(); EM.redrawStatic(); });
+  document.getElementById('vi-p').addEventListener('input', function(){ th = +this.value*D2R; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 46, R = 16, T = 16, gap = 22, B = 34, XL = 1;
+    var ph1 = (H - T - B - gap)*0.55, ph2 = (H - T - B - gap)*0.45;
+    var y1 = T, y2 = T + ph1 + gap;
+    function px(l){ return L + l/XL*(W - L - R); }
+    function py1(v){ return y1 + ph1 - v/2.1*ph1; }
+    function py2(v){ return y2 + ph2 - v/4.2*ph2; }
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    [[y1, ph1], [y2, ph2]].forEach(function(q){
+      c.beginPath(); c.moveTo(L + .5, q[0]); c.lineTo(L + .5, q[0] + q[1]); c.lineTo(W - R, q[0] + q[1]); c.stroke();
+    });
+    c.strokeStyle = C.line;
+    [0.25, 0.5, 0.75].forEach(function(l){ c.beginPath(); c.moveTo(px(l) + .5, y1); c.lineTo(px(l) + .5, y2 + ph2); c.stroke(); });
+    /* envelopes */
+    [[vv, C.e], [ii, C.h]].forEach(function(q){
+      c.strokeStyle = q[1]; c.lineWidth = 2.4; c.beginPath();
+      for(var k = 0; k <= 300; k++){ var l = XL*k/300; c.lineTo(px(l), py1(q[0](l))); }
+      c.stroke();
+    });
+    /* energies, filled */
+    [[vv, C.e], [ii, C.h]].forEach(function(q){
+      c.fillStyle = q[1]; c.globalAlpha = 0.18; c.beginPath(); c.moveTo(px(0), py2(0));
+      for(var k = 0; k <= 300; k++){ var l = XL*k/300, v = q[0](l); c.lineTo(px(l), py2(v*v)); }
+      c.lineTo(px(XL), py2(0)); c.closePath(); c.fill(); c.globalAlpha = 1;
+      c.strokeStyle = q[1]; c.lineWidth = 1.6; c.beginPath();
+      for(var k2 = 0; k2 <= 300; k2++){ var l2 = XL*k2/300, v2 = q[0](l2); c.lineTo(px(l2), py2(v2*v2)); }
+      c.stroke();
+    });
+    c.font = '11px ' + MONO; c.textAlign = 'right'; c.fillStyle = C.ink3;
+    c.fillText('1', L - 6, py1(1) + 4); c.fillText('2', L - 6, py1(2) + 4);
+    c.fillText('1', L - 6, py2(1) + 4); c.fillText('4', L - 6, py2(4) + 4);
+    c.textAlign = 'left';
+    c.fillStyle = C.e; c.fillText('|V|', L + 6, y1 + 10);
+    c.fillStyle = C.h; EM.rich(c, [['Z','n'], ['0','b'], ['|I|','n']], L + 38, y1 + 10, 11, 'left');
+    c.fillStyle = C.e; c.fillText('electric', L + 6, y2 + 10);
+    c.fillStyle = C.h; c.fillText('magnetic', L + 76, y2 + 10);
+    c.fillStyle = C.ink3; c.textAlign = 'center';
+    [['load', 0], ['λ/4', 0.25], ['λ/2', 0.5], ['3λ/4', 0.75], ['λ', 1]].forEach(function(q){
+      c.textAlign = q[1] === 0 ? 'left' : q[1] === 1 ? 'right' : 'center';
+      c.fillText(q[0], px(q[1]), H - B + 15);
+    });
+    c.textAlign = 'right'; c.fillText('toward generator →', W - R, H - 5);
+  }, false);
+})();
+
+/* ---- a long lossy line: the reflection fades toward the generator ---- */
+(function(){
+  var cv = document.getElementById('lsfig');
+  if(!cv) return;
+  var dbl = 0.5, m = 1, LL = 6;
+  function al(){ return dbl/(20/Math.LN10); }               /* Np per wavelength */
+  function swr(g){ return g >= 0.9995 ? Infinity : (1 + g)/(1 - g); }
+  function fs(s){ return isFinite(s) ? s.toFixed(2) : '∞'; }
+  function sync(){
+    document.getElementById('ls-av').textContent = dbl.toFixed(2);
+    document.getElementById('ls-gv').textContent = m.toFixed(2);
+    document.getElementById('ls-s0').textContent = fs(swr(m));
+    document.getElementById('ls-s1').textContent = fs(swr(m*Math.exp(-2*al()*LL)));
+    document.getElementById('ls-ll').textContent = (dbl*LL).toFixed(2) + ' dB';
+  }
+  document.getElementById('ls-a').addEventListener('input', function(){ dbl = +this.value; sync(); EM.redrawStatic(); });
+  document.getElementById('ls-g').addEventListener('input', function(){ m = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 40, R = 16, T = 16, B = 34, a = al();
+    function px(l){ return L + l/LL*(W - L - R); }
+    function py(v){ return (H - B) - v/2.1*(H - T - B); }
+    function inc(l){ return Math.exp(-a*(LL - l)); }
+    function ref(l){ return m*Math.exp(-a*LL)*Math.exp(-a*l); }
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.lineTo(W - R, H - B); c.stroke();
+    c.strokeStyle = C.line;
+    for(var g = 1; g < LL; g++){ c.beginPath(); c.moveTo(px(g) + .5, T); c.lineTo(px(g) + .5, H - B); c.stroke(); }
+    /* the bounds |V+| +/- |V-| */
+    c.setLineDash([4, 4]); c.lineWidth = 1.2; c.strokeStyle = C.ink3;
+    [1, -1].forEach(function(s){
+      c.beginPath();
+      for(var k = 0; k <= 200; k++){ var l = LL*k/200; c.lineTo(px(l), py(inc(l) + s*ref(l))); }
+      c.stroke();
+    });
+    c.setLineDash([]);
+    /* the envelope itself: a short at the load, so the reflection is inverted */
+    c.fillStyle = C.accfill; c.beginPath(); c.moveTo(px(0), py(0));
+    for(var j = 0; j <= 1200; j++){
+      var l2 = LL*j/1200, p = Math.PI - 2*TAU2*l2;
+      var re = inc(l2) + ref(l2)*Math.cos(p), im = ref(l2)*Math.sin(p);
+      c.lineTo(px(l2), py(Math.hypot(re, im)));
+    }
+    c.lineTo(px(LL), py(0)); c.closePath(); c.fill();
+    c.strokeStyle = C.acc; c.lineWidth = 2; c.beginPath();
+    for(var j2 = 0; j2 <= 1200; j2++){
+      var l3 = LL*j2/1200, p2 = Math.PI - 2*TAU2*l3;
+      c.lineTo(px(l3), py(Math.hypot(inc(l3) + ref(l3)*Math.cos(p2), ref(l3)*Math.sin(p2))));
+    }
+    c.stroke();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
+    c.fillText('1', L - 6, py(1) + 4); c.fillText('2', L - 6, py(2) + 4); c.fillText('0', L - 6, py(0) + 4);
+    for(var n = 0; n <= LL; n++){
+      c.textAlign = n === 0 ? 'left' : n === LL ? 'right' : 'center';
+      c.fillText(n === 0 ? 'load' : n + 'λ', px(n), H - B + 15);
+    }
+    c.textAlign = 'right'; c.fillText('toward generator →', W - R, H - 5);
+  }, false);
+})();
+
+/* ---- the pattern building up, echo by echo ----
+   Units: lambda = 1, period = 1, so u = 1. The generator is at l = LN, the
+   load at l = 0. Echo k leaves after k transits; its delay to position l is
+   k LN + (LN - l) going toward the load, k LN + l coming back. Every echo
+   that has arrived is summed exactly; the steady envelope is the closed-form
+   sum |1 + GL e^{-j4 pi l}| / |1 - Gg GL e^{-j4 pi LN}|. */
+(function(){
+  var cv = document.getElementById('bufig');
+  if(!cv) return;
+  var LN = 1.25, GL = 0.8, gg = -0.5, NT = 12;
+  function steady(l){
+    var p = -4*Math.PI*l, q = -4*Math.PI*LN, k = gg*GL;
+    var nr = 1 + GL*Math.cos(p), ni = GL*Math.sin(p);
+    var dr = 1 - k*Math.cos(q), di = -k*Math.sin(q);
+    return Math.hypot(nr, ni)/Math.hypot(dr, di);
+  }
+  function v(l, t){
+    var s = 0, a = 1;
+    for(var k = 0; k < NT + 2; k++){
+      var d = k*LN + (k % 2 === 0 ? LN - l : l);
+      if(t < d) break;
+      s += a*Math.sin(2*Math.PI*(t - d));
+      a *= (k % 2 === 0 ? GL : gg);
+    }
+    return s;
+  }
+  function sync(){
+    document.getElementById('bu-gv').textContent = (gg < 0 ? '−' : '') + Math.abs(gg).toFixed(2);
+    document.getElementById('bu-q').textContent = Math.abs(gg*GL).toFixed(2);
+  }
+  document.getElementById('bu-g').addEventListener('input', function(){ gg = +this.value; sync(); });
+  sync();
+
+  EM.register(function(C, t){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var tt = (t*0.2) % (NT*LN + 1);
+    document.getElementById('bu-n').textContent = Math.floor(tt/(2*LN));
+    var ymax = 0;
+    for(var k = 0; k <= 100; k++) ymax = Math.max(ymax, steady(LN*k/100));
+    ymax = Math.max(ymax, 1)*1.15;
+    var L = 16, R = 16, T = 18, B = 26, y0 = T + (H - T - B)/2, sy = (H - T - B)/2/ymax;
+    function px(l){ return L + l/LN*(W - L - R); }
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L, y0 + .5); c.lineTo(W - R, y0 + .5); c.stroke();
+    c.strokeStyle = C.ink2; c.lineWidth = 3;
+    c.beginPath(); c.moveTo(L, T - 4); c.lineTo(L, H - B + 4); c.moveTo(W - R, T - 4); c.lineTo(W - R, H - B + 4); c.stroke();
+    c.strokeStyle = C.acc; c.lineWidth = 1.2; c.setLineDash([4, 4]);
+    [1, -1].forEach(function(s){
+      c.beginPath();
+      for(var k2 = 0; k2 <= 200; k2++){ var l = LN*k2/200; c.lineTo(px(l), y0 - s*steady(l)*sy); }
+      c.stroke();
+    });
+    c.setLineDash([]);
+    c.strokeStyle = C.ink; c.lineWidth = 2.4; c.beginPath();
+    for(var j = 0; j <= 400; j++){ var l2 = LN*j/400; c.lineTo(px(l2), y0 - v(l2, tt)*sy); }
+    c.stroke();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3;
+    c.textAlign = 'left'; c.fillText('load', L + 6, H - 8);
+    c.textAlign = 'right'; c.fillText('generator', W - R - 6, H - 8);
+  }, true);
 })();
 </script>
 </body>

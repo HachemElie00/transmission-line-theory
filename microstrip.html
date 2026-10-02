@@ -142,6 +142,42 @@
   </details>
 </section>
 
+<section class="blk" id="solver">
+  <h2>Checking the fit against the field</h2>
+  <p class="t">Hammerstad's formulas are curve fits, so it is worth seeing them confirmed by something that is not a fit. Part two showed that the transverse field of a TEM line solves Laplace's equation in the cross-section, and quasi-TEM microstrip is close enough that the same calculation gives its parameters. Solve it twice, once with the substrate and once with everything replaced by air:</p>
+
+  <div class="eq box">
+    $$\varepsilon_{\text{eff}} = \frac{C'}{C'_{\text{air}}} \qquad\qquad Z_0 = \frac{1}{c\sqrt{C'\,C'_{\text{air}}}}$$
+    <span class="note">$C'$ from the charge on the track per volt, found by Gauss's law around it; the air solve fixes $L'$, since a dielectric does not change the inductance</span>
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; why two capacitances are enough</summary>
+    <div class="body">
+      <p>A non-magnetic dielectric changes the electric field but not the magnetic one, so $L'$ is the same with or without the substrate. With the substrate replaced by air the line is a true TEM line in vacuum, for which $L'C'_{\text{air}} = \mu_0\varepsilon_0 = 1/c^2$, so $L' = 1/(c^2C'_{\text{air}})$. With the real substrate, the speed is $1/\sqrt{L'C'}$ and the effective permittivity is defined by $u_p = c/\sqrt{\varepsilon_{\text{eff}}}$:</p>
+      <div class="eq">$$\varepsilon_{\text{eff}} = c^2L'C' = \frac{C'}{C'_{\text{air}}}, \qquad Z_0 = \sqrt{\frac{L'}{C'}} = \frac{1}{c\sqrt{C'C'_{\text{air}}}}$$</div>
+      <p>At the boundary between the substrate and the air the normal component of $\vD$ is continuous (part one), which the solver enforces by using the average permittivity on the grid row that lies on the interface.</p>
+    </div>
+  </details>
+
+  <figure class="fig">
+    <canvas id="fdfig" style="height:300px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="fd-w">W / h</label><input type="range" id="fd-w" min="0.3" max="5" step="0.1" value="2"><output id="fd-wv">2.0</output></div>
+      <div class="ctl"><label for="fd-e">&epsilon;<sub>r</sub></label><input type="range" id="fd-e" min="1" max="12" step="0.1" value="4.4"><output id="fd-ev">4.4</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>&epsilon;<sub>eff</sub>, field solve</dt><dd id="fd-e1">&mdash;</dd></div>
+      <div class="rd"><dt>&epsilon;<sub>eff</sub>, Hammerstad</dt><dd id="fd-e2">3.34</dd></div>
+      <div class="rd"><dt>Z<sub>0</sub>, field solve</dt><dd id="fd-z1">&mdash;</dd></div>
+      <div class="rd"><dt>Z<sub>0</sub>, Hammerstad</dt><dd id="fd-z2">48.9 &Omega;</dd></div>
+    </dl>
+    <figcaption class="cap">the potential in the cross-section, found by relaxing Laplace's equation on a grid ten cells per substrate thickness, inside a grounded box 16h wide and 8h tall; the curves are equipotentials at tenths of the track voltage. the solve runs as you watch and the readouts fill in when it has converged</figcaption>
+  </figure>
+
+  <p class="t">The two routes agree to within about 2 % across the range, which is the size of Hammerstad's own stated accuracy plus the grid and the box. They share nothing but the geometry. A field solver of exactly this kind, refined, is what a commercial tool runs when the closed-form fits are no longer good enough.</p>
+</section>
+
 <section class="blk" id="limits">
   <h2>Where the model stops</h2>
   <p class="t">Everything so far treats microstrip as an ideal quasi-TEM line with frequency-independent parameters. Four effects break that, and knowing when each one bites is the difference between a board that works and one that needs a second spin.</p>
@@ -160,6 +196,76 @@
     <span class="lab">The practical summary</span>
     <p>Below a few GHz on ordinary board, the formulas above are good to a percent or two and you can design directly from them. Above that, use them to get close and then let a field solver finish the job &mdash; but the intuition they encode, that $W/h$ sets impedance and $\varepsilon_{\text{eff}}$ sets wavelength, never stops being true.</p>
   </div>
+</section>
+
+<section class="blk" id="dispersion">
+  <h2>Dispersion, quantified</h2>
+  <p class="t">The first entry in that table can be put in numbers. As frequency rises, the field is drawn further into the substrate, the high-permittivity region, and $\varepsilon_{\text{eff}}$ climbs from its static value toward $\varepsilon_r$. Getsinger's model captures this with one characteristic frequency set by the impedance and the substrate thickness:</p>
+
+  <div class="eq box">
+    $$\varepsilon_{\text{eff}}(f) = \varepsilon_r - \frac{\varepsilon_r - \varepsilon_{\text{eff}}(0)}{1 + G\,(f/f_p)^2}, \qquad f_p = \frac{Z_0}{2\mu_0 h}, \quad G = 0.6 + 0.009\,Z_0$$
+    <span class="note">$Z_0$ in ohms; an empirical fit, good to a few percent, which is enough to show where dispersion starts</span>
+  </div>
+
+  <figure class="fig">
+    <canvas id="gsfig" class="static" style="height:260px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="gs-e">&epsilon;<sub>r</sub></label><input type="range" id="gs-e" min="2" max="12" step="0.1" value="4.4"><output id="gs-ev">4.4</output></div>
+    </div>
+    <dl class="readout" id="gs-ro"></dl>
+    <figcaption class="cap">&epsilon;<sub>eff</sub> against frequency for a 50 &Omega; track on three substrate thicknesses, the width in each case found from Hammerstad's synthesis. the readouts give the frequency at which &epsilon;<sub>eff</sub> has risen 5 % above its static value</figcaption>
+  </figure>
+
+  <p class="t">Thickness is what matters: $f_p$ scales as $1/h$, so a substrate a sixth as thick disperses at six times the frequency. That is one reason millimetre-wave boards use thin substrates, and why the "few GHz" in the table above is a statement about 1.6 mm FR-4, not about microstrip in general.</p>
+</section>
+
+<section class="blk" id="openend">
+  <h2>The open end is longer than it looks</h2>
+  <p class="t">The field does not stop where the copper stops. It fringes past the end of an open track and stores extra charge there, which makes the end behave as if the line continued for a short distance $\Delta l$. A stub cut to exactly $\lambda_g/4$ is therefore electrically too long, and resonates low.</p>
+
+  <div class="eq box">
+    $$\frac{\Delta l}{h} = 0.412\,\frac{(\varepsilon_{\text{eff}} + 0.3)(W/h + 0.264)}{(\varepsilon_{\text{eff}} - 0.258)(W/h + 0.8)}$$
+    <span class="note">Hammerstad and Bekkadal's fit; cut the stub short by $\Delta l$ to land on frequency</span>
+  </div>
+
+  <figure class="fig">
+    <canvas id="oefig" class="static" style="height:220px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="oe-w">W / h</label><input type="range" id="oe-w" min="0.3" max="5" step="0.05" value="2"><output id="oe-wv">2.00</output></div>
+      <div class="ctl"><label for="oe-f">f (GHz)</label><input type="range" id="oe-f" min="0.5" max="10" step="0.1" value="2.4"><output id="oe-fv">2.4</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>&Delta;l</dt><dd id="oe-dl">0.63 mm</dd></div>
+      <div class="rd"><dt>&lambda;<sub>g</sub>/4</dt><dd id="oe-q">17.1 mm</dd></div>
+      <div class="rd"><dt>cut it to</dt><dd id="oe-cut">16.5 mm</dd></div>
+      <div class="rd"><dt>if uncorrected, resonates</dt><dd id="oe-err">3.6 % low</dd></div>
+    </dl>
+    <figcaption class="cap">the end of an open stub seen from above, on 1.6 mm FR-4: the copper, and the extra length &Delta;l the fringing field adds beyond it, drawn to scale against the track width</figcaption>
+  </figure>
+
+  <p class="t">Bends and width steps disturb the field the same way and need the same kind of correction. A sharp right-angle bend adds excess capacitance at its outer corner, which is why bends are mitred, removing somewhat more than half of the corner along its diagonal. A step in width adds a small shunt capacitance at the junction. None of these appear in the transmission-line model itself; they are lumped corrections stitched onto it, and every microstrip design tool carries a library of them.</p>
+</section>
+
+<section class="blk" id="others">
+  <h2>Stripline, coplanar waveguide and coupled lines</h2>
+  <p class="t">Microstrip is one of several planar lines, and the differences between them come straight back to whether the field sits in one material or two.</p>
+
+  <figure class="fig">
+    <canvas id="lnfig" class="static" style="height:250px"></canvas>
+    <figcaption class="cap">three cross-sections: a stripline, a track buried between two ground planes; a coplanar waveguide, with its grounds beside the track on the same surface; and a coupled pair of microstrips, in its even mode (both tracks at the same potential) and its odd mode (opposite potentials). the arrows sketch the electric field</figcaption>
+  </figure>
+
+  <p class="t"><b>Stripline</b> buries the track in one uniform dielectric between two grounds. The field never sees air, so it is a true TEM line: $\varepsilon_{\text{eff}} = \varepsilon_r$ exactly, there is no dispersion of the microstrip kind, and the closed form is good. For a track of width $W$ between grounds $b$ apart,</p>
+
+  <div class="eq">$$Z_0 = \frac{30\pi}{\sqrt{\varepsilon_r}}\,\frac{b}{W_e + 0.441\,b}, \qquad W_e = W - \left(0.35 - \frac{W}{b}\right)^2 b \;\text{ for } W/b &lt; 0.35, \text{ else } W_e = W$$</div>
+
+  <p class="t"><b>Coplanar waveguide</b> puts the grounds on the same surface as the track, separated by two narrow slots. It needs no vias to reach ground, which makes it natural for mounting components and for probing a chip, and on a thick substrate half its field is in air, giving $\varepsilon_{\text{eff}} \approx (\varepsilon_r + 1)/2$.</p>
+
+  <p class="t"><b>Coupled lines</b> are two tracks close enough to share field. They support two modes: the <b>even</b> mode, both at the same potential, and the <b>odd</b> mode, at opposite potentials. Any pair of signals is a sum of the two, and each mode has its own impedance, $Z_{0e}$ and $Z_{0o}$, with $Z_{0e} > Z_{0o}$ because in the odd mode the tracks' fields terminate on each other. The coupling coefficient is</p>
+
+  <div class="eq">$$k = \frac{Z_{0e} - Z_{0o}}{Z_{0e} + Z_{0o}}$$</div>
+
+  <p class="t">which is what a directional coupler is built from and what crosstalk between neighbouring tracks is made of. In microstrip the odd mode has more of its field in air than the even mode, so the two travel at different speeds; the difference converts a signal on one track into a pulse at the far end of the other. In stripline both modes travel at the same speed and that far-end crosstalk cancels, one of the main reasons sensitive high-speed signals are routed on inner layers.</p>
 </section>
 
 <section class="blk" id="check">
@@ -410,6 +516,325 @@ function z0ms(er, wh){
   }, false);
 
   sync();
+})();
+
+/* ---- shared Hammerstad helpers for the figures below ---- */
+function hamE(wh, er){
+  var e = (er + 1)/2 + (er - 1)/2*Math.pow(1 + 12/wh, -0.5);
+  if(wh < 1) e += (er - 1)/2*0.04*(1 - wh)*(1 - wh);
+  return e;
+}
+function hamZ(wh, er){
+  var e = hamE(wh, er);
+  if(wh <= 1) return 60/Math.sqrt(e)*Math.log(8/wh + wh/4);
+  return 120*Math.PI/(Math.sqrt(e)*(wh + 1.393 + 0.667*Math.log(wh + 1.444)));
+}
+/* Hammerstad synthesis: W/h for a target Z0, choosing the branch that lands in its own range */
+function hamWH(z, er){
+  var A = z/60*Math.sqrt((er + 1)/2) + (er - 1)/(er + 1)*(0.23 + 0.11/er);
+  var w1 = 8*Math.exp(A)/(Math.exp(2*A) - 2);
+  if(w1 < 2) return w1;
+  var B = 377*Math.PI/(2*z*Math.sqrt(er));
+  return 2/Math.PI*(B - 1 - Math.log(2*B - 1) + (er - 1)/(2*er)*(Math.log(B - 1) + 0.39 - 0.61/er));
+}
+function hexRGB(h){
+  h = (h || '#888').replace('#', '');
+  if(h.length === 3) h = h.replace(/./g, function(x){ return x + x; });
+  return [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16), parseInt(h.substr(4, 2), 16)];
+}
+
+/* ---- finite-difference Laplace solve of the microstrip cross-section ----
+   Node (i, j), j = 0 the ground plane, j = HC the substrate surface where the
+   track sits. Vertical links below the surface lie in the substrate; the
+   horizontal links on the surface row use the mean permittivity. Successive
+   over-relaxation, a slice of sweeps per frame, warm-started from the last
+   solution whenever a slider moves. C' from Gauss's law around the track. */
+(function(){
+  var cv = document.getElementById('fdfig');
+  if(!cv) return;
+  var HC = 10, NX = 160, NY = 80, MAXIT = 1500, PER = 50, OM = 1.9;
+  var wh = 2, er = 4.4, it = 0, res = null;
+  var phi = new Float64Array(NX*NY), phiA = new Float64Array(NX*NY), fixed = new Uint8Array(NX*NY);
+  var x0, x1;
+  function build(){
+    var w = Math.max(2, Math.round(wh*HC));
+    x0 = Math.round(NX/2 - w/2); x1 = x0 + w;
+    for(var j = 0; j < NY; j++) for(var i = 0; i < NX; i++){
+      var k = j*NX + i, edge = (i === 0 || i === NX - 1 || j === 0 || j === NY - 1), tr = (j === HC && i >= x0 && i <= x1);
+      fixed[k] = (edge || tr) ? 1 : 0;
+      if(edge){ phi[k] = 0; phiA[k] = 0; }
+      if(tr){ phi[k] = 1; phiA[k] = 1; }
+    }
+    it = 0; res = null;
+  }
+  function sweep(p, e){
+    for(var j = 1; j < NY - 1; j++){
+      var es = j <= HC ? e : 1, en = j + 1 <= HC ? e : 1, eh = j < HC ? e : (j === HC ? (e + 1)/2 : 1);
+      var den = 2*eh + es + en;
+      for(var i = 1; i < NX - 1; i++){
+        var k = j*NX + i;
+        if(fixed[k]) continue;
+        var v = (eh*(p[k - 1] + p[k + 1]) + es*p[k - NX] + en*p[k + NX])/den;
+        p[k] += OM*(v - p[k]);
+      }
+    }
+  }
+  function charge(p, e){
+    var xa = x0 - 5, xb = x1 + 5, ya = HC - 4, yb = HC + 4, Q = 0;
+    for(var i = xa; i < xb; i++){
+      Q += -(p[(yb + 1)*NX + i] - p[yb*NX + i]);
+      Q += -(p[(ya - 1)*NX + i] - p[ya*NX + i])*(ya <= HC ? e : 1);
+    }
+    for(var j = ya; j < yb; j++){
+      var eh = j < HC ? e : (j === HC ? (e + 1)/2 : 1);
+      Q += -(p[j*NX + xb + 1] - p[j*NX + xb])*eh;
+      Q += -(p[j*NX + xa - 1] - p[j*NX + xa])*eh;
+    }
+    return Q;                                   /* C' / eps0 */
+  }
+  function sync(){
+    document.getElementById('fd-wv').textContent = wh.toFixed(1);
+    document.getElementById('fd-ev').textContent = er.toFixed(1);
+    document.getElementById('fd-e2').textContent = hamE(wh, er).toFixed(3);
+    document.getElementById('fd-z2').textContent = hamZ(wh, er).toFixed(1) + ' Ω';
+    if(res){
+      document.getElementById('fd-e1').textContent = res.e.toFixed(3);
+      document.getElementById('fd-z1').textContent = res.z.toFixed(1) + ' Ω';
+    } else {
+      document.getElementById('fd-e1').textContent = 'solving…';
+      document.getElementById('fd-z1').textContent = 'solving…';
+    }
+  }
+  document.getElementById('fd-w').addEventListener('input', function(){ wh = +this.value; build(); sync(); });
+  document.getElementById('fd-e').addEventListener('input', function(){ er = +this.value; build(); sync(); });
+  build(); sync();
+
+  var img = null;
+  EM.register(function(C){
+    if(it < MAXIT){
+      for(var s = 0; s < PER; s++){ sweep(phi, er); sweep(phiA, 1); }
+      it += PER;
+      if(it >= MAXIT){
+        var Cq = charge(phi, er), Ca = charge(phiA, 1), c0 = 299792458, e0 = 8.8541878128e-12;
+        res = { e: Cq/Ca, z: 1/(c0*e0*Math.sqrt(Cq*Ca)) };
+        sync();
+      }
+    }
+    EM.fit(cv);
+    /* the box is 2:1, so on a narrow screen the canvas follows the width */
+    var want = Math.min(300, Math.round((cv._w - 20)*NY/NX + 30));
+    if(Math.abs(cv._h - want) > 1){ cv.style.height = want + 'px'; EM.fit(cv); }
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var sc = Math.min((W - 20)/NX, (H - 26)/NY), bw = NX*sc, bh = NY*sc, ox = (W - bw)/2, oy = (H - bh)/2 + 6;
+    /* the potential as a wash from the background to the field colour */
+    if(!img || img.width !== NX) img = c.createImageData(NX, NY);
+    var a = hexRGB(C.sunk), b = hexRGB(C.e), d = img.data;
+    for(var j = 0; j < NY; j++) for(var i = 0; i < NX; i++){
+      var v = Math.max(0, Math.min(1, phi[j*NX + i]))*0.75, q = ((NY - 1 - j)*NX + i)*4;
+      d[q] = a[0] + (b[0] - a[0])*v; d[q + 1] = a[1] + (b[1] - a[1])*v; d[q + 2] = a[2] + (b[2] - a[2])*v; d[q + 3] = 255;
+    }
+    var off = cv._off || (cv._off = document.createElement('canvas'));
+    off.width = NX; off.height = NY; off.getContext('2d').putImageData(img, 0, 0);
+    c.imageSmoothingEnabled = true; c.drawImage(off, ox, oy, bw, bh);
+    function X(i){ return ox + (i + 0.5)*sc; }
+    function Y(j){ return oy + (NY - 1 - j + 0.5)*sc; }
+    /* equipotentials by marching squares */
+    c.strokeStyle = C.ink; c.globalAlpha = 0.55; c.lineWidth = 1;
+    c.beginPath();
+    for(var L = 1; L <= 9; L++){
+      var lv = L/10;
+      for(var j2 = 0; j2 < NY - 1; j2++) for(var i2 = 0; i2 < NX - 1; i2++){
+        var p00 = phi[j2*NX + i2], p10 = phi[j2*NX + i2 + 1], p01 = phi[(j2 + 1)*NX + i2], p11 = phi[(j2 + 1)*NX + i2 + 1];
+        var pts = [];
+        if((p00 - lv)*(p10 - lv) < 0) pts.push([i2 + (lv - p00)/(p10 - p00), j2]);
+        if((p10 - lv)*(p11 - lv) < 0) pts.push([i2 + 1, j2 + (lv - p10)/(p11 - p10)]);
+        if((p01 - lv)*(p11 - lv) < 0) pts.push([i2 + (lv - p01)/(p11 - p01), j2 + 1]);
+        if((p00 - lv)*(p01 - lv) < 0) pts.push([i2, j2 + (lv - p00)/(p01 - p00)]);
+        if(pts.length >= 2){ c.moveTo(X(pts[0][0]), Y(pts[0][1])); c.lineTo(X(pts[1][0]), Y(pts[1][1])); }
+      }
+    }
+    c.stroke(); c.globalAlpha = 1;
+    /* substrate, ground, track, box */
+    c.strokeStyle = C.h; c.lineWidth = 1.2; c.setLineDash([5, 4]);
+    c.beginPath(); c.moveTo(ox, Y(HC)); c.lineTo(ox + bw, Y(HC)); c.stroke(); c.setLineDash([]);
+    c.strokeStyle = C.ink2; c.lineWidth = 1; c.strokeRect(ox, oy, bw, bh);
+    c.lineWidth = 4; c.beginPath(); c.moveTo(ox, oy + bh); c.lineTo(ox + bw, oy + bh); c.stroke();
+    c.fillStyle = C.ink2; c.fillRect(X(x0), Y(HC) - 3, X(x1) - X(x0), 5);
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'left';
+    c.fillText('substrate', ox + 6, Y(HC) + 14);
+    c.fillText('air', ox + 6, oy + 14);
+    if(it < MAXIT){ c.textAlign = 'right'; c.fillStyle = C.ink2; c.fillText('solving ' + Math.round(100*it/MAXIT) + ' %', ox + bw - 6, oy + 14); }
+  }, true);
+})();
+
+/* ---- Getsinger dispersion for a 50-ohm track on three thicknesses ---- */
+(function(){
+  var cv = document.getElementById('gsfig');
+  if(!cv) return;
+  var MU0 = 4e-7*Math.PI, er = 4.4, HS = [0.25e-3, 0.8e-3, 1.6e-3], COLS = ['e', 'acc', 'h'], FM = 40e9;
+  function line(h){
+    var wh = hamWH(50, er), e0 = hamE(wh, er), z = hamZ(wh, er), fp = z/(2*MU0*h), G = 0.6 + 0.009*z;
+    return { e0: e0, f: function(f){ return er - (er - e0)/(1 + G*Math.pow(f/fp, 2)); } };
+  }
+  function f5(L){ for(var f = 1e8; f < 1e12; f *= 1.005) if(L.f(f) > 1.05*L.e0) return f; return null; }
+  function sync(){
+    document.getElementById('gs-ev').textContent = er.toFixed(1);
+    document.getElementById('gs-ro').innerHTML = HS.map(function(h){
+      var x = f5(line(h));
+      return '<div class="rd"><dt>h = ' + (h*1e3).toFixed(2) + ' mm</dt><dd>' + (x ? (x/1e9).toPrecision(3) + ' GHz' : '&mdash;') + '</dd></div>';
+    }).join('');
+  }
+  document.getElementById('gs-e').addEventListener('input', function(){ er = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 44, R = 14, T = 16, B = 34, e0 = line(HS[0]).e0, Y0 = Math.floor(e0*10 - 1)/10, Y1 = er + 0.1;
+    function px(f){ return L + f/FM*(W - L - R); }
+    function py(v){ return (H - B) - (v - Y0)/(Y1 - Y0)*(H - T - B); }
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.lineTo(W - R, H - B); c.stroke();
+    c.strokeStyle = C.ink3; c.setLineDash([4, 4]);
+    c.beginPath(); c.moveTo(L, py(er)); c.lineTo(W - R, py(er)); c.stroke(); c.setLineDash([]);
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'left';
+    EM.rich(c, [['ε','n'], ['r','b']], L + 6, py(er) - 6, 11, 'left');
+    c.textAlign = 'right';
+    c.fillText(er.toFixed(1), L - 6, py(er) + 4); c.fillText(e0.toFixed(2), L - 6, py(e0) + 4);
+    c.textAlign = 'center';
+    for(var g = 0; g <= 40; g += 10) c.fillText(g + (g ? ' GHz' : ''), px(g*1e9), H - B + 15);
+    HS.forEach(function(h, n){
+      var Ln = line(h);
+      c.strokeStyle = C[COLS[n]]; c.lineWidth = 2.4; c.beginPath();
+      for(var j = 0; j <= 200; j++){ var f = FM*j/200; c.lineTo(px(f), py(Ln.f(f))); }
+      c.stroke();
+      var fl = FM*0.82, y = py(Ln.f(fl)) + 16, t = (h*1e3).toFixed(2) + ' mm';
+      var tw = c.measureText(t).width;
+      c.fillStyle = C.sunk; c.fillRect(px(fl) - tw/2 - 3, y - 11, tw + 6, 15);
+      c.fillStyle = C[COLS[n]]; c.textAlign = 'center'; c.fillText(t, px(fl), y);
+    });
+    c.fillStyle = C.ink3; c.textAlign = 'left';
+    EM.rich(c, [['ε','n'], ['eff','b']], 6, T + 2, 11, 'left');
+  }, false);
+})();
+
+/* ---- the open end: the copper and its fringing extension, to scale ---- */
+(function(){
+  var cv = document.getElementById('oefig');
+  if(!cv) return;
+  var H_MM = 1.6, ER = 4.4, wh = 2, fg = 2.4;
+  function vals(){
+    var e = hamE(wh, ER), dl = 0.412*H_MM*(e + 0.3)*(wh + 0.264)/((e - 0.258)*(wh + 0.8));
+    var q = 299792458/(fg*1e9)/Math.sqrt(e)/4*1e3;
+    return { dl: dl, q: q, cut: q - dl, err: 100*dl/(q + dl) };
+  }
+  function sync(){
+    var v = vals();
+    document.getElementById('oe-wv').textContent = wh.toFixed(2);
+    document.getElementById('oe-fv').textContent = fg.toFixed(1);
+    document.getElementById('oe-dl').textContent = v.dl.toFixed(2) + ' mm';
+    document.getElementById('oe-q').textContent = v.q.toFixed(1) + ' mm';
+    document.getElementById('oe-cut').textContent = v.cut.toFixed(1) + ' mm';
+    document.getElementById('oe-err').textContent = v.err.toFixed(1) + ' % low';
+  }
+  document.getElementById('oe-w').addEventListener('input', function(){ wh = +this.value; sync(); EM.redrawStatic(); });
+  document.getElementById('oe-f').addEventListener('input', function(){ fg = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var v = vals(), Wmm = wh*H_MM;
+    /* the track is always drawn the same height on screen; everything else,
+       the extension included, follows at the same scale */
+    var hw = Math.min(34, H*0.18), s = 2*hw/Wmm;
+    var cy = H/2 + 6, xe = Math.min(W*0.62, W - v.dl*s - 150), dls = v.dl*s;
+    /* fringing beyond the end: arcs from the top edge round to the bottom edge */
+    c.strokeStyle = C.e; c.lineWidth = 1.2; c.globalAlpha = 0.7;
+    [0.35, 0.7, 1.05].forEach(function(k){
+      c.beginPath(); c.ellipse(xe, cy, dls + hw*k, hw*(1 + 0.45*k), 0, -Math.PI/2, Math.PI/2); c.stroke();
+    });
+    c.globalAlpha = 1;
+    /* the equivalent extension */
+    c.strokeStyle = C.h; c.lineWidth = 1.6; c.setLineDash([5, 4]);
+    c.strokeRect(xe, cy - hw, dls, 2*hw); c.setLineDash([]);
+    /* the copper */
+    c.fillStyle = C.ink2; c.fillRect(16, cy - hw, xe - 16, 2*hw);
+    c.font = '12px ' + MONO;
+    /* the width, measured beside the track's left part */
+    c.strokeStyle = C.ink3; c.lineWidth = 1;
+    var xw = 40;
+    c.beginPath(); c.moveTo(xw, cy - hw - 14); c.lineTo(xw, cy - hw - 4); c.moveTo(xw, cy + hw + 4); c.lineTo(xw, cy + hw + 14); c.stroke();
+    c.fillStyle = C.ink3; c.textAlign = 'left';
+    c.fillText('W = ' + Wmm.toFixed(2) + ' mm', xw + 8, cy - hw - 10);
+    /* the extension, measured below */
+    var yd = cy + hw + 22;
+    c.beginPath(); c.moveTo(xe, cy + hw + 4); c.lineTo(xe, yd + 6); c.moveTo(xe + dls, cy + hw + 4); c.lineTo(xe + dls, yd + 6); c.stroke();
+    c.fillStyle = C.h;
+    EM.rich(c, [['Δl = ' + v.dl.toFixed(2) + ' mm','n']], xe + dls + 8, yd + 4, 12, 'left');
+    c.fillStyle = C.ink3; c.textAlign = 'right';
+    c.fillText('copper ends here', xe - 8, cy - hw - 10);
+    c.beginPath(); c.moveTo(xe, cy - hw - 16); c.lineTo(xe, cy - hw - 2); c.stroke();
+  }, false);
+})();
+
+/* ---- four planar cross-sections, field sketched (static) ---- */
+(function(){
+  var cv = document.getElementById('lnfig');
+  if(!cv) return;
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d');
+    c.clearRect(0, 0, cv._w, cv._h);
+    var nar = cv._w < 600;
+    if(nar && !cv._grown){ cv._grown = true; cv.style.height = '420px'; cv._h0 = null; EM.fit(cv); }
+    if(!nar && cv._grown){ cv._grown = false; cv.style.height = '250px'; cv._h0 = null; EM.fit(cv); }
+    var DW = nar ? 340 : 680, DH = nar ? 380 : 200;
+    EM.design(c, cv, DW, DH, true);
+    function tint(x, y, w, h){ c.fillStyle = C.e; c.globalAlpha = 0.12; c.fillRect(x, y, w, h); c.globalAlpha = 1; }
+    function metal(x, y, w, h){ c.fillStyle = C.ink2; c.fillRect(x, y, w, h); }
+    function arr(x1, y1, x2, y2){ c.strokeStyle = C.e; c.fillStyle = C.e; c.lineWidth = 1.3; EM.arrow(c, x1, y1, x2, y2, 5); }
+    function title(t, x, y){ c.fillStyle = C.ink; c.font = '12px ' + MONO; c.textAlign = 'center'; c.fillText(t, x, y); }
+    function sign(t, x, y){ c.fillStyle = C.surface; c.font = '11px ' + MONO; c.textAlign = 'center'; c.fillText(t, x, y + 4); }
+    /* each panel is 160 x 170 */
+    function strip(ox, oy){
+      tint(ox + 10, oy + 40, 140, 90); metal(ox + 10, oy + 36, 140, 5); metal(ox + 10, oy + 129, 140, 5);
+      metal(ox + 62, oy + 82, 36, 7);
+      [70, 80, 90].forEach(function(x){ arr(ox + x, oy + 81, ox + x, oy + 46); arr(ox + x, oy + 90, ox + x, oy + 124); });
+      title('stripline', ox + 80, oy + 160);
+    }
+    function cpw(ox, oy){
+      tint(ox + 10, oy + 88, 140, 46); metal(ox + 10, oy + 130, 140, 4);
+      metal(ox + 10, oy + 82, 46, 6); metal(ox + 66, oy + 82, 28, 6); metal(ox + 104, oy + 82, 46, 6);
+      c.strokeStyle = C.e; c.lineWidth = 1.3;
+      [[1, -1], [-1, -1], [1, 1], [-1, 1]].forEach(function(s){
+        c.beginPath(); c.ellipse(ox + 80 + s[0]*20, oy + 85, 14, 18, 0, s[1] < 0 ? Math.PI : 0, s[1] < 0 ? 2*Math.PI : Math.PI); c.stroke();
+      });
+      title('coplanar waveguide', ox + 80, oy + 160);
+    }
+    function coupled(ox, oy, odd){
+      tint(ox + 10, oy + 88, 140, 42); metal(ox + 10, oy + 130, 140, 5);
+      metal(ox + 42, oy + 81, 28, 7); metal(ox + 90, oy + 81, 28, 7);
+      sign('+', ox + 56, oy + 84); sign(odd ? '−' : '+', ox + 104, oy + 84);
+      [48, 56, 64].forEach(function(x){ arr(ox + x, oy + 89, ox + x, oy + 126); });
+      if(odd){
+        c.strokeStyle = C.e; c.lineWidth = 1.3;
+        c.beginPath(); c.ellipse(ox + 80, oy + 81, 20, 20, 0, Math.PI, 2*Math.PI); c.stroke();
+        arr(ox + 99, oy + 76, ox + 100, oy + 79);
+        /* the negative track receives field from the ground plane */
+        [96, 104, 112].forEach(function(x){ arr(ox + x, oy + 126, ox + x, oy + 90); });
+      } else {
+        [96, 104, 112].forEach(function(x){ arr(ox + x, oy + 89, ox + x, oy + 126); });
+      }
+      title(odd ? 'coupled, odd mode' : 'coupled, even mode', ox + 80, oy + 160);
+    }
+    if(nar){ strip(5, 0); cpw(175, 0); coupled(5, 190, false); coupled(175, 190, true); }
+    else { strip(10, 10); cpw(180, 10); coupled(350, 10, false); coupled(520, 10, true); }
+    c.restore();
+  }, false);
 })();
 </script>
 </body>

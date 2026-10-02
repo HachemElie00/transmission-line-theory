@@ -186,6 +186,23 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
   <p class="t">The practical trade-off is physical, not mathematical: a series stub has to be spliced <b>into</b> the line rather than tapped onto it, which is routine in coax and slotline but awkward in microstrip, where cutting the conductor to insert a stub costs a connector or a via. That is why microstrip designs default to shunt stubs and coax designs often do not.</p>
 </section>
 
+<section class="blk" id="choose">
+  <h2>Choosing between the four designs</h2>
+  <p class="t">A single shunt stub has two positions, and at each the stub can be shorted or open. All four match perfectly at $f_0$. Away from it they differ, and by a lot, because every length in the design is an electrical length that scales with frequency: the longer the line and the stub, the faster the match walks away.</p>
+
+  <figure class="fig">
+    <canvas id="chfig" class="static" style="height:270px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="ch-r">r<sub>L</sub></label><input type="range" id="ch-r" min="0.2" max="5" step="0.05" value="2"><output id="ch-rv">2.00</output></div>
+      <div class="ctl"><label for="ch-x">x<sub>L</sub></label><input type="range" id="ch-x" min="-2" max="2" step="0.05" value="0"><output id="ch-xv">0.00</output></div>
+    </div>
+    <dl class="readout" id="ch-ro"></dl>
+    <figcaption class="cap">|&Gamma;| against frequency for the four single-shunt-stub designs of the same load, each computed by scaling every electrical length with frequency. the readouts give each design&rsquo;s travel d, stub length, and its band at |&Gamma;| &le; 0.2</figcaption>
+  </figure>
+
+  <p class="t">The pattern is general: the design with the <b>shortest total length</b>, travel plus stub, holds its match over the widest band, often by a factor of two against the longest. Chapter 08's Foster theorem says why: a longer stub stores more energy for the same reactance and changes it faster with frequency. When the shortest design needs an awkwardly short stub, the next shortest is the usual compromise, and the choice between short and open is then settled by the board: a short needs a via, an open needs Δl subtracted.</p>
+</section>
+
 <section class="blk" id="dstub">
   <h2>A tuner you do not rebuild: the double stub</h2>
   <p class="t">The single stub has a flaw hiding in plain sight: the distance $d$ depends on the load. Change the load and the stub has to move, which is fine for a one-off design etched onto a board but useless for a <b>tuner</b> &mdash; a device meant to be adjusted by hand to match whatever is plugged into it. Fixing that means fixing the geometry and adjusting only the two stub lengths.</p>
@@ -239,6 +256,28 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
   <p class="t">To see the forbidden region and the rotated target circle drawn on the chart, use the <a href="smith-tool.html">workbench</a>'s double-stub method; its two designs are a click apart.</p>
 </section>
 
+<section class="blk" id="escape">
+  <h2>Out of the forbidden region</h2>
+  <p class="t">A load inside the double-stub tuner's forbidden region cannot be matched at that spacing, because stub 1 cannot change $g$. The cure the section above named is a length of ordinary line in front of stub 1. Travel turns the point round its constant-SWR circle, which changes $g$, and once the point is outside the forbidden disc the tuner works.</p>
+
+  <figure class="fig">
+    <canvas id="esfig" class="static" style="height:320px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="es-g">g<sub>L</sub></label><input type="range" id="es-g" min="2.05" max="6" step="0.05" value="3"><output id="es-gv">3.00</output></div>
+      <div class="ctl"><label for="es-b">b<sub>L</sub></label><input type="range" id="es-b" min="-2" max="2" step="0.05" value="-1"><output id="es-bv">&minus;1.00</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>forbidden at &lambda;/8</dt><dd>g &gt; 2</dd></div>
+      <div class="rd"><dt>line to escape</dt><dd id="es-l">&mdash;</dd></div>
+      <div class="rd"><dt>g after it</dt><dd id="es-g2">&mdash;</dd></div>
+      <div class="rd"><dt>stubs then add</dt><dd id="es-s">&mdash;</dd></div>
+    </dl>
+    <figcaption class="cap">admittance plotted on the impedance chart by turning the point half a turn, as chapter 10 describes. the shaded disc is the forbidden region for a &lambda;/8 tuner; the hollow marker is the load, the arc is the added line, and the filled marker is where stub 1 now sits. the last readout gives the susceptances the two stubs must add from there, one of the two solutions</figcaption>
+  </figure>
+
+  <p class="t">The added line has to be at least long enough to clear the disc, and travelling further round is harmless until the point comes back toward it. Since the constant-SWR circle always reaches the low-$g$ side of the chart within a quarter wavelength, some length up to $\lambda/4$ always works. This is also why practical tuners often have three stubs: the third does the same job without anyone cutting cable.</p>
+</section>
+
 <section class="blk" id="lumped">
   <h2>Below microwave: the L-network</h2>
   <p class="t">Stubs need a length of line comparable with a wavelength. At 100 MHz that is a couple of metres, which no circuit board will carry, so lower frequencies use <b>lumped</b> matching instead: two reactive components in an L.</p>
@@ -285,6 +324,38 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
   <p class="t">The trade-off against stubs is worth naming. Lumped parts are tiny at low frequency and hopeless at high frequency, where their own parasitics dominate and the "capacitor" stops being one. Stubs are exact and repeatable at microwave and absurdly large below it. The crossover sits around a gigahertz, which is why boards in that band often use both.</p>
 </section>
 
+<section class="blk" id="lumpedq">
+  <h2>The Q of a lumped match</h2>
+  <p class="t">An L-network matching $R_{\text{lo}}$ to $R_{\text{hi}}$ has no freedom: its two element values, and therefore its Q, are fixed by the ratio. In the middle of the network, where the series and shunt elements meet, the node Q is</p>
+
+  <div class="eq box">
+    $$Q = \sqrt{\frac{R_{\text{hi}}}{R_{\text{lo}}} - 1}, \qquad X_s = QR_{\text{lo}}, \qquad B_p = \frac{Q}{R_{\text{hi}}}$$
+    <span class="note">the series reactance sits on the low side, the shunt susceptance across the high side; the bandwidth is roughly $2/Q$</span>
+  </div>
+
+  <p class="t">A third element buys freedom, in either direction. A <b>&pi; or T network</b> is two L-sections back to back through a virtual resistance lower or higher than both ends; that raises Q above the L-network's, narrowing the band, which is what a filter-like match wants. <b>Two L-sections in cascade</b> through an intermediate resistance between the ends, ideally $\sqrt{R_{\text{lo}}R_{\text{hi}}}$, do the opposite: each step is a smaller ratio, so each has a lower Q, and the band widens.</p>
+
+  <figure class="fig">
+    <canvas id="lqfig" class="static" style="height:270px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="lq-r">R<sub>L</sub> &Omega;</label><input type="range" id="lq-r" min="60" max="800" step="5" value="200"><output id="lq-rv">200</output></div>
+      <div class="ctl"><label for="lq-q">&pi; network Q</label><input type="range" id="lq-q" min="1" max="8" step="0.1" value="3"><output id="lq-qv">3.0</output></div>
+    </div>
+    <dl class="readout" id="lq-ro"></dl>
+    <figcaption class="cap">matching R<sub>L</sub> to 50 &Omega; three ways, every element an inductor in series or a capacitor in shunt, all responses computed by cascading the actual components. a &pi; network cannot have a Q below the L-network&rsquo;s, so the slider is limited from below by that value. bands are at |&Gamma;| &le; 0.2</figcaption>
+  </figure>
+
+  <p class="t">On the chart of chapter 10 the three paths are visible as arcs: the cascade stays inside a lower constant-Q arc than the single L, the &pi; network swings out past it. Choosing a lumped match is choosing which arc to stay inside.</p>
+
+  <p class="t"><b>Real components lose some of the power.</b> An inductor or capacitor with unloaded quality factor $Q_u$ dissipates, at the node Q $Q_n$ the network imposes on it, about $Q_n/Q_u$ of the power passing through. An L-network has two such elements, so</p>
+
+  <div class="eq">$$\text{insertion loss} \approx 10\log_{10}\!\left(1 + \frac{2Q_n}{Q_u}\right)\ \text{dB}$$</div>
+
+  <p class="t">For a 4:1 match ($Q_n = 1.73$) with components of $Q_u = 50$ that is about 0.3 dB. The same formula says why high-Q matches with ordinary components are lossy, and why the wideband cascade is also the low-loss one.</p>
+
+  <p class="t"><b>A complex source.</b> When the generator's own impedance $Z_s$ is complex, maximum power needs the network to present $Z_s^*$ to it, not $Z_0$. On a chart normalised to $Z_0$ the target is then the point $z_s^*$ rather than the centre, and every construction in this chapter runs unchanged with that point as its destination. An amplifier's output match is designed exactly this way.</p>
+</section>
+
 <section class="blk" id="bandwidth">
   <h2>Nothing matches over all frequencies</h2>
   <p class="t">Every network here is designed at one frequency. Move away from it and the electrical lengths change, the reactances change, and the match degrades &mdash; exactly as chapter 09's transformer did.</p>
@@ -297,6 +368,31 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
   </div>
 
   <p class="t">The engineering consequence is simple to state. If you need more bandwidth, use <b>more sections</b> &mdash; two stubs, a multi-section transformer, a taper &mdash; and accept the extra size. A perfect match over an infinite band is not difficult, it is impossible, and knowing that saves a great deal of wasted effort.</p>
+</section>
+
+<section class="blk" id="bodefano">
+  <h2>The bound, in numbers</h2>
+  <p class="t">For a load made of a resistance $R$ in parallel with a capacitance $C$, the Bode&ndash;Fano integral above has a clean consequence. The best any lossless network can do over a band $\Delta\omega$ is a constant reflection $\Gamma_m$ inside it and total reflection outside, and putting that rectangle into the integral gives</p>
+
+  <div class="eq box">
+    $$\Gamma_m \ge \exp\!\left(-\frac{\pi}{\Delta\omega RC}\right) = \exp\!\left(-\frac{\pi}{Q_L\,\Delta\omega/\omega_0}\right), \qquad Q_L = \omega_0RC$$
+    <span class="note">the load&rsquo;s own Q sets the floor: for a wider band you must accept a worse match, and no network gets below the curve</span>
+  </div>
+
+  <figure class="fig">
+    <canvas id="bffig" class="static" style="height:270px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="bf-q">load Q<sub>L</sub></label><input type="range" id="bf-q" min="0.5" max="10" step="0.1" value="2"><output id="bf-qv">2.0</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>bound, 20 % band</dt><dd id="bf-b">&mdash;</dd></div>
+      <div class="rd"><dt>shunt L, 20 % band</dt><dd id="bf-l">&mdash;</dd></div>
+      <div class="rd"><dt>bound, 50 % band</dt><dd id="bf-c">&mdash;</dd></div>
+    </dl>
+    <figcaption class="cap">the smallest reflection achievable across a band, against the band&rsquo;s width, for a parallel RC load with R = Z<sub>0</sub>: the Bode&ndash;Fano floor, and what the simplest match, one shunt inductor resonating the capacitance at f<sub>0</sub>, actually achieves, its worst |&Gamma;| across each band computed directly</figcaption>
+  </figure>
+
+  <p class="t">The gap between the two curves is what a better network can still win: a multi-element match can crowd towards the floor, never cross it. And the floor itself rises steeply with $Q_L$. A load with a large reactive part stores a lot of energy for the power it absorbs, and no arrangement of further lossless parts can make it absorb well over a wide band. That is the quantitative form of the warning above: the budget is set by the load.</p>
 </section>
 
 <section class="blk" id="end">
@@ -705,6 +801,290 @@ layoutFigure('lay-lnet', 300, function(c, C, k, X){
   row(68,  [['series element at the load: needs r','n'], ['L','b'], [' < 1','n']], true);
   row(208, [['shunt element at the load: needs g','n'], ['L','b'], [' < 1','n']], false);
 });
+
+/* ---- complex arithmetic for the figures below ---- */
+function k11(r, i){ return { r: r, i: i }; }
+function ka(a, b){ return k11(a.r + b.r, a.i + b.i); }
+function ks(a, b){ return k11(a.r - b.r, a.i - b.i); }
+function km(a, b){ return k11(a.r*b.r - a.i*b.i, a.r*b.i + a.i*b.r); }
+function kd(a, b){ var d = b.r*b.r + b.i*b.i; return k11((a.r*b.r + a.i*b.i)/d, (a.i*b.r - a.r*b.i)/d); }
+function kabs(a){ return Math.hypot(a.r, a.i); }
+function kinv(a){ return kd(k11(1, 0), a); }
+/* normalised impedance after a line of electrical length bl */
+function kline(z, bl){ var t = Math.tan(bl); return kd(ka(z, k11(0, t)), ka(k11(1, 0), km(k11(0, t), z))); }
+function kgam(z){ return kabs(kd(ks(z, k11(1, 0)), ka(z, k11(1, 0)))); }
+function bandAt(fn, lim, fmax){
+  if(fn(1) > lim) return null;
+  var lo = 1, hi = 1, st = 0.0005;
+  while(lo - st > 0.005 && fn(lo - st) <= lim) lo -= st;
+  while(hi + st < fmax && fn(hi + st) <= lim) hi += st;
+  return hi - lo;
+}
+function plotFrame(c, C, W, H, L, R, T, B, YM, FM){
+  c.strokeStyle = C.line2; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.lineTo(W - R, H - B); c.stroke();
+  c.strokeStyle = C.ink3; c.setLineDash([3, 3]);
+  var y2 = (H - B) - 0.2/YM*(H - T - B);
+  c.beginPath(); c.moveTo(L, y2); c.lineTo(W - R, y2); c.stroke(); c.setLineDash([]);
+  c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
+  c.fillText(YM.toFixed(1), L - 6, T + 8); c.fillText('0.2', L - 6, y2 + 4); c.fillText('0', L - 6, H - B + 4);
+  c.textAlign = 'center';
+  EM.rich(c, [['f','n'], ['0','b']], L + 1/FM*(W - L - R), H - B + 15, 11, 'center');
+  c.fillText('0', L, H - B + 15);
+  EM.rich(c, [['2f','n'], ['0','b']], W - R - 8, H - B + 15, 11, 'center');
+  c.textAlign = 'left'; c.fillText('|Γ|', L + 6, T + 10);
+}
+
+/* ---- the four single-stub designs, across frequency ---- */
+(function(){
+  var cv = document.getElementById('chfig');
+  if(!cv) return;
+  var r = 2, x = 0, FM = 2, COLS = ['e', 'h', 'acc', 'ink2'];
+  /* travel positions where Re y = 1, by bracketing and bisection */
+  function designs(){
+    var zl = k11(r, x), out = [];
+    function g(d){ return kinv(kline(zl, 2*Math.PI*d)).r - 1; }
+    var N = 2000, prev = g(1e-6);
+    for(var k = 1; k <= N; k++){
+      var d = 0.5*k/N + 1e-6, v = g(d);
+      if(isFinite(v) && isFinite(prev) && prev*v <= 0 && Math.abs(v - prev) < 1){
+        var a = 0.5*(k - 1)/N + 1e-6, b = d;
+        for(var it = 0; it < 60; it++){ var m = (a + b)/2; if(g(a)*g(m) <= 0) b = m; else a = m; }
+        var dd = (a + b)/2, bb = kinv(kline(zl, 2*Math.PI*dd)).i;
+        [false, true].forEach(function(open){
+          /* shorted: y = -j cot(bl) must be -j b, so cot(bl) = b; open: tan(bl) = -b */
+          var bl = open ? Math.atan(-bb) : Math.atan2(1, bb);
+          if(bl < 0) bl += Math.PI;
+          out.push({ d: dd, ls: bl/(2*Math.PI), open: open });
+        });
+      }
+      prev = v;
+    }
+    return out.slice(0, 4);
+  }
+  function resp(D, f){
+    var y = kinv(kline(k11(r, x), 2*Math.PI*D.d*f)), t = Math.tan(2*Math.PI*D.ls*f);
+    var ys = D.open ? k11(0, t) : k11(0, -1/t);
+    return kgam(kinv(ka(y, ys)));
+  }
+  function sync(){
+    document.getElementById('ch-rv').textContent = r.toFixed(2);
+    document.getElementById('ch-xv').textContent = (x < 0 ? '−' : '') + Math.abs(x).toFixed(2);
+    var ds = designs(), host = document.getElementById('ch-ro');
+    if(!ds.length){ host.innerHTML = '<div class="rd"><dt>no design</dt><dd>&mdash;</dd></div>'; return; }
+    host.innerHTML = ds.map(function(D, i){
+      var b = bandAt(function(f){ return resp(D, f); }, 0.2, FM);
+      return '<div class="rd"><dt style="white-space:normal"><i style="display:inline-block;width:14px;border-top:2.5px solid var(--' + COLS[i] +
+        ');vertical-align:middle;margin-right:6px"></i>d ' + D.d.toFixed(3) + '&lambda;, ' + (D.open ? 'open ' : 'short ') +
+        D.ls.toFixed(3) + '&lambda;</dt><dd>' + (b === null ? '&mdash;' : (100*b).toFixed(1) + ' %') + '</dd></div>';
+    }).join('');
+  }
+  document.getElementById('ch-r').addEventListener('input', function(){ r = +this.value; sync(); EM.redrawStatic(); });
+  document.getElementById('ch-x').addEventListener('input', function(){ x = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 40, R = 14, T = 16, B = 34, YM = 1;
+    plotFrame(c, C, W, H, L, R, T, B, YM, FM);
+    function px(f){ return L + f/FM*(W - L - R); }
+    function py(v){ return (H - B) - v/YM*(H - T - B); }
+    designs().forEach(function(D, i){
+      c.strokeStyle = C[COLS[i]]; c.lineWidth = 2.2; c.beginPath();
+      for(var k = 1; k <= 500; k++){ var f = FM*k/500; c.lineTo(px(f), py(Math.min(1, resp(D, f)))); }
+      c.stroke();
+    });
+  }, false);
+})();
+
+/* ---- escaping the forbidden region with a length of line ----
+   Drawn the way chapter 10 turns a point: y is plotted as if it were z, on
+   the impedance grid, so the forbidden g > 2 region is the r > 2 disc. */
+(function(){
+  var cv = document.getElementById('esfig');
+  if(!cv) return;
+  var g = 3, b = -1, GMAX = 2, T1 = 1;                    /* lambda/8 spacing: t = tan(pi/4) = 1 */
+  function yAt(l){ return kline(k11(g, b), 2*Math.PI*l); } /* an admittance moves by the same rule */
+  function escape(){
+    for(var l = 0; l <= 0.5; l += 0.0002){ var y = yAt(l); if(y.r <= GMAX) return { l: l, y: y }; }
+    return null;
+  }
+  function stubs(y){
+    var gg = y.r, disc = gg*(1 + T1*T1) - T1*T1*gg*gg;
+    if(disc < 0) return null;
+    var bb = (1 + Math.sqrt(disc))/T1, add1 = bb - y.i;
+    var y1 = k11(gg, bb), y2 = kd(ka(y1, k11(0, T1)), ka(k11(1, 0), km(k11(0, T1), y1)));
+    return { s1: add1, s2: -y2.i, chk: y2.r };
+  }
+  function f2(v){ return (v < 0 ? '−' : '+') + Math.abs(v).toFixed(2); }
+  function sync(){
+    document.getElementById('es-gv').textContent = g.toFixed(2);
+    document.getElementById('es-bv').textContent = (b < 0 ? '−' : '') + Math.abs(b).toFixed(2);
+    var e = escape();
+    if(!e){ ['es-l', 'es-g2', 'es-s'].forEach(function(id){ document.getElementById(id).textContent = '—'; }); return; }
+    document.getElementById('es-l').innerHTML = e.l.toFixed(3) + '&lambda;';
+    document.getElementById('es-g2').textContent = e.y.r.toFixed(3);
+    var s = stubs(e.y);
+    document.getElementById('es-s').textContent = s ? 'j' + f2(s.s1).replace('+', '') + ' / j' + f2(s.s2).replace('+', '') : '—';
+  }
+  document.getElementById('es-g').addEventListener('input', function(){ g = +this.value; sync(); EM.redrawStatic(); });
+  document.getElementById('es-b').addEventListener('input', function(){ b = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var R = Math.min(W, H)/2 - 22, cx = W/2, cy = H/2;
+    function P(z){ var gm = kd(ks(z, k11(1, 0)), ka(z, k11(1, 0))); return [cx + gm.r*R, cy - gm.i*R]; }
+    c.fillStyle = C.sunk; c.beginPath(); c.arc(cx, cy, R, 0, Math.PI*2); c.fill();
+    c.save(); c.beginPath(); c.arc(cx, cy, R, 0, Math.PI*2); c.clip();
+    c.strokeStyle = C.z; c.globalAlpha = 0.4; c.lineWidth = 1;
+    [0.2, 0.5, 1, 2, 5].forEach(function(rr){ c.beginPath(); c.arc(cx + rr/(1 + rr)*R, cy, R/(1 + rr), 0, Math.PI*2); c.stroke(); });
+    [-2, -1, -0.5, 0.5, 1, 2].forEach(function(xx){ c.beginPath(); c.arc(cx + R, cy - R/xx, Math.abs(R/xx), 0, Math.PI*2); c.stroke(); });
+    c.globalAlpha = 1;
+    /* the forbidden disc, g > GMAX */
+    c.fillStyle = C.warn; c.globalAlpha = 0.14;
+    c.beginPath(); c.arc(cx + GMAX/(1 + GMAX)*R, cy, R/(1 + GMAX), 0, Math.PI*2); c.fill();
+    c.globalAlpha = 0.7; c.strokeStyle = C.warn; c.lineWidth = 1.6; c.setLineDash([5, 4]); c.stroke(); c.setLineDash([]);
+    c.globalAlpha = 1;
+    c.restore();
+    c.strokeStyle = C.line2; c.lineWidth = 1.5; c.beginPath(); c.arc(cx, cy, R, 0, Math.PI*2); c.stroke();
+    var e = escape(), pl = P(k11(g, b));
+    if(e){
+      c.strokeStyle = C.acc; c.lineWidth = 3; c.beginPath();
+      for(var k = 0; k <= 200; k++){ var q = P(yAt(e.l*k/200)); c.lineTo(q[0], q[1]); }
+      c.stroke();
+      var pe = P(e.y); c.fillStyle = C.ink; c.beginPath(); c.arc(pe[0], pe[1], 5, 0, Math.PI*2); c.fill();
+    }
+    c.strokeStyle = C.ink; c.lineWidth = 1.6; c.beginPath(); c.arc(pl[0], pl[1], 6, 0, Math.PI*2); c.stroke();
+    c.font = '11px ' + MONO; c.fillStyle = C.warn; c.textAlign = 'center';
+    c.fillText('g > 2', cx + GMAX/(1 + GMAX)*R, cy + R/(1 + GMAX) + 14);
+  }, false);
+})();
+
+/* ---- L, cascade and pi: three lumped matches of the same ratio ----
+   Every series element an inductor (X scales with f), every shunt element a
+   capacitor (B scales with f). Responses by cascading the components. */
+(function(){
+  var cv = document.getElementById('lqfig');
+  if(!cv) return;
+  var RL = 200, Z0 = 50, Qp = 3, FM = 2;
+  /* an L-section stepping from Rhi down to Rlo: shunt C across Rhi, series L */
+  function lsec(Rhi, Rlo){ var q = Math.sqrt(Rhi/Rlo - 1); return { B: q/Rhi, X: q*Rlo, q: q }; }
+  function qmin(){ return Math.sqrt(RL/Z0 - 1); }
+  function nets(){
+    var Rm = Math.sqrt(RL*Z0), q = Math.max(Qp, qmin() + 0.01), Rv = RL/(1 + q*q), q2 = Math.sqrt(Z0/Rv - 1);
+    return {
+      single: [{ shunt: lsec(RL, Z0).B, series: lsec(RL, Z0).X }],
+      cascade: [{ shunt: lsec(RL, Rm).B, series: lsec(RL, Rm).X }, { shunt: lsec(Rm, Z0).B, series: lsec(Rm, Z0).X }],
+      pi: [{ shunt: lsec(RL, Rv).B, series: lsec(RL, Rv).X + q2*Rv }, { shunt: q2/Z0, series: 0, shuntLast: true }],
+      q: q, qc: lsec(RL, Rm).q
+    };
+  }
+  function gamma(net, f){
+    var z = k11(RL, 0);
+    net.forEach(function(s){
+      if(s.shuntLast){ z = kinv(ka(kinv(z), k11(0, s.shunt*f))); return; }
+      z = kinv(ka(kinv(z), k11(0, s.shunt*f)));
+      z = ka(z, k11(0, s.series*f));
+    });
+    return kabs(kd(ks(z, k11(Z0, 0)), ka(z, k11(Z0, 0))));
+  }
+  function sync(){
+    var n = nets();
+    document.getElementById('lq-rv').textContent = RL;
+    document.getElementById('lq-qv').textContent = n.q.toFixed(1);
+    var rows = [['one L, Q ' + qmin().toFixed(2), n.single, 'e'], ['two L in cascade, Q ' + n.qc.toFixed(2), n.cascade, 'h'], ['&pi;, Q ' + n.q.toFixed(2), n.pi, 'acc']];
+    document.getElementById('lq-ro').innerHTML = rows.map(function(rw){
+      var b = bandAt(function(f){ return gamma(rw[1], f); }, 0.2, FM);
+      return '<div class="rd"><dt style="white-space:normal"><i style="display:inline-block;width:14px;border-top:2.5px solid var(--' + rw[2] +
+        ');vertical-align:middle;margin-right:6px"></i>' + rw[0] + '</dt><dd>' + (b === null ? '&mdash;' : (100*b).toFixed(1) + ' %') + '</dd></div>';
+    }).join('');
+  }
+  document.getElementById('lq-r').addEventListener('input', function(){ RL = +this.value; sync(); EM.redrawStatic(); });
+  document.getElementById('lq-q').addEventListener('input', function(){ Qp = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 40, R = 14, T = 16, B = 34, YM = 1, n = nets();
+    plotFrame(c, C, W, H, L, R, T, B, YM, FM);
+    function px(f){ return L + f/FM*(W - L - R); }
+    function py(v){ return (H - B) - v/YM*(H - T - B); }
+    [[n.single, 'e'], [n.cascade, 'h'], [n.pi, 'acc']].forEach(function(q){
+      c.strokeStyle = C[q[1]]; c.lineWidth = 2.2; c.beginPath();
+      for(var k = 1; k <= 500; k++){ var f = FM*k/500; c.lineTo(px(f), py(Math.min(1, gamma(q[0], f)))); }
+      c.stroke();
+    });
+  }, false);
+})();
+
+/* ---- the Bode-Fano floor for a parallel RC load ---- */
+(function(){
+  var cv = document.getElementById('bffig');
+  if(!cv) return;
+  var Q = 2;
+  function bound(w){ return w <= 0 ? 0 : Math.exp(-Math.PI/(Q*w)); }
+  /* one shunt L resonating C at f0, R = Z0: y = 1 + jQ(f - 1/f) */
+  function simple(w){
+    var worst = 0;
+    [1 - w/2, 1 + w/2].forEach(function(f){
+      if(f <= 0) { worst = 1; return; }
+      var s = Q*(f - 1/f); worst = Math.max(worst, Math.abs(s)/Math.hypot(2, s));
+    });
+    return worst;
+  }
+  /* the floor can be tiny: below 0.01 it is given in powers of ten */
+  function fm(v){
+    if(v >= 0.01) return v.toFixed(3);
+    var e = Math.floor(Math.log10(v)), m = v/Math.pow(10, e);
+    return m.toFixed(1) + '&times;10<sup>&minus;' + (-e) + '</sup>';
+  }
+  function sync(){
+    document.getElementById('bf-qv').textContent = Q.toFixed(1);
+    document.getElementById('bf-b').innerHTML = '|&Gamma;| &ge; ' + fm(bound(0.2));
+    document.getElementById('bf-l').innerHTML = '|&Gamma;| = ' + fm(simple(0.2));
+    document.getElementById('bf-c').innerHTML = '|&Gamma;| &ge; ' + fm(bound(0.5));
+  }
+  document.getElementById('bf-q').addEventListener('input', function(){ Q = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 40, R = 14, T = 16, B = 34;
+    function px(w){ return L + w*(W - L - R); }
+    function py(v){ return (H - B) - v*(H - T - B); }
+    /* the unreachable region under the floor */
+    c.fillStyle = C.warn; c.globalAlpha = 0.1; c.beginPath(); c.moveTo(px(0), py(0));
+    for(var k = 0; k <= 300; k++){ var w = k/300; c.lineTo(px(w), py(bound(w))); }
+    c.lineTo(px(1), py(0)); c.closePath(); c.fill(); c.globalAlpha = 1;
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.lineTo(W - R, H - B); c.stroke();
+    c.strokeStyle = C.warn; c.lineWidth = 2.4; c.beginPath();
+    for(var k2 = 0; k2 <= 300; k2++){ var w2 = k2/300; c.lineTo(px(w2), py(bound(w2))); }
+    c.stroke();
+    c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
+    for(var k3 = 0; k3 <= 300; k3++){ var w3 = k3/300; c.lineTo(px(w3), py(simple(w3))); }
+    c.stroke();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
+    c.fillText('1', L - 6, py(1) + 4); c.fillText('0', L - 6, py(0) + 4);
+    c.textAlign = 'center';
+    [0, 0.25, 0.5, 0.75, 1].forEach(function(w){ c.textAlign = w === 1 ? 'right' : 'center'; c.fillText((100*w) + ' %', px(w), H - B + 15); });
+    c.textAlign = 'right'; c.fillText('bandwidth', W - R, H - 5);
+    c.textAlign = 'left';
+    c.fillStyle = C.ink3; c.fillText('worst |Γ| in the band', L + 6, T + 10);
+    var wl = 0.7;
+    c.textAlign = 'right'; c.fillStyle = C.e; c.fillText('one shunt inductor', W - R - 4, py(simple(0.95)) + 18);
+    c.fillStyle = C.warn; c.fillText('no network does better', W - R - 4, H - B - 8);
+  }, false);
+})();
 </script>
 </body>
 </html>

@@ -46,7 +46,7 @@
   <p class="t">The word doing the work in the last two is <b>curl</b>. A curl is a circulation: it says the field forms closed loops around whatever sits on the right-hand side. So Faraday's law says a changing $\vB$ is encircled by $\vE$, and Amp&egrave;re's law says a changing $\vD$ is encircled by $\vH$.</p>
 
   <div class="key">
-    <span class="lab">The whole of chapter 2 in one sentence</span>
+    <span class="lab">The whole of part two in one sentence</span>
     <p>Each of those two laws produces the very quantity the other one needs. Loop them together and you have a disturbance that sustains itself with no charge and no current anywhere near it.</p>
   </div>
 </section>
@@ -131,6 +131,105 @@
       <p>Because both theorems hold for <i>every</i> volume and <i>every</i> surface, the two forms carry identical information. Neither is more fundamental. The differential form does assume the fields are differentiable, so at a sharp material boundary you work with the integral form instead &mdash; which is exactly how boundary conditions are derived.</p>
     </div>
   </details>
+</section>
+
+<section class="blk" id="boundary">
+  <h2>At the surface of a conductor</h2>
+  <p class="t">A transmission line is two conductors with fields between them, so the first thing to know is what the four laws demand right at a conductor's surface. The differential forms cannot say, because the fields jump there. The integral forms can, applied to two shapes that straddle the surface and are then squeezed flat.</p>
+
+  <figure class="fig">
+    <canvas id="bcfig" class="static" style="height:280px"></canvas>
+    <figcaption class="cap">a pillbox across the surface sees only the normal components; a thin loop across it sees only the tangential ones. squeeze either to zero height and what is left is the boundary condition</figcaption>
+  </figure>
+
+  <p class="t">Inside a perfect conductor a time-varying field cannot exist: any electric field would drive an unlimited current, and with $\vE = 0$ inside, Faraday's law leaves $\partial\vB/\partial t = 0$ there too. Everything therefore happens on one side of the surface, and with $\hat{n}$ the normal pointing out of the conductor:</p>
+
+  <div class="eq box">
+    $$\hat{n}\times\vE = 0 \qquad \hat{n}\cdot\vD = \rho_s \qquad \hat{n}\cdot\vB = 0 \qquad \hat{n}\times\vH = \vJ_s$$
+    <span class="note">the electric field meets the surface at right angles; the magnetic field runs along it; charge and current live on the surface itself</span>
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; the pillbox and the loop</summary>
+    <div class="body">
+      <p><b>Normal components.</b> Take a pillbox of face area $\Delta A$ and height $h$ straddling the surface. Gauss's law gives $\oint\vD\cdot d\vA = Q_{enc}$. As $h \to 0$ the curved side contributes nothing, the face inside the conductor sees no field, and the enclosed charge is whatever sits on the surface:</p>
+      <div class="eq">$$D_n\,\Delta A = \rho_s\,\Delta A \quad\Longrightarrow\quad \hat{n}\cdot\vD = \rho_s$$</div>
+      <p>The same box with $\oint\vB\cdot d\vA = 0$ gives $\hat{n}\cdot\vB = 0$.</p>
+      <p><b>Tangential components.</b> Take a rectangular loop of length $\Delta l$ along the surface and height $h$ across it. Faraday's law gives $\oint\vE\cdot d\mathbf{l} = -d\Phi_B/dt$. As $h \to 0$ the area, and with it the flux, vanishes; the short sides contribute nothing and the leg inside the conductor sees no field:</p>
+      <div class="eq">$$E_t\,\Delta l = 0 \quad\Longrightarrow\quad \hat{n}\times\vE = 0$$</div>
+      <p>Amp&egrave;re&ndash;Maxwell is the one place a term survives the squeeze. The displacement flux through the loop vanishes with its area, but a <b>surface</b> current $\vJ_s$ (amperes per metre) threads the loop however thin it is, contributing $J_s\,\Delta l$:</p>
+      <div class="eq">$$H_t\,\Delta l = J_s\,\Delta l \quad\Longrightarrow\quad \hat{n}\times\vH = \vJ_s$$</div>
+      <p>Between two ordinary dielectrics the same steps give continuity of $E_t$, $H_t$ (no surface current) and $B_n$, and a jump in $D_n$ only where free surface charge sits.</p>
+    </div>
+  </details>
+
+  <p class="t">Chapter 03 rests on all four. The surface charge $\rho_s$ on each conductor, integrated round its perimeter, is the charge per metre that $C'$ relates to voltage. The surface current, integrated the same way, is the current $I$ that $L'$ relates to magnetic flux. And because $\vE$ must leave each conductor at right angles while $\vH$ wraps around it, the field pattern between two conductors is pinned down by their shape.</p>
+</section>
+
+<section class="blk" id="sigma">
+  <h2>Conduction and displacement, compared</h2>
+  <p class="t">In a material with conductivity $\sigma$, an electric field drives two currents at once: the conduction current $\sigma\vE$ and the displacement current $\partial\vD/\partial t$. For a sinusoid the second becomes $j\omega\varepsilon\vE$, and Amp&egrave;re&ndash;Maxwell collects both into one term:</p>
+
+  <div class="eq box">
+    $$\curl\vH = (\sigma + j\omega\varepsilon)\,\vE = j\omega\left(\varepsilon - j\frac{\sigma}{\omega}\right)\vE \qquad\qquad \frac{|\vJ_c|}{|\vJ_d|} = \frac{\sigma}{\omega\varepsilon}$$
+    <span class="note">the bracket is the complex permittivity; the ratio decides which current dominates, and it falls with frequency</span>
+  </div>
+
+  <p class="t">So "conductor" and "dielectric" are not properties of a material alone. They are properties of a material <b>at a frequency</b>. Where $\sigma/\omega\varepsilon \gg 1$ the conduction current dominates and the material behaves as a conductor; where it is $\ll 1$ the material behaves as a dielectric with a little loss; the crossover sits at $f = \sigma/2\pi\varepsilon$.</p>
+
+  <figure class="fig">
+    <canvas id="sigfig" style="height:300px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="sf">frequency</label><input type="range" id="sf" min="0" max="12" step="0.01" value="6"><output id="sfv">1.00 MHz</output></div>
+    </div>
+    <dl class="readout" id="sig-ro"></dl>
+    <figcaption class="cap">&sigma;/&omega;&epsilon; against frequency, both axes logarithmic. typical values: copper &sigma; = 5.8&times;10<sup>7</sup> S/m; sea water 4 S/m, &epsilon;<sub>r</sub> = 81; fresh water 10<sup>&minus;3</sup> S/m, &epsilon;<sub>r</sub> = 80; wet soil 10<sup>&minus;2</sup> S/m, &epsilon;<sub>r</sub> = 15</figcaption>
+  </figure>
+
+  <p class="t">Copper stays a conductor until its crossover near $10^{18}$ Hz, far beyond anything a transmission line carries, which is why a line's conductors can be treated as perfect to first order. Sea water crosses near 900 MHz: a conductor to a submarine's low-frequency radio, a lossy dielectric to a microwave radar. The ratio reappears in chapter 03 as the <b>loss tangent</b> $\tan\delta = \sigma/\omega\varepsilon$ of the dielectric between the conductors, which is where the shunt conductance $G' = \omega C'\tan\delta$ comes from.</p>
+</section>
+
+<section class="blk" id="poynting">
+  <h2>Where the energy goes</h2>
+  <p class="t">The two curl laws also account for energy. Combine them with one vector identity and they say that power leaving any region through its surface is exactly what the region loses from its stored field energy and to heat:</p>
+
+  <div class="eq box">
+    $$-\oint_S (\vE\times\vH)\cdot d\vA = \frac{d}{dt}\int_V \left(\tfrac12\varepsilon|\vE|^2 + \tfrac12\mu|\vH|^2\right)dV + \int_V \vE\cdot\vJ\,dV$$
+    <span class="note">Poynting's theorem: $\vS = \vE\times\vH$ is the power flow per unit area, in W/m<sup>2</sup></span>
+  </div>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; from the two curl laws</summary>
+    <div class="body">
+      <p>The identity $\dive(\vE\times\vH) = \vH\cdot(\curl\vE) - \vE\cdot(\curl\vH)$ holds for any two vector fields. Substitute both curl laws:</p>
+      <div class="eq">$$\dive(\vE\times\vH) = -\vH\cdot\frac{\partial\vB}{\partial t} - \vE\cdot\vJ - \vE\cdot\frac{\partial\vD}{\partial t}$$</div>
+      <p>In a linear medium $\vH\cdot\partial\vB/\partial t = \partial(\tfrac12\mu|\vH|^2)/\partial t$, and likewise for the electric term, so the right side is minus the rate of change of stored energy density, minus the ohmic loss density $\vE\cdot\vJ$. Integrate over a volume and apply the divergence theorem to the left side to get the boxed result.</p>
+      <p>For sinusoidal fields the instantaneous $\vS$ oscillates at $2\omega$ about a mean, and the mean is what delivers energy. With phasors it is</p>
+      <div class="eq">$$\langle\vS\rangle = \tfrac12\operatorname{Re}\left(\vE\times\vH^*\right)$$</div>
+      <p>by the same argument that gives $\tfrac12\operatorname{Re}(VI^*)$ for a circuit: the product of two sinusoids averages to half the real part of one times the conjugate of the other.</p>
+    </div>
+  </details>
+
+  <p class="t">On a coaxial cable the fields are known exactly: $\vE$ radial, $E_\rho = V/(\rho\ln(b/a))$, and $\vH$ circling the axis, $H_\phi = I/2\pi\rho$. Their cross product points along the cable, so the power travels <b>in the dielectric between the conductors</b>, not in the copper. Integrating $\langle S_z\rangle$ over the annulus recovers the circuit result exactly:</p>
+
+  <div class="eq">$$P = \int_a^b \tfrac12\,E_\rho H_\phi\,2\pi\rho\,d\rho = \tfrac12\,VI\int_a^b\frac{d\rho}{\rho\ln(b/a)} = \tfrac12\,VI$$</div>
+
+  <figure class="fig">
+    <canvas id="poyfig" style="height:300px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="pba">b / a</label><input type="range" id="pba" min="1.5" max="10" step="0.05" value="3.5"><output id="pbav">3.50</output></div>
+      <div class="ctl"><label for="per">&epsilon;<sub>r</sub></label><input type="range" id="per" min="1" max="10" step="0.05" value="2.25"><output id="perv">2.25</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>Z<sub>0</sub></dt><dd id="po-z0">50.1 &Omega;</dd></div>
+      <div class="rd"><dt>P, integrating S</dt><dd id="po-int">9.985 mW</dd></div>
+      <div class="rd"><dt>|V|<sup>2</sup>/2Z<sub>0</sub></dt><dd id="po-ckt">9.985 mW</dd></div>
+      <div class="rd"><dt>half the power inside</dt><dd id="po-half">&rho; = 1.87a</dd></div>
+    </dl>
+    <figcaption class="cap">the cross-section at 1 V. power flows along the axis, out of the page; the shading is its density, which falls as 1/&rho;<sup>2</sup>. the plot gives that density and the share of the total flowing inside each radius</figcaption>
+  </figure>
+
+  <p class="t">The density falls as $1/\rho^2$, so the power crowds toward the inner conductor: half of it flows inside $\rho = \sqrt{ab}$, whatever the dielectric. A real conductor changes the picture by one small term. Its finite conductivity leaves a little tangential $\vE$ at the surface, so $\vS$ tips slightly inward and a trickle of power enters the metal, which is exactly the $I^2R'$ loss chapter 03 assigns to $R'$. The conductors guide the energy; they do not carry it.</p>
 </section>
 
 <section class="blk" id="check">
@@ -293,6 +392,301 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     c.fillStyle = C.ink3; c.font = '11.5px ' + MONO; c.textAlign = 'center';
     c.fillText('each law produces what the other needs →', W/2, H - 12);
   }, true);
+})();
+
+/* ---- boundary conditions at a perfect conductor (static) ----
+   Two panels, each a 300 x 250 box: the pillbox and the loop. Side by side
+   in a 640-wide design, stacked in a 320-wide one on a phone, so the labels
+   keep their size instead of shrinking with a wide box. */
+(function(){
+  var cv = document.getElementById('bcfig');
+  if(!cv) return;
+  var rich = EM.rich;
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d');
+    c.clearRect(0, 0, cv._w, cv._h);
+    var nar = cv._w < 560;
+    /* the canvas starts tall enough for either layout and is shrunk to fit */
+    if(nar && !cv._grown){ cv._grown = true; cv.style.height = '540px'; cv._h0 = null; EM.fit(cv); }
+    if(!nar && cv._grown){ cv._grown = false; cv.style.height = '280px'; cv._h0 = null; EM.fit(cv); }
+    var DW = nar ? 320 : 640, DH = nar ? 500 : 250;
+    EM.design(c, cv, DW, DH, true);
+
+    function panel(ox, oy, kind){
+      var ys = oy + 150;
+      /* the conductor, below the surface */
+      c.fillStyle = C.ink2; c.globalAlpha = 0.16;
+      c.fillRect(ox, ys, 300, 70); c.globalAlpha = 1;
+      c.strokeStyle = C.ink2; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(ox, ys); c.lineTo(ox + 300, ys); c.stroke();
+      c.font = '12px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
+      c.fillText('dielectric', ox + 294, ys - 10);
+      c.textAlign = 'left';
+      c.fillText('perfect conductor', ox + 6, ys + 62);
+
+      c.fillStyle = C.ink; c.font = '13px ' + MONO; c.textAlign = 'center';
+      if(kind === 'box'){
+        c.fillText('Gauss: a pillbox', ox + 150, oy + 16);
+        /* surface charge */
+        c.fillStyle = C.e; c.font = '13px ' + MONO;
+        for(var x = ox + 20; x < ox + 290; x += 22) c.fillText('+', x, ys + 15);
+        /* D leaving the surface at right angles */
+        c.strokeStyle = C.e; c.fillStyle = C.e; c.lineWidth = 1.6;
+        [30, 62, 106, 138].forEach(function(dx){ EM.arrow(c, ox + dx, ys - 2, ox + dx, oy + 72, 6); });
+        /* the pillbox, straddling */
+        c.strokeStyle = C.ink; c.lineWidth = 1.4; c.setLineDash([5, 4]);
+        c.strokeRect(ox + 90, ys - 20, 64, 40); c.setLineDash([]);
+        c.strokeStyle = C.ink3; c.lineWidth = 1;
+        c.beginPath(); c.moveTo(ox + 166, ys - 20); c.lineTo(ox + 166, ys + 20);
+        c.moveTo(ox + 162, ys - 20); c.lineTo(ox + 170, ys - 20);
+        c.moveTo(ox + 162, ys + 20); c.lineTo(ox + 170, ys + 20); c.stroke();
+        c.fillStyle = C.ink3; c.font = '12px ' + MONO; c.textAlign = 'left';
+        c.fillText('h → 0', ox + 176, ys + 34);
+        c.fillStyle = C.e;
+        rich(c, [['D','n'], ['n','b'], [' = ρ','n'], ['s','b'], ['     B','n'], ['n','b'], [' = 0','n']], ox + 150, oy + 46, 14, 'center');
+      } else {
+        c.fillText('Ampère and Faraday: a loop', ox + 150, oy + 16);
+        /* H running along the surface */
+        c.strokeStyle = C.h; c.fillStyle = C.h; c.lineWidth = 1.6;
+        [[24, 84], [118, 178], [212, 272]].forEach(function(p){
+          EM.arrow(c, ox + p[0], ys - 34, ox + p[1], ys - 34, 6);
+          EM.arrow(c, ox + p[0], ys - 62, ox + p[1], ys - 62, 6);
+        });
+        /* the surface current, out of the page */
+        c.strokeStyle = C.ink; c.fillStyle = C.ink; c.lineWidth = 1.2;
+        for(var x2 = ox + 30; x2 < ox + 290; x2 += 40){
+          c.beginPath(); c.arc(x2, ys + 18, 5, 0, EM.TAU); c.stroke();
+          c.beginPath(); c.arc(x2, ys + 18, 1.6, 0, EM.TAU); c.fill();
+        }
+        /* the loop, straddling */
+        c.strokeStyle = C.ink; c.lineWidth = 1.4; c.setLineDash([5, 4]);
+        c.strokeRect(ox + 100, ys - 12, 100, 24); c.setLineDash([]);
+        c.fillStyle = C.ink2; c.textAlign = 'right';
+        rich(c, [['J','n'], ['s','b'], [' out of the page','n']], ox + 294, ys + 44, 12, 'right');
+        c.fillStyle = C.h;
+        rich(c, [['H','n'], ['t','b'], [' = J','n'], ['s','b'], ['     E','n'], ['t','b'], [' = 0','n']], ox + 150, oy + 46, 14, 'center');
+      }
+    }
+    if(nar){ panel(10, 0, 'box'); panel(10, 250, 'loop'); }
+    else   { panel(10, 0, 'box'); panel(330, 0, 'loop'); }
+    c.restore();
+  }, false);
+})();
+
+/* ---- conduction against displacement, across frequency ----
+   sigma/(omega eps) is a straight line of slope -1 on log-log axes, crossing
+   1 at f = sigma/(2 pi eps). The material constants are inputs; every line,
+   crossover and verdict is computed from them. */
+(function(){
+  var cv = document.getElementById('sigfig');
+  if(!cv) return;
+  var E0 = 8.8541878128e-12;
+  var MATS = [
+    { name: 'copper',      sig: 5.8e7, er: 1,  col: 'h' },
+    { name: 'sea water',   sig: 4,     er: 81, col: 'e' },
+    { name: 'wet soil',    sig: 1e-2,  er: 15, col: 'acc' },
+    { name: 'fresh water', sig: 1e-3,  er: 80, col: 'ink2' }
+  ];
+  var lf = 6;                                   /* log10 of the cursor frequency */
+  function ratio(m, f){ return m.sig/(2*Math.PI*f*m.er*E0); }
+  function fmtF(f){
+    var u = [[1e12,'THz'],[1e9,'GHz'],[1e6,'MHz'],[1e3,'kHz'],[1,'Hz']];
+    for(var i = 0; i < u.length; i++) if(f >= u[i][0]*0.9995) return (f/u[i][0]).toFixed(2) + ' ' + u[i][1];
+    return f.toFixed(2) + ' Hz';
+  }
+  function sci(v){
+    var e = Math.floor(Math.log10(v)), m = v/Math.pow(10, e);
+    if(m >= 9.995){ m = 1; e += 1; }
+    return m.toFixed(2) + '&times;10<sup>' + (e < 0 ? '&minus;' + (-e) : e) + '</sup>';
+  }
+  function sync(){
+    var f = Math.pow(10, lf);
+    document.getElementById('sfv').textContent = fmtF(f);
+    document.getElementById('sig-ro').innerHTML = MATS.map(function(m){
+      var r = ratio(m, f);
+      var v = r > 100 ? 'conductor' : r < 0.01 ? 'dielectric' : 'in between';
+      return '<div class="rd"><dt>' + m.name + '</dt><dd>' + sci(r) + '</dd><dt style="margin-top:3px">' + v + '</dt></div>';
+    }).join('');
+  }
+  document.getElementById('sf').addEventListener('input', function(){ lf = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 52, R = 14, T = 14, B = 38, X0 = 0, X1 = 12, Y0 = -4, Y1 = 10;
+    function px(x){ return L + (x - X0)/(X1 - X0)*(W - L - R); }
+    function py(y){ return (H - B) - (y - Y0)/(Y1 - Y0)*(H - T - B); }
+
+    /* the two regimes, shaded lightly above 100 and below 1/100 */
+    c.fillStyle = C.ink3; c.globalAlpha = 0.07;
+    c.fillRect(L, py(Y1), W - L - R, py(2) - py(Y1));
+    c.fillRect(L, py(-2), W - L - R, py(Y0) - py(-2));
+    c.globalAlpha = 1;
+    c.fillStyle = C.ink3; c.font = '11px ' + MONO; c.textAlign = 'right';
+    c.fillText('conducts', W - R - 6, py(Y1) + 14);
+    c.fillText('insulates', W - R - 6, py(Y0) - 6);
+
+    /* grid and axes */
+    c.strokeStyle = C.line; c.lineWidth = 1;
+    for(var gx = 0; gx <= 12; gx += 3){ c.beginPath(); c.moveTo(px(gx) + .5, T); c.lineTo(px(gx) + .5, H - B); c.stroke(); }
+    for(var gy = -4; gy <= 10; gy += 2){ c.beginPath(); c.moveTo(L, py(gy) + .5); c.lineTo(W - R, py(gy) + .5); c.stroke(); }
+    c.strokeStyle = C.line2;
+    c.beginPath(); c.moveTo(L, H - B + .5); c.lineTo(W - R, H - B + .5); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.stroke();
+    c.fillStyle = C.ink3; c.textAlign = 'center';
+    ['1 Hz', '1 kHz', '1 MHz', '1 GHz', '1 THz'].forEach(function(t, i){
+      c.textAlign = i === 0 ? 'left' : i === 4 ? 'right' : 'center';
+      c.fillText(t, px(i*3) + (i === 0 ? -4 : 0), H - B + 15);
+    });
+    c.textAlign = 'center';
+    c.fillText('frequency', (L + W - R)/2, H - 6);
+    for(var ly = -4; ly <= 10; ly += 2){
+      c.fillStyle = C.ink3;
+      EM.rich(c, [['10','n'], [ly < 0 ? '−' + (-ly) : String(ly),'p']], L - 8, py(ly) + 4, 11, 'right');
+    }
+    /* ratio = 1 */
+    c.strokeStyle = C.ink2; c.setLineDash([4, 4]);
+    c.beginPath(); c.moveTo(L, py(0)); c.lineTo(W - R, py(0)); c.stroke(); c.setLineDash([]);
+
+    /* each material, clipped to the plot */
+    c.save(); c.beginPath(); c.rect(L, T, W - L - R, H - T - B); c.clip();
+    MATS.forEach(function(m){
+      c.strokeStyle = C[m.col]; c.lineWidth = 2.2; c.beginPath();
+      c.moveTo(px(X0), py(Math.log10(ratio(m, 1))));
+      c.lineTo(px(X1), py(Math.log10(ratio(m, 1e12))));
+      c.stroke();
+    });
+    c.restore();
+
+    /* labels: on each line, at the point where it is a set height above the
+       crossover line, so four parallel lines get four separate labels */
+    MATS.forEach(function(m, i){
+      var yl = [6.5, 4.6, 2.9, 1.2][i];
+      var xl = Math.log10(m.sig/(2*Math.PI*m.er*E0)) - yl;      /* where log ratio = yl */
+      xl = Math.min(Math.max(xl, 0.3), 11.2);
+      var yv = Math.log10(ratio(m, Math.pow(10, xl)));
+      c.font = '11.5px ' + MONO; c.textAlign = 'left';
+      var tw = c.measureText(m.name).width;
+      var lx = Math.min(px(xl) + 8, W - R - tw - 4);
+      c.fillStyle = C.sunk; c.fillRect(lx - 3, py(yv) - 12, tw + 6, 15);
+      c.fillStyle = C[m.col]; c.fillText(m.name, lx, py(yv));
+    });
+
+    /* the frequency cursor, with where it cuts each line */
+    var xc = px(lf);
+    c.strokeStyle = C.ink; c.lineWidth = 1; c.setLineDash([2, 3]);
+    c.beginPath(); c.moveTo(xc, T); c.lineTo(xc, H - B); c.stroke(); c.setLineDash([]);
+    MATS.forEach(function(m){
+      var y = Math.log10(ratio(m, Math.pow(10, lf)));
+      if(y < Y0 || y > Y1) return;
+      c.fillStyle = C[m.col]; c.beginPath(); c.arc(xc, py(y), 4.5, 0, EM.TAU); c.fill();
+    });
+    c.fillStyle = C.ink2; c.textAlign = 'left'; c.font = '11px ' + MONO;
+    c.fillText('σ = ωε', L + 6, py(0) - 5);
+  }, false);
+})();
+
+/* ---- power flow in a coaxial cable ----
+   Fields from the exact coax solution; P is found twice, by integrating the
+   Poynting vector over the annulus (Simpson's rule) and from the circuit
+   formula |V|^2 / 2Z0. Agreement is the point, and it is computed, not
+   asserted. */
+(function(){
+  var cv = document.getElementById('poyfig');
+  if(!cv) return;
+  var ETA0 = 376.730313668, ba = 3.5, er = 2.25, V = 1;
+  function z0(){ return ETA0/Math.sqrt(er)/(2*Math.PI)*Math.log(ba); }
+  function pInt(){
+    var Lg = Math.log(ba), I = V/z0(), N = 400, h = (ba - 1)/N, s = 0;
+    for(var k = 0; k <= N; k++){
+      var r = 1 + k*h, E = V/(r*Lg), Hf = I/(2*Math.PI*r), f = 0.5*E*Hf*2*Math.PI*r;
+      s += f*(k === 0 || k === N ? 1 : (k % 2 ? 4 : 2));
+    }
+    return s*h/3;                                 /* radius in units of a: the a cancels */
+  }
+  function sync(){
+    document.getElementById('pbav').textContent = ba.toFixed(2);
+    document.getElementById('perv').textContent = er.toFixed(2);
+    document.getElementById('po-z0').textContent = z0().toFixed(1) + ' Ω';
+    document.getElementById('po-int').textContent = (pInt()*1000).toFixed(3) + ' mW';
+    document.getElementById('po-ckt').textContent = (V*V/(2*z0())*1000).toFixed(3) + ' mW';
+    document.getElementById('po-half').innerHTML = '&rho; = ' + Math.sqrt(ba).toFixed(2) + 'a';
+  }
+  document.getElementById('pba').addEventListener('input', function(){ ba = +this.value; sync(); EM.redrawStatic(); });
+  document.getElementById('per').addEventListener('input', function(){ er = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var stack = cv._w < 560, want = stack ? 560 : 300;
+    if(Math.abs(cv._h - want) > 1){ cv.style.height = want + 'px'; EM.fit(cv); }
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+
+    /* the cross-section */
+    var side = stack ? Math.min(W, 290) : Math.min(H, W*0.45);
+    var cx = stack ? W/2 : side/2 + 10, cy = side/2, Rb = side/2 - 18, Ra = Rb/ba;
+    var N = 70;
+    for(var k = 0; k < N; k++){
+      var r0 = Ra + (Rb - Ra)*k/N, r1 = Ra + (Rb - Ra)*(k + 1)/N, rm = (r0 + r1)/2;
+      c.fillStyle = C.acc; c.globalAlpha = 0.55*(Ra/rm)*(Ra/rm);
+      c.beginPath(); c.arc(cx, cy, r1, 0, EM.TAU); c.arc(cx, cy, r0, 0, EM.TAU, true); c.fill();
+    }
+    c.globalAlpha = 1;
+    /* H circles, counter-clockwise for current out of the page */
+    c.strokeStyle = C.h; c.fillStyle = C.h; c.lineWidth = 1.3;
+    [0.3, 0.6, 0.9].forEach(function(q){
+      var r = Ra + (Rb - Ra)*q;
+      c.beginPath(); c.arc(cx, cy, r, 0, EM.TAU); c.stroke();
+      /* decreasing canvas angle is counter-clockwise on screen */
+      var a = -Math.PI/4, d = 14/r;
+      EM.arrow(c, cx + r*Math.cos(a + d), cy + r*Math.sin(a + d), cx + r*Math.cos(a), cy + r*Math.sin(a), 6);
+    });
+    /* E radial */
+    c.strokeStyle = C.e; c.fillStyle = C.e; c.lineWidth = 1.5;
+    for(var i = 0; i < 12; i++){
+      var an = i/12*EM.TAU + 0.13;
+      EM.arrow(c, cx + (Ra + 3)*Math.cos(an), cy + (Ra + 3)*Math.sin(an),
+                  cx + (Rb - 4)*Math.cos(an), cy + (Rb - 4)*Math.sin(an), 6);
+    }
+    /* conductors */
+    c.fillStyle = C.ink2; c.beginPath(); c.arc(cx, cy, Ra, 0, EM.TAU); c.fill();
+    c.strokeStyle = C.ink2; c.lineWidth = 6; c.beginPath(); c.arc(cx, cy, Rb + 3, 0, EM.TAU); c.stroke();
+    /* the radius inside which half the power flows */
+    var Rh = Ra*Math.sqrt(ba);
+    c.strokeStyle = C.ink; c.lineWidth = 1.2; c.setLineDash([3, 3]);
+    c.beginPath(); c.arc(cx, cy, Rh, 0, EM.TAU); c.stroke(); c.setLineDash([]);
+
+    /* the plot: density and running share against radius */
+    var L, Rr, T, B;
+    if(stack){ L = 40; Rr = W - 16; T = side + 22; B = H - 40; }
+    else { L = side + 54; Rr = W - 16; T = 20; B = H - 40; }
+    if(Rr - L < 80) return;
+    function px(r){ return L + (r - 1)/(ba - 1)*(Rr - L); }
+    function py(v){ return B - v*(B - T); }
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L, B + .5); c.lineTo(Rr, B + .5); c.moveTo(L + .5, T); c.lineTo(L + .5, B); c.stroke();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
+    c.fillText('1', L - 6, py(1) + 4); c.fillText('0', L - 6, py(0) + 4);
+    c.strokeStyle = C.acc; c.lineWidth = 2.4; c.beginPath();
+    for(var j = 0; j <= 200; j++){ var r2 = 1 + (ba - 1)*j/200; c.lineTo(px(r2), py(1/(r2*r2))); }
+    c.stroke();
+    c.strokeStyle = C.ink; c.lineWidth = 2.4; c.beginPath();
+    for(var j2 = 0; j2 <= 200; j2++){ var r3 = 1 + (ba - 1)*j2/200; c.lineTo(px(r3), py(Math.log(r3)/Math.log(ba))); }
+    c.stroke();
+    var xh = px(Math.sqrt(ba));
+    c.strokeStyle = C.ink3; c.lineWidth = 1; c.setLineDash([3, 3]);
+    c.beginPath(); c.moveTo(xh, T); c.lineTo(xh, B); c.moveTo(L, py(0.5)); c.lineTo(xh, py(0.5)); c.stroke(); c.setLineDash([]);
+    c.textAlign = 'center'; c.fillStyle = C.ink3;
+    c.fillText('a', px(1), B + 15); c.fillText('b', px(ba), B + 15);
+    EM.rich(c, [['√(ab)','n']], xh, B + 15, 11, 'center');
+    c.fillText('radius ρ', (L + Rr)/2, B + 32);
+    c.textAlign = 'left';
+    c.fillStyle = C.acc; c.fillText('density, S(ρ)/S(a)', px(1) + 10, py(0.93));
+    c.fillStyle = C.ink; c.textAlign = 'right'; c.fillText('share of P inside ρ', Rr, py(0.5) + 4);
+  }, false);
 })();
 </script>
 </body>

@@ -185,6 +185,120 @@
       <p>It is worth being clear that this is a <i>different</i> condition from $Z_L = Z_0$. The first maximises power out of a given generator; the second eliminates the reflected wave. They coincide only when $Z_g = Z_0$, which is the usual arrangement in RF systems precisely because it makes the two goals agree. When they do not coincide, you must decide which one you actually want &mdash; and in a system with a long feed line, eliminating the reflection is almost always the right answer.</p>
     </div>
   </details>
+  <div class="key">
+    <span class="lab">Two different matches</span>
+    <p>$Z_L = Z_0$ removes the reflected wave. $Z_{\text{in}} = Z_g^*$ takes the most power the source can give. They are the same condition only when $Z_g = Z_0$, which is why RF sources are built with outputs of the system impedance. When they differ, chapter 06 showed the other route: with both ends mismatched, a length of line alone can produce the conjugate match, but only when $|\Gamma_g| = |\Gamma_L|$.</p>
+  </div>
+</section>
+
+<section class="blk" id="lossyin">
+  <h2>A lossy line forgets its load</h2>
+  <p class="t">With loss, the input impedance uses the hyperbolic form from the derivation above, and $\Gamma$ at the input is $\Gamma_Le^{-2\alpha d}e^{-j2\beta d}$. It still turns clockwise, but it also shrinks, so the locus on the $\Gamma$ plane is a spiral into the centre, and $Z_{\text{in}}$ spirals onto $Z_0$:</p>
+
+  <div class="eq box">
+    $$Z_{\text{in}} = Z_0\,\frac{Z_L + Z_0\tanh\gamma d}{Z_0 + Z_L\tanh\gamma d} \;\longrightarrow\; Z_0 \quad\text{as}\quad \alpha d \to \infty$$
+    <span class="note">because $\tanh\gamma d \to 1$; whatever the load, a long enough lossy line looks matched</span>
+  </div>
+
+  <figure class="fig">
+    <canvas id="spfig" class="static" style="height:280px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="sp-a">loss, dB per &lambda;</label><input type="range" id="sp-a" min="0" max="2" step="0.01" value="0.4"><output id="sp-av">0.40</output></div>
+      <div class="ctl"><label for="sp-l">load</label>
+        <select id="sp-l" aria-label="Load">
+          <option value="0" selected>short</option>
+          <option value="1">open</option>
+          <option value="2">25 &minus; j50 &Omega;</option>
+        </select></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>|&Gamma;<sub>in</sub>| after 2&lambda;</dt><dd id="sp-g2">0.479</dd></div>
+      <div class="rd"><dt>|&Gamma;<sub>in</sub>| &lt; 0.1 beyond</dt><dd id="sp-l1">12.5&lambda;</dd></div>
+      <div class="rd"><dt>Z<sub>in</sub> after 2&lambda;</dt><dd id="sp-z2">&mdash;</dd></div>
+    </dl>
+    <figcaption class="cap">&Gamma; at the input as the line lengthens from 0 to 4 wavelengths, on a 50 &Omega; line, and the input resistance and reactance over the same lengths. without loss the point would circle forever; with it, every turn is smaller</figcaption>
+  </figure>
+
+  <p class="t">The return loss at the input is the load's return loss plus twice the line loss, which is chapter 07's lossy SWR seen from the impedance side. This is also the principle of a <b>matched termination</b> built from line alone: a long enough run of lossy cable, shorted or open at the far end, absorbs everything and reflects almost nothing.</p>
+</section>
+
+<section class="blk" id="measure">
+  <h2>Measuring Z<sub>0</sub> and &gamma;: short and open</h2>
+  <p class="t">The two special cases in the table give a classic way to measure an unknown line. Terminate a length $l$ of it in a short and measure $Z_{\text{sc}} = Z_0\tanh\gamma l$; then in an open and measure $Z_{\text{oc}} = Z_0\coth\gamma l$. Their product and ratio separate the two unknowns:</p>
+
+  <div class="eq box">
+    $$Z_0 = \sqrt{Z_{\text{sc}}\,Z_{\text{oc}}} \qquad\qquad \tanh\gamma l = \sqrt{\frac{Z_{\text{sc}}}{Z_{\text{oc}}}}$$
+    <span class="note">exact for any uniform line, lossy or not; the second gives $\alpha l$ directly, and $\beta l$ only modulo $\pi$</span>
+  </div>
+
+  <figure class="fig">
+    <canvas id="scfig" class="static" style="height:240px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="sc-f">frequency, f / f<sub>1</sub></label><input type="range" id="sc-f" min="0.1" max="3" step="0.01" value="0.7"><output id="sc-fv">0.70</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>Z<sub>0</sub> recovered</dt><dd id="sc-z">&mdash;</dd></div>
+      <div class="rd"><dt>&alpha;l recovered</dt><dd id="sc-a">&mdash;</dd></div>
+      <div class="rd"><dt>&beta;l recovered</dt><dd id="sc-b">&mdash;</dd></div>
+      <div class="rd"><dt>&beta;l true</dt><dd id="sc-bt">&mdash;</dd></div>
+    </dl>
+    <figcaption class="cap">a test line with Z<sub>0</sub> = 50 &minus; j2 &Omega; and a little loss; f<sub>1</sub> is where it is a quarter wavelength long. the curves are the magnitudes of the two measured impedances against frequency, and the readouts invert them at the marked frequency. the recovered &beta;l is the principal value, which lags the true one by a multiple of &pi; once the line is longer than a quarter wavelength</figcaption>
+  </figure>
+
+  <p class="t">The ambiguity is genuine: $\tanh$ repeats every $j\pi$, so one pair of measurements cannot tell a line of electrical length $\beta l$ from one $\pi$ longer. Measuring at two nearby frequencies, or knowing the length roughly in advance, settles which branch is right. Network analysers do the same thing in effect, which is why their line-delay features ask for an approximate length.</p>
+</section>
+
+<section class="blk" id="foster">
+  <h2>Every lossless reactance rises with frequency</h2>
+  <p class="t">The short and the open sweep through every reactance as the length changes. Hold the length and change the frequency instead, and they still sweep through every value, but always in the same direction. That is a theorem, not a coincidence:</p>
+
+  <div class="eq box">
+    $$\frac{dX}{d\omega} > 0 \qquad\qquad \frac{dX}{d\omega} = \frac{4\left(W_m + W_e\right)}{|I|^2}$$
+    <span class="note">Foster's reactance theorem, for any lossless one-port: the slope is set by the total energy stored, so it can never be negative</span>
+  </div>
+
+  <figure class="fig">
+    <canvas id="fofig" class="static" style="height:260px"></canvas>
+    <figcaption class="cap">the input reactance of a shorted and of an open stub, each a quarter wavelength long at f<sub>0</sub>, against frequency, normalised to Z<sub>0</sub>. between poles every branch rises, and poles and zeros alternate</figcaption>
+  </figure>
+
+  <p class="t">Two consequences matter later. A reactance cannot pass through zero going downward, so <b>poles and zeros of $X(\omega)$ must alternate</b>: a shorted stub goes zero, pole, zero, pole as frequency rises. And a steeper slope means more stored energy, which means a narrower bandwidth: a matching network whose reactances change quickly with frequency is one storing a lot of energy, and it will hold its match only over a narrow band. Chapter 11's bandwidth comparisons are this theorem in practice.</p>
+</section>
+
+<section class="blk" id="resonator">
+  <h2>A line section as a resonator</h2>
+  <p class="t">Near $f_0$ a shorted quarter-wave stub behaves like a parallel resonant circuit: its input impedance rises to a peak that is finite only because of loss. Expanding $\tanh\gamma l$ about the resonance gives the equivalent parallel RLC, and its quality factor in terms of the line's own constants:</p>
+
+  <div class="eq box">
+    $$Q = \frac{\beta}{2\alpha}$$
+    <span class="note">for a quarter-wave or half-wave TEM resonator; it depends only on the line, not on its length</span>
+  </div>
+
+  <figure class="fig">
+    <canvas id="qfig" class="static" style="height:250px"></canvas>
+    <div class="rail">
+      <div class="ctl"><label for="q-a">loss, dB per &lambda;</label><input type="range" id="q-a" min="0.02" max="1" step="0.01" value="0.1"><output id="q-av">0.10</output></div>
+    </div>
+    <dl class="readout">
+      <div class="rd"><dt>Q from the curve</dt><dd id="q-c">&mdash;</dd></div>
+      <div class="rd"><dt>&beta;/2&alpha;</dt><dd id="q-f">&mdash;</dd></div>
+      <div class="rd"><dt>peak |Z<sub>in</sub>| / Z<sub>0</sub></dt><dd id="q-p">&mdash;</dd></div>
+    </dl>
+    <figcaption class="cap">|Z<sub>in</sub>| of a shorted quarter-wave line near resonance. the curve's Q is f<sub>0</sub> over the width between the two points where |Z<sub>in</sub>| falls to 1/&radic;2 of its peak, measured off the plotted function; the formula beside it is computed independently</figcaption>
+  </figure>
+
+  <details class="deriv">
+    <summary>Full derivation &mdash; the parallel RLC near resonance</summary>
+    <div class="body">
+      <p>Write $\beta l = \pi/2 + \pi\,\Delta\omega/2\omega_0$ near the resonance, and take $\alpha l \ll 1$. Using $\tanh(x + jy) = (\tanh x + j\tan y)/(1 + j\tanh x\tan y)$ with $\tan y \to -2\omega_0/\pi\Delta\omega$ near the pole, and keeping first-order terms,</p>
+      <div class="eq">$$Z_{\text{in}} = Z_0\tanh\gamma l \approx \frac{Z_0}{\alpha l + j\pi\Delta\omega/2\omega_0}$$</div>
+      <p>A parallel RLC near resonance has $Z \approx R/(1 + 2jQ\Delta\omega/\omega_0)$. Matching the two forms gives $R = Z_0/\alpha l$ and</p>
+      <div class="eq">$$Q = \frac{\pi}{4\alpha l} = \frac{\beta}{2\alpha}, \qquad \text{using}\quad \beta l = \frac{\pi}{2}$$</div>
+      <p>The same steps on a half-wave line, where $\beta l = \pi$, give $Q = \pi/2\alpha l$, which is again $\beta/2\alpha$. So the Q is a property of the line's loss per radian of phase, and a resonator can only be made sharper by making the line itself less lossy.</p>
+    </div>
+  </details>
+
+  <p class="t">Air-filled coaxial resonators reach Q in the thousands; microstrip ones, with dielectric and radiation loss, a few hundred. This is chapter 03's ringing line seen in the frequency domain: with $R_s = 0$ and an open end the echoes never died, and the matching statement here is that a lossless line has infinite Q.</p>
 </section>
 
 <section class="blk" id="check">
@@ -486,6 +600,247 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     box(104, t2-15, 54, 30, 'Z|g', C.ink2);
     box(188, t2, 52, b2-t2, 'Z|in', C.e);
     c.restore();
+  }, false);
+})();
+
+/* ---- complex helpers for the figures below ---- */
+function cx(r, i){ return { r: r, i: i }; }
+function cadd(a, b){ return cx(a.r + b.r, a.i + b.i); }
+function csub(a, b){ return cx(a.r - b.r, a.i - b.i); }
+function cmul(a, b){ return cx(a.r*b.r - a.i*b.i, a.r*b.i + a.i*b.r); }
+function cdv(a, b){ var d = b.r*b.r + b.i*b.i; return cx((a.r*b.r + a.i*b.i)/d, (a.i*b.r - a.r*b.i)/d); }
+function cabs(a){ return Math.hypot(a.r, a.i); }
+function ctanh(z){ var d = Math.cosh(2*z.r) + Math.cos(2*z.i); return cx(Math.sinh(2*z.r)/d, Math.sin(2*z.i)/d); }
+function csqrt(z){ var m = cabs(z); return cx(Math.sqrt((m + z.r)/2), (z.i < 0 ? -1 : 1)*Math.sqrt(Math.max(0, (m - z.r)/2))); }
+function catanh(z){ var w = cdv(cadd(cx(1, 0), z), csub(cx(1, 0), z)); return cx(0.5*Math.log(cabs(w)), 0.5*Math.atan2(w.i, w.r)); }
+function zfmt(z, dp){
+  dp = dp == null ? 1 : dp;
+  return z.r.toFixed(dp) + (z.i < 0 ? ' − j' : ' + j') + Math.abs(z.i).toFixed(dp) + ' Ω';
+}
+
+/* ---- the lossy spiral ----
+   Gamma_in(d) = Gamma_L e^{-2 alpha d} e^{-j 4 pi d}, d in wavelengths. */
+(function(){
+  var cv = document.getElementById('spfig');
+  if(!cv) return;
+  var Z0 = 50, dbl = 0.4, li = 0, DM = 4;
+  var LOADS = [cx(-1, 0), cx(1, 0), null];
+  function gl(){
+    if(LOADS[li]) return LOADS[li];
+    var z = cx(25, -50); return cdv(csub(z, cx(Z0, 0)), cadd(z, cx(Z0, 0)));
+  }
+  function al(){ return dbl/(20/Math.LN10); }
+  function gin(d){ var g = gl(), k = Math.exp(-2*al()*d), p = -4*Math.PI*d; return cmul(g, cx(k*Math.cos(p), k*Math.sin(p))); }
+  function zin(d){ var g = gin(d); return cmul(cx(Z0, 0), cdv(cadd(cx(1, 0), g), csub(cx(1, 0), g))); }
+  function sync(){
+    document.getElementById('sp-av').textContent = dbl.toFixed(2);
+    document.getElementById('sp-g2').textContent = cabs(gin(2)).toFixed(3);
+    var m = cabs(gl()), a = al();
+    document.getElementById('sp-l1').innerHTML = a < 1e-6 ? 'never' : (m <= 0.1 ? '0' : (Math.log(m/0.1)/(2*a)).toFixed(2) + '&lambda;');
+    var z = zin(2);
+    document.getElementById('sp-z2').textContent = cabs(z) > 1e5 ? '→ ∞' : zfmt(z);
+  }
+  document.getElementById('sp-a').addEventListener('input', function(){ dbl = +this.value; sync(); EM.redrawStatic(); });
+  document.getElementById('sp-l').addEventListener('change', function(){ li = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var stack = cv._w < 600, want = stack ? 540 : 280;
+    if(Math.abs(cv._h - want) > 1){ cv.style.height = want + 'px'; EM.fit(cv); }
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var side = stack ? Math.min(W, 270) : H, Rr = side/2 - 22, cxp = stack ? W/2 : side/2 + 4, cyp = side/2;
+    c.strokeStyle = C.line2; c.lineWidth = 1.2; c.beginPath(); c.arc(cxp, cyp, Rr, 0, EM.TAU); c.stroke();
+    c.strokeStyle = C.line; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(cxp - Rr, cyp); c.lineTo(cxp + Rr, cyp); c.moveTo(cxp, cyp - Rr); c.lineTo(cxp, cyp + Rr); c.stroke();
+    c.strokeStyle = C.acc; c.lineWidth = 1.8; c.beginPath();
+    for(var k = 0; k <= 1600; k++){ var g = gin(DM*k/1600); c.lineTo(cxp + Rr*g.r, cyp - Rr*g.i); }
+    c.stroke();
+    var g0 = gl(), gE = gin(DM);
+    c.strokeStyle = C.ink; c.lineWidth = 1.6; c.beginPath(); c.arc(cxp + Rr*g0.r, cyp - Rr*g0.i, 6, 0, EM.TAU); c.stroke();
+    c.fillStyle = C.ink; c.beginPath(); c.arc(cxp + Rr*gE.r, cyp - Rr*gE.i, 4.5, 0, EM.TAU); c.fill();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'center';
+    c.fillText('Γ at the input, 0 to 4λ', cxp, cyp + Rr + 16);
+    /* R and X against length */
+    var L, Rg, T, B;
+    if(stack){ L = 44; Rg = W - 14; T = side + 18; B = H - 34; }
+    else { L = side + 50; Rg = W - 14; T = 16; B = H - 34; }
+    var YM = 200;
+    function px(d){ return L + d/DM*(Rg - L); }
+    function py(v){ return (T + B)/2 - Math.max(-YM, Math.min(YM, v))/YM*(B - T)/2; }
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L + .5, T); c.lineTo(L + .5, B); c.moveTo(L, py(0)); c.lineTo(Rg, py(0)); c.stroke();
+    c.strokeStyle = C.ink3; c.setLineDash([4, 4]);
+    c.beginPath(); c.moveTo(L, py(Z0)); c.lineTo(Rg, py(Z0)); c.stroke(); c.setLineDash([]);
+    c.save(); c.beginPath(); c.rect(L, T, Rg - L, B - T); c.clip();
+    [['r', C.e], ['i', C.h]].forEach(function(q){
+      c.strokeStyle = q[1]; c.lineWidth = 1.8; c.beginPath();
+      var prev = null;
+      for(var k2 = 0; k2 <= 1600; k2++){
+        var d = DM*k2/1600, v = zin(d)[q[0]];
+        /* break the trace where it jumps through a pole */
+        if(prev !== null && Math.abs(v - prev) > YM){ c.stroke(); c.beginPath(); }
+        c.lineTo(px(d), py(v)); prev = v;
+      }
+      c.stroke();
+    });
+    c.restore();
+    c.fillStyle = C.ink3; c.textAlign = 'right';
+    c.fillText('+200', L - 4, T + 8); c.fillText('−200', L - 4, B); c.fillText('50', L - 4, py(Z0) + 4);
+    c.textAlign = 'center';
+    for(var n = 1; n <= DM; n++) c.fillText(n + 'λ', px(n), B + 15);
+    c.textAlign = 'left';
+    c.fillStyle = C.e; c.fillText('R', L + 6, T + 10);
+    c.fillStyle = C.h; c.fillText('X', L + 22, T + 10);
+    c.fillStyle = C.ink3; c.textAlign = 'right'; c.fillText('line length d', Rg, H - 6);
+  }, false);
+})();
+
+/* ---- short and open: measuring a line ----
+   The test line is invented; the inversion only ever sees Zsc and Zoc. */
+(function(){
+  var cv = document.getElementById('scfig');
+  if(!cv) return;
+  var ZT = cx(50, -2), A1 = 0.02, fr = 0.7, FM = 3;
+  function gl(f){ return cx(A1*Math.sqrt(f), Math.PI/2*f); }          /* gamma l: skin-effect loss */
+  function meas(f){ var t = ctanh(gl(f)); return { sc: cmul(ZT, t), oc: cdv(ZT, t) }; }
+  function deg(r){ return (r*180/Math.PI).toFixed(1) + '°'; }
+  function sync(){
+    document.getElementById('sc-fv').textContent = fr.toFixed(2);
+    var m = meas(fr), z0 = csqrt(cmul(m.sc, m.oc)), t = csqrt(cdv(m.sc, m.oc));
+    if(z0.r < 0) z0 = cx(-z0.r, -z0.i);
+    if(t.r < 0) t = cx(-t.r, -t.i);                          /* alpha l > 0 picks the root */
+    var g = catanh(t);
+    document.getElementById('sc-z').textContent = zfmt(z0);
+    document.getElementById('sc-a').textContent = g.r.toFixed(4) + ' Np';
+    document.getElementById('sc-b').textContent = deg(g.i);
+    document.getElementById('sc-bt').textContent = deg(gl(fr).i);
+  }
+  document.getElementById('sc-f').addEventListener('input', function(){ fr = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 46, R = 14, T = 14, B = 34, Y0 = -1, Y1 = 4;
+    function px(f){ return L + f/FM*(W - L - R); }
+    function py(v){ return (H - B) - (Math.log10(Math.max(v, 1e-9)) - Y0)/(Y1 - Y0)*(H - T - B); }
+    c.strokeStyle = C.line; c.lineWidth = 1;
+    for(var g = Y0; g <= Y1; g++){ c.beginPath(); c.moveTo(L, py(Math.pow(10, g)) + .5); c.lineTo(W - R, py(Math.pow(10, g)) + .5); c.stroke(); }
+    [1, 2].forEach(function(f){ c.beginPath(); c.moveTo(px(f) + .5, T); c.lineTo(px(f) + .5, H - B); c.stroke(); });
+    c.strokeStyle = C.line2;
+    c.beginPath(); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.lineTo(W - R, H - B); c.stroke();
+    c.save(); c.beginPath(); c.rect(L, T, W - L - R, H - T - B); c.clip();
+    [['sc', C.e], ['oc', C.h]].forEach(function(q){
+      c.strokeStyle = q[1]; c.lineWidth = 2.2; c.beginPath();
+      for(var k = 1; k <= 600; k++){ var f = FM*k/600; c.lineTo(px(f), py(cabs(meas(f)[q[0]]))); }
+      c.stroke();
+    });
+    c.restore();
+    c.strokeStyle = C.ink; c.setLineDash([2, 3]);
+    c.beginPath(); c.moveTo(px(fr), T); c.lineTo(px(fr), H - B); c.stroke(); c.setLineDash([]);
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3;
+    for(var y = Y0; y <= Y1; y++) EM.rich(c, [['10','n'], [y < 0 ? '−' + (-y) : String(y),'p']], L - 6, py(Math.pow(10, y)) + 4, 11, 'right');
+    c.textAlign = 'center';
+    [[1, 'f'], [2, '2f'], [3, '3f']].forEach(function(q){
+      EM.rich(c, [[q[1], 'n'], ['1', 'b']], px(q[0]), H - B + 15, 11, q[0] === 3 ? 'right' : 'center');
+    });
+    c.textAlign = 'left';
+    c.fillStyle = C.e; EM.rich(c, [['|Z','n'], ['sc','b'], ['|','n']], L + 8, T + 12, 11.5, 'left');
+    c.fillStyle = C.h; EM.rich(c, [['|Z','n'], ['oc','b'], ['| Ω','n']], L + 64, T + 12, 11.5, 'left');
+  }, false);
+})();
+
+/* ---- Foster: stub reactance against frequency ---- */
+(function(){
+  var cv = document.getElementById('fofig');
+  if(!cv) return;
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var L = 40, R = 14, T = 14, B = 34, FM = 2.5, YM = 5;
+    function px(f){ return L + f/FM*(W - L - R); }
+    function py(v){ return (T + H - B)/2 - v/YM*(H - B - T)/2; }
+    c.strokeStyle = C.line; c.lineWidth = 1;
+    [1, 2].forEach(function(f){ c.beginPath(); c.moveTo(px(f) + .5, T); c.lineTo(px(f) + .5, H - B); c.stroke(); });
+    c.strokeStyle = C.line2;
+    c.beginPath(); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.moveTo(L, py(0)); c.lineTo(W - R, py(0)); c.stroke();
+    c.save(); c.beginPath(); c.rect(L, T, W - L - R, H - T - B); c.clip();
+    [[function(f){ return Math.tan(Math.PI/2*f); }, C.e], [function(f){ return -1/Math.tan(Math.PI/2*f); }, C.h]].forEach(function(q){
+      c.strokeStyle = q[1]; c.lineWidth = 2.4; c.beginPath();
+      var prev = null;
+      for(var k = 1; k <= 1000; k++){
+        var f = FM*k/1000, v = q[0](f);
+        if(prev !== null && (v < prev)){ c.stroke(); c.beginPath(); }      /* a pole: rising branches only */
+        c.lineTo(px(f), py(Math.max(-YM*1.5, Math.min(YM*1.5, v)))); prev = v;
+      }
+      c.stroke();
+    });
+    c.restore();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
+    c.fillText('+5', L - 6, py(5) + 8); c.fillText('0', L - 6, py(0) + 4); c.fillText('−5', L - 6, py(-5));
+    c.textAlign = 'center';
+    EM.rich(c, [['f','n'], ['0','b']], px(1), H - B + 15, 11, 'center');
+    EM.rich(c, [['2f','n'], ['0','b']], px(2), H - B + 15, 11, 'center');
+    c.textAlign = 'left';
+    c.fillStyle = C.e; c.fillText('shorted', px(0.12), py(-0.6) + 16);
+    c.fillStyle = C.h; c.fillText('open', px(0.28), py(-3.2));
+    c.fillStyle = C.ink3; EM.rich(c, [['X / Z','n'], ['0','b']], L + 6, T + 10, 11, 'left');
+    c.textAlign = 'right'; c.fillText('frequency', W - R, H - 6);
+  }, false);
+})();
+
+/* ---- a quarter-wave resonator and its Q ---- */
+(function(){
+  var cv = document.getElementById('qfig');
+  if(!cv) return;
+  var dbl = 0.1;
+  function al(){ return dbl/(20/Math.LN10); }                 /* Np per wavelength */
+  function z(f){ return cabs(ctanh(cx(al()*0.25, Math.PI/2*f))); }   /* Z0 = 1, l = lambda0/4 */
+  function qcurve(){
+    var span = 8*al()/Math.PI, pk = 0, fp = 1, N = 4000;
+    for(var k = 0; k <= N; k++){ var f = 1 - span + 2*span*k/N, v = z(f); if(v > pk){ pk = v; fp = f; } }
+    var lo = fp, hi = fp, step = span/N/4;
+    while(z(lo) > pk/Math.SQRT2) lo -= step;
+    while(z(hi) > pk/Math.SQRT2) hi += step;
+    return { q: fp/(hi - lo), pk: pk, lo: lo, hi: hi, fp: fp, span: span };
+  }
+  function sync(){
+    var r = qcurve();
+    document.getElementById('q-av').textContent = dbl.toFixed(2);
+    document.getElementById('q-c').textContent = r.q.toFixed(1);
+    document.getElementById('q-f').textContent = (2*Math.PI/(2*al())).toFixed(1);
+    document.getElementById('q-p').textContent = r.pk.toFixed(1);
+  }
+  document.getElementById('q-a').addEventListener('input', function(){ dbl = +this.value; sync(); EM.redrawStatic(); });
+  sync();
+
+  EM.register(function(C){
+    EM.fit(cv);
+    var c = cv.getContext('2d'), W = cv._w, H = cv._h;
+    c.clearRect(0, 0, W, H);
+    var r = qcurve(), L = 46, R = 14, T = 16, B = 34, f0 = 1 - r.span, f1 = 1 + r.span;
+    function px(f){ return L + (f - f0)/(f1 - f0)*(W - L - R); }
+    function py(v){ return (H - B) - v/(r.pk*1.08)*(H - T - B); }
+    c.strokeStyle = C.line2; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.lineTo(W - R, H - B); c.stroke();
+    c.fillStyle = C.accfill;
+    c.fillRect(px(r.lo), T, px(r.hi) - px(r.lo), H - B - T);
+    c.strokeStyle = C.ink3; c.setLineDash([4, 4]);
+    c.beginPath(); c.moveTo(L, py(r.pk/Math.SQRT2)); c.lineTo(W - R, py(r.pk/Math.SQRT2)); c.stroke(); c.setLineDash([]);
+    c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
+    for(var k = 0; k <= 600; k++){ var f = f0 + (f1 - f0)*k/600; c.lineTo(px(f), py(z(f))); }
+    c.stroke();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
+    c.fillText(r.pk.toFixed(0), L - 6, py(r.pk) + 4); c.fillText('0', L - 6, py(0) + 4);
+    c.textAlign = 'center';
+    EM.rich(c, [['f','n'], ['0','b']], px(1), H - B + 15, 11, 'center');
+    c.textAlign = 'left'; c.fillText('1/√2 of the peak', L + 6, py(r.pk/Math.SQRT2) - 6);
+    c.fillStyle = C.ink3; EM.rich(c, [['|Z','n'], ['in','b'], ['| / Z','n'], ['0','b']], L + 6, T + 10, 11, 'left');
+    c.textAlign = 'right'; c.fillText('frequency', W - R, H - 6);
   }, false);
 })();
 </script>
