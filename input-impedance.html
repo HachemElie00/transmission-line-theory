@@ -284,7 +284,7 @@
       <div class="rd"><dt>&beta;/2&alpha;</dt><dd id="q-f">&mdash;</dd></div>
       <div class="rd"><dt>peak |Z<sub>in</sub>| / Z<sub>0</sub></dt><dd id="q-p">&mdash;</dd></div>
     </dl>
-    <figcaption class="cap">|Z<sub>in</sub>| of a shorted quarter-wave line near resonance. the curve's Q is f<sub>0</sub> over the width between the two points where |Z<sub>in</sub>| falls to 1/&radic;2 of its peak, measured off the plotted function; the formula beside it is computed independently</figcaption>
+    <figcaption class="cap">|Z<sub>in</sub>| of a shorted quarter-wave line near resonance, on fixed axes with a logarithmic vertical scale: more loss lowers the peak and widens it. the curve's Q is f<sub>0</sub> over the width between the two points where |Z<sub>in</sub>| falls to 1/&radic;2 of its peak, measured off the plotted function; the formula beside it is computed independently</figcaption>
   </figure>
 
   <details class="deriv">
@@ -835,23 +835,38 @@ function zfmt(z, dp){
     EM.fit(cv);
     var c = cv.getContext('2d'), W = cv._w, H = cv._h;
     c.clearRect(0, 0, W, H);
-    var r = qcurve(), L = 46, R = 14, T = 16, B = 34, f0 = 1 - r.span, f1 = 1 + r.span;
+    /* fixed axes, so a change of loss shows as a change of the curve: the
+       frequency window does not follow the resonance width and |Zin| is on a
+       log scale wide enough for the lowest-loss peak */
+    var r = qcurve(), L = 46, R = 14, T = 16, B = 34, f0 = 0.92, f1 = 1.08, YL = 0, YH = Math.log10(3000);
     function px(f){ return L + (f - f0)/(f1 - f0)*(W - L - R); }
-    function py(v){ return (H - B) - v/(r.pk*1.08)*(H - T - B); }
+    function py(v){ return (H - B) - (Math.log10(Math.max(v, 1)) - YL)/(YH - YL)*(H - T - B); }
     c.strokeStyle = C.line2; c.lineWidth = 1;
     c.beginPath(); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.lineTo(W - R, H - B); c.stroke();
+    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
+    [1, 10, 100, 1000].forEach(function(v){
+      c.strokeStyle = C.line; c.beginPath(); c.moveTo(L, py(v) + .5); c.lineTo(W - R, py(v) + .5); c.stroke();
+      c.fillText(String(v), L - 6, py(v) + 4);
+    });
     c.fillStyle = C.accfill;
-    c.fillRect(px(r.lo), T, px(r.hi) - px(r.lo), H - B - T);
+    c.fillRect(px(r.lo), T, Math.max(1, px(r.hi) - px(r.lo)), H - B - T);
     c.strokeStyle = C.ink3; c.setLineDash([4, 4]);
     c.beginPath(); c.moveTo(L, py(r.pk/Math.SQRT2)); c.lineTo(W - R, py(r.pk/Math.SQRT2)); c.stroke(); c.setLineDash([]);
+    /* uniform samples plus a dense run across the peak, which at low loss is
+       narrower than the uniform spacing */
+    var fs = [], k, bw = r.hi - r.lo;
+    for(k = 0; k <= 800; k++) fs.push(f0 + (f1 - f0)*k/800);
+    for(k = 0; k <= 400; k++) fs.push(r.fp - 4*bw + 8*bw*k/400);
+    fs.sort(function(a, b){ return a - b; });
+    c.save(); c.beginPath(); c.rect(L, T - 2, W - L - R, H - B - T + 2); c.clip();
     c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
-    for(var k = 0; k <= 600; k++){ var f = f0 + (f1 - f0)*k/600; c.lineTo(px(f), py(z(f))); }
-    c.stroke();
-    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
-    c.fillText(r.pk.toFixed(0), L - 6, py(r.pk) + 4); c.fillText('0', L - 6, py(0) + 4);
-    c.textAlign = 'center';
+    fs.forEach(function(f){ if(f >= f0 && f <= f1) c.lineTo(px(f), py(z(f))); });
+    c.stroke(); c.restore();
+    c.fillStyle = C.ink3; c.textAlign = 'center';
     EM.rich(c, [['f','n'], ['0','b']], px(1), H - B + 15, 11, 'center');
-    c.textAlign = 'left'; c.fillText('1/√2 of the peak', L + 6, py(r.pk/Math.SQRT2) - 6);
+    EM.rich(c, [['0.95f','n'], ['0','b']], px(0.95), H - B + 15, 11, 'center');
+    EM.rich(c, [['1.05f','n'], ['0','b']], px(1.05), H - B + 15, 11, 'center');
+    c.textAlign = 'right'; c.fillText('1/√2 of the peak', W - R - 4, py(r.pk/Math.SQRT2) - 6);
     c.fillStyle = C.ink3; EM.rich(c, [['|Z','n'], ['in','b'], ['| / Z','n'], ['0','b']], L + 6, T + 10, 11, 'left');
     c.textAlign = 'right'; c.fillText('frequency', W - R, H - 6);
   }, false);

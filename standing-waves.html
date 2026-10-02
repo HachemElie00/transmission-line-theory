@@ -347,13 +347,16 @@
   <figure class="fig">
     <canvas id="bufig" style="height:250px"></canvas>
     <div class="rail">
+      <div class="ctl"><label for="bu-l">&Gamma;<sub>L</sub></label><input type="range" id="bu-l" min="-1" max="1" step="0.05" value="0.8"><output id="bu-lv">0.80</output></div>
       <div class="ctl"><label for="bu-g">&Gamma;<sub>g</sub></label><input type="range" id="bu-g" min="-0.9" max="0.9" step="0.05" value="-0.5"><output id="bu-gv">&minus;0.50</output></div>
     </div>
     <dl class="readout">
+      <div class="rd"><dt>SWR</dt><dd id="bu-s">9.00</dd></div>
+      <div class="rd"><dt>steady state</dt><dd id="bu-k">partial standing wave</dd></div>
       <div class="rd"><dt>round trips so far</dt><dd id="bu-n">0</dd></div>
       <div class="rd"><dt>|&Gamma;<sub>g</sub>&Gamma;<sub>L</sub>| per trip</dt><dd id="bu-q">0.40</dd></div>
     </dl>
-    <figcaption class="cap">a sinusoid switched on at the generator, on the right, travelling toward a load with &Gamma;<sub>L</sub> = 0.8 on the left, 1.25 wavelengths away. every echo is summed exactly. dashed: the steady-state envelope it settles into. the animation restarts after twelve transits</figcaption>
+    <figcaption class="cap">a sinusoid switched on at the generator, on the right, travelling toward the load on the left, 1.25 wavelengths away. &Gamma;<sub>L</sub> = 0 leaves a pure travelling wave, |&Gamma;<sub>L</sub>| = 1 a full standing wave with true nulls, and anything between a partial standing wave. every echo is summed exactly. dashed: the steady-state envelope it settles into. the animation restarts after twelve transits</figcaption>
   </figure>
 
   <p class="t">With a matched source the pattern is complete after a single round trip, since nothing re-reflects. With a strongly mismatched one it takes many, and on a lossless line with both ends reflecting totally it never settles at all: the steady state of the phasor analysis simply does not exist, and the line is a resonator. Every phasor result on this site describes the state after the echoes have died away, which on a real line is a few nanoseconds to a few microseconds after switch-on.</p>
@@ -1030,7 +1033,7 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
 (function(){
   var cv = document.getElementById('bufig');
   if(!cv) return;
-  var LN = 1.25, GL = 0.8, gg = -0.5, NT = 12;
+  var LN = 1.25, GL = 0.8, gg = -0.5, NT = 12;   /* GL and gg are set by the sliders */
   function steady(l){
     var p = -4*Math.PI*l, q = -4*Math.PI*LN, k = gg*GL;
     var nr = 1 + GL*Math.cos(p), ni = GL*Math.sin(p);
@@ -1049,9 +1052,14 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
   }
   function sync(){
     document.getElementById('bu-gv').textContent = (gg < 0 ? '−' : '') + Math.abs(gg).toFixed(2);
+    document.getElementById('bu-lv').textContent = (GL < 0 ? '−' : '') + Math.abs(GL).toFixed(2);
     document.getElementById('bu-q').textContent = Math.abs(gg*GL).toFixed(2);
+    var m = Math.abs(GL);
+    document.getElementById('bu-s').textContent = m > 0.999 ? '∞' : ((1 + m)/(1 - m)).toFixed(2);
+    document.getElementById('bu-k').textContent = m < 1e-9 ? 'travelling wave' : m > 0.999 ? 'full standing wave' : 'partial standing wave';
   }
   document.getElementById('bu-g').addEventListener('input', function(){ gg = +this.value; sync(); });
+  document.getElementById('bu-l').addEventListener('input', function(){ GL = +this.value; sync(); });
   sync();
 
   EM.register(function(C, t){

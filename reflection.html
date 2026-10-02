@@ -563,8 +563,18 @@ var rich = EM.rich;
     c.strokeStyle = C.line2; c.strokeRect(L+.5, y2+.5, full-1, barH-1);
 
     c.textAlign = 'center'; c.font = '12px ' + MONO;
-    if(wd > 62){ c.fillStyle = '#fff'; c.fillText('delivered ' + (del*100).toFixed(0) + '%', L + wd/2, y2 + barH/2 + 4); }
-    if(full - wd > 58){ c.fillStyle = '#fff'; c.fillText('reflected ' + (refl*100).toFixed(0) + '%', L + wd + (full-wd)/2, y2 + barH/2 + 4); }
+    /* the longest label that fits its segment: the full one, then the number
+       alone, then nothing */
+    function inside(word, frac, x0, w){
+      var pc = (frac*100).toFixed(0) + '%', opts = [word + ' ' + pc, pc];
+      for(var i = 0; i < opts.length; i++){
+        if(c.measureText(opts[i]).width + 12 <= w){
+          c.fillStyle = '#fff'; c.fillText(opts[i], x0 + w/2, y2 + barH/2 + 4); return;
+        }
+      }
+    }
+    inside('delivered', del, L, wd);
+    inside('reflected', refl, L + wd, full - wd);
 
     c.fillStyle = C.ink3; c.textAlign = 'left'; c.font = '11.5px ' + MONO;
     EM.rich(c, [['reflected fraction = |Γ|','n'], ['2','p']], L, y2 + barH + 26, 11.5, 'left');

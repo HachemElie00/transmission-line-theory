@@ -223,9 +223,9 @@
   </div>
 
   <figure class="fig">
-    <canvas id="skinfig" style="height:270px"></canvas>
+    <canvas id="skinfig" style="height:290px"></canvas>
     <div class="rail">
-      <div class="ctl"><label for="skf">frequency</label><input type="range" id="skf" min="3" max="10" step="0.01" value="9"><output id="skfv">1.00 GHz</output></div>
+      <div class="ctl"><label for="skf">frequency</label><input type="range" id="skf" min="3" max="10" step="0.01" value="9"><output id="skfv" class="fw">1.00 GHz</output></div>
       <div class="ctl"><label for="skm">metal</label>
         <select id="skm" aria-label="Metal">
           <option value="5.8e7" selected>copper</option>
@@ -239,7 +239,7 @@
       <div class="rd"><dt>R<sub>s</sub> = 1/&sigma;&delta;</dt><dd id="sk-rs">8.25 m&Omega;</dd></div>
       <div class="rd"><dt>R&prime; of a 0.45 mm wire</dt><dd id="sk-rp">2.92 &Omega;/m</dd></div>
     </dl>
-    <figcaption class="cap">current density inside the metal against depth, at one instant and as its envelope e<sup>&minus;z/&delta;</sup>. the shaded strip is the first skin depth. the wire figure uses R&prime; = R<sub>s</sub>/2&pi;a, valid while &delta; is small against the radius a</figcaption>
+    <figcaption class="cap">current density inside the metal against depth, at one instant and as its envelope e<sup>&minus;z/&delta;</sup>. depth is measured in skin depths, so the curve has the same shape for every metal and frequency; the row under each tick is that depth in metres for the current setting. the shaded strip is the first skin depth. the wire figure uses R&prime; = R<sub>s</sub>/2&pi;a, valid while &delta; is small against the radius a</figcaption>
   </figure>
 
   <p class="t">The surface resistance has a useful reading: $R_s$ is exactly the resistance per square of a slab of the metal <b>one skin depth thick</b> carrying uniform current. The real current decays smoothly rather than stopping at $\delta$, but it dissipates the same power. A conductor of perimeter $p$ therefore has a resistance per metre of $R_s/p$, and for coax that gives</p>
@@ -624,7 +624,7 @@ function fmtFreq(f){
     EM.fit(cv);
     var c = cv.getContext('2d'), W = cv._w, H = cv._h;
     c.clearRect(0, 0, W, H);
-    var L = 46, R = 16, T = 18, B = 44, ZM = 5;          /* five skin depths across */
+    var L = 46, R = 16, T = 18, B = 58, ZM = 5;          /* five skin depths across */
     var y0 = T + (H - T - B)/2, sy = (H - T - B)/2*0.92;
     function px(z){ return L + z/ZM*(W - L - R); }
     /* the metal, and the first skin depth */
@@ -646,9 +646,16 @@ function fmtFreq(f){
     c.stroke();
     /* labels */
     c.font = '11px ' + MONO2; c.fillStyle = C.ink3; c.textAlign = 'center';
-    for(var k = 1; k <= 4; k++) c.fillText(k + 'δ', px(k), H - B + 15);
+    /* the axis is in skin depths, so the curve is the same for every metal and
+       frequency; the second row puts the physical depth under each tick */
+    var dd = delta();
+    for(var k = 1; k <= 4; k++){
+      c.fillStyle = C.ink3; c.fillText(k + 'δ', px(k), H - B + 15);
+      c.fillStyle = C.ink2; c.fillText(len(k*dd), px(k), H - B + 29);
+    }
+    c.fillStyle = C.ink3;
     c.textAlign = 'left'; c.fillText('surface', L - 2, H - B + 15);
-    c.textAlign = 'right'; c.fillText('depth into the metal →', W - R, H - B + 32);
+    c.textAlign = 'right'; c.fillText('depth into the metal →', W - R, H - B + 47);
     c.textAlign = 'left'; c.fillStyle = C.ink2;
     EM.rich(c, [['δ = ' + len(delta()),'n']], px(1) + 6, T + 14, 12, 'left');
     c.fillStyle = C.ink3;

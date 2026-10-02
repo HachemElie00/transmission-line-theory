@@ -692,7 +692,7 @@ function hexRGB(h){
     EM.fit(cv);
     var c = cv.getContext('2d'), W = cv._w, H = cv._h;
     c.clearRect(0, 0, W, H);
-    var L = 44, R = 14, T = 16, B = 34, e0 = line(HS[0]).e0, Y0 = Math.floor(e0*10 - 1)/10, Y1 = er + 0.1;
+    var L = 44, R = 74, T = 28, B = 34, e0 = line(HS[0]).e0, Y0 = Math.floor(e0*10 - 1)/10, Y1 = er + 0.1*(er - Y0);
     function px(f){ return L + f/FM*(W - L - R); }
     function py(v){ return (H - B) - (v - Y0)/(Y1 - Y0)*(H - T - B); }
     c.strokeStyle = C.line2; c.lineWidth = 1;
@@ -710,13 +710,16 @@ function hexRGB(h){
       c.strokeStyle = C[COLS[n]]; c.lineWidth = 2.4; c.beginPath();
       for(var j = 0; j <= 200; j++){ var f = FM*j/200; c.lineTo(px(f), py(Ln.f(f))); }
       c.stroke();
-      var fl = FM*0.82, y = py(Ln.f(fl)) + 16, t = (h*1e3).toFixed(2) + ' mm';
-      var tw = c.measureText(t).width;
-      c.fillStyle = C.sunk; c.fillRect(px(fl) - tw/2 - 3, y - 11, tw + 6, 15);
-      c.fillStyle = C[COLS[n]]; c.textAlign = 'center'; c.fillText(t, px(fl), y);
     });
+    /* each curve is named at its right-hand end, in the margin, so no label
+       sits on a curve; labels closer than a line height are pushed apart */
+    var tags = HS.map(function(h, n){ return { n: n, y: py(line(h).f(FM)) + 4, t: (h*1e3).toFixed(2) + ' mm' }; });
+    tags.sort(function(a, b){ return a.y - b.y; });
+    for(var q = 1; q < tags.length; q++) tags[q].y = Math.max(tags[q].y, tags[q-1].y + 13);
+    c.textAlign = 'left';
+    tags.forEach(function(g){ c.fillStyle = C[COLS[g.n]]; c.fillText(g.t, W - R + 6, g.y); });
     c.fillStyle = C.ink3; c.textAlign = 'left';
-    EM.rich(c, [['ε','n'], ['eff','b']], 6, T + 2, 11, 'left');
+    EM.rich(c, [['ε','n'], ['eff','b']], 6, T - 12, 11, 'left');
   }, false);
 })();
 

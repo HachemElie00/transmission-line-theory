@@ -50,7 +50,7 @@
         <option value="-1">reverse (+&beta;z)</option>
       </select></div>
     </div>
-    <figcaption class="cap">one crest is tracked in colour &mdash; wavelength is the distance between repeats, period is the time between them</figcaption>
+    <figcaption class="cap">the round marker and its drop line ride one crest, a point of constant phase; it moves at the phase velocity u<sub>p</sub> = &omega;/&beta;, one wavelength per period. the bracket spans one wavelength, between two neighbouring minima</figcaption>
   </figure>
 
   <p class="t">Two periodicities, one wave. In <b>space</b> the pattern repeats every wavelength; in <b>time</b> it repeats every period. They are tied together by the speed:</p>
@@ -245,7 +245,7 @@
       <div class="rd"><dt>u<sub>g</sub> / c, the envelope</dt><dd id="gp-ug">1.000</dd></div>
       <div class="rd"><dt>u<sub>p</sub> u<sub>g</sub> / c<sup>2</sup></dt><dd id="gp-pr">1.000</dd></div>
     </dl>
-    <figcaption class="cap">two equal tones, 12.5 % apart in &beta;. the round marker rides one crest; the bar rides the peak of the envelope. waveguide-like means &omega;<sup>2</sup> = &omega;<sub>c</sub><sup>2</sup> + c<sup>2</sup>&beta;<sup>2</sup>, the dispersion of the hollow guides in part two</figcaption>
+    <figcaption class="cap">two equal tones, 12.5 % apart in &beta;. the round marker rides one crest, at u<sub>p</sub>; the bar rides the peak of the envelope, at u<sub>g</sub>. without dispersion the two move together. in the waveguide-like medium the crest outruns the envelope, so crests appear at the back of each group, run through it and vanish at the front. waveguide-like means &omega;<sup>2</sup> = &omega;<sub>c</sub><sup>2</sup> + c<sup>2</sup>&beta;<sup>2</sup>, the dispersion of the hollow guides in part two</figcaption>
   </figure>
 
   <p class="t">In the waveguide-like medium the crests outrun the envelope, sliding forward through it and vanishing at its front, while the envelope itself travels slower than light. Their product is exactly $c^2$, and since energy and information travel with the envelope, nothing is outrun by a crest moving faster than $c$. A lossless TEM line is not dispersive: $\beta = \omega\sqrt{LC}$ is proportional to $\omega$, so the two velocities agree. Loss changes that, which chapter 04 takes up as distortion.</p>
@@ -606,7 +606,7 @@ var TAU = Math.PI*2;
 (function(){
   var cv = document.getElementById('grpfig');
   if(!cv) return;
-  var mode = 0, BB = TAU, DB = TAU/8, WC = 0.8*TAU;
+  var mode = 0, BB = TAU, DB = TAU/8, WC = 1.2*TAU;
   function w(b){ return mode ? Math.sqrt(WC*WC + b*b) : b; }       /* c = 1 */
   var b1 = BB - DB/2, b2 = BB + DB/2;
   function sync(){
@@ -622,7 +622,7 @@ var TAU = Math.PI*2;
     EM.fit(cv);
     var c = cv.getContext('2d'), W = cv._w, H = cv._h;
     c.clearRect(0, 0, W, H);
-    var L = 14, R = 14, T = 16, B = 20, ZW = 8;          /* window: 8 carrier wavelengths */
+    var L = 14, R = 14, T = 30, B = 20, ZW = 8;          /* window: 8 carrier wavelengths */
     var y0 = T + (H - T - B)/2, sy = (H - T - B)/2/2.15;
     function px(z){ return L + z/ZW*(W - L - R); }
     var tau = t*0.15;
@@ -647,7 +647,11 @@ var TAU = Math.PI*2;
     var zc = ((wb/bb)*tau) % ZW; if(zc < 0) zc += ZW;
     c.fillStyle = C.e;
     c.beginPath(); c.arc(px(zc), y0 - f(zc)*sy, 5.5, 0, TAU); c.fill();
-    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
+    c.font = '11px ' + MONO; c.textAlign = 'center';
+    c.fillStyle = C.ink2; c.fillText('envelope peak', Math.max(L + 40, Math.min(W - R - 40, px(ze))), T - 10);
+    var yc = y0 - f(zc)*sy;
+    c.fillStyle = C.ink; c.fillText('crest', px(zc), f(zc) >= 0 ? yc - 11 : yc + 19);
+    c.fillStyle = C.ink3; c.textAlign = 'right';
     c.fillText('z →', W - R, H - 5);
   }, true);
 })();

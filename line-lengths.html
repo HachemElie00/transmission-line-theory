@@ -636,7 +636,7 @@ function mm2(A, B){
 (function(){
   var cv = document.getElementById('rcfig');
   if(!cv) return;
-  var G = [1, 2, 1], FM = 4.5, YM = 40;
+  var G = [1, 2, 1], FM = 4.5, YM = 60;
   function s21(f, stubs){
     var w = stubs ? Math.tan(Math.PI/4*f) : f, ONE = q9(1, 0), ZERO = q9(0, 0);
     var Ms = [[[ONE, q9(0, w*G[0])], [ZERO, ONE]], [[ONE, ZERO], [q9(0, w*G[1]), ONE]], [[ONE, q9(0, w*G[2])], [ZERO, ONE]]];
@@ -678,7 +678,7 @@ function mm2(A, B){
     c.textAlign = 'center';
     [[1, 'f'], [2, '2f'], [3, '3f'], [4, '4f']].forEach(function(q){ EM.rich(c, [[q[1], 'n'], ['c', 'b']], px(q[0]), H - B + 15, 11, 'center'); });
     c.textAlign = 'left';
-    c.fillStyle = C.h; c.fillText('lumped', px(2.6), py(36));
+    c.fillStyle = C.h; c.fillText('lumped', px(2.6), py(40));
     c.fillStyle = C.e; c.fillText('stubs', px(3.55), py(6));
     c.fillStyle = C.ink3; c.fillText('dB', L + 6, T + 10);
   }, false);

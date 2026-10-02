@@ -28,8 +28,10 @@
   <p class="t">In differential form, for fields in a medium described by permittivity $\varepsilon$ and permeability $\mu$:</p>
 
   <div class="eq box">
-    $$\dive \vD = \rho_v \qquad\qquad \dive \vB = 0$$
-    $$\curl \vE = -\frac{\partial \vB}{\partial t} \qquad\qquad \curl \vH = \vJ + \frac{\partial \vD}{\partial t}$$
+    $$\begin{array}{ccc}
+      \displaystyle \dive \vD = \rho_v & \qquad\qquad & \displaystyle \dive \vB = 0 \\[14pt]
+      \displaystyle \curl \vE = -\frac{\partial \vB}{\partial t} & & \displaystyle \curl \vH = \vJ + \frac{\partial \vD}{\partial t}
+    \end{array}$$
     <span class="note">with the constitutive relations $\vD = \varepsilon\vE$ and $\vB = \mu\vH$ in a linear, isotropic, homogeneous medium</span>
   </div>
 
@@ -139,7 +141,7 @@
 
   <figure class="fig">
     <canvas id="bcfig" class="static" style="height:280px"></canvas>
-    <figcaption class="cap">a pillbox across the surface sees only the normal components; a thin loop across it sees only the tangential ones. squeeze either to zero height and what is left is the boundary condition</figcaption>
+    <figcaption class="cap">a pillbox across the surface sees only the normal components; a thin loop across it sees only the tangential ones. h is the height each shape spans across the surface; as h &rarr; 0 the side walls of the pillbox and the short ends of the loop vanish, and what is left is the boundary condition. the tangential H points the way n&#770; &times; H = J<sub>s</sub> requires</figcaption>
   </figure>
 
   <p class="t">Inside a perfect conductor a time-varying field cannot exist: any electric field would drive an unlimited current, and with $\vE = 0$ inside, Faraday's law leaves $\partial\vB/\partial t = 0$ there too. Everything therefore happens on one side of the surface, and with $\hat{n}$ the normal pointing out of the conductor:</p>
@@ -180,7 +182,7 @@
   <figure class="fig">
     <canvas id="sigfig" style="height:300px"></canvas>
     <div class="rail">
-      <div class="ctl"><label for="sf">frequency</label><input type="range" id="sf" min="0" max="12" step="0.01" value="6"><output id="sfv">1.00 MHz</output></div>
+      <div class="ctl"><label for="sf">frequency</label><input type="range" id="sf" min="0" max="12" step="0.01" value="6"><output id="sfv" class="fw">1.00 MHz</output></div>
     </div>
     <dl class="readout" id="sig-ro"></dl>
     <figcaption class="cap">&sigma;/&omega;&epsilon; against frequency, both axes logarithmic. typical values: copper &sigma; = 5.8&times;10<sup>7</sup> S/m; sea water 4 S/m, &epsilon;<sub>r</sub> = 81; fresh water 10<sup>&minus;3</sup> S/m, &epsilon;<sub>r</sub> = 80; wet soil 10<sup>&minus;2</sup> S/m, &epsilon;<sub>r</sub> = 15</figcaption>
@@ -447,11 +449,12 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
         rich(c, [['D','n'], ['n','b'], [' = ρ','n'], ['s','b'], ['     B','n'], ['n','b'], [' = 0','n']], ox + 150, oy + 46, 14, 'center');
       } else {
         c.fillText('Ampère and Faraday: a loop', ox + 150, oy + 16);
-        /* H running along the surface */
+        /* H running along the surface: with n up and J_s out of the page,
+           n x H = J_s needs H pointing in -x, to the left */
         c.strokeStyle = C.h; c.fillStyle = C.h; c.lineWidth = 1.6;
         [[24, 84], [118, 178], [212, 272]].forEach(function(p){
-          EM.arrow(c, ox + p[0], ys - 34, ox + p[1], ys - 34, 6);
-          EM.arrow(c, ox + p[0], ys - 62, ox + p[1], ys - 62, 6);
+          EM.arrow(c, ox + p[1], ys - 34, ox + p[0], ys - 34, 6);
+          EM.arrow(c, ox + p[1], ys - 62, ox + p[0], ys - 62, 6);
         });
         /* the surface current, out of the page */
         c.strokeStyle = C.ink; c.fillStyle = C.ink; c.lineWidth = 1.2;
@@ -462,6 +465,12 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
         /* the loop, straddling */
         c.strokeStyle = C.ink; c.lineWidth = 1.4; c.setLineDash([5, 4]);
         c.strokeRect(ox + 100, ys - 12, 100, 24); c.setLineDash([]);
+        c.strokeStyle = C.ink3; c.lineWidth = 1;
+        c.beginPath(); c.moveTo(ox + 88, ys - 12); c.lineTo(ox + 88, ys + 12);
+        c.moveTo(ox + 84, ys - 12); c.lineTo(ox + 92, ys - 12);
+        c.moveTo(ox + 84, ys + 12); c.lineTo(ox + 92, ys + 12); c.stroke();
+        c.fillStyle = C.ink3; c.font = '12px ' + MONO; c.textAlign = 'right';
+        c.fillText('h → 0', ox + 80, ys - 18);
         c.fillStyle = C.ink2; c.textAlign = 'right';
         rich(c, [['J','n'], ['s','b'], [' out of the page','n']], ox + 294, ys + 44, 12, 'right');
         c.fillStyle = C.h;
