@@ -1877,6 +1877,33 @@ function drawChart(){
       }
       if(moved) ringMark(angL, false);
       ringMark(angC, true);
+
+      /* The start tick needs its own radius back to the point it marks, or it
+         floats on the ring with nothing to say what it belongs to; and the band
+         is the answer, so it is named. d is the reading at the point minus the
+         reading at the start -- the subtraction the reader does on paper. */
+      if(moved){
+        var sL = rimPt(angL, r1);
+        c.save();
+        c.strokeStyle = C.acc; c.globalAlpha = 0.45; c.lineWidth = 1;
+        c.setLineDash([4, 4]);
+        c.beginPath(); c.moveTo(G.cx, G.cy); c.lineTo(sL[0], sL[1]); c.stroke();
+        c.restore();
+        if(G.size >= 440){
+          var mid = angL - TAU*wrapHalf(S.d);          /* halfway round the clockwise travel */
+          var pm = rimPt(mid, G.R - Math.max(16, G.size*0.03));
+          var dt = 'd = ' + n3(wrapHalf(S.d)) + 'λ';
+          c.save();
+          c.font = Math.max(9, Math.min(11.5, G.size*0.0155)) + 'px ' + MONO;
+          c.textAlign = 'center'; c.textBaseline = 'middle';
+          var dw = c.measureText(dt).width;
+          c.fillStyle = C.sunk; c.globalAlpha = 0.85;
+          c.fillRect(pm[0] - dw/2 - 4, pm[1] - 8, dw + 8, 16);
+          c.globalAlpha = 1; c.fillStyle = C.acc;
+          c.fillText(dt, pm[0], pm[1]);
+          c.restore();
+        }
+      }
     }
   }
 
