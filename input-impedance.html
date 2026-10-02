@@ -519,7 +519,20 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     EM.fit(cv);
     var c = cv.getContext('2d');
     c.clearRect(0,0,cv._w,cv._h);
-    EM.design(c, cv, 560, 350, true);
+    /* On a phone the 560-wide box put every label near 8px. The narrow box is
+       400 wide: X() pulls positions in piecewise, keeping the line section
+       wide enough for its two labels, text stays at full size, and the note
+       moves under the equivalent circuit. */
+    var nar = cv._w < 520, DW = nar ? 400 : 560, DH = nar ? 372 : 350;
+    var MAP = [[48, 30], [104, 58], [158, 110], [214, 146], [450, 318], [486, 338], [538, 388]];
+    function X(x){
+      if(!nar) return x;
+      for(var i = 1; i < MAP.length; i++) if(x <= MAP[i][0]){
+        var a = MAP[i - 1], b = MAP[i]; return a[1] + (x - a[0])*(b[1] - a[1])/(b[0] - a[0]);
+      }
+      return MAP[MAP.length - 1][1];
+    }
+    EM.design(c, cv, DW, DH, true);
     /* vertical budget, checked against 350: upper rails 62/164, arrow 196-216,
        lower rails 238/300, deepest ink at 300 + generator radius = 320. */
     var top = 62, bot = 164, t2 = 238, b2 = 300;
@@ -563,42 +576,42 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     }
 
     /* --- upper: generator, Zg, line, load --- */
-    source(48, top, bot, 21);
-    wire(48, top, 104, top,  158, top, 214, top,  48, bot, 214, bot);
-    box(104, top-15, 54, 30, 'Z|g', C.ink2);
+    source(X(48), top, bot, nar ? 18 : 21);
+    wire(X(48), top, X(104), top,  X(158), top, X(214), top,  X(48), bot, X(214), bot);
+    box(X(104), top-15, X(158) - X(104), 30, 'Z|g', C.ink2);
 
     c.fillStyle = C.accfill;
-    c.fillRect(214, top-4, 236, 8); c.fillRect(214, bot-4, 236, 8);
+    c.fillRect(X(214), top-4, X(450) - X(214), 8); c.fillRect(X(214), bot-4, X(450) - X(214), 8);
     c.strokeStyle = C.acc; c.lineWidth = 1.5;
-    c.strokeRect(214, top-4, 236, 8); c.strokeRect(214, bot-4, 236, 8);
+    c.strokeRect(X(214), top-4, X(450) - X(214), 8); c.strokeRect(X(214), bot-4, X(450) - X(214), 8);
     c.fillStyle = C.acc; c.font = '13px ' + MONO; c.textAlign = 'center';
-    EM.rich(c, [['line, Z','n'], ['0','b'], [', length l','n']], 332, (top+bot)/2 - 5, 13, 'center');
-    c.fillText('electrical length βl', 332, (top+bot)/2 + 14);
+    EM.rich(c, [['line, Z','n'], ['0','b'], [', length l','n']], X(332), (top+bot)/2 - 5, 13, 'center');
+    c.fillText('electrical length βl', X(332), (top+bot)/2 + 14);
 
-    wire(450, top, 486, top,  450, bot, 486, bot);
-    box(486, top-16, 52, (bot-top)+32, 'Z|L', C.ink2);
+    wire(X(450), top, X(486), top,  X(450), bot, X(486), bot);
+    box(X(486), top-16, X(538) - X(486), (bot-top)+32, 'Z|L', C.ink2);
 
     /* input plane */
     c.strokeStyle = C.h; c.lineWidth = 1; c.setLineDash([4,4]);
-    c.beginPath(); c.moveTo(214, top-36); c.lineTo(214, bot+22); c.stroke();
+    c.beginPath(); c.moveTo(X(214), top-36); c.lineTo(X(214), bot+22); c.stroke();
     c.setLineDash([]);
     c.fillStyle = C.h; c.font = '12px ' + MONO; c.textAlign = 'center';
-    c.fillText('input plane', 214, top-44);
+    c.fillText('input plane', X(214), top-44);
 
     /* --- the collapse --- */
     c.strokeStyle = C.ink3; c.fillStyle = C.ink3; c.lineWidth = 1.6;
-    EM.arrow(c, 214, 196, 214, 216, 7);
+    EM.arrow(c, X(214), 196, X(214), 216, 7);
     /* beside the equivalent circuit, on two lines: as one line from the arrow
-       it ran 40 units past the right edge of the design box */
+       it ran 40 units past the right edge of the design box. Narrow, below it */
     c.font = '12px ' + MONO; c.textAlign = 'left';
-    c.fillText('everything right of the plane', 270, t2 + 26);
-    c.fillText('becomes this one impedance', 270, t2 + 44);
+    c.fillText('everything right of the plane', nar ? 16 : 270, nar ? b2 + 46 : t2 + 26);
+    c.fillText('becomes this one impedance', nar ? 16 : 270, nar ? b2 + 64 : t2 + 44);
 
     /* --- lower: the equivalent lumped circuit --- */
-    source(48, t2, b2, 19);
-    wire(48, t2, 104, t2,  158, t2, 214, t2,  48, b2, 214, b2);
-    box(104, t2-15, 54, 30, 'Z|g', C.ink2);
-    box(188, t2, 52, b2-t2, 'Z|in', C.e);
+    source(X(48), t2, b2, nar ? 17 : 19);
+    wire(X(48), t2, X(104), t2,  X(158), t2, X(214), t2,  X(48), b2, X(214), b2);
+    box(X(104), t2-15, X(158) - X(104), 30, 'Z|g', C.ink2);
+    box(X(188), t2, X(240) - X(188), b2-t2, 'Z|in', C.e);
     c.restore();
   }, false);
 })();

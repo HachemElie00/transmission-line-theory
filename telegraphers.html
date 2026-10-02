@@ -343,7 +343,12 @@ function resistorV(c, x, y1, y2, col){
     EM.fit(cv);
     var c = cv.getContext('2d');
     c.clearRect(0,0,cv._w,cv._h);
-    EM.design(c, cv, 560, 300, true);
+    /* Narrow, the terminal labels move under the ends of the rails, which
+       frees the 100 units they took at the sides: the box shrinks to 460 and
+       everything is drawn larger on a phone. */
+    var nar = cv._w < 520;
+    EM.design(c, cv, nar ? 460 : 560, 300, true);
+    if(nar) c.translate(-50, 0);
     var top = 92, bot = 224, xl = 60, xr = 500, xs = 300;
 
     /* rails */
@@ -372,12 +377,19 @@ function resistorV(c, x, y1, y2, col){
 
     /* terminal labels */
     c.fillStyle = C.ink; c.font = '14px ' + MONO;
-    c.textAlign = 'left';
-    c.fillText('v(z,t)', 16, (top+bot)/2 - 6);
-    c.fillText('i(z,t)', 16, (top+bot)/2 + 14);
-    c.textAlign = 'right';
-    c.fillText('v(z+Δz,t)', 544, (top+bot)/2 - 6);
-    c.fillText('i(z+Δz,t)', 544, (top+bot)/2 + 14);
+    if(nar){
+      c.textAlign = 'left';
+      c.fillText('v(z,t)', xl, bot + 20); c.fillText('i(z,t)', xl, bot + 36);
+      c.textAlign = 'right';
+      c.fillText('v(z+Δz,t)', xr, bot + 20); c.fillText('i(z+Δz,t)', xr, bot + 36);
+    } else {
+      c.textAlign = 'left';
+      c.fillText('v(z,t)', 16, (top+bot)/2 - 6);
+      c.fillText('i(z,t)', 16, (top+bot)/2 + 14);
+      c.textAlign = 'right';
+      c.fillText('v(z+Δz,t)', 544, (top+bot)/2 - 6);
+      c.fillText('i(z+Δz,t)', 544, (top+bot)/2 + 14);
+    }
 
     /* KVL / KCL annotations */
     c.fillStyle = C.ink3; c.font = '13px ' + MONO; c.textAlign = 'center';
