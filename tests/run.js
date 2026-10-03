@@ -17,6 +17,7 @@ const ALL = [
   ['problems', 'problems.test.js', []],
   ['search',   'search.test.js',   []],
   ['practice', 'practice.test.js', []],
+  ['scenarios','scenarios.test.js',[]],
   ['response', 'response.test.js', []],
   ['chrome',   'chrome.test.js',   []],
   ['toggles',  'toggles.test.js',  []],

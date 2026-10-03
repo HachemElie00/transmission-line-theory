@@ -282,8 +282,8 @@ table.vals{width:100%;min-width:0;margin-top:11px;border-collapse:collapse;
         <h4>Move along the line</h4>
         <div class="ctl" style="padding:0">
           <label for="i-d">d&nbsp;&rarr;gen</label>
-          <input id="i-d" type="range" min="0" max="0.5" step="0.001" value="0">
-          <output id="o-d">0.000&lambda;</output>
+          <input id="i-d" type="range" min="0" max="0.5" step="0.0001" value="0">
+          <output id="o-d">0.0000&lambda;</output>
         </div>
         <!-- The point the slider is moving, in ohms and normalised side by
              side: the relation between the two is what a student keeps getting
@@ -342,6 +342,13 @@ table.vals{width:100%;min-width:0;margin-top:11px;border-collapse:collapse;
           <div class="row" style="margin-top:7px">
             <button class="mini" id="b-prac-show">show me</button>
           </div>
+        </div>
+        <!-- The same choice as the "show" buttons under the chart, here so the
+             chart stays in view while switching. Hidden while practising until
+             "show me": picking a solution there would hand over the answer. -->
+        <div class="row" id="row-pick" style="margin-top:9px;display:none">
+          <span class="fld"><label for="i-pick">solution</label>
+            <select id="i-pick" style="flex:1;min-width:0"></select></span>
         </div>
         <canvas id="ckt-mini" class="cktmini" hidden
                 aria-label="The circuit being built, in miniature"></canvas>
@@ -1569,12 +1576,19 @@ function pathG(g, b0, b1){
    own annulus just outside the chart so it can never be mistaken for a grid
    curve. Termination: short -> Gamma_z = -1 (left); open -> +1 (right), for
    shunt (admittance) and series (impedance) stubs alike. */
+/* What the last chart render actually drew, in display coordinates: the
+   point, the reader's attempt, the two ring marks and the stub arc. Published
+   on the canvas as data-drawn so a test can hold the drawing against the
+   physics -- the same reason data-disc exists. Each of the bugs it guards
+   against left a perfectly drawn chart that meant the wrong thing. */
+var DRAWN = {};
 function drawStubArc(c, C, isOpen, ls){
   /* With the point turned to y, the grid is being read as admittance, where a
      short (y -> infinity) sits on the right and an open on the left: the stub
      starts from the opposite end of the diameter. */
   var a0 = (isOpen ? 0 : Math.PI) + (viewSign() < 0 ? Math.PI : 0), rad = stubR();
   var a1 = a0 - 2*TAU*ls;
+  DRAWN.stub = [a0, a1, ls];
   c.save();
   c.strokeStyle = C.acc; c.lineWidth = Math.max(3, G.size*0.006);
   c.setLineDash([Math.max(2.5, G.size*0.006), Math.max(2.5, G.size*0.006)]);
@@ -1663,6 +1677,7 @@ function drawChart(){
   var discAttr = String(Math.round(G.R*10)/10);
   if(cv.getAttribute('data-disc') !== discAttr) cv.setAttribute('data-disc', discAttr);
   var c = ctx, W = cv._w, H = cv._h;
+  DRAWN = {};
   c.clearRect(0,0,W,H);
   c.fillStyle = C.sunk; c.fillRect(0,0,W,H);
 
@@ -1825,6 +1840,18 @@ function drawChart(){
     polyline(c, pd, C.acc, 3, null, 0.9); headAt(c, pd, 0.6, C.acc);
   }
 
+  /* The reader's own stub on the rim while practising, sized the way the
+     chapter sizes it on paper. Not drawn while it is still neutral: an arc for
+     a stub that does nothing is a mark the reader did not make. */
+  if(S.practice && !S.reveal){
+    var own = (S.method === 'shunt' || S.method === 'series') ? S.prac.l1
+            : (S.method === 'dstub') ? S.prac.l2 : null;
+    if(own != null){
+      var off = Math.abs(((own - neutralStub()) % 0.5 + 0.5) % 0.5);
+      if(Math.min(off, 0.5 - off) > 1e-4) drawStubArc(c, C, S.openStub, own);
+    }
+  }
+
   /* --- markers --- */
   var gC = curG();
 
@@ -1840,6 +1867,7 @@ function drawChart(){
     var rot = viewSign() < 0 ? Math.PI : 0;
     var angC = Math.atan2(gC[1], gC[0]) + rot;
     var angL = Math.atan2(gL[1], gL[0]) + rot;
+    DRAWN.ring = [angL, angC];
     var moved = Math.abs(angC - angL) > 1e-4;
 
     /* radial line to the rim, so the angle ring can be read */
@@ -1944,6 +1972,7 @@ function drawChart(){
 
   /* current point: filled */
   var pc = P(gC[0], gC[1]);
+  DRAWN.pt = [viewSign()*gC[0], viewSign()*gC[1]];
   c.beginPath(); c.arc(pc[0], pc[1], Math.max(5, G.size*0.0095)*mk, 0, TAU);
   c.fillStyle = C.acc; c.fill();
   c.strokeStyle = C.sunk; c.lineWidth = 1.6*mk; c.stroke();
@@ -1954,6 +1983,7 @@ function drawChart(){
      Joined to the travel point so the move being made is legible. */
   if(S.practice && S.method){
     var ga = attemptG();
+    if(ga) DRAWN.att = [viewSign()*ga[0], viewSign()*ga[1]];
     if(ga){
       var pa = P(ga[0], ga[1]);
       if(Math.hypot(pa[0]-pc[0], pa[1]-pc[1]) > 2){
@@ -1995,6 +2025,9 @@ function drawChart(){
 
   drawDirections(c, C);
   c.restore();
+  var dAttr = JSON.stringify(DRAWN, function(k, v){
+    return typeof v === 'number' ? Math.round(v*1e6)/1e6 : v; });
+  if(cv.getAttribute('data-drawn') !== dAttr) cv.setAttribute('data-drawn', dAttr);
 
   if(S.zoom !== 1){
     c.save();
@@ -2517,14 +2550,74 @@ function solPanel(){
   });
   host.innerHTML = html;
   Array.prototype.forEach.call(host.querySelectorAll('[data-pick]'), function(b){
-    b.addEventListener('click', function(){
-      S.pick = +b.getAttribute('data-pick');
-      var s = solve().sols[S.pick];
-      if(s && s.d != null){ S.d = s.d; syncD(); }
-      refresh();
-    });
+    b.addEventListener('click', function(){ choosePick(+b.getAttribute('data-pick')); });
   });
 }
+
+/* One way to switch solutions, whichever control asked: the buttons under the
+   chart, the select beside the miniature circuit, or "show me". After "show
+   me" the reader's fields hold the revealed design, so they follow the
+   switch too; otherwise the chart would show one solution and the fields
+   another. */
+function choosePick(i){
+  var s = solve().sols[i];
+  if(!s) return;
+  S.pick = i;
+  if(s.d != null){ S.d = s.d; syncD(); }
+  if(S.practice && S.reveal) fillFromSol(s);
+  refresh();
+}
+function fillFromSol(s){
+  if(s.d != null){ S.d = s.d; syncD(); }
+  if(s.ls != null) S.prac.l1 = s.ls;
+  if(s.ls1 != null) S.prac.l1 = s.ls1;
+  if(s.ls2 != null) S.prac.l2 = s.ls2;
+  if(s.z1 != null) S.prac.z1 = s.z1 * S.z0;
+  if(s.xs != null) S.prac.x1 = s.xs;
+  if(s.bp != null) S.prac.b1 = s.bp;
+  if(s.order) S.prac.order = (s.order === 'series first') ? 'series' : 'shunt';
+  var fw = document.getElementById('prac-fields');
+  if(fw) fw.removeAttribute('data-for');
+}
+
+/* The select beside the miniature circuit. Options are plain text (a select
+   cannot hold markup), so each names what differs between the solutions in
+   words and wavelengths, with no subscripted symbols. */
+function pickRow(){
+  var row = document.getElementById('row-pick'), sel = document.getElementById('i-pick');
+  var sols = S.method ? solve().sols : [];
+  var on = sols.length > 1 && !(S.practice && !S.reveal);
+  row.style.display = on ? '' : 'none';
+  if(!on) return;
+  /* short enough to read in the closed select at the panel's narrowest; the
+     L-network's order is the order the elements are named in, from the load */
+  var opts = sols.map(function(s, i){
+    var t = (i+1) + ':  ';
+    if(S.method === 'shunt' || S.method === 'series')
+      t += 'd ' + n3(s.d) + 'λ, stub ' + n3(s.ls) + 'λ';
+    else if(S.method === 'dstub')
+      t += 'stubs ' + n3(s.ls1) + 'λ, ' + n3(s.ls2) + 'λ';
+    else if(S.method === 'qwt')
+      t += 'voltage ' + (s.at === 'minimum' ? 'min' : 'max') + ', d ' + n3(s.d) + 'λ';
+    else
+      t += s.order === 'series first'
+        ? 'x ' + n2(s.xs) + ', then b ' + n2(s.bp)
+        : 'b ' + n2(s.bp) + ', then x ' + n2(s.xs);
+    return t;
+  });
+  /* rebuilt only when the text changes, so an open list is not yanked away */
+  var key = opts.join('|');
+  if(sel.getAttribute('data-key') !== key){
+    sel.setAttribute('data-key', key);
+    sel.innerHTML = opts.map(function(t, i){
+      return '<option value="' + i + '">' + t + '</option>';
+    }).join('');
+  }
+  sel.value = String(Math.min(S.pick, sols.length - 1));
+}
+document.getElementById('i-pick').addEventListener('change', function(){
+  choosePick(+this.value);
+});
 
 function legend(){
   var C = EM.colors(), L = [];
@@ -2858,8 +2951,8 @@ function walkthrough(){
 /* ===================== wiring ===================== */
 
 function syncD(){
-  document.getElementById('i-d').value = S.d.toFixed(3);
-  document.getElementById('o-d').textContent = S.d.toFixed(3) + 'λ';
+  document.getElementById('i-d').value = S.d.toFixed(4);
+  document.getElementById('o-d').textContent = S.d.toFixed(4) + 'λ';
 }
 function syncLoad(){
   var a = document.getElementById('i-r'), b = document.getElementById('i-x');
@@ -2912,7 +3005,7 @@ function valsTable(){
 function refresh(){
   cqm.hidden = !S.method;
   drawChart(); drawNomo(); drawCircuit(); drawCircuit(cqm, qmctx, true);
-  drawResp(); bigRow(); valsTable(); solPanel(); legend(); syncLambda();
+  drawResp(); bigRow(); valsTable(); solPanel(); pickRow(); legend(); syncLambda();
   /* spacing means something to the double-stub tuner only. style, not the
      hidden attribute: .row sets display, which would beat [hidden]. */
   var rdd = document.getElementById('row-dd');
@@ -2937,12 +3030,49 @@ function refresh(){
   pushHash();
 }
 
-/* The stub length that does nothing. An open stub of zero length presents
-   y = 0; a SHORTED stub of zero length is a dead short across the line, which
-   is why practice used to open at z = 0 and look broken before the reader had
-   done anything. Quarter of a wavelength of shorted line is the open circuit,
-   so that is the neutral starting value there. */
-function neutralStub(){ return S.openStub ? 0 : 0.25; }
+/* The stub length that does nothing, so the reader's marker starts on their
+   point instead of somewhere else. It depends on how the stub is connected:
+   - shunt: it must present y = 0, an open. An open stub of zero length does;
+     a SHORTED one of zero length is a dead short across the line, and needs a
+     quarter wave to become an open.
+   - series: it must present z = 0, a wire. A shorted stub of zero length is
+     one; an OPEN one needs the quarter wave.
+   Using the shunt rule for a series stub put the marker on the open point. */
+function neutralStub(){
+  var series = S.method === 'series';
+  return (S.openStub !== series) ? 0 : 0.25;
+}
+
+/* The reader's attempt, back to doing nothing. Every way into practice goes
+   through here -- the button, a change of method, and a shared link -- so they
+   cannot start the marker in three different places. The link case matters:
+   the attempt is not in the hash, and the zero lengths it was left with put a
+   shorted stub's marker on the short. */
+function resetAttempt(){
+  S.reveal = false;
+  S.d = 0;
+  S.prac.l1 = neutralStub(); S.prac.l2 = neutralStub();
+  S.prac.x1 = 0; S.prac.b1 = 0; S.prac.z1 = S.z0;
+  S.prac.rotated = false;
+  var fw = document.getElementById('prac-fields');
+  if(fw) fw.removeAttribute('data-for');
+  var sb = document.getElementById('b-prac-show');
+  if(sb) sb.textContent = 'show me';
+}
+
+/* Shorted and open stubs a quarter wave apart present the same immittance,
+   shunt or series: -cot(x) = tan(x - pi/2), and the period is half a wave. So
+   switching the type moves the length by a quarter wave and leaves what the
+   reader has built exactly where it was, instead of throwing it to the rim. */
+function swapStubType(){
+  S.openStub = !S.openStub;
+  if(S.practice){
+    S.prac.l1 = (S.prac.l1 + 0.25) % 0.5;
+    S.prac.l2 = (S.prac.l2 + 0.25) % 0.5;
+    var fw = document.getElementById('prac-fields');
+    if(fw) fw.removeAttribute('data-for');
+  }
+}
 
 /* ===================== practice panel =====================
    The fields a method needs the reader to supply. Travel is not here: it is
@@ -3130,6 +3260,8 @@ function applyHash(h){
     }
   });
   if(touched) sanitiseState();
+  /* a link carries the problem, never an attempt at it */
+  if(touched && S.practice) resetAttempt();
   return touched;
 }
 
@@ -3237,7 +3369,7 @@ function readLoad(){
 
 document.getElementById('i-d').addEventListener('input', function(){
   S.d = parseFloat(this.value) || 0;
-  document.getElementById('o-d').textContent = S.d.toFixed(3) + 'λ';
+  document.getElementById('o-d').textContent = S.d.toFixed(4) + 'λ';
   /* Moving off the solved distance normally means the reader has left the
      solution behind, so the method is dropped. In practice mode travelling the
      line IS the exercise, and dropping the method would close the very panel
@@ -3265,13 +3397,7 @@ function pickMethod(m){
   if(S.practice){
     /* the whole point is that the reader travels the line themselves, so the
        answer is neither jumped to nor drawn until they ask for it */
-    S.reveal = false;
-    S.d = 0;
-    S.prac.l1 = neutralStub(); S.prac.l2 = neutralStub();
-    S.prac.x1 = 0; S.prac.b1 = 0; S.prac.z1 = S.z0;
-    S.prac.rotated = false;
-    var fw = document.getElementById('prac-fields');
-    if(fw) fw.removeAttribute('data-for');
+    resetAttempt();
   } else {
     var s = S.method ? (solve().sols[0] || null) : null;
     S.d = (s && s.d != null) ? s.d : 0;
@@ -3304,7 +3430,7 @@ document.getElementById('i-dd').addEventListener('change', function(){
   S.dd = parseFloat(this.value) || 0.125; S.pick = 0; refresh();
 });
 document.getElementById('b-term').addEventListener('click', function(){
-  S.openStub = !S.openStub; refresh();
+  swapStubType(); refresh();
 });
 document.getElementById('z-in').addEventListener('click', function(){ setZoom(S.zoom*1.5); });
 document.getElementById('z-out').addEventListener('click', function(){ setZoom(S.zoom/1.5); });
@@ -3538,12 +3664,7 @@ function panelToWork(){
     S.practice = !S.practice;
     S.reveal = false;
     if(S.practice){
-      S.d = 0;
-      S.prac.l1 = neutralStub(); S.prac.l2 = neutralStub();
-      S.prac.x1 = 0; S.prac.b1 = 0; S.prac.z1 = S.z0;
-      S.prac.rotated = false;
-      var fw = document.getElementById('prac-fields');
-      if(fw) fw.removeAttribute('data-for');
+      resetAttempt();
       requestAnimationFrame(panelToWork);
     } else if(S.method){
       /* leaving practice puts the solved construction back, which is what the
@@ -3561,18 +3682,7 @@ function panelToWork(){
     sb.textContent = S.reveal ? 'hide it' : 'show me';
     if(S.reveal){
       var s = solve().sols[S.pick] || solve().sols[0] || null;
-      if(s){
-        if(s.d != null){ S.d = s.d; syncD(); }
-        if(s.ls != null) S.prac.l1 = s.ls;
-        if(s.ls1 != null) S.prac.l1 = s.ls1;
-        if(s.ls2 != null) S.prac.l2 = s.ls2;
-        if(s.z1 != null) S.prac.z1 = s.z1 * S.z0;
-        if(s.xs != null) S.prac.x1 = s.xs;
-        if(s.bp != null) S.prac.b1 = s.bp;
-        if(s.order) S.prac.order = (s.order === 'series first') ? 'series' : 'shunt';
-        var fw = document.getElementById('prac-fields');
-        if(fw) fw.removeAttribute('data-for');
-      }
+      if(s) fillFromSol(s);
     }
     refresh();
   });

@@ -28,9 +28,10 @@ step unchanged.
 | `chrome.test.js` | `site.js` is pure ASCII; sidebar collapse, persistence, and the narrow-viewport fallback; collapsing actually buys chart width; every figure has a toolbar with symbol-only play/pause |
 | `toggles.test.js` | fine grid changes the render in all three grid modes and restores it exactly; zoom reset is pixel-identical; centre-click still reads matched under magnification; theme switch changes and persists |
 | `geometry.test.js` | chart and radially scaled parameters share left edge, right edge and width at four viewports; the rim sweep spans the arc the travel distance implies |
-| `pages.test.js` | all 15 pages × 7 widths from `file://`: no errors, no blank canvas, no overflow, correct `<head>` (doctype, lang, charset, viewport), all maths typeset, zero external requests — plus one mobile-emulated pass at 390px |
+| `pages.test.js` | all 16 pages × 7 widths from `file://`: no errors, no blank canvas, no overflow, correct `<head>` (doctype, lang, charset, viewport), all maths typeset, zero external requests — plus one mobile-emulated pass at 390px |
 | `offline.test.js` | the same over HTTP with every foreign origin aborted, plus per-page MathJax output and font-load counts |
 | `solvers.test.js` | the two-stage solver verification (below) |
+| `scenarios.test.js` | every practice scenario worked step by step — 13 loads × five methods × shorted/open × both admittance conventions × both designs, about 280 runs on one page. At each step the chart's own `data-drawn` (point, attempt marker, ring marks, stub arc) is held against values computed in the file: the marker starts on the point, switching shorted/open moves nothing, the turned view marks the turned point, a half-length stub stays on the target circle, the finished design lands at the centre and stays matched through a type switch and a turn back. Each of those was confirmed to fail with its original bug put back. Also: the solution picker beside the miniature circuit leaves the page exactly as the matching "show" button does, travels to the crossing the theory gives, stays hidden while practising until "show me", and then carries the reader's fields with it; and the travel slider, at the page's own step, can reach the 1% acceptance for every load without dragging (at 0.001λ it could not for four of them) |
 
 ## Which browser
 
