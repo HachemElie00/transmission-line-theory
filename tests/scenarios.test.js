@@ -543,6 +543,40 @@ async function main(){
   s.check('solution picker agrees with the buttons and the theory', pickFails.length === 0,
           pickFails.slice(0, 3).join('  |  '));
 
+  /* ---- the solved shunt view follows the convention ----
+     Turning the point (the default) is the paper method on an impedance
+     chart: y_L is z_L turned half a turn, the travel is read on the impedance
+     grid, and the point lands on the r = 1 circle, which reads g = 1 for the
+     turned point. The solved view once drew the point unturned on the g = 1
+     circle -- the admittance-chart route -- whatever the convention said.
+     'grid' mode is that route, and keeps it. Expected positions come from
+     travelHits, not from the page. */
+  const solvedFails = [];
+  for (const [r, x] of LOADS){
+    const hits = travelHits(C(r, x), true).slice().sort((a, b) => a - b);
+    if (hits.length < 2) continue;
+    for (const ymode of ['point', 'grid']){
+      for (let i = 0; i < 2; i++){
+        await setHash('r=' + r + '&x=' + x + '&method=shunt&practice=0&openStub=0&ymode=' + ymode +
+                      '&grid=' + (ymode === 'grid' ? 'y' : 'z') + '&pick=' + i + '&d=' + hits[i]);
+        const dr = await p.evaluate(() => JSON.parse(document.getElementById('chart').getAttribute('data-drawn')));
+        const gz = rot(gOfZ(C(r, x)), -2*TAU*hits[i]);          /* Gamma_z after travel */
+        const want = ymode === 'point' ? [-gz[0], -gz[1]] : gz;
+        const ctr = ymode === 'point' ? 0.5 : -0.5;             /* r = 1 drawn, or g = 1 */
+        const tag = ymode + ' r=' + r + ' x=' + x + ' #' + i;
+        if (!near(dr.pt, want, 1e-4)) solvedFails.push(tag + ': point at ' + JSON.stringify(dr.pt) + ', want ' + want.map(v => v.toFixed(4)));
+        else if (Math.abs(Math.hypot(dr.pt[0] - ctr, dr.pt[1]) - 0.5) > 1e-4) solvedFails.push(tag + ': point off its target circle');
+      }
+    }
+  }
+  /* double stub: with nothing travelled, the turned point is -Gamma_L */
+  await setHash('r=0.5&x=-0.6&method=dstub&practice=0&ymode=point&grid=z&dd=0.125&d=0&pick=0');
+  const dd = await p.evaluate(() => JSON.parse(document.getElementById('chart').getAttribute('data-drawn')));
+  const gl = gOfZ(C(0.5, -0.6));
+  if (!near(dd.pt, [-gl[0], -gl[1]], 1e-4)) solvedFails.push('dstub point: point not turned to y');
+  s.check('solved shunt view: turned to y on r = 1 by default, unturned on g = 1 with the grid',
+          solvedFails.length === 0, solvedFails.length + ' cases, e.g. ' + solvedFails.slice(0, 2).join('  |  '));
+
   /* ---- what the slider alone can reach ----
      A reader who never drags travels in the slider's steps. At 0.001 lambda
      the nearest step to the crossing missed the 1% acceptance by itself for

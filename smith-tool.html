@@ -1226,7 +1226,18 @@ function stubR(){ return G.R + G.gap*0.5; }
    chart itself (the grids, the rings, the rim) uses P0 and is never turned;
    everything that draws the reader's own point and construction uses P. */
 function P0(u, v){ return [G.cx + u*G.R, G.cy - v*G.R]; }
-function viewSign(){ return (S.practice && S.prac.rotated) ? -1 : 1; }
+/* -1 while the point is shown turned half a turn to y. Practising, that is
+   the reader's own move (step 1). Solved, it follows the convention: in
+   'point' mode the shunt methods are shown the paper way -- y_L is z_L turned
+   half a turn, travel and stub are read on the impedance grid, and the target
+   is the r = 1 circle, which is g = 1 for the turned point. Showing it on the
+   g = 1 circle with the point unturned is the admittance-chart route, which
+   is what 'grid' mode is for. */
+function viewSign(){
+  if(S.practice && !S.reveal) return S.prac.rotated ? -1 : 1;
+  if(S.practice && S.prac.rotated) return -1;
+  return (S.ymode === 'point' && (S.method === 'shunt' || S.method === 'dstub')) ? -1 : 1;
+}
 function P(u, v){ var s = viewSign(); return P0(s*u, s*v); }
 function rimPt(ang, rad){ return [G.cx + rad*Math.cos(ang), G.cy - rad*Math.sin(ang)]; }
 
@@ -1952,7 +1963,7 @@ function drawChart(){
      y. Without it the rotation is a thing that happened to the numbers; with
      it the reader can see that y is the same point turned through the origin,
      which is the whole content of Gamma_y = -Gamma_z. */
-  if(S.practice && S.prac.rotated){
+  if(viewSign() < 0){
     var py = P0(-gL[0], -gL[1]);
     c.save();
     c.strokeStyle = C.ink3; c.globalAlpha = 0.5; c.lineWidth = 1.2*mk;
@@ -2918,7 +2929,8 @@ function walkthrough(){
      '\\%$ of the incident power turned back. All from one measurement.'],
     ['Get to admittance.', 'A shunt stub adds susceptance, so the work is in $y$. ' + (S.ymode === 'point' ? 'Turn the point half a turn about the centre: same radius, opposite side, and you go on reading the impedance grid. ' : 'Press <b>admittance</b>: the point stays put and the grid turns instead. ') +
      'Either way you now read $y_L = ' + cpx(yL[0], yL[1]) + '$.'],
-    ['Travel to the $g = 1$ circle.', 'Choose <b>shunt stub</b> from the method list. The first crossing is at $d = ' +
+    [S.ymode === 'point' ? 'Travel to the $r = 1$ circle, which now reads $g = 1$.'
+                         : 'Travel to the $g = 1$ circle.', 'Choose <b>shunt stub</b> from the method list. The first crossing is at $d = ' +
      n3(st[0].d) + '\\lambda$, where the line presents $y = 1 ' +
      (st[0].line < 0 ? '- j' + n2(-st[0].line) : '+ j' + n2(st[0].line)) +
      '$. The second is at $d = ' + n3(st[1].d) + '\\lambda$ &mdash; both are real answers.'],
