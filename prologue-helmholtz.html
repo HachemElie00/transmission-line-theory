@@ -96,7 +96,7 @@
       <p>so the propagation constant in general is</p>
       <div class="eq">$$\gamma = \sqrt{j\omega\mu(\sigma + j\omega\varepsilon)} = \alpha + j\beta$$</div>
       <p>It is complex, and both parts have a job. The real part $\alpha$ is the <b>attenuation constant</b> in nepers per metre &mdash; how fast the amplitude decays. The imaginary part $\beta$ is the <b>phase constant</b> in radians per metre &mdash; how fast the phase advances. Setting $\sigma = 0$ recovers the lossless case, where $\alpha = 0$ and $\beta = \omega\sqrt{\mu\varepsilon}$.</p>
-      <p>Keep the shape of this result in view. When the telegrapher's equations arrive in chapter 04 they produce $\gamma = \sqrt{(R + j\omega L)(G + j\omega C)}$ &mdash; the same structure, with circuit quantities in place of material ones. That is not a coincidence, and the parallel is the point of the next few chapters.</p>
+      <p>Keep the shape of this result in view. When the telegrapher's equations of chapter 03 are solved in chapter 04 they produce $\gamma = \sqrt{(R + j\omega L)(G + j\omega C)}$ &mdash; the same structure, with circuit quantities in place of material ones. That is not a coincidence, and the parallel is the point of the next few chapters.</p>
     </div>
   </details>
 </section>
@@ -126,7 +126,7 @@
       <div class="ctl"><label for="freq">&beta; (rad/m)</label><input type="range" id="freq" min="0.6" max="3" step="0.05" value="1.4"><output id="freqv">1.40</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>&ang;&eta;, the lag of H behind E</dt><dd id="o-eta">0.0&deg;</dd></div>
+      <div class="rd"><dt>&ang;&eta;, the lag of H behind E</dt><dd id="o-eta">&mdash;</dd></div>
     </dl>
     <div class="btns">
       <button data-a="0" data-b="1.4">lossless</button>
@@ -202,15 +202,15 @@
         </select></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>crossover, tan &delta; = 1</dt><dd id="ab-fc">888 MHz</dd></div>
-      <div class="rd"><dt>&alpha;/&beta; there</dt><dd id="ab-r">0.414</dd></div>
-      <div class="rd"><dt>&alpha; at high frequency</dt><dd id="ab-ainf">83.7 Np/m</dd></div>
-      <div class="rd"><dt>the same, in dB</dt><dd id="ab-db">727 dB/m</dd></div>
+      <div class="rd"><dt>crossover, tan &delta; = 1</dt><dd id="ab-fc">&mdash;</dd></div>
+      <div class="rd"><dt>&alpha;/&beta; there</dt><dd id="ab-r">&mdash;</dd></div>
+      <div class="rd"><dt>&alpha; at high frequency</dt><dd id="ab-ainf">&mdash;</dd></div>
+      <div class="rd"><dt>the same, in dB</dt><dd id="ab-db">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">&alpha; and &beta; computed exactly from &gamma;, on logarithmic axes, with the two limiting forms dashed. below the crossover they run together as &radic;f; above it &alpha; levels off while &beta; keeps rising as f</figcaption>
   </figure>
 
-  <p class="t">Sea water's high-frequency attenuation of about 84 Np/m, roughly 700 dB per metre, is why radar does not see submarines. The same physics sets a transmission line's dielectric loss in chapter 04: a good line dielectric sits deep in the low-loss regime, where the attenuation above can be written $\alpha = \tfrac12\beta\tan\delta$.</p>
+  <p class="t">Sea water's high-frequency attenuation of about 84 Np/m, over 700 dB per metre, is why radar does not see submarines. The same physics sets a transmission line's dielectric loss in chapter 04: a good line dielectric sits deep in the low-loss regime, where the attenuation above can be written $\alpha = \tfrac12\beta\tan\delta$.</p>
 </section>
 
 <section class="blk" id="skin">
@@ -235,9 +235,9 @@
         </select></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>skin depth &delta;</dt><dd id="sk-d">2.09 &micro;m</dd></div>
-      <div class="rd"><dt>R<sub>s</sub> = 1/&sigma;&delta;</dt><dd id="sk-rs">8.25 m&Omega;</dd></div>
-      <div class="rd"><dt>R&prime; of a 0.45 mm wire</dt><dd id="sk-rp">2.92 &Omega;/m</dd></div>
+      <div class="rd"><dt>skin depth &delta;</dt><dd id="sk-d">&mdash;</dd></div>
+      <div class="rd"><dt>R<sub>s</sub> = 1/&sigma;&delta;</dt><dd id="sk-rs">&mdash;</dd></div>
+      <div class="rd"><dt>R&prime;, a = 0.45 mm</dt><dd id="sk-rp">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">current density inside the metal against depth, at one instant and as its envelope e<sup>&minus;z/&delta;</sup>. depth is measured in skin depths, so the curve has the same shape for every metal and frequency; the row under each tick is that depth in metres for the current setting. the shaded strip is the first skin depth. the wire figure uses R&prime; = R<sub>s</sub>/2&pi;a, valid while &delta; is small against the radius a</figcaption>
   </figure>
@@ -276,10 +276,10 @@
       <div class="ctl"><label for="ni-e">&epsilon;<sub>r</sub> beyond</label><input type="range" id="ni-e" min="1" max="81" step="0.5" value="4"><output id="ni-ev">4.0</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>&Gamma;</dt><dd id="ni-g">&minus;0.333</dd></div>
-      <div class="rd"><dt>&tau;</dt><dd id="ni-t">0.667</dd></div>
-      <div class="rd"><dt>reflected power</dt><dd id="ni-pr">11.1 %</dd></div>
-      <div class="rd"><dt>transmitted power</dt><dd id="ni-pt">88.9 %</dd></div>
+      <div class="rd"><dt>&Gamma;</dt><dd id="ni-g">&mdash;</dd></div>
+      <div class="rd"><dt>&tau;</dt><dd id="ni-t">&mdash;</dd></div>
+      <div class="rd"><dt>reflected power</dt><dd id="ni-pr">&mdash;</dd></div>
+      <div class="rd"><dt>transmitted power</dt><dd id="ni-pt">&mdash;</dd></div>
     </dl>
     <div class="btns">
       <button data-ni="1">no boundary</button>
@@ -382,7 +382,17 @@
   var aEl = document.getElementById('alpha'), bEl = document.getElementById('freq');
   var aOut = document.getElementById('alphav'), bOut = document.getElementById('freqv');
   var etaOut = document.getElementById('o-eta');
+  /* alpha < beta in any passive medium: alpha^2 - beta^2 = Re(gamma^2)
+     = -omega^2 mu eps < 0. Past that the lag would exceed the 45 degrees the
+     derivation names as the bound, so the alpha slider stops one step short
+     of beta. */
+  function clampA(){
+    var st = +aEl.step, amax = Math.min(0.9, Math.ceil(be/st - 1 - 1e-9)*st);
+    aEl.max = amax.toFixed(2);
+    if(al > amax){ al = +amax.toFixed(2); aEl.value = al; }
+  }
   function sync(){
+    clampA();
     aOut.textContent = al.toFixed(2); bOut.textContent = be.toFixed(2);
     /* eta*gamma = j*omega*mu exactly, so arg(eta) = 90deg - arg(gamma) */
     if(etaOut) etaOut.innerHTML = ((Math.PI/2 - Math.atan2(be, al))*180/Math.PI).toFixed(1) + '&deg;';
@@ -392,7 +402,7 @@
   Array.prototype.forEach.call(document.querySelectorAll('.btns button[data-a]'), function(b){
     b.addEventListener('click', function(){
       al = +b.getAttribute('data-a'); be = +b.getAttribute('data-b');
-      aEl.value = al; bEl.value = be; sync();
+      bEl.value = be; sync(); aEl.value = al;
     });
   });
   sync();
@@ -435,18 +445,22 @@
        derivation below makes and this figure used to contradict by drawing both
        with one phase. H is drawn at 0.55 scale to read as a distinct trace. */
     var etaPh = Math.PI/2 - Math.atan2(be, al);
+    var pub = { t: t, al: al, be: be, eta: etaPh*180/Math.PI, envelope: al > 0.005, bracket: null };
 
     function wave(scale, ph, col, lw){
+      var smp = [];
       c.strokeStyle = col; c.lineWidth = lw;
       c.beginPath();
       for(var i=0;i<=300;i++){
-        var z = i/300*zmax;
-        c.lineTo(px(z), mid - env(z)*Math.cos(t - be*z - ph)*sy*scale);
+        var z = i/300*zmax, v = env(z)*Math.cos(t - be*z - ph)*scale;
+        c.lineTo(px(z), mid - v*sy);
+        if(i % 6 === 0) smp.push([z, v]);
       }
       c.stroke();
+      return smp;
     }
-    wave(0.55, etaPh, C.h, 1.8);
-    wave(1, 0, C.e, 2.4);
+    pub.H = wave(0.55, etaPh, C.h, 1.8);
+    pub.E = wave(1, 0, C.e, 2.4);
 
     /* wavelength marker */
     var lam = EM.TAU/be;
@@ -476,6 +490,7 @@
         c.fillStyle = C.sunk; c.fillRect((px(z1)+px(z2b))/2 - w/2, y-8, w, 16);
         c.fillStyle = C.ink; c.fillText(lab, (px(z1)+px(z2b))/2, y+4);
         c.restore();
+        pub.bracket = [z1, z2b, fade];
       }
     }
 
@@ -484,6 +499,7 @@
     c.fillText(al > 0.005 ? ('α = ' + al.toFixed(2) + ' Np/m') : 'lossless (α = 0)', L + 7, T + 12);
     c.fillText('z = 0', L, H - B + 14);
     c.textAlign = 'right'; c.fillText('propagation z →', W-R, T + 12);
+    EM.publish(cv, pub);
   }, true);
 })();
 
@@ -527,13 +543,12 @@ function fmtFreq(f){
     var c = cv.getContext('2d'), W = cv._w, H = cv._h;
     c.clearRect(0, 0, W, H);
     var m = MATS[mi], X0 = 0, X1 = 12;
-    /* the y range follows the medium: whole decades spanning both curves */
-    var lo = Infinity, hi = -Infinity;
-    for(var k = 0; k <= 60; k++){
-      var g = gammaOf(Math.pow(10, X0 + (X1 - X0)*k/60), m.sig, m.er);
-      lo = Math.min(lo, Math.log10(g[0]), Math.log10(g[1])); hi = Math.max(hi, Math.log10(g[0]), Math.log10(g[1]));
-    }
+    /* the y range follows the medium: whole decades spanning both curves.
+       alpha and beta both rise with f, so their extremes are at the two ends */
+    var gA = gammaOf(Math.pow(10, X0), m.sig, m.er), gB = gammaOf(Math.pow(10, X1), m.sig, m.er);
+    var lo = Math.log10(Math.min(gA[0], gA[1])), hi = Math.log10(Math.max(gB[0], gB[1]));
     var Y0 = Math.floor(lo), Y1 = Math.ceil(hi);
+    var pub = { mi: mi, sig: m.sig, er: m.er, axes: [X0, X1, Y0, Y1], alpha: [], beta: [] };
     var L = 52, R = 14, T = 14, B = 38;
     function px(x){ return L + (x - X0)/(X1 - X0)*(W - L - R); }
     function py(y){ return (H - B) - (y - Y0)/(Y1 - Y0)*(H - T - B); }
@@ -558,21 +573,23 @@ function fmtFreq(f){
     c.save(); c.beginPath(); c.rect(L, T, W - L - R, H - T - B); c.clip();
     /* the limits, dashed */
     c.setLineDash([5, 4]); c.lineWidth = 1.2; c.strokeStyle = C.ink3;
+    var gc = function(x){ return Math.log10(Math.sqrt(Math.PI*Math.pow(10, x)*MU0*m.sig)); };
     c.beginPath();                                   /* good conductor: alpha = beta = sqrt(pi f mu sigma) */
-    c.moveTo(px(X0), py(Math.log10(Math.sqrt(Math.PI*Math.pow(10, X0)*MU0*m.sig))));
-    c.lineTo(px(X1), py(Math.log10(Math.sqrt(Math.PI*Math.pow(10, X1)*MU0*m.sig))));
+    c.moveTo(px(X0), py(gc(X0))); c.lineTo(px(X1), py(gc(X1)));
     c.stroke();
     var ainf = m.sig/2*ETA0/Math.sqrt(m.er);          /* low loss: alpha flat, beta = w sqrt(mu eps) */
     c.beginPath(); c.moveTo(px(X0), py(Math.log10(ainf))); c.lineTo(px(X1), py(Math.log10(ainf))); c.stroke();
-    var bl = function(x){ return Math.log10(2*Math.PI*Math.pow(10, x)*Math.sqrt(m.er)/299792458); };
+    var bl = function(x){ return Math.log10(2*Math.PI*Math.pow(10, x)*Math.sqrt(m.er*MU0*EPS0)); };
     c.beginPath(); c.moveTo(px(X0), py(bl(X0))); c.lineTo(px(X1), py(bl(X1))); c.stroke();
     c.setLineDash([]);
+    pub.limits = { conductor: [gc(X0), gc(X1)], alphaLow: Math.log10(ainf), betaLow: [bl(X0), bl(X1)] };
     /* exact */
-    [[0, C.h], [1, C.e]].forEach(function(q){
+    [[0, C.h, pub.alpha], [1, C.e, pub.beta]].forEach(function(q){
       c.strokeStyle = q[1]; c.lineWidth = 2.4; c.beginPath();
       for(var j = 0; j <= 240; j++){
-        var x = X0 + (X1 - X0)*j/240, g2 = gammaOf(Math.pow(10, x), m.sig, m.er);
-        c.lineTo(px(x), py(Math.log10(g2[q[0]])));
+        var x = X0 + (X1 - X0)*j/240, g2 = gammaOf(Math.pow(10, x), m.sig, m.er), y = Math.log10(g2[q[0]]);
+        c.lineTo(px(x), py(y));
+        if(j % 8 === 0) q[2].push([x, y]);
       }
       c.stroke();
     });
@@ -580,6 +597,7 @@ function fmtFreq(f){
 
     /* crossover */
     var xc = Math.log10(fc(m));
+    pub.fc = fc(m);
     c.strokeStyle = C.ink; c.lineWidth = 1; c.setLineDash([2, 3]);
     c.beginPath(); c.moveTo(px(xc), T); c.lineTo(px(xc), H - B); c.stroke(); c.setLineDash([]);
     c.fillStyle = C.ink2; c.textAlign = 'left'; c.font = '11px ' + MONO2;
@@ -593,6 +611,7 @@ function fmtFreq(f){
     var gl = gammaOf(Math.pow(10, 1), m.sig, m.er);
     c.fillStyle = C.ink2; c.textAlign = 'left';
     c.fillText('α = β', px(1) + 4, py(Math.log10(gl[0])) - 10);
+    EM.publish(cv, pub);
   }, false);
 })();
 
@@ -624,25 +643,34 @@ function fmtFreq(f){
     EM.fit(cv);
     var c = cv.getContext('2d'), W = cv._w, H = cv._h;
     c.clearRect(0, 0, W, H);
-    var L = 46, R = 16, T = 18, B = 58, ZM = 5;          /* five skin depths across */
+    var L = 46, R = 16, T = 18, B = 58, ZM = 5, SH = 1;   /* five skin depths across; the first shaded */
     var y0 = T + (H - T - B)/2, sy = (H - T - B)/2*0.92;
     function px(z){ return L + z/ZM*(W - L - R); }
     /* the metal, and the first skin depth */
     c.fillStyle = C.ink2; c.globalAlpha = 0.08; c.fillRect(L, T, W - L - R, H - T - B);
-    c.globalAlpha = 0.16; c.fillRect(L, T, px(1) - L, H - T - B); c.globalAlpha = 1;
+    c.globalAlpha = 0.16; c.fillRect(L, T, px(SH) - L, H - T - B); c.globalAlpha = 1;
     c.strokeStyle = C.line2; c.lineWidth = 1;
     c.beginPath(); c.moveTo(L, y0 + .5); c.lineTo(W - R, y0 + .5); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.stroke();
+    var pub = { t: t, lf: lf, sig: sig, delta: delta(), shade: [0, SH], env: [], J: [], ticks: [] };
     /* envelope */
     c.strokeStyle = C.acc; c.lineWidth = 1.2; c.setLineDash([4, 4]);
     [1, -1].forEach(function(s){
       c.beginPath();
-      for(var i = 0; i <= 200; i++){ var z = ZM*i/200; c.lineTo(px(z), y0 - s*Math.exp(-z)*sy); }
+      for(var i = 0; i <= 200; i++){
+        var z = ZM*i/200, v = s*Math.exp(-z);
+        c.lineTo(px(z), y0 - v*sy);
+        if(i % 10 === 0) pub.env.push([z, v]);
+      }
       c.stroke();
     });
     c.setLineDash([]);
     /* the instantaneous current density */
     c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
-    for(var j = 0; j <= 300; j++){ var z2 = ZM*j/300; c.lineTo(px(z2), y0 - Math.exp(-z2)*Math.cos(t - z2)*sy); }
+    for(var j = 0; j <= 300; j++){
+      var z2 = ZM*j/300, v2 = Math.exp(-z2)*Math.cos(t - z2);
+      c.lineTo(px(z2), y0 - v2*sy);
+      if(j % 6 === 0) pub.J.push([z2, v2]);
+    }
     c.stroke();
     /* labels */
     c.font = '11px ' + MONO2; c.fillStyle = C.ink3; c.textAlign = 'center';
@@ -652,6 +680,7 @@ function fmtFreq(f){
     for(var k = 1; k <= 4; k++){
       c.fillStyle = C.ink3; c.fillText(k + 'δ', px(k), H - B + 15);
       c.fillStyle = C.ink2; c.fillText(len(k*dd), px(k), H - B + 29);
+      pub.ticks.push([k, len(k*dd)]);
     }
     c.fillStyle = C.ink3;
     c.textAlign = 'left'; c.fillText('surface', L - 2, H - B + 15);
@@ -660,6 +689,7 @@ function fmtFreq(f){
     EM.rich(c, [['δ = ' + len(delta()),'n']], px(1) + 6, T + 14, 12, 'left');
     c.fillStyle = C.ink3;
     EM.rich(c, [['J/J','n'], ['0','b']], 6, T + 4, 11, 'left');
+    EM.publish(cv, pub);
   }, true);
 })();
 
@@ -712,40 +742,55 @@ function fmtFreq(f){
     c.beginPath(); c.moveTo(L, y0 + .5); c.lineTo(W - R, y0 + .5); c.stroke();
     c.strokeStyle = C.ink2; c.lineWidth = 2;
     c.beginPath(); c.moveTo(xb, T - 10); c.lineTo(xb, H - B + 10); c.stroke();
+    /* what was drawn, for the tests: positions in incident wavelengths from
+       the boundary (negative on the left), values in units of the incident
+       amplitude */
+    function u(x){ return (x - xb)/lam; }
+    var pub = { t: t, er: er, pec: pec, G: k.G, T: k.T, env: [], inc: [], ref: [], tot: [], trans: [] };
     /* envelope of the total field on the left */
     c.fillStyle = C.accfill; c.beginPath();
-    for(var i = 0; i <= 160; i++){ var x = L + (xb - L)*i/160, p = 2*b1(x);
-      c.lineTo(x, y0 - Math.hypot(1 + k.G*Math.cos(p), k.G*Math.sin(p))*sy); }
+    for(var i = 0; i <= 160; i++){ var x = L + (xb - L)*i/160, p = 2*b1(x), ev = Math.hypot(1 + k.G*Math.cos(p), k.G*Math.sin(p));
+      c.lineTo(x, y0 - ev*sy);
+      if(i % 4 === 0) pub.env.push([u(x), ev]); }
     for(var i2 = 160; i2 >= 0; i2--){ var x2 = L + (xb - L)*i2/160, p2 = 2*b1(x2);
       c.lineTo(x2, y0 + Math.hypot(1 + k.G*Math.cos(p2), k.G*Math.sin(p2))*sy); }
     c.closePath(); c.fill();
     /* incident and reflected, dashed */
     c.setLineDash([5, 4]); c.lineWidth = 1.4;
     c.strokeStyle = C.e; c.beginPath();
-    for(var a = 0; a <= 160; a++){ var xa = L + (xb - L)*a/160; c.lineTo(xa, y0 - Math.cos(t - b1(xa))*sy); }
+    for(var a = 0; a <= 160; a++){ var xa = L + (xb - L)*a/160, va = Math.cos(t - b1(xa));
+      c.lineTo(xa, y0 - va*sy);
+      if(a % 4 === 0) pub.inc.push([u(xa), va]); }
     c.stroke();
     c.strokeStyle = C.h; c.beginPath();
-    for(var r = 0; r <= 160; r++){ var xr = L + (xb - L)*r/160; c.lineTo(xr, y0 - k.G*Math.cos(t + b1(xr))*sy); }
+    for(var r = 0; r <= 160; r++){ var xr = L + (xb - L)*r/160, vr = k.G*Math.cos(t + b1(xr));
+      c.lineTo(xr, y0 - vr*sy);
+      if(r % 4 === 0) pub.ref.push([u(xr), vr]); }
     c.stroke(); c.setLineDash([]);
     /* total on the left, transmitted on the right */
     c.strokeStyle = C.ink; c.lineWidth = 2.4; c.beginPath();
-    for(var s = 0; s <= 200; s++){ var xs = L + (xb - L)*s/200;
-      c.lineTo(xs, y0 - (Math.cos(t - b1(xs)) + k.G*Math.cos(t + b1(xs)))*sy); }
+    for(var s = 0; s <= 200; s++){ var xs = L + (xb - L)*s/200, vs = Math.cos(t - b1(xs)) + k.G*Math.cos(t + b1(xs));
+      c.lineTo(xs, y0 - vs*sy);
+      if(s % 5 === 0) pub.tot.push([u(xs), vs]); }
     c.stroke();
     if(!pec){
       var n = Math.sqrt(er);
       c.beginPath();
-      for(var q = 0; q <= 200; q++){ var xq = xb + (W - R - xb)*q/200;
-        c.lineTo(xq, y0 - k.T*Math.cos(t - n*b1(xq))*sy); }
+      for(var q = 0; q <= 200; q++){ var xq = xb + (W - R - xb)*q/200, vq = k.T*Math.cos(t - n*b1(xq));
+        c.lineTo(xq, y0 - vq*sy);
+        if(q % 2 === 0) pub.trans.push([u(xq), vq]); }
       c.stroke();
     }
+    var eta2 = pec ? 0 : ETA0/Math.sqrt(er);
+    pub.labels = [ETA0.toFixed(0), eta2.toFixed(0)];
     c.font = '11px ' + MONO2; c.fillStyle = C.ink3; c.textAlign = 'left';
-    EM.rich(c, [['free space, η','n'], ['1','b'], [' = 377 Ω','n']], L, T - 8, 11, 'left');
+    EM.rich(c, [['free space, η','n'], ['1','b'], [' = ' + pub.labels[0] + ' Ω','n']], L, T - 8, 11, 'left');
     c.fillStyle = C.ink2;
     if(pec) EM.rich(c, [['conductor, η','n'], ['2','b'], [' = 0','n']], xb + 6, T - 8, 11, 'left');
-    else EM.rich(c, [['η','n'], ['2','b'], [' = ' + (ETA0/Math.sqrt(er)).toFixed(0) + ' Ω','n']], xb + 6, T - 8, 11, 'left');
+    else EM.rich(c, [['η','n'], ['2','b'], [' = ' + pub.labels[1] + ' Ω','n']], xb + 6, T - 8, 11, 'left');
     c.fillStyle = C.ink3; c.textAlign = 'center';
     c.fillText('boundary', xb, H - B + 24);
+    EM.publish(cv, pub);
   }, true);
 })();
 
@@ -767,15 +812,20 @@ function fmtFreq(f){
     var DW = nar ? 320 : 640, DH = nar ? 520 : 260;
     EM.design(c, cv, DW, DH, true);
 
+    var pub = {};
     function twoWire(ox, oy){
       var cx = ox + 150, cy = oy + 128, d = 62, K0 = 1.45;
+      /* design coordinates (y down); the line charges sit at cx -+ d */
+      pub.charges = [[cx - d, cy, 1], [cx + d, cy, -1]];
+      pub.field = []; pub.equi = []; pub.wires = [];
       c.save(); c.beginPath(); c.rect(ox, oy + 26, 300, 210); c.clip();
       /* field lines: circles through both charges */
       c.strokeStyle = C.e; c.lineWidth = 1.3;
       [-2.2, -1.1, -0.45, 0, 0.45, 1.1, 2.2].forEach(function(u){
-        if(u === 0){ c.beginPath(); c.moveTo(cx - d, cy); c.lineTo(cx + d, cy); c.stroke(); return; }
+        if(u === 0){ c.beginPath(); c.moveTo(cx - d, cy); c.lineTo(cx + d, cy); c.stroke(); pub.field.push({ line: [cx - d, cy, cx + d, cy] }); return; }
         var yc = cy - d*u, rr = Math.sqrt(d*d + d*u*d*u);
         c.beginPath(); c.arc(cx, yc, rr, 0, EM.TAU); c.stroke();
+        pub.field.push({ c: [cx, yc], r: rr });
       });
       /* equipotentials */
       c.strokeStyle = C.h; c.lineWidth = 1.1; c.setLineDash([4, 3]);
@@ -783,17 +833,20 @@ function fmtFreq(f){
         [1, -1].forEach(function(s){
           var xc = cx + s*d/Math.tanh(k), rr = d/Math.sinh(k);
           c.beginPath(); c.arc(xc, cy, rr, 0, EM.TAU); c.stroke();
+          pub.equi.push({ c: [xc, cy], r: rr });
         });
       });
       c.beginPath(); c.moveTo(cx, oy + 26); c.lineTo(cx, oy + 236); c.stroke();
+      pub.equi.push({ line: [cx, oy + 26, cx, oy + 236] });
       c.setLineDash([]);
       c.restore();
       /* the two wires, themselves equipotentials */
       [1, -1].forEach(function(s){
-        var xc = cx + s*d/Math.tanh(K0), rr = d/Math.sinh(K0);
+        var xc = cx + s*d/Math.tanh(K0), rr = d/Math.sinh(K0), sg = s > 0 ? -1 : 1;
         c.fillStyle = C.ink2; c.beginPath(); c.arc(xc, cy, rr, 0, EM.TAU); c.fill();
         c.fillStyle = C.surface; c.font = '13px ' + MONO2; c.textAlign = 'center';
-        c.fillText(s > 0 ? '−' : '+', xc, cy + 5);
+        c.fillText(sg < 0 ? '−' : '+', xc, cy + 5);
+        pub.wires.push({ c: [xc, cy], r: rr, sign: sg });
       });
       c.fillStyle = C.ink; c.font = '13px ' + MONO2; c.textAlign = 'center';
       c.fillText('two conductors', cx, oy + 16);
@@ -818,6 +871,7 @@ function fmtFreq(f){
     if(nar){ twoWire(10, 0); pipe(10, 262); }
     else { twoWire(10, 0); pipe(330, 0); }
     c.restore();
+    EM.publish(cv, pub);
   }, false);
 })();
 </script>

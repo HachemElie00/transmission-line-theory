@@ -106,7 +106,7 @@
 
   <div class="key">
     <span class="lab">Where this is heading</span>
-    <p>That verbal argument is suggestive but not a proof. In the next chapter the same two curl equations are combined algebraically, and out falls a wave equation with a propagation speed set entirely by $\mu$ and $\varepsilon$ &mdash; which for free space turns out to be the speed of light.</p>
+    <p>That verbal argument is suggestive but not a proof. In part two the same two curl equations are combined algebraically, and out falls a wave equation with a propagation speed set entirely by $\mu$ and $\varepsilon$ &mdash; which for free space turns out to be the speed of light.</p>
   </div>
 </section>
 
@@ -188,7 +188,7 @@
     <figcaption class="cap">&sigma;/&omega;&epsilon; against frequency, both axes logarithmic. typical values: copper &sigma; = 5.8&times;10<sup>7</sup> S/m; sea water 4 S/m, &epsilon;<sub>r</sub> = 81; fresh water 10<sup>&minus;3</sup> S/m, &epsilon;<sub>r</sub> = 80; wet soil 10<sup>&minus;2</sup> S/m, &epsilon;<sub>r</sub> = 15</figcaption>
   </figure>
 
-  <p class="t">Copper stays a conductor until its crossover near $10^{18}$ Hz, far beyond anything a transmission line carries, which is why a line's conductors can be treated as perfect to first order. Sea water crosses near 900 MHz: a conductor to a submarine's low-frequency radio, a lossy dielectric to a microwave radar. The ratio reappears in chapter 03 as the <b>loss tangent</b> $\tan\delta = \sigma/\omega\varepsilon$ of the dielectric between the conductors, which is where the shunt conductance $G' = \omega C'\tan\delta$ comes from.</p>
+  <p class="t">Copper's crossover, with $\sigma$ held at its DC value, is near $10^{18}$ Hz. Its conductivity itself starts to fall in the terahertz range, long before that, but both are far beyond anything a transmission line carries, which is why a line's conductors can be treated as perfect to first order. Sea water crosses near 900 MHz: a conductor to a submarine's low-frequency radio, a lossy dielectric to a microwave radar. The ratio reappears in chapter 03 as the <b>loss tangent</b> $\tan\delta = \sigma/\omega\varepsilon$ of the dielectric between the conductors, which is where the shunt conductance $G' = \omega C'\tan\delta$ comes from.</p>
 </section>
 
 <section class="blk" id="poynting">
@@ -223,10 +223,10 @@
       <div class="ctl"><label for="per">&epsilon;<sub>r</sub></label><input type="range" id="per" min="1" max="10" step="0.05" value="2.25"><output id="perv">2.25</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>Z<sub>0</sub></dt><dd id="po-z0">50.1 &Omega;</dd></div>
-      <div class="rd"><dt>P, integrating S</dt><dd id="po-int">9.985 mW</dd></div>
-      <div class="rd"><dt>|V|<sup>2</sup>/2Z<sub>0</sub></dt><dd id="po-ckt">9.985 mW</dd></div>
-      <div class="rd"><dt>half the power inside</dt><dd id="po-half">&rho; = 1.87a</dd></div>
+      <div class="rd"><dt>Z<sub>0</sub></dt><dd id="po-z0">&mdash;</dd></div>
+      <div class="rd"><dt>P, integrating S</dt><dd id="po-int">&mdash;</dd></div>
+      <div class="rd"><dt>|V|<sup>2</sup>/2Z<sub>0</sub></dt><dd id="po-ckt">&mdash;</dd></div>
+      <div class="rd"><dt>half the power inside</dt><dd id="po-half">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">the cross-section at 1 V. power flows along the axis, out of the page; the shading is its density, which falls as 1/&rho;<sup>2</sup>. the plot gives that density and the share of the total flowing inside each radius</figcaption>
   </figure>
@@ -414,9 +414,12 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     if(!nar && cv._grown){ cv._grown = false; cv.style.height = '280px'; cv._h0 = null; EM.fit(cv); }
     var DW = nar ? 320 : 640, DH = nar ? 500 : 250;
     EM.design(c, cv, DW, DH, true);
+    /* what was drawn, in design coordinates (y down), for the tests */
+    var pub = { box: { D: [] }, loop: { H: [] } };
 
     function panel(ox, oy, kind){
       var ys = oy + 150;
+      pub[kind].surface = ys; pub[kind].conductor = [ys, ys + 70];
       /* the conductor, below the surface */
       c.fillStyle = C.ink2; c.globalAlpha = 0.16;
       c.fillRect(ox, ys, 300, 70); c.globalAlpha = 1;
@@ -431,14 +434,20 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
       if(kind === 'box'){
         c.fillText('Gauss: a pillbox', ox + 150, oy + 16);
         /* surface charge */
+        var QS = '+';
         c.fillStyle = C.e; c.font = '13px ' + MONO;
-        for(var x = ox + 20; x < ox + 290; x += 22) c.fillText('+', x, ys + 15);
+        for(var x = ox + 20; x < ox + 290; x += 22) c.fillText(QS, x, ys + 15);
+        pub.box.charge = QS;
         /* D leaving the surface at right angles */
         c.strokeStyle = C.e; c.fillStyle = C.e; c.lineWidth = 1.6;
-        [30, 62, 106, 138].forEach(function(dx){ EM.arrow(c, ox + dx, ys - 2, ox + dx, oy + 72, 6); });
+        [30, 62, 106, 138].forEach(function(dx){
+          EM.arrow(c, ox + dx, ys - 2, ox + dx, oy + 72, 6);
+          pub.box.D.push([ox + dx, ys - 2, ox + dx, oy + 72]);
+        });
         /* the pillbox, straddling */
         c.strokeStyle = C.ink; c.lineWidth = 1.4; c.setLineDash([5, 4]);
         c.strokeRect(ox + 90, ys - 20, 64, 40); c.setLineDash([]);
+        pub.box.shape = [ys - 20, ys + 20];
         c.strokeStyle = C.ink3; c.lineWidth = 1;
         c.beginPath(); c.moveTo(ox + 166, ys - 20); c.lineTo(ox + 166, ys + 20);
         c.moveTo(ox + 162, ys - 20); c.lineTo(ox + 170, ys - 20);
@@ -451,20 +460,28 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
         c.fillText('Ampère and Faraday: a loop', ox + 150, oy + 16);
         /* H running along the surface: with n up and J_s out of the page,
            n x H = J_s needs H pointing in -x, to the left */
+        var HX = -1, JS_OUT = true;
         c.strokeStyle = C.h; c.fillStyle = C.h; c.lineWidth = 1.6;
         [[24, 84], [118, 178], [212, 272]].forEach(function(p){
-          EM.arrow(c, ox + p[1], ys - 34, ox + p[0], ys - 34, 6);
-          EM.arrow(c, ox + p[1], ys - 62, ox + p[0], ys - 62, 6);
+          var a = ox + (HX < 0 ? p[1] : p[0]), b = ox + (HX < 0 ? p[0] : p[1]);
+          [34, 62].forEach(function(h){
+            EM.arrow(c, a, ys - h, b, ys - h, 6);
+            pub.loop.H.push([a, ys - h, b, ys - h]);
+          });
         });
-        /* the surface current, out of the page */
+        /* the surface current: a dot is out of the page, a cross into it */
         c.strokeStyle = C.ink; c.fillStyle = C.ink; c.lineWidth = 1.2;
         for(var x2 = ox + 30; x2 < ox + 290; x2 += 40){
           c.beginPath(); c.arc(x2, ys + 18, 5, 0, EM.TAU); c.stroke();
-          c.beginPath(); c.arc(x2, ys + 18, 1.6, 0, EM.TAU); c.fill();
+          c.beginPath();
+          if(JS_OUT){ c.arc(x2, ys + 18, 1.6, 0, EM.TAU); c.fill(); }
+          else { c.moveTo(x2 - 3, ys + 15); c.lineTo(x2 + 3, ys + 21); c.moveTo(x2 + 3, ys + 15); c.lineTo(x2 - 3, ys + 21); c.stroke(); }
         }
+        pub.loop.js = JS_OUT ? 1 : -1;
         /* the loop, straddling */
         c.strokeStyle = C.ink; c.lineWidth = 1.4; c.setLineDash([5, 4]);
         c.strokeRect(ox + 100, ys - 12, 100, 24); c.setLineDash([]);
+        pub.loop.shape = [ys - 12, ys + 12];
         c.strokeStyle = C.ink3; c.lineWidth = 1;
         c.beginPath(); c.moveTo(ox + 88, ys - 12); c.lineTo(ox + 88, ys + 12);
         c.moveTo(ox + 84, ys - 12); c.lineTo(ox + 92, ys - 12);
@@ -472,7 +489,7 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
         c.fillStyle = C.ink3; c.font = '12px ' + MONO; c.textAlign = 'right';
         c.fillText('h → 0', ox + 80, ys - 18);
         c.fillStyle = C.ink2; c.textAlign = 'right';
-        rich(c, [['J','n'], ['s','b'], [' out of the page','n']], ox + 294, ys + 44, 12, 'right');
+        rich(c, [['J','n'], ['s','b'], [JS_OUT ? ' out of the page' : ' into the page','n']], ox + 294, ys + 44, 12, 'right');
         c.fillStyle = C.h;
         rich(c, [['H','n'], ['t','b'], [' = J','n'], ['s','b'], ['     E','n'], ['t','b'], [' = 0','n']], ox + 150, oy + 46, 14, 'center');
       }
@@ -480,6 +497,7 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     if(nar){ panel(10, 0, 'box'); panel(10, 250, 'loop'); }
     else   { panel(10, 0, 'box'); panel(330, 0, 'loop'); }
     c.restore();
+    EM.publish(cv, pub);
   }, false);
 })();
 
@@ -498,6 +516,7 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     { name: 'fresh water', sig: 1e-3,  er: 80, col: 'ink2' }
   ];
   var lf = 6;                                   /* log10 of the cursor frequency */
+  var HI = 2, LO = -2;                          /* log10 of the ratio: the verdicts and the shading */
   function ratio(m, f){ return m.sig/(2*Math.PI*f*m.er*E0); }
   function fmtF(f){
     var u = [[1e12,'THz'],[1e9,'GHz'],[1e6,'MHz'],[1e3,'kHz'],[1,'Hz']];
@@ -514,7 +533,7 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     document.getElementById('sfv').textContent = fmtF(f);
     document.getElementById('sig-ro').innerHTML = MATS.map(function(m){
       var r = ratio(m, f);
-      var v = r > 100 ? 'conductor' : r < 0.01 ? 'dielectric' : 'in between';
+      var v = r > Math.pow(10, HI) ? 'conductor' : r < Math.pow(10, LO) ? 'dielectric' : 'in between';
       return '<div class="rd"><dt>' + m.name + '</dt><dd>' + sci(r) + '</dd><dt style="margin-top:3px">' + v + '</dt></div>';
     }).join('');
   }
@@ -529,10 +548,11 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     function px(x){ return L + (x - X0)/(X1 - X0)*(W - L - R); }
     function py(y){ return (H - B) - (y - Y0)/(Y1 - Y0)*(H - T - B); }
 
+    var pub = { lf: lf, axes: [X0, X1, Y0, Y1], shade: [HI, LO], mats: [] };
     /* the two regimes, shaded lightly above 100 and below 1/100 */
     c.fillStyle = C.ink3; c.globalAlpha = 0.07;
-    c.fillRect(L, py(Y1), W - L - R, py(2) - py(Y1));
-    c.fillRect(L, py(-2), W - L - R, py(Y0) - py(-2));
+    c.fillRect(L, py(Y1), W - L - R, py(HI) - py(Y1));
+    c.fillRect(L, py(LO), W - L - R, py(Y0) - py(LO));
     c.globalAlpha = 1;
     c.fillStyle = C.ink3; c.font = '11px ' + MONO; c.textAlign = 'right';
     c.fillText('conducts', W - R - 6, py(Y1) + 14);
@@ -562,10 +582,12 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     /* each material, clipped to the plot */
     c.save(); c.beginPath(); c.rect(L, T, W - L - R, H - T - B); c.clip();
     MATS.forEach(function(m){
+      var ya = Math.log10(ratio(m, Math.pow(10, X0))), yb = Math.log10(ratio(m, Math.pow(10, X1)));
       c.strokeStyle = C[m.col]; c.lineWidth = 2.2; c.beginPath();
-      c.moveTo(px(X0), py(Math.log10(ratio(m, 1))));
-      c.lineTo(px(X1), py(Math.log10(ratio(m, 1e12))));
+      c.moveTo(px(X0), py(ya));
+      c.lineTo(px(X1), py(yb));
       c.stroke();
+      pub.mats.push({ name: m.name, sig: m.sig, er: m.er, line: [ya, yb] });
     });
     c.restore();
 
@@ -581,19 +603,23 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
       var lx = Math.min(px(xl) + 8, W - R - tw - 4);
       c.fillStyle = C.sunk; c.fillRect(lx - 3, py(yv) - 12, tw + 6, 15);
       c.fillStyle = C[m.col]; c.fillText(m.name, lx, py(yv));
+      pub.mats[i].label = [xl, yv];
     });
 
     /* the frequency cursor, with where it cuts each line */
     var xc = px(lf);
     c.strokeStyle = C.ink; c.lineWidth = 1; c.setLineDash([2, 3]);
     c.beginPath(); c.moveTo(xc, T); c.lineTo(xc, H - B); c.stroke(); c.setLineDash([]);
-    MATS.forEach(function(m){
+    MATS.forEach(function(m, i){
       var y = Math.log10(ratio(m, Math.pow(10, lf)));
+      pub.mats[i].dot = null;
       if(y < Y0 || y > Y1) return;
       c.fillStyle = C[m.col]; c.beginPath(); c.arc(xc, py(y), 4.5, 0, EM.TAU); c.fill();
+      pub.mats[i].dot = y;
     });
     c.fillStyle = C.ink2; c.textAlign = 'left'; c.font = '11px ' + MONO;
     c.fillText('σ = ωε', L + 6, py(0) - 5);
+    EM.publish(cv, pub);
   }, false);
 })();
 
@@ -637,11 +663,14 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     /* the cross-section */
     var side = stack ? Math.min(W, 290) : Math.min(H, W*0.45);
     var cx = stack ? W/2 : side/2 + 10, cy = side/2, Rb = side/2 - 18, Ra = Rb/ba;
+    /* what was drawn, in canvas pixels (y down), for the tests */
+    var pub = { ba: ba, er: er, z0: z0(), pInt: pInt(), cx: cx, cy: cy, Ra: Ra, Rb: Rb, shade: [], H: [], E: [] };
     var N = 70;
     for(var k = 0; k < N; k++){
       var r0 = Ra + (Rb - Ra)*k/N, r1 = Ra + (Rb - Ra)*(k + 1)/N, rm = (r0 + r1)/2;
       c.fillStyle = C.acc; c.globalAlpha = 0.55*(Ra/rm)*(Ra/rm);
       c.beginPath(); c.arc(cx, cy, r1, 0, EM.TAU); c.arc(cx, cy, r0, 0, EM.TAU, true); c.fill();
+      if(k % 10 === 0) pub.shade.push([rm/Ra, c.globalAlpha]);
     }
     c.globalAlpha = 1;
     /* H circles, counter-clockwise for current out of the page */
@@ -651,14 +680,17 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
       c.beginPath(); c.arc(cx, cy, r, 0, EM.TAU); c.stroke();
       /* decreasing canvas angle is counter-clockwise on screen */
       var a = -Math.PI/4, d = 14/r;
-      EM.arrow(c, cx + r*Math.cos(a + d), cy + r*Math.sin(a + d), cx + r*Math.cos(a), cy + r*Math.sin(a), 6);
+      var tail = [cx + r*Math.cos(a + d), cy + r*Math.sin(a + d)], head = [cx + r*Math.cos(a), cy + r*Math.sin(a)];
+      EM.arrow(c, tail[0], tail[1], head[0], head[1], 6);
+      pub.H.push(tail.concat(head));
     });
     /* E radial */
     c.strokeStyle = C.e; c.fillStyle = C.e; c.lineWidth = 1.5;
     for(var i = 0; i < 12; i++){
       var an = i/12*EM.TAU + 0.13;
-      EM.arrow(c, cx + (Ra + 3)*Math.cos(an), cy + (Ra + 3)*Math.sin(an),
-                  cx + (Rb - 4)*Math.cos(an), cy + (Rb - 4)*Math.sin(an), 6);
+      var e4 = [cx + (Ra + 3)*Math.cos(an), cy + (Ra + 3)*Math.sin(an), cx + (Rb - 4)*Math.cos(an), cy + (Rb - 4)*Math.sin(an)];
+      EM.arrow(c, e4[0], e4[1], e4[2], e4[3], 6);
+      pub.E.push(e4);
     }
     /* conductors */
     c.fillStyle = C.ink2; c.beginPath(); c.arc(cx, cy, Ra, 0, EM.TAU); c.fill();
@@ -667,12 +699,14 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     var Rh = Ra*Math.sqrt(ba);
     c.strokeStyle = C.ink; c.lineWidth = 1.2; c.setLineDash([3, 3]);
     c.beginPath(); c.arc(cx, cy, Rh, 0, EM.TAU); c.stroke(); c.setLineDash([]);
+    pub.Rh = Rh;
 
     /* the plot: density and running share against radius */
     var L, Rr, T, B;
     if(stack){ L = 40; Rr = W - 16; T = side + 22; B = H - 40; }
     else { L = side + 54; Rr = W - 16; T = 20; B = H - 40; }
-    if(Rr - L < 80) return;
+    if(Rr - L < 80){ EM.publish(cv, pub); return; }
+    pub.density = []; pub.share = [];
     function px(r){ return L + (r - 1)/(ba - 1)*(Rr - L); }
     function py(v){ return B - v*(B - T); }
     c.strokeStyle = C.line2; c.lineWidth = 1;
@@ -680,12 +714,21 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
     c.fillText('1', L - 6, py(1) + 4); c.fillText('0', L - 6, py(0) + 4);
     c.strokeStyle = C.acc; c.lineWidth = 2.4; c.beginPath();
-    for(var j = 0; j <= 200; j++){ var r2 = 1 + (ba - 1)*j/200; c.lineTo(px(r2), py(1/(r2*r2))); }
+    for(var j = 0; j <= 200; j++){
+      var r2 = 1 + (ba - 1)*j/200, v2 = 1/(r2*r2);
+      c.lineTo(px(r2), py(v2));
+      if(j % 10 === 0) pub.density.push([r2, v2]);
+    }
     c.stroke();
     c.strokeStyle = C.ink; c.lineWidth = 2.4; c.beginPath();
-    for(var j2 = 0; j2 <= 200; j2++){ var r3 = 1 + (ba - 1)*j2/200; c.lineTo(px(r3), py(Math.log(r3)/Math.log(ba))); }
+    for(var j2 = 0; j2 <= 200; j2++){
+      var r3 = 1 + (ba - 1)*j2/200, v3 = Math.log(r3)/Math.log(ba);
+      c.lineTo(px(r3), py(v3));
+      if(j2 % 10 === 0) pub.share.push([r3, v3]);
+    }
     c.stroke();
     var xh = px(Math.sqrt(ba));
+    pub.halfMark = Math.sqrt(ba);
     c.strokeStyle = C.ink3; c.lineWidth = 1; c.setLineDash([3, 3]);
     c.beginPath(); c.moveTo(xh, T); c.lineTo(xh, B); c.moveTo(L, py(0.5)); c.lineTo(xh, py(0.5)); c.stroke(); c.setLineDash([]);
     c.textAlign = 'center'; c.fillStyle = C.ink3;
@@ -695,6 +738,7 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     c.textAlign = 'left';
     c.fillStyle = C.acc; c.fillText('density, S(ρ)/S(a)', px(1) + 10, py(0.93));
     c.fillStyle = C.ink; c.textAlign = 'right'; c.fillText('share of P inside ρ', Rr, py(0.5) + 4);
+    EM.publish(cv, pub);
   }, false);
 })();
 </script>
