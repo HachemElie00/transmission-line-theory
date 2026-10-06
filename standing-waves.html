@@ -56,10 +56,10 @@
       <div class="ctl"><label for="gpp">&theta;<sub>r</sub></label><input type="range" id="gpp" min="-180" max="180" step="1" value="-90"><output id="gpv">&minus;90&deg;</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>SWR</dt><dd id="o-s">3.00</dd></div>
-      <div class="rd"><dt>First min</dt><dd id="o-mn">0.125&lambda;</dd></div>
-      <div class="rd"><dt>First max</dt><dd id="o-mx">0.375&lambda;</dd></div>
-      <div class="rd"><dt>Z<sub>L</sub> on 50 &#937;</dt><dd id="o-zl">30 &minus; j40</dd></div>
+      <div class="rd"><dt>SWR</dt><dd id="o-s">&mdash;</dd></div>
+      <div class="rd"><dt>First min</dt><dd id="o-mn">&mdash;</dd></div>
+      <div class="rd"><dt>First max</dt><dd id="o-mx">&mdash;</dd></div>
+      <div class="rd"><dt>Z<sub>L</sub> on 50 &#937;</dt><dd id="o-zl">&mdash;</dd></div>
     </dl>
     <div class="btns">
       <button data-g="0" data-p="0">matched</button>
@@ -193,12 +193,12 @@
       </select></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>&Gamma;<sub>L</sub></dt><dd id="zl-g">0.333&ang;0&deg;</dd></div>
-      <div class="rd"><dt>SWR</dt><dd id="zl-s">2.00</dd></div>
-      <div class="rd"><dt>first max</dt><dd id="zl-mx">0.000&lambda;</dd></div>
-      <div class="rd"><dt>first min</dt><dd id="zl-mn">0.250&lambda;</dd></div>
-      <div class="rd"><dt>Z at a max</dt><dd id="zl-zmx">100 &Omega;</dd></div>
-      <div class="rd"><dt>Z at a min</dt><dd id="zl-zmn">25 &Omega;</dd></div>
+      <div class="rd"><dt>&Gamma;<sub>L</sub></dt><dd id="zl-g">&mdash;</dd></div>
+      <div class="rd"><dt>SWR</dt><dd id="zl-s">&mdash;</dd></div>
+      <div class="rd"><dt>first max</dt><dd id="zl-mx">&mdash;</dd></div>
+      <div class="rd"><dt>first min</dt><dd id="zl-mn">&mdash;</dd></div>
+      <div class="rd"><dt>Z at a max</dt><dd id="zl-zmx">&mdash;</dd></div>
+      <div class="rd"><dt>Z at a min</dt><dd id="zl-zmn">&mdash;</dd></div>
     </dl>
     <div class="btns">
       <button data-zr="1" data-zx="0">matched</button>
@@ -209,7 +209,7 @@
       <button data-zr="0" data-zx="0">short</button>
       <button data-zopen="1">open</button>
     </div>
-    <p class="cap" id="zl-case" aria-live="polite">a real load above Z<sub>0</sub>: the load sits at a voltage maximum</p>
+    <p class="cap" id="zl-case" aria-live="polite"></p>
     <figcaption class="cap">the envelope against distance from the load, and &Gamma; at the probe in the circle: it turns clockwise as the probe walks toward the generator, and its distance from &minus;1 is the envelope&rsquo;s height there. move your pointer across the envelope to place the probe yourself</figcaption>
   </figure>
 
@@ -240,10 +240,10 @@
       <div class="ctl"><label for="vi-p">&theta;<sub>r</sub></label><input type="range" id="vi-p" min="-180" max="180" step="1" value="60"><output id="vi-pv">60&deg;</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>power flow, every l</dt><dd id="vi-pw">0.750</dd></div>
-      <div class="rd"><dt>Z at a V max</dt><dd id="vi-zx">3.00 Z<sub>0</sub></dd></div>
-      <div class="rd"><dt>Z at a V min</dt><dd id="vi-zn">0.33 Z<sub>0</sub></dd></div>
-      <div class="rd"><dt>W<sub>e</sub>/W<sub>m</sub> over &lambda;/2</dt><dd id="vi-we">1.000</dd></div>
+      <div class="rd"><dt>power flow, every l</dt><dd id="vi-pw">&mdash;</dd></div>
+      <div class="rd"><dt>Z at a V max</dt><dd id="vi-zx">&mdash;</dd></div>
+      <div class="rd"><dt>Z at a V min</dt><dd id="vi-zn">&mdash;</dd></div>
+      <div class="rd"><dt>W<sub>e</sub>/W<sub>m</sub> over &lambda;/2</dt><dd id="vi-we">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">the voltage and current envelopes, both scaled by the incident wave, and below them the time-averaged electric and magnetic energy stored per unit length, against distance from the load. power flow is in units of |V<sub>0</sub><sup>+</sup>|<sup>2</sup>/2Z<sub>0</sub>; the last readout integrates the two energies over half a wavelength</figcaption>
   </figure>
@@ -330,9 +330,9 @@
       <div class="ctl"><label for="ls-g">|&Gamma;<sub>L</sub>|</label><input type="range" id="ls-g" min="0.05" max="1" step="0.01" value="1"><output id="ls-gv">1.00</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>SWR at the load</dt><dd id="ls-s0">&infin;</dd></div>
-      <div class="rd"><dt>SWR 6&lambda; back</dt><dd id="ls-s1">3.00</dd></div>
-      <div class="rd"><dt>line loss, one way</dt><dd id="ls-ll">3.00 dB</dd></div>
+      <div class="rd"><dt>SWR at the load</dt><dd id="ls-s0">&mdash;</dd></div>
+      <div class="rd"><dt>SWR 6&lambda; back</dt><dd id="ls-s1">&mdash;</dd></div>
+      <div class="rd"><dt>line loss, one way</dt><dd id="ls-ll">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">the voltage envelope along six wavelengths of lossy line, the load at the left; both waves are drawn shrinking toward the generator&rsquo;s end on the right as their own trip lengthens. the incident wave is taken as 1 at the generator end</figcaption>
   </figure>
@@ -351,10 +351,10 @@
       <div class="ctl"><label for="bu-g">&Gamma;<sub>g</sub></label><input type="range" id="bu-g" min="-0.9" max="0.9" step="0.05" value="-0.5"><output id="bu-gv">&minus;0.50</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>SWR</dt><dd id="bu-s">9.00</dd></div>
-      <div class="rd"><dt>steady state</dt><dd id="bu-k">partial standing wave</dd></div>
-      <div class="rd"><dt>round trips so far</dt><dd id="bu-n">0</dd></div>
-      <div class="rd"><dt>|&Gamma;<sub>g</sub>&Gamma;<sub>L</sub>| per trip</dt><dd id="bu-q">0.40</dd></div>
+      <div class="rd"><dt>SWR</dt><dd id="bu-s">&mdash;</dd></div>
+      <div class="rd"><dt>steady state</dt><dd id="bu-k">&mdash;</dd></div>
+      <div class="rd"><dt>round trips so far</dt><dd id="bu-n">&mdash;</dd></div>
+      <div class="rd"><dt>|&Gamma;<sub>g</sub>&Gamma;<sub>L</sub>| per trip</dt><dd id="bu-q">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">a sinusoid switched on at the generator, on the right, travelling toward the load on the left, 1.25 wavelengths away. &Gamma;<sub>L</sub> = 0 leaves a pure travelling wave, |&Gamma;<sub>L</sub>| = 1 a full standing wave with true nulls, and anything between a partial standing wave. every echo is summed exactly. dashed: the steady-state envelope it settles into. the animation restarts after twelve transits</figcaption>
   </figure>
@@ -535,6 +535,10 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
     c.textAlign = 'left'; c.fillText('load', PADL, H-PADB+29);
     c.textAlign = 'right'; c.fillText('toward generator →  l/λ', W-PADR, H-PADB+29);
     c.fillText('v', PADL-9, y0-sy*1.75);
+    var smp = [];
+    for(var q = 0; q <= 50; q++){ var xq = q/50*XL; smp.push([xq, envM(xq), inc(xq, t), ref(xq, t, g), tot(xq, t, g)]); }
+    EM.publish(cv, { g: g, ph: ph, t: t, samples: smp,
+                     marks: g > 0.005 ? { min: norm((ph+180)/720), max: norm(ph/720) } : null });
   }, true);
 })();
 
@@ -558,11 +562,12 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
       c.strokeStyle = C.ink; c.lineWidth = 1.9; c.beginPath();
       for(var i=0;i<=200;i++){ var x=i/200*XL; c.lineTo(px(x), y0-tot(x,t,gg)*sy); }
       c.stroke();
-      var prev = tot(0,t,gg);
+      var prev = tot(0,t,gg), zs = [];
       for(var k=1;k<=200;k++){
         var x2 = k/200*XL, v = tot(x2,t,gg);
         if((prev<0) !== (v<0)){
           var xz = x2 - (v/(v-prev))*(XL/200);
+          zs.push(xz);
           c.fillStyle = gg >= 0.999 ? C.e : C.h;
           c.beginPath();
           c.moveTo(px(xz), H-B+2); c.lineTo(px(xz)-4, H-B+9); c.lineTo(px(xz)+4, H-B+9);
@@ -570,6 +575,7 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
         }
         prev = v;
       }
+      EM.publish(cv, { g: gg, ph: ph, t: t, zeros: zs });
     }, true);
   });
 })();
@@ -795,6 +801,10 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
     c.beginPath(); c.arc(pg[0], pg[1], 4.5, 0, TAU2); c.fill();
     /* the load itself, hollow */
     var pl = P(gL[0], gL[1]);
+    var es = []; for(var q = 0; q <= 60; q++){ var lq = q/60*XLZ; es.push([lq, env(lq)]); }
+    EM.publish(cv, { r: isOpen ? null : R, x: X, z0: Z0, open: isOpen, gl: gL, env: es,
+                     lmax: m > 5e-4 ? w.lmx : null, lmin: m > 5e-4 ? w.lmn : null,
+                     probe: [lp, gp, ev] });
     c.strokeStyle = C.ink; c.lineWidth = 1.6;
     c.beginPath(); c.arc(pl[0], pl[1], 6, 0, TAU2); c.stroke();
     c.fillStyle = C.ink2;
@@ -842,15 +852,21 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
     c.strokeStyle = C.line2; c.lineWidth = 1;
     c.beginPath(); c.moveTo(L,base+.5); c.lineTo(W-RM,base+.5);
     c.moveTo(L+.5,T); c.lineTo(L+.5,base); c.stroke();
-    var xmn1 = 0.1, xmx = 0.35, xmn2 = 0.6;
+    /* first minimum where theta - 2 beta l = -pi, first maximum where it is
+       -2 pi, the next minimum half a wavelength on; heights 1 -/+ |Gamma| */
+    var xmn1 = norm((a + Math.PI)/(2*TAU2)), xmx = norm((a + TAU2)/(2*TAU2)), xmn2 = xmn1 + 0.5;
+    if(xmx < xmn1) xmx += 0.5;
     c.textAlign = 'center';
-    c.fillStyle = C.e; c.beginPath(); c.arc(px(xmn1),py(0.5),4.2,0,TAU2); c.fill();
-    c.fillText('1st min', px(xmn1), py(0.5)+19);
-    c.fillStyle = C.h; c.beginPath(); c.arc(px(xmx),py(1.5),4.2,0,TAU2); c.fill();
-    if(narrow) EM.rich(c, [['V','n'], ['max','b'], [', 1st max','n']], px(xmx), py(1.5)-11, 11.5, 'center');
-    else c.fillText('1st max', px(xmx), py(1.5)-11);
-    c.fillStyle = C.e; c.beginPath(); c.arc(px(xmn2),py(0.5),4.2,0,TAU2); c.fill();
-    c.fillText('2nd min', px(xmn2), py(0.5)+19);
+    var vmn = 1 - m, vmx = 1 + m;
+    EM.publish(cv, { m: m, a: a, min1: [xmn1, vmn], max1: [xmx, vmx], min2: [xmn2, vmn],
+                     env: (function(){ var e = []; for(var q = 0; q <= 70; q++) e.push([q/100, envOf(q/100, m, a)]); return e; })() });
+    c.fillStyle = C.e; c.beginPath(); c.arc(px(xmn1),py(vmn),4.2,0,TAU2); c.fill();
+    c.fillText('1st min', px(xmn1), py(vmn)+19);
+    c.fillStyle = C.h; c.beginPath(); c.arc(px(xmx),py(vmx),4.2,0,TAU2); c.fill();
+    if(narrow) EM.rich(c, [['V','n'], ['max','b'], [', 1st max','n']], px(xmx), py(vmx)-11, 11.5, 'center');
+    else c.fillText('1st max', px(xmx), py(vmx)-11);
+    c.fillStyle = C.e; c.beginPath(); c.arc(px(xmn2),py(vmn),4.2,0,TAU2); c.fill();
+    c.fillText('2nd min', px(xmn2), py(vmn)+19);
     dim(px(xmn1), px(xmx), base+22, 'λ/4');
     dim(px(xmn1), px(xmn2), base+48, 'λ/2');
     function dim(x1,x2,y,lab){
@@ -907,6 +923,8 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
     var a = 0, b = 0;
     for(var k = 0; k < 2000; k++){ var l = 0.5*k/2000; a += vv(l)*vv(l); b += ii(l)*ii(l); }
     document.getElementById('vi-we').textContent = (a/b).toFixed(3);
+    var smp = []; for(var q = 0; q <= 50; q++){ var lq = q/50; smp.push([lq, vv(lq), ii(lq)]); }
+    EM.publish(cv, { m: m, th: th, samples: smp, power: 1 - m*m, ratio: a/b });
   }
   document.getElementById('vi-m').addEventListener('input', function(){ m = +this.value; sync(); EM.redrawStatic(); });
   document.getElementById('vi-p').addEventListener('input', function(){ th = +this.value*D2R; sync(); EM.redrawStatic(); });
@@ -1021,6 +1039,12 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
       c.fillText(n === 0 ? 'load' : n + 'λ', px(n), H - B + 15);
     }
     c.textAlign = 'right'; c.fillText('toward generator →', W - R, H - 5);
+    var smp = [];
+    for(var q = 0; q <= 120; q++){
+      var lq = LL*q/120, pq = Math.PI - 2*TAU2*lq, rq = inc(lq) + ref(lq)*Math.cos(pq), iq = ref(lq)*Math.sin(pq);
+      smp.push([lq, inc(lq), ref(lq), Math.hypot(rq, iq)]);
+    }
+    EM.publish(cv, { db: dbl, m: m, samples: smp });
   }, false);
 })();
 
@@ -1086,6 +1110,8 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
     c.setLineDash([]);
     c.strokeStyle = C.ink; c.lineWidth = 2.4; c.beginPath();
     for(var j = 0; j <= 400; j++){ var l2 = LN*j/400; c.lineTo(px(l2), y0 - v(l2, tt)*sy); }
+    var smp = []; for(var q = 0; q <= 50; q++){ var lq = LN*q/50; smp.push([lq, v(lq, tt), steady(lq)]); }
+    EM.publish(cv, { gl: GL, gg: gg, tt: tt, samples: smp });
     c.stroke();
     c.font = '11px ' + MONO; c.fillStyle = C.ink3;
     c.textAlign = 'left'; c.fillText('load', L + 6, H - 8);

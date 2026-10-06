@@ -139,7 +139,7 @@ canvas#smith{display:block;width:100%;max-width:560px;height:auto;aspect-ratio:1
     <dl class="readout">
       <div class="rd"><dt>load</dt><dd>R<sub>L</sub> = 100 &Omega; on 50 &Omega;</dd></div>
       <div class="rd"><dt>|&Gamma;| at the input</dt><dd id="rn-g">&mdash;</dd></div>
-      <div class="rd"><dt>&radic;(Z<sub>0</sub>R<sub>L</sub>)</dt><dd id="rn-s">70.7 &Omega;</dd></div>
+      <div class="rd"><dt>&radic;(Z<sub>0</sub>R<sub>L</sub>)</dt><dd id="rn-s">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">everything drawn on the 50 &Omega; chart. the hollow marker is the load and the cross is the impedance Z<sub>1</sub>, the centre the section turns about. the dashed arc is the impedance seen along the quarter-wave section: half a turn about Z<sub>1</sub>, which renormalisation shows is a circle on this chart too, though not one centred on the middle. the filled marker is the input</figcaption>
   </figure>
@@ -157,10 +157,10 @@ canvas#smith{display:block;width:100%;max-width:560px;height:auto;aspect-ratio:1
       <button id="adm" aria-pressed="false">Admittance</button>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>z at the load</dt><dd id="s-zl">0.50 + j0.00</dd></div>
-      <div class="rd"><dt>z here</dt><dd id="s-z">0.50 + j0.00</dd></div>
-      <div class="rd"><dt>&Gamma;</dt><dd id="s-g">0.33&ang;180&deg;</dd></div>
-      <div class="rd"><dt>SWR</dt><dd id="s-swr">2.00</dd></div>
+      <div class="rd"><dt>z at the load</dt><dd id="s-zl">&mdash;</dd></div>
+      <div class="rd"><dt>z here</dt><dd id="s-z">&mdash;</dd></div>
+      <div class="rd"><dt>&Gamma;</dt><dd id="s-g">&mdash;</dd></div>
+      <div class="rd"><dt>SWR</dt><dd id="s-swr">&mdash;</dd></div>
     </dl>
     <div class="btns">
       <button data-s="0.5,0">z = 0.5</button>
@@ -252,7 +252,7 @@ canvas#smith{display:block;width:100%;max-width:560px;height:auto;aspect-ratio:1
 
 <section class="blk" id="loci">
   <h2>A load across frequency</h2>
-  <p class="t">A real load is not one point but a curve, traced as the frequency sweeps. For a series RLC, $r$ is fixed and $x$ runs from $-\infty$ to $+\infty$, so the locus is the whole constant-$r$ circle; for a parallel RLC it is a constant-$g$ circle. Both are traced <b>clockwise</b> as frequency rises, and so is the locus of any passive network made of lossless reactances and resistors in this way: it is chapter 08's Foster theorem, $dX/d\omega > 0$, drawn on the chart.</p>
+  <p class="t">A real load is not one point but a curve, traced as the frequency sweeps. For a series RLC, $r$ is fixed and $x$ runs from $-\infty$ to $+\infty$, so the locus is the whole constant-$r$ circle; for a parallel RLC it is a constant-$g$ circle. Both are traced <b>clockwise</b> as frequency rises. That is chapter 08's Foster theorem applied to the lossless part of each: the series network's reactance and the parallel network's susceptance both rise with frequency, and rising $x$ along a constant-$r$ circle, like rising $b$ along a constant-$g$ circle, is clockwise motion. For the parallel network it has to be the susceptance: its reactance falls through resonance. A network with resistance spread through it is not bound by this, and its locus can bend back the other way over part of the band; only a lossless one is guaranteed to move clockwise everywhere.</p>
 
   <figure class="fig">
     <canvas id="lcifig" style="height:320px"></canvas>
@@ -292,8 +292,8 @@ canvas#smith{display:block;width:100%;max-width:560px;height:auto;aspect-ratio:1
       <div class="ctl"><label for="qa-x">x</label><input type="range" id="qa-x" min="-4" max="4" step="0.05" value="1"><output id="qa-xv">1.00</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>node Q = |x|/r</dt><dd id="qa-q">2.00</dd></div>
-      <div class="rd"><dt>rough bandwidth, 2/Q</dt><dd id="qa-b">100 %</dd></div>
+      <div class="rd"><dt>node Q = |x|/r</dt><dd id="qa-q">&mdash;</dd></div>
+      <div class="rd"><dt>rough bandwidth, 2/Q</dt><dd id="qa-b">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">arcs of constant node Q at 0.5, 1, 2 and 5, over a faint impedance grid, and a point set by its normalised impedance</figcaption>
   </figure>
@@ -376,11 +376,15 @@ function drawGrid(c, cx, cy, R, opts){
   c.beginPath(); c.arc(cx, cy, R, 0, Math.PI*2); c.clip();
 
   var rs = opts.rs, xs = opts.xs;
+  /* when given a list, every circle drawn is recorded in it, in Gamma and
+     already turned if the grid is, for the tests */
+  var out = opts.out, k = rot ? -1 : 1;
 
   if(opts.showR !== false){
     rs.forEach(function(r){
       var ctr = r/(1+r), rad = 1/(1+r);
       var p = P(ctr, 0);
+      if(out) out.push({ kind: 'r', val: r, c: [k*ctr, 0], rad: rad });
       c.beginPath(); c.arc(p[0], p[1], rad*R, 0, Math.PI*2);
       c.strokeStyle = (r === 1 && !faint) ? col : (faint ? col : col);
       c.globalAlpha = (r === 1) ? 0.95 : 0.5;
@@ -393,6 +397,7 @@ function drawGrid(c, cx, cy, R, opts){
       if(x === 0) return;
       var cyv = 1/x, rad = Math.abs(1/x);
       var p = P(1, cyv);
+      if(out) out.push({ kind: 'x', val: x, c: [k*1, k*cyv], rad: rad });
       c.beginPath(); c.arc(p[0], p[1], rad*R, 0, Math.PI*2);
       c.strokeStyle = col; c.globalAlpha = 0.45; c.lineWidth = lw;
       c.stroke();
@@ -448,9 +453,10 @@ function fmtZ(z){
     /* 1 = r alone, 2 = x alone, 3 = both, so each family can be seen by itself */
     var wantR = (stage === 1 || stage === 3);
     var wantX = (stage === 2 || stage === 3);
-    if(wantR) drawGrid(c, cx, cy, R, {color:C.z, lw:1.1, showX:false, rs:[0.2,0.5,1,2,5], xs:[]});
+    var drawn = [];
+    if(wantR) drawGrid(c, cx, cy, R, {color:C.z, lw:1.1, showX:false, rs:[0.2,0.5,1,2,5], xs:[], out:drawn});
     if(wantX) drawGrid(c, cx, cy, R, {color:C.h, lw:1.1, showR:false,
-      rs:[], xs:[0.2,0.5,1,2,5,-0.2,-0.5,-1,-2,-5]});
+      rs:[], xs:[0.2,0.5,1,2,5,-0.2,-0.5,-1,-2,-5], out:drawn});
     c.strokeStyle = C.line2; c.lineWidth = 1.6;
     c.beginPath(); c.arc(cx, cy, R, 0, Math.PI*2); c.stroke();
 
@@ -481,10 +487,12 @@ function fmtZ(z){
     c.fillText('matched', cx, cy + 56);
 
     c.fillStyle = C.ink3; c.textAlign = 'center';
-    c.fillText(['|Γ| = 1, the boundary of every passive load',
+    var said = ['|Γ| = 1, the boundary of every passive load',
                 'constant r: circles through Γ = +1, one passing through the centre',
                 'constant x: centred outside the disc, so the disc clips them',
-                'both families together — the Smith chart'][stage], cx, H-8);
+                'both families together — the Smith chart'][stage];
+    c.fillText(said, cx, H-8);
+    EM.publish(cv, { stage: stage, circles: drawn, said: said, r1label: wantR ? [0.5, 0.5] : null });
     /* park the end labels outside the disc when there is room, inside when not */
     var out = (W/2 - R) > 46;
     c.textAlign = out ? 'right' : 'left';
@@ -513,6 +521,7 @@ function fmtZ(z){
     var ang = Math.round(Math.atan2(g[1], g[0])*180/Math.PI);
     document.getElementById('s-g').innerHTML = m.toFixed(3) + '&ang;' + (ang<0?'−':'') + Math.abs(ang) + '&deg;';
     document.getElementById('s-swr').textContent = m >= 0.999 ? '∞' : ((1+m)/(1-m)).toFixed(2);
+    EM.publish(cv, { gl: gl, d: D, g: g, showY: showY });
   }
   function setFromXY(ev){
     var r = cv.getBoundingClientRect();
@@ -596,10 +605,12 @@ function fmtZ(z){
       c.setLineDash([]);
     }
     /* arc travelled so far */
+    var arcDrawn = null;
     if(m > 0.005 && D > 0.002){
-      var a0 = Math.atan2(gl[1], gl[0]);
+      var a0 = Math.atan2(gl[1], gl[0]), sA = -a0, sB = -a0 + 2*EM.TAU*D;
+      arcDrawn = [-sA, -sB];                      /* back from screen angles (y down) */
       c.strokeStyle = C.acc; c.lineWidth = 4; c.globalAlpha = .45;
-      c.beginPath(); c.arc(cx, cy, R*m, -a0, -a0 + 2*EM.TAU*D, false); c.stroke();
+      c.beginPath(); c.arc(cx, cy, R*m, sA, sB, false); c.stroke();
       c.globalAlpha = 1;
     }
     /* load marker, hollow */
@@ -607,6 +618,7 @@ function fmtZ(z){
     c.beginPath(); c.arc(cx + gl[0]*R, cy - gl[1]*R, 5.5, 0, Math.PI*2); c.stroke();
     /* current point, filled */
     var g = gAt(D);
+    EM.publish(cv, { gl: gl, d: D, g: g, showY: showY, arc: arcDrawn });
     c.strokeStyle = C.ink; c.lineWidth = 1.5;
     c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + g[0]*R, cy - g[1]*R); c.stroke();
     c.fillStyle = C.ink;
@@ -688,6 +700,8 @@ function renorm(g, gr){ return cdivg([g[0] - gr, g[1]], [1 - gr*g[0], -gr*g[1]])
     c.beginPath(); c.moveTo(z1[0] - 6, z1[1] - 6); c.lineTo(z1[0] + 6, z1[1] + 6); c.moveTo(z1[0] + 6, z1[1] - 6); c.lineTo(z1[0] - 6, z1[1] + 6); c.stroke();
     var l = P(p.gL); c.beginPath(); c.arc(l[0], l[1], 6, 0, Math.PI*2); c.stroke();
     var e = P(p.pts[p.pts.length - 1]); c.fillStyle = C.ink; c.beginPath(); c.arc(e[0], e[1], 5, 0, Math.PI*2); c.fill();
+    EM.publish(cv, { z0: Z0, rl: RL, z1: Z1, cross: [p.gr, 0], load: p.gL,
+                     path: p.pts.filter(function(q, i){ return i % 10 === 0; }), input: p.pts[p.pts.length - 1] });
     c.fillStyle = C.ink2; c.beginPath(); c.arc(cx, cy, 2.5, 0, Math.PI*2); c.fill();
     c.font = '11px ' + MONO; c.fillStyle = C.ink2; c.textAlign = 'left';
     c.fillText('load', l[0] + 9, l[1] - 8);
@@ -707,12 +721,18 @@ function renorm(g, gr){ return cdivg([g[0] - gr, g[1]], [1 - gr*g[0], -gr*g[1]])
     var g = 1/rr, y = [g, g*d]; return cdivg([1, 0], y);
   }
   function gAt(f){ return zToGamma(zAt(f)[0], zAt(f)[1]); }
+  /* The band around f0 inside |Gamma| <= 1/3. Walked out in small steps,
+     then each edge found by bisection: the walk alone stopped up to a step
+     short at each end, which moved the printed tenth of a percent. */
   function band(){
-    var lim = 1/3, g0 = gAt(1);
-    if(Math.hypot(g0[0], g0[1]) > lim) return null;
+    var lim = 1/3, g0 = gAt(1), at = function(f){ return Math.hypot.apply(null, gAt(f)); };
+    if(at(1) > lim) return null;
     var lo = 1, hi = 1, st = 1.0005;
-    while(lo > F0 && Math.hypot.apply(null, gAt(lo/st)) <= lim) lo /= st;
-    while(hi < F1 && Math.hypot.apply(null, gAt(hi*st)) <= lim) hi *= st;
+    while(lo > F0 && at(lo/st) <= lim) lo /= st;
+    while(hi < F1 && at(hi*st) <= lim) hi *= st;
+    var edge = function(a, b){ for(var i = 0; i < 60; i++){ var m = (a + b)/2; if(at(m) <= lim) a = m; else b = m; } return a; };
+    if(lo > F0) lo = edge(lo, lo/st);
+    if(hi < F1) hi = edge(hi, hi*st);
     return hi - lo;
   }
   function sync(){
@@ -752,6 +772,11 @@ function renorm(g, gr){ return cdivg([g[0] - gr, g[1]], [1 - gr*g[0], -gr*g[1]])
     var z = zAt(fm);
     document.getElementById('lc-z').textContent = fmtZ(z);
     document.getElementById('lc-f').innerHTML = fm.toFixed(2) + ' f<sub>0</sub>';
+    var locus = [];
+    for(var j = 0; j <= 60; j++){ var ff = F0*Math.pow(F1/F0, j/60); locus.push([ff, gAt(ff)]); }
+    EM.publish(cv, { kind: kind, q: Q, r: rr, locus: locus,
+                     marks: [0.5, 1, 2].map(function(f){ return [f, gAt(f)]; }),
+                     arrow: [gAt(1.3), gAt(1.42)], moving: [fm, gAt(fm)], band: band() });
   }, true);
 })();
 
@@ -779,9 +804,12 @@ function renorm(g, gr){ return cdivg([g[0] - gr, g[1]], [1 - gr*g[0], -gr*g[1]])
     chartBase(c, C, cx, cy, R);
     c.save(); c.beginPath(); c.arc(cx, cy, R, 0, Math.PI*2); c.clip();
     c.strokeStyle = C.h; c.lineWidth = 1.8;
+    var arcs = [];
     QS.forEach(function(q){
       [1, -1].forEach(function(s){
-        c.beginPath(); c.arc(cx, cy + s*R/q, R*Math.sqrt(1 + 1/(q*q)), 0, Math.PI*2); c.stroke();
+        var ccy = cy + s*R/q, rr2 = R*Math.sqrt(1 + 1/(q*q));
+        arcs.push({ q: q, c: [0, (cy - ccy)/R], rad: rr2/R });
+        c.beginPath(); c.arc(cx, ccy, rr2, 0, Math.PI*2); c.stroke();
       });
     });
     c.restore();
@@ -795,6 +823,7 @@ function renorm(g, gr){ return cdivg([g[0] - gr, g[1]], [1 - gr*g[0], -gr*g[1]])
     });
     var g = zToGamma(r, x), px = cx + g[0]*R, py = cy - g[1]*R;
     c.fillStyle = C.ink; c.beginPath(); c.arc(px, py, 5.5, 0, Math.PI*2); c.fill();
+    EM.publish(cv, { r: r, x: x, point: g, arcs: arcs });
   }, false);
 })();
 </script>

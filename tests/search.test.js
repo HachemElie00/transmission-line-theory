@@ -38,8 +38,14 @@ const builder = require('../tools/build-search-index');
   s.check('index is pure ASCII', bad < 0, bad < 0 ? '' : 'first at char ' + bad);
 
   const index = builder.build();
-  s.check('every page is indexed', index.length === H.pages().length,
-          index.length + ' of ' + H.pages().length);
+  /* every page, except the bug report page while site.js keeps it unlinked */
+  const reportOff = /var REPORT_ON = false;/.test(require('fs').readFileSync(
+    require('path').join(H.SITE, 'assets', 'site.js'), 'utf8'));
+  const want = H.pages().filter(f => !(reportOff && /report\.html$/.test(f)));
+  s.check('every page is indexed', index.length === want.length,
+          index.length + ' of ' + want.length);
+  s.check('the report page is in search only when it is linked',
+          index.some(e => e.p === 'report.html') === !reportOff);
   const noSections = index.filter(e => !e.s.length).map(e => e.p);
   s.check('every page yielded sections', noSections.length === 0, noSections.join(' '));
 

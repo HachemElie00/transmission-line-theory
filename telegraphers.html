@@ -80,14 +80,14 @@
           <option value="coax" selected>coax</option>
           <option value="twin">two-wire</option>
         </select></div>
-      <div class="ctl"><label for="lc-r" id="lc-rl">b / a</label><input type="range" id="lc-r" min="1.2" max="12" step="0.02" value="3.35"><output id="lc-rv">3.35</output></div>
+      <div class="ctl"><label for="lc-r" id="lc-rl">b / a</label><input type="range" id="lc-r" min="1.2" max="12" step="0.01" value="3.35"><output id="lc-rv">3.35</output></div>
       <div class="ctl"><label for="lc-e">&epsilon;<sub>r</sub></label><input type="range" id="lc-e" min="1" max="10" step="0.05" value="2.1"><output id="lc-ev">2.10</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>L&prime;</dt><dd id="lc-l">242 nH/m</dd></div>
-      <div class="rd"><dt>C&prime;</dt><dd id="lc-c">96.6 pF/m</dd></div>
-      <div class="rd"><dt>L&prime;C&prime; / &mu;&epsilon;</dt><dd id="lc-p">1.000</dd></div>
-      <div class="rd"><dt>Z<sub>0</sub> = &radic;(L&prime;/C&prime;)</dt><dd id="lc-z">50.1 &Omega;</dd></div>
+      <div class="rd"><dt>L&prime;</dt><dd id="lc-l">&mdash;</dd></div>
+      <div class="rd"><dt>C&prime;</dt><dd id="lc-c">&mdash;</dd></div>
+      <div class="rd"><dt>L&prime;C&prime; / &mu;&epsilon;</dt><dd id="lc-p">&mdash;</dd></div>
+      <div class="rd"><dt>Z<sub>0</sub> = &radic;(L&prime;/C&prime;)</dt><dd id="lc-z">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">the cross-section drawn to the chosen proportions. for two wires, the ratio is centre spacing to wire radius, D/a, and the formulas use cosh<sup>&minus;1</sup>(D/2a) in place of ln(b/a)</figcaption>
   </figure>
@@ -116,9 +116,9 @@
         </select></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>R&prime; = 0.1 &omega;L&prime; at</dt><dd id="rg-x">656 kHz</dd></div>
-      <div class="rd"><dt>R&prime;/&omega;L&prime; at 1 GHz</dt><dd id="rg-r">0.0026</dd></div>
-      <div class="rd"><dt>G&prime;/&omega;C&prime;, all f</dt><dd id="rg-g">0.0002</dd></div>
+      <div class="rd"><dt>R&prime; = 0.1 &omega;L&prime; at</dt><dd id="rg-x">&mdash;</dd></div>
+      <div class="rd"><dt>R&prime;/&omega;L&prime; at 1 GHz</dt><dd id="rg-r">&mdash;</dd></div>
+      <div class="rd"><dt>G&prime;/&omega;C&prime;, all f</dt><dd id="rg-g">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">a coax with a = 0.45 mm, b = 1.47 mm and copper conductors, on logarithmic axes: the series pair in &Omega;/m, the shunt pair in S/m. R&prime; is the skin-effect form, valid once &delta; is small against a (above about 200 kHz here), and is drawn dashed below that. typical loss tangents: polyethylene 2&times;10<sup>&minus;4</sup>, PTFE 2&times;10<sup>&minus;4</sup>, FR-4 0.02</figcaption>
   </figure>
@@ -222,10 +222,10 @@
       <div class="ctl"><label for="lt-l">R<sub>L</sub> &Omega;</label><input type="range" id="lt-l" min="0" max="305" step="1" value="305"><output id="lt-lv">open</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>launched step</dt><dd id="lt-v1">0.667 V</dd></div>
-      <div class="rd"><dt>&Gamma;<sub>s</sub></dt><dd id="lt-gs">&minus;0.333</dd></div>
-      <div class="rd"><dt>&Gamma;<sub>L</sub></dt><dd id="lt-gl">1.000</dd></div>
-      <div class="rd"><dt>settles to</dt><dd id="lt-fin">1.000 V</dd></div>
+      <div class="rd"><dt>launched step</dt><dd id="lt-v1">&mdash;</dd></div>
+      <div class="rd"><dt>&Gamma;<sub>s</sub></dt><dd id="lt-gs">&mdash;</dd></div>
+      <div class="rd"><dt>&Gamma;<sub>L</sub></dt><dd id="lt-gl">&mdash;</dd></div>
+      <div class="rd"><dt>settles to</dt><dd id="lt-fin">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">a 1 V step on a 50 &Omega; line. the bounce diagram runs time downward: each sloping segment is one wave crossing the line, labelled with the step it carries. the snapshot gives the voltage along the line at the moment marked by the horizontal cursor, and the traces the voltage at each end against time. at the far right of the slider the load is an open circuit</figcaption>
   </figure>
@@ -462,8 +462,10 @@ function resistorV(c, x, y1, y2, col){
     }
 
     /* node voltages, tied to their nodes by faint guides */
+    var nodes = [];
     for(var k=0;k<=n;k++){
       var x = L + k*dx, v = volt(k), y = vy - v*amp;
+      nodes.push([k, v]);
       c.strokeStyle = C.line2; c.lineWidth = 1; c.globalAlpha = .55;
       c.setLineDash([1,4]);
       c.beginPath(); c.moveTo(x, y); c.lineTo(x, top); c.stroke();
@@ -477,6 +479,7 @@ function resistorV(c, x, y1, y2, col){
     c.fillStyle = C.ink3; c.font = '11.5px ' + MONO;
     c.textAlign = 'left'; c.fillText('node voltages', L, 15);
     c.textAlign = 'right'; c.fillText('dashed: the continuous line', W-R, 15);
+    EM.publish(cv, { n: n, t: t, cellsPerWave: lamCells, nodes: nodes });
   }, true);
 })();
 
@@ -526,6 +529,7 @@ var MU0 = 4e-7*Math.PI, EPS0 = 8.8541878128e-12;
     c.font = '12px ' + MONO; c.lineWidth = 1;
     if(geo === 'coax'){
       var Rb = Math.min(H/2 - 16, W/2 - 40), Ra = Rb/ratio;
+      EM.publish(cv, { geo: geo, ratio: ratio, er: er, nH: vals().L*1e9, pF: vals().C*1e12, drawn: Rb/Ra });
       c.fillStyle = C.e; c.globalAlpha = tint;
       c.beginPath(); c.arc(cx, cy, Rb, 0, EM.TAU); c.fill(); c.globalAlpha = 1;
       c.strokeStyle = C.ink2; c.lineWidth = 6; c.beginPath(); c.arc(cx, cy, Rb + 3, 0, EM.TAU); c.stroke();
@@ -539,6 +543,7 @@ var MU0 = 4e-7*Math.PI, EPS0 = 8.8541878128e-12;
       c.fillStyle = C.surface; c.fillText('a', cx + 4, cy - 4);
     } else {
       var r = Math.min(H*0.2, (W - 60)/(2*ratio + 2)), D = ratio*r;
+      EM.publish(cv, { geo: geo, ratio: ratio, er: er, nH: vals().L*1e9, pF: vals().C*1e12, drawn: D/r });
       c.fillStyle = C.e; c.globalAlpha = tint; c.fillRect(0, 0, W, H); c.globalAlpha = 1;
       [-1, 1].forEach(function(s){
         c.fillStyle = C.ink2; c.beginPath(); c.arc(cx + s*D/2, cy, r, 0, EM.TAU); c.fill();
@@ -601,10 +606,11 @@ var MU0 = 4e-7*Math.PI, EPS0 = 8.8541878128e-12;
       c.save(); c.beginPath(); c.rect(L, y0, W - L - R, ph); c.clip();
       pairs.forEach(function(p){
         c.strokeStyle = C[p.col]; c.lineWidth = 2.2;
-        var prevDash = null;
+        var prevDash = null, pc = pub[p.name] = [];
         c.beginPath();
         for(var j = 0; j <= 200; j++){
           var x = X0 + (X1 - X0)*j/200, f = Math.pow(10, x), dash = p.valid ? !p.valid(f) : false;
+          if(j % 10 === 0) pc.push([f, Math.log10(p.fn(f)), dash]);
           if(prevDash !== null && dash !== prevDash){ c.stroke(); c.beginPath(); c.moveTo(px(x), py(p.fn(f))); }
           c.setLineDash(dash ? [5, 4] : []);
           c.lineTo(px(x), py(p.fn(f))); prevDash = dash;
@@ -622,7 +628,7 @@ var MU0 = 4e-7*Math.PI, EPS0 = 8.8541878128e-12;
       });
     }
     var w = function(f){ return 2*Math.PI*f; };
-    var td = DIEL[di].td;
+    var td = DIEL[di].td, pub = {};
     panel(top, [
       { name: 'ωL′', col: 'e', fn: function(f){ return w(f)*Lp(); }, dy: -6 },
       { name: 'R′', col: 'h', fn: Rp, valid: function(f){ return delta(f) < A/3; }, dy: 16 }
@@ -634,6 +640,7 @@ var MU0 = 4e-7*Math.PI, EPS0 = 8.8541878128e-12;
     c.fillStyle = C.ink3; c.font = '11px ' + MONO;
     ['1 kHz', '1 MHz', '1 GHz'].forEach(function(t, i){ c.textAlign = 'center'; c.fillText(t, px(3 + 3*i), H - bot + 15); });
     c.textAlign = 'right'; c.fillText('frequency', W - R, H - 5);
+    EM.publish(cv, { diel: DIEL[di], a: A, b: B, sigma: SIG, curves: pub });
   }, false);
 })();
 
@@ -683,7 +690,7 @@ var MU0 = 4e-7*Math.PI, EPS0 = 8.8541878128e-12;
     if(Math.abs(cv._h - want) > 1){ cv.style.height = want + 'px'; EM.fit(cv); }
     var c = cv.getContext('2d'), W = cv._w, H = cv._h;
     c.clearRect(0, 0, W, H);
-    var a = amps(TM + 1), now = (t*0.25) % TM;
+    var a = amps(TM + 1), now = (t*0.25) % TM, segs = [], snap = [], trace = [[], []];
     var vals = [0, 1];
     for(var k = 0; k <= 400; k++){ var tt = TM*k/400; vals.push(v(0, tt, a), v(1, tt, a)); }
     var vmin = Math.min.apply(null, vals), vmax = Math.max.apply(null, vals);
@@ -717,6 +724,7 @@ var MU0 = 4e-7*Math.PI, EPS0 = 8.8541878128e-12;
       c.strokeStyle = w % 2 ? C.h : C.e; c.lineWidth = 1.8;
       c.beginPath(); c.moveTo(x0, ly(w)); c.lineTo(x1, ly(w + 1)); c.stroke();
       var mx = (x0 + x1)/2, my = (ly(w) + ly(w + 1))/2, lab = (a[w] < 0 ? '−' : '+') + Math.abs(a[w]).toFixed(3);
+      segs.push([w, a[w], lab]);
       c.font = '11px ' + MONO; var tw = c.measureText(lab).width;
       c.fillStyle = C.sunk; c.fillRect(mx - tw/2 - 3, my - 9, tw + 6, 14);
       c.fillStyle = w % 2 ? C.h : C.e; c.textAlign = 'center'; c.fillText(lab, mx, my + 2);
@@ -735,7 +743,7 @@ var MU0 = 4e-7*Math.PI, EPS0 = 8.8541878128e-12;
       if(vmin < 0){ c.strokeStyle = C.line; c.beginPath(); c.moveTo(box.x0, sy(0, box)); c.lineTo(box.x1, sy(0, box)); c.stroke(); c.strokeStyle = C.line2; }
     });
     c.strokeStyle = C.ink; c.lineWidth = 2.4; c.beginPath();
-    for(var i = 0; i <= 300; i++){ var z = i/300; c.lineTo(SN.x0 + z*(SN.x1 - SN.x0), sy(v(z, now, a), SN)); }
+    for(var i = 0; i <= 300; i++){ var z = i/300, vz = v(z, now, a); c.lineTo(SN.x0 + z*(SN.x1 - SN.x0), sy(vz, SN)); if(i % 10 === 0) snap.push([z, vz]); }
     c.stroke();
     c.fillStyle = C.ink3; c.font = '11px ' + MONO;
     c.textAlign = 'left'; c.fillText('v along the line at the cursor', SN.x0 + 6, SN.y0 - 8);
@@ -745,7 +753,7 @@ var MU0 = 4e-7*Math.PI, EPS0 = 8.8541878128e-12;
     function tx(tt){ return TR.x0 + tt/TM*(TR.x1 - TR.x0); }
     [[0, C.e, 'at the source'], [1, C.h, 'at the load']].forEach(function(q, n){
       c.strokeStyle = q[1]; c.lineWidth = 2.2; c.beginPath();
-      for(var k2 = 0; k2 <= 800; k2++){ var tt = TM*k2/800; c.lineTo(tx(tt), sy(v(q[0], tt, a), TR)); }
+      for(var k2 = 0; k2 <= 800; k2++){ var tt = TM*k2/800, vq = v(q[0], tt, a); c.lineTo(tx(tt), sy(vq, TR)); if(k2 % 20 === 0) trace[n].push([tt, vq]); }
       c.stroke();
       c.fillStyle = q[1]; c.textAlign = 'left'; c.fillText(q[2], TR.x0 + 6 + n*110, TR.y0 - 8);
     });
@@ -753,6 +761,7 @@ var MU0 = 4e-7*Math.PI, EPS0 = 8.8541878128e-12;
     c.beginPath(); c.moveTo(tx(now), TR.y0); c.lineTo(tx(now), TR.y1); c.stroke(); c.setLineDash([]);
     c.fillStyle = C.ink3; c.textAlign = 'right';
     EM.rich(c, [['time / t','n'], ['d','b']], TR.x1, TR.y1 + 16, 11, 'right');
+    EM.publish(cv, { rs: Rs, rl: RLs >= OPEN ? null : RLs, now: now, segs: segs, snap: snap, source: trace[0], load: trace[1], range: [vmin, vmax] });
     [SN, TR].forEach(function(box){
       c.textAlign = 'right';
       c.fillText(vmax.toFixed(2), box.x0 - 4, sy(vmax, box) + 4);

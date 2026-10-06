@@ -110,10 +110,10 @@
       </select></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>|&Gamma;|</dt><dd id="r-gm">0.686</dd></div>
-      <div class="rd"><dt>&theta;<sub>r</sub></dt><dd id="r-ga">&minus;31&deg;</dd></div>
-      <div class="rd"><dt>Power reflected</dt><dd id="r-pw">47.1 %</dd></div>
-      <div class="rd"><dt>Return loss</dt><dd id="r-rl">3.3 dB</dd></div>
+      <div class="rd"><dt>|&Gamma;|</dt><dd id="r-gm">&mdash;</dd></div>
+      <div class="rd"><dt>&theta;<sub>r</sub></dt><dd id="r-ga">&mdash;</dd></div>
+      <div class="rd"><dt>Power reflected</dt><dd id="r-pw">&mdash;</dd></div>
+      <div class="rd"><dt>Return loss</dt><dd id="r-rl">&mdash;</dd></div>
     </dl>
     <div class="btns">
       <button data-match="1">matched</button>
@@ -206,8 +206,8 @@
   <p class="t">and the forward wave on the line is the sum of the first launch and every echo of it. The echoes form a geometric series, and it sums in closed form:</p>
 
   <div class="eq box">
-    $$V_0^+ = \frac{V_g Z_0}{Z_g + Z_0}\cdot\frac{1}{1 - \Gamma_g\Gamma_L e^{-j2\beta l}}$$
-    <span class="note">the first factor is the launched wave; the second sums the round trips, each multiplying by $\Gamma_g\Gamma_L e^{-j2\beta l}$</span>
+    $$V_0^+ = \frac{V_g Z_0}{Z_g + Z_0}\cdot\frac{e^{-j\beta l}}{1 - \Gamma_g\Gamma_L e^{-j2\beta l}}$$
+    <span class="note">the first factor is the launched wave; $e^{-j\beta l}$ carries it from the source to the load, where $V_0^+$ is defined; the rest sums the round trips, each multiplying by $\Gamma_g\Gamma_L e^{-j2\beta l}$</span>
   </div>
 
   <details class="deriv">
@@ -215,7 +215,7 @@
     <div class="body">
       <p>Put the load at $z = 0$ and the source at $z = -l$. The first wave launched into the line, seen at the source end, is $V_gZ_0/(Z_g + Z_0)$, since the line presents $Z_0$ to the source before any reflection returns. One round trip later it comes back reduced by $\Gamma_L$, delayed by a phase $2\beta l$, and is reflected again by $\Gamma_g$, joining the forward wave. Summing all of them,</p>
       <div class="eq">$$V^+_{\text{at source}} = \frac{V_gZ_0}{Z_g + Z_0}\sum_{n=0}^{\infty}\left(\Gamma_g\Gamma_Le^{-j2\beta l}\right)^n = \frac{V_gZ_0}{Z_g + Z_0}\cdot\frac{1}{1 - \Gamma_g\Gamma_Le^{-j2\beta l}}$$</div>
-      <p>which converges because $|\Gamma_g\Gamma_L| &lt; 1$ unless both ends reflect totally. The same answer comes from solving the boundary conditions at both ends at once, without any series; the series is the time-domain picture of chapter 03's bounce diagram, summed in steady state.</p>
+      <p>which converges because $|\Gamma_g\Gamma_L| &lt; 1$ unless both ends reflect totally. That is the forward wave at the source, $z = -l$; at the load it has travelled a further $l$, so $V_0^+ = V^+_{\text{at source}}\,e^{-j\beta l}$, the boxed result. The same answer comes from solving the boundary conditions at both ends at once, without any series; the series is the time-domain picture of chapter 03's bounce diagram, summed in steady state.</p>
       <p>The power reaching the load follows from the previous section, $P_L = |V_0^+|^2(1 - |\Gamma_L|^2)/2Z_0$. Divided by the most the source could ever deliver, its available power $|V_g|^2/8R_g$, it takes a symmetric form:</p>
       <div class="eq">$$\frac{P_L}{P_{\text{av}}} = \frac{\left(1 - |\Gamma_g|^2\right)\left(1 - |\Gamma_L|^2\right)}{\left|1 - \Gamma_g\Gamma_Le^{-j2\beta l}\right|^2}$$</div>
     </div>
@@ -229,10 +229,10 @@
       <div class="ctl"><label for="sg-x">X<sub>L</sub> &Omega;</label><input type="range" id="sg-x" min="-150" max="150" step="1" value="40"><output id="sg-xv">40</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>|&Gamma;<sub>g</sub>|</dt><dd id="sg-gg">0.429</dd></div>
-      <div class="rd"><dt>|&Gamma;<sub>L</sub>|</dt><dd id="sg-gl">0.427</dd></div>
-      <div class="rd"><dt>least delivered</dt><dd id="sg-min">0.48</dd></div>
-      <div class="rd"><dt>most delivered</dt><dd id="sg-max">1.00</dd></div>
+      <div class="rd"><dt>|&Gamma;<sub>g</sub>|</dt><dd id="sg-gg">&mdash;</dd></div>
+      <div class="rd"><dt>|&Gamma;<sub>L</sub>|</dt><dd id="sg-gl">&mdash;</dd></div>
+      <div class="rd"><dt>least delivered</dt><dd id="sg-min">&mdash;</dd></div>
+      <div class="rd"><dt>most delivered</dt><dd id="sg-max">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">power reaching the load as a fraction of the source's available power, against the length of a 50 &Omega; line between them. it repeats every half wavelength. the dashed line is 1 &minus; |&Gamma;<sub>L</sub>|<sup>2</sup>, what a matched source would deliver</figcaption>
   </figure>
@@ -275,9 +275,9 @@
       <div class="ctl"><label for="td-x" id="td-xl">L nH</label><input type="range" id="td-x" min="1" max="60" step="1" value="20"><output id="td-xv">20</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>&Gamma; as it arrives</dt><dd id="td-g0">+1.000</dd></div>
-      <div class="rd"><dt>&Gamma; once settled</dt><dd id="td-g1">0.000</dd></div>
-      <div class="rd"><dt>time constant</dt><dd id="td-tau">0.20 ns</dd></div>
+      <div class="rd"><dt>&Gamma; as it arrives</dt><dd id="td-g0">&mdash;</dd></div>
+      <div class="rd"><dt>&Gamma; once settled</dt><dd id="td-g1">&mdash;</dd></div>
+      <div class="rd"><dt>time constant</dt><dd id="td-tau">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">the voltage at the TDR's own end for a 1 V step through a matched 50 &Omega; source, on a line with a one-way delay of 1 ns. the trace is computed from the load's own differential equation, driven by the Th&eacute;venin equivalent of the arriving wave</figcaption>
   </figure>
@@ -480,6 +480,8 @@ var rich = EM.rich;
     document.getElementById('r-ga').innerHTML = (deg<0?'−':'') + Math.abs(deg) + '&deg;';
     document.getElementById('r-pw').textContent = (g.m*g.m*100).toFixed(1) + ' %';
     document.getElementById('r-rl').textContent = g.m < 1e-4 ? '∞' : (-20*Math.log10(g.m)).toFixed(1) + ' dB';
+    EM.publish(gp, { r: isOpen ? null : R, x: X, z0: Z0, open: isOpen, g: [g.re, g.im] });
+    EM.publish(gb, { reflected: g.m*g.m, delivered: 1 - g.m*g.m });
     EM.redrawStatic();
   }
   document.getElementById('rl').addEventListener('input', function(){ R = +this.value; isOpen = false; sync(); });
@@ -602,8 +604,11 @@ var rich = EM.rich;
     return (1 - g.gg*g.gg)*(1 - g.ml*g.ml)/(qr*qr + qi*qi);
   }
   function sync(){
-    var g = gs(), mn = Infinity, mx = 0;
-    for(var k = 0; k <= 400; k++){ var r = ratio(0.5*k/400, g); mn = Math.min(mn, r); mx = Math.max(mx, r); }
+    /* The extremes are exact: the denominator |1 - Gg GL e^(-j2bl)|^2 runs
+       between (1 -+ |Gg||GL|)^2 as the line length turns the phase. Sampling
+       401 lengths came close but could miss the third decimal. */
+    var g = gs(), pg = Math.abs(g.gg)*g.ml, num0 = (1 - g.gg*g.gg)*(1 - g.ml*g.ml);
+    var mn = num0/((1 + pg)*(1 + pg)), mx = num0/((1 - pg)*(1 - pg));
     document.getElementById('sg-rv').textContent = Rg;
     document.getElementById('sg-lv').textContent = RL;
     document.getElementById('sg-xv').textContent = (XL < 0 ? '−' : '') + Math.abs(XL);
@@ -611,6 +616,9 @@ var rich = EM.rich;
     document.getElementById('sg-gl').textContent = g.ml.toFixed(3);
     document.getElementById('sg-min').textContent = mn.toFixed(3);
     document.getElementById('sg-max').textContent = mx.toFixed(3);
+    var curve = []; for(var k = 0; k <= 40; k++) curve.push([k/40, ratio(k/40, g)]);
+    EM.publish(cv, { rg: Rg, rl: RL, xl: XL, gg: g.gg, gl: [g.glr, g.gli], min: mn, max: mx,
+                     matchedSource: 1 - g.ml*g.ml, curve: curve });
   }
   [['sg-r', function(v){ Rg = v; }], ['sg-l', function(v){ RL = v; }], ['sg-x', function(v){ XL = v; }]].forEach(function(q){
     document.getElementById(q[0]).addEventListener('input', function(){ q[1](+this.value); sync(); EM.redrawStatic(); });
@@ -695,6 +703,9 @@ var rich = EM.rich;
     function px(t){ return L + t/TM*(W - L - Rm); }
     function py(v){ return (H - B) - v/1.1*(H - T - B); }
     function v(t){ if(t < 0) return 0; if(t < 2*TD) return VP; return VP*(1 + r.g(t - 2*TD)); }
+    /* published from the very function the trace is drawn with */
+    var tr = []; for(var k = 0; k <= 60; k++){ var tt = TM*k/60; tr.push([tt, v(tt)]); }
+    EM.publish(cv, { kind: kind, r: R, x: X, g0: r.g0, g1: r.g1, tau: r.tau, trace: tr });
     c.strokeStyle = C.line; c.lineWidth = 1;
     [0.5, 1].forEach(function(y){ c.beginPath(); c.moveTo(L, py(y) + .5); c.lineTo(W - Rm, py(y) + .5); c.stroke(); });
     c.strokeStyle = C.line2;

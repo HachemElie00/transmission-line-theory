@@ -68,16 +68,16 @@
     <div class="readout" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));border-top:1px solid var(--line)">
       <div style="padding:13px 17px;border-right:1px solid var(--line)">
         <div style="font-family:var(--f-mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px">Electrical length</div>
-        <div id="o-deg" style="font-family:var(--f-mono);font-size:19px">7&deg;</div></div>
+        <div id="o-deg" style="font-family:var(--f-mono);font-size:19px">&mdash;</div></div>
       <div style="padding:13px 17px;border-right:1px solid var(--line)">
         <div style="font-family:var(--f-mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px">End-to-end error</div>
-        <div id="o-err" style="font-family:var(--f-mono);font-size:19px">13 %</div></div>
+        <div id="o-err" style="font-family:var(--f-mono);font-size:19px">&mdash;</div></div>
       <div style="padding:13px 17px">
         <div style="font-family:var(--f-mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px">Which model</div>
-        <div id="o-ver" style="font-family:var(--f-mono);font-size:17px">lumped is fine</div></div>
+        <div id="o-ver" style="font-family:var(--f-mono);font-size:17px">&mdash;</div></div>
     </div>
     <div class="btns">
-      <button data-l="0.002">60 Hz mains, 1 m</button>
+      <button data-m="1" data-f="60">60 Hz mains, 1 m</button>
       <button data-l="0.05">&lambda;/20</button>
       <button data-l="0.1">&lambda;/10</button>
       <button data-l="0.25">&lambda;/4</button>
@@ -121,7 +121,7 @@
       <p><b>A 2 cm board trace at 5 GHz</b>, on FR-4 with $\varepsilon_{\text{eff}} \approx 3.5$. Then $u_p \approx 1.6\times10^8$ m/s, $\lambda \approx 3.2$ cm, and</p>
       <div class="eq">$$\frac{l}{\lambda} = \frac{2}{3.2} = 0.63 \quad\Longrightarrow\quad \beta l \approx 225^\circ$$</div>
       <p>More than half a wavelength. That trace is not a connection between two components &mdash; it <b>is</b> a component, with its own impedance, and treating it as a wire will give an answer that is not merely imprecise but qualitatively wrong.</p>
-      <p>Same physical object, same equations, thirteen orders of magnitude between the two cases. The only thing that changed is $l/\lambda$.</p>
+      <p>Same physical object, same equations, more than six orders of magnitude between the two electrical lengths. The only thing that changed is $l/\lambda$.</p>
     </div>
   </details>
 </section>
@@ -148,9 +148,9 @@
       <div class="ctl"><label for="rs-r">t<sub>r</sub> / t<sub>d</sub></label><input type="range" id="rs-r" min="-0.7" max="1.3" step="0.01" value="0"><output id="rs-rv">1.00</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>l / &lambda; at 0.35/t<sub>r</sub></dt><dd id="rs-l">0.350</dd></div>
-      <div class="rd"><dt>peak, line model</dt><dd id="rs-pk">1.333</dd></div>
-      <div class="rd"><dt>peak, lumped model</dt><dd id="rs-pl">1.000</dd></div>
+      <div class="rd"><dt>l / &lambda; at 0.35/t<sub>r</sub></dt><dd id="rs-l">&mdash;</dd></div>
+      <div class="rd"><dt>peak, line model</dt><dd id="rs-pk">&mdash;</dd></div>
+      <div class="rd"><dt>peak, lumped model</dt><dd id="rs-pl">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">a 50 &Omega; line driven through 25 &Omega; and open at the far end, so the far end should settle at the source voltage. the line model sums the reflections exactly; the lumped model treats the whole line as one capacitor C&prime;l = t<sub>d</sub>/Z<sub>0</sub> charged through the source resistance. time runs in units of the one-way delay t<sub>d</sub></figcaption>
   </figure>
@@ -280,11 +280,14 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
   var eL = 0.02;
   var sl = document.getElementById('ell'), out = document.getElementById('ellv');
   function sync(){
-    out.textContent = eL.toFixed(3);
+    /* below the slider's range (the mains button) the numbers are tiny, and
+       printing them to one decimal would say zero */
+    out.textContent = eL < 0.001 ? eL.toExponential(1).replace('-', '−') : eL.toFixed(3);
     var deg = 360*eL;
-    document.getElementById('o-deg').innerHTML = deg.toFixed(deg < 10 ? 1 : 0) + '&deg;';
+    var small = function(v){ return v < 0.05 ? v.toPrecision(2) : v.toFixed(v < 10 ? 1 : 0); };
+    document.getElementById('o-deg').innerHTML = small(deg) + '&deg;';
     var err = 2*Math.abs(Math.sin(Math.PI*eL))*100;
-    document.getElementById('o-err').textContent = err.toFixed(err < 10 ? 1 : 0) + ' %';
+    document.getElementById('o-err').textContent = small(err) + ' %';
     var v = document.getElementById('o-ver');
     /* Say which model, not just a word. "needs a line" was read as a
        property of the hardware rather than as the answer to "which model". */
@@ -293,8 +296,13 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     else { v.textContent = 'line model needed'; v.style.color = 'var(--warn)'; }
   }
   sl.addEventListener('input', function(){ eL = +this.value; sync(); });
-  Array.prototype.forEach.call(document.querySelectorAll('.btns button[data-l]'), function(b){
-    b.addEventListener('click', function(){ eL = +b.getAttribute('data-l'); sl.value = eL; sync(); });
+  /* a button gives l/lambda directly, or a length and a frequency: l f / u_p,
+     with u_p = 2e8 m/s as the derivation below takes for ordinary cable */
+  Array.prototype.forEach.call(document.querySelectorAll('.btns button[data-l], .btns button[data-m]'), function(b){
+    b.addEventListener('click', function(){
+      eL = b.hasAttribute('data-l') ? +b.getAttribute('data-l') : (+b.getAttribute('data-m'))*(+b.getAttribute('data-f'))/2e8;
+      sl.value = eL; sync();
+    });
   });
   sync();
 
@@ -325,8 +333,10 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
 
     /* voltage profile along the wire */
     c.strokeStyle = C.e; c.lineWidth = 2.6; c.beginPath();
-    for(var i=0;i<=260;i++){ var u=i/260; c.lineTo(px(u), mid - v(u)*sy); }
+    var smp = [];
+    for(var i=0;i<=260;i++){ var u=i/260, vu = v(u); c.lineTo(px(u), mid - vu*sy); if(i % 13 === 0) smp.push([u, vu]); }
     c.stroke();
+    EM.publish(cv, { l: eL, t: t, ends: [v(0), v(1)], samples: smp });
 
     /* the two ends */
     var y0 = mid - v(0)*sy, y1 = mid - v(1)*sy;
@@ -358,8 +368,10 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
 /* ---- an edge into a mismatched line ----
    Line model: the far end is the sum of the wave arriving after each round
    trip, 2 V_inc Gs^n s(t - (2n+1) td), exact for a lossless line with an open
-   end. Lumped model: one capacitor C'l = td/Z0 charged through Rs, integrated
-   numerically. Rs = Z0/2, so Gs = -1/3 and V_inc = 2/3 of the source. */
+   end. Lumped model: one capacitor C'l = td/Z0 charged through Rs, in closed
+   form (it was integrated by Euler steps, at one step size for the readout
+   and another for the curve). Rs = Z0/2, so Gs = -1/3 and V_inc = 2/3 of the
+   source. */
 (function(){
   var cv = document.getElementById('risefig');
   if(!cv) return;
@@ -374,16 +386,25 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     }
     return s;
   }
-  function vLumped(T, tr, dt){
-    var out = [], v = 0;
-    for(var t = 0; t <= T + 1e-9; t += dt){ out.push(v); v += dt*(ramp(t + dt/2, tr) - v)/TAUc; }
-    return out;
+  /* RC driven by a ramp to 1 over tr: the ramp's response while it rises,
+     then the same response less a delayed copy */
+  function vLumped(t, tr){
+    if(t <= 0) return 0;
+    var a = (t - TAUc*(1 - Math.exp(-t/TAUc)))/tr;
+    if(t <= tr) return a;
+    return a - (t - tr - TAUc*(1 - Math.exp(-(t - tr)/TAUc)))/tr;
   }
   function win(tr){ return Math.max(14, 2.2*tr + 8); }
   function sync(){
-    var tr = Math.pow(10, lr), T = win(tr), pk = 0, pl = 0;
-    for(var t = 0; t <= T; t += T/4000) pk = Math.max(pk, vLine(t, tr));
-    vLumped(T, tr, T/4000).forEach(function(v){ pl = Math.max(pl, v); });
+    var tr = Math.pow(10, lr), T = win(tr), pk = 0;
+    /* the line's response is piecewise linear, so its peak is at a corner:
+       where an arrival starts or finishes rising */
+    for(var n = 0; 2*n + 1 <= T; n++){
+      [2*n + 1, 2*n + 1 + tr].forEach(function(q){ if(q <= T) pk = Math.max(pk, vLine(q, tr)); });
+    }
+    pk = Math.max(pk, vLine(T, tr));
+    /* the capacitor only ever charges upward: its largest value is at the end */
+    var pl = vLumped(T, tr);
     document.getElementById('rs-rv').textContent = tr < 10 ? tr.toFixed(2) : tr.toFixed(1);
     document.getElementById('rs-l').textContent = (0.35/tr).toFixed(3);
     document.getElementById('rs-pk').textContent = pk.toFixed(3);
@@ -407,11 +428,14 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     c.strokeStyle = C.ink3; c.lineWidth = 1.4; c.setLineDash([5, 4]); c.beginPath();
     for(var i = 0; i <= 300; i++){ var t = T*i/300; c.lineTo(px(t), py(ramp(t, tr))); } c.stroke();
     c.setLineDash([]);
-    var lump = vLumped(T, tr, T/600);
+    var pubL = [], pubC = [];
     c.strokeStyle = C.h; c.lineWidth = 2.2; c.beginPath();
-    lump.forEach(function(v, k){ c.lineTo(px(k*T/600), py(v)); }); c.stroke();
+    for(var k = 0; k <= 600; k++){ var tk = T*k/600, vk = vLumped(tk, tr); c.lineTo(px(tk), py(vk)); if(k % 10 === 0) pubC.push([tk, vk]); }
+    c.stroke();
     c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
-    for(var j = 0; j <= 1200; j++){ var t2 = T*j/1200; c.lineTo(px(t2), py(vLine(t2, tr))); } c.stroke();
+    for(var j = 0; j <= 1200; j++){ var t2 = T*j/1200, v2 = vLine(t2, tr); c.lineTo(px(t2), py(v2)); if(j % 20 === 0) pubL.push([t2, v2]); }
+    c.stroke();
+    EM.publish(cv, { tr: tr, T: T, line: pubL, lumped: pubC });
     c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
     c.fillText('1', L - 6, py(1) + 4); c.fillText('0', L - 6, py(0) + 4);
     c.textAlign = 'center';
@@ -444,7 +468,15 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     var bl = 2*Math.PI*x, e = exact(LOADS[li], bl), l = ladder(LOADS[li], bl, N);
     return Math.hypot(l[0] - e[0], l[1] - e[1])/Math.hypot(e[0], e[1]);
   }
-  function at1(N){ for(var x = 0.002; x < 0.5; x *= 1.005) if(err(x, N) > 0.01) return x; return null; }
+  /* the first length where the error passes 1 %: stepped out to bracket it,
+     then bisected (the step alone moved the printed third decimal) */
+  function at1(N){
+    for(var a = 0.002, x = a; x < 0.5; a = x, x *= 1.005) if(err(x, N) > 0.01){
+      for(var i = 0; i < 60; i++){ var m = (a + x)/2; if(err(m, N) > 0.01) x = m; else a = m; }
+      return a;
+    }
+    return null;
+  }
   function sync(){
     document.getElementById('ld-ro').innerHTML = NS.map(function(N){
       var x = at1(N);
@@ -478,14 +510,18 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     c.beginPath(); c.moveTo(L, py(-2)); c.lineTo(W - R, py(-2)); c.stroke(); c.setLineDash([]);
     c.fillStyle = C.ink2; c.textAlign = 'left'; c.fillText('1 %', L + 6, py(-2) - 5);
     c.save(); c.beginPath(); c.rect(L, T, W - L - R, H - T - B); c.clip();
+    var pub = { load: LOADS[li], curves: {} };
     NS.forEach(function(N, i){
       c.strokeStyle = C[COLS[i]]; c.lineWidth = 2.2; c.beginPath();
+      var cs = pub.curves[N] = [];
       for(var j = 0; j <= 300; j++){
         var x = Math.pow(10, X0 + (X1 - X0)*j/300), e = err(x, N);
         c.lineTo(px(x), py(Math.log10(Math.max(e, 1e-12))));
+        if(j % 15 === 0) cs.push([x, e]);
       }
       c.stroke();
     });
+    EM.publish(cv, pub);
     c.restore();
     /* each curve named where it is lowest on screen, near the left edge */
     NS.forEach(function(N, i){

@@ -182,10 +182,10 @@
       <div class="ctl"><label for="pw-th">&theta; = &phi;<sub>v</sub> &minus; &phi;<sub>i</sub></label><input type="range" id="pw-th" min="-90" max="90" step="1" value="40"><output id="pw-thv">40&deg;</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>mean of v i, integrated</dt><dd id="pw-avg">0.383</dd></div>
-      <div class="rd"><dt>&frac12;Re{V I*}</dt><dd id="pw-re">0.383</dd></div>
-      <div class="rd"><dt>Q = &frac12;Im{V I*}</dt><dd id="pw-q">0.321</dd></div>
-      <div class="rd"><dt>time p(t) &lt; 0</dt><dd id="pw-neg">22 %</dd></div>
+      <div class="rd"><dt>mean of v i, integrated</dt><dd id="pw-avg">&mdash;</dd></div>
+      <div class="rd"><dt>&frac12;Re{V I*}</dt><dd id="pw-re">&mdash;</dd></div>
+      <div class="rd"><dt>Q = &frac12;Im{V I*}</dt><dd id="pw-q">&mdash;</dd></div>
+      <div class="rd"><dt>time p(t) &lt; 0</dt><dd id="pw-neg">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">|V| = |I| = 1. the average is computed by integrating p(t) over a period, independently of the phasor formula beside it. where p(t) dips below zero, energy is flowing back to the source</figcaption>
   </figure>
@@ -208,9 +208,9 @@
       <div class="ctl"><label for="np-a">&alpha; (Np/m)</label><input type="range" id="np-a" min="0.1" max="3" step="0.05" value="1"><output id="np-av">1.00</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>loss per metre</dt><dd id="np-db">8.69 dB/m</dd></div>
-      <div class="rd"><dt>amplitude after 1 m</dt><dd id="np-v">36.8 %</dd></div>
-      <div class="rd"><dt>power after 1 m</dt><dd id="np-p">13.5 %</dd></div>
+      <div class="rd"><dt>loss per metre</dt><dd id="np-db">&mdash;</dd></div>
+      <div class="rd"><dt>amplitude after 1 m</dt><dd id="np-v">&mdash;</dd></div>
+      <div class="rd"><dt>power after 1 m</dt><dd id="np-p">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">the same decay twice: the amplitude e<sup>&minus;&alpha;z</sup> on a linear scale, which curves, and the loss in decibels, which is a straight line &mdash; the reason losses are quoted in dB per metre</figcaption>
   </figure>
@@ -241,9 +241,9 @@
         </select></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>u<sub>p</sub> / c, a crest</dt><dd id="gp-up">1.000</dd></div>
-      <div class="rd"><dt>u<sub>g</sub> / c, the envelope</dt><dd id="gp-ug">1.000</dd></div>
-      <div class="rd"><dt>u<sub>p</sub> u<sub>g</sub> / c<sup>2</sup></dt><dd id="gp-pr">1.000</dd></div>
+      <div class="rd"><dt>u<sub>p</sub> / c, a crest</dt><dd id="gp-up">&mdash;</dd></div>
+      <div class="rd"><dt>u<sub>g</sub> / c, the envelope</dt><dd id="gp-ug">&mdash;</dd></div>
+      <div class="rd"><dt>u<sub>p</sub> u<sub>g</sub> / c<sup>2</sup></dt><dd id="gp-pr">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">two equal tones, 12.5 % apart in &beta;. the round marker rides one crest, at u<sub>p</sub>; the bar rides the peak of the envelope, at u<sub>g</sub>. without dispersion the two move together. in the waveguide-like medium the crest outruns the envelope, so crests appear at the back of each group, run through it and vanish at the front. waveguide-like means &omega;<sup>2</sup> = &omega;<sub>c</sub><sup>2</sup> + c<sup>2</sup>&beta;<sup>2</sup>, the dispersion of the hollow guides in part two</figcaption>
   </figure>
@@ -359,9 +359,11 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     c.moveTo(L+.5, T); c.lineTo(L+.5, H-B); c.stroke();
 
     c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
+    var smp = [];
     for(var i=0;i<=320;i++){
-      var z = i/320*zmax;
-      c.lineTo(px(z), mid - Math.cos(t - dir*be*z)*sy);
+      var z = i/320*zmax, v = Math.cos(t - dir*be*z);
+      c.lineTo(px(z), mid - v*sy);
+      if(i % 8 === 0) smp.push([z, v]);
     }
     c.stroke();
 
@@ -369,7 +371,6 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     var lam = EM.TAU/be;
     var zc = dir*t/be;
     zc = zc - Math.floor(zc/lam)*lam;
-    if(dir < 0) zc = zc;
     while(zc < 0) zc += lam;
     while(zc > zmax) zc -= lam;
     if(zc >= 0 && zc <= zmax){
@@ -398,6 +399,8 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
          (Math.abs(cf - fade) <= 1e-9 &&
           Math.abs(cand + lam/2 - zmax/2) < Math.abs(a + lam/2 - zmax/2))){ a = cand; fade = cf; }
     }
+    EM.publish(cv, { be: be, dir: dir, t: t, zmax: zmax, crest: (zc >= 0 && zc <= zmax) ? zc : null,
+                     bracket: (a !== null && fade > 0) ? [a, a + lam] : null, fade: fade, samples: smp });
     if(a !== null && fade > 0){
       var b = a + lam, y = H - B + 16;
       c.save(); c.globalAlpha = fade;
@@ -453,6 +456,7 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     c.moveTo(cx, cy-Rr); c.lineTo(cx, cy+Rr); c.stroke();
 
     var vx = Math.cos(ang)*Rr*A, vy = Math.sin(ang)*Rr*A;
+    var pub = { A: A, ph: ph, t: t, tip: [vx/Rr, vy/Rr], trace: null };
     /* projection onto the real axis */
     c.strokeStyle = C.h; c.lineWidth = 1; c.setLineDash([2,3]);
     c.beginPath(); c.moveTo(cx+vx, cy-vy); c.lineTo(cx+vx, cy); c.stroke();
@@ -475,9 +479,11 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
       c.strokeStyle = C.line2; c.lineWidth = 1;
       c.beginPath(); c.moveTo(PL, y0+.5); c.lineTo(W-PR, y0+.5); c.stroke();
       c.strokeStyle = C.h; c.lineWidth = 2.2; c.beginPath();
+      pub.trace = [];
       for(var i=0;i<=220;i++){
-        var tt = t + (i/220)*3*Math.PI;
-        c.lineTo(PL + (i/220)*(W-PL-PR), y0 - A*Math.cos(tt + ph*Math.PI/180)*sy);
+        var tt = t + (i/220)*3*Math.PI, vv = A*Math.cos(tt + ph*Math.PI/180);
+        c.lineTo(PL + (i/220)*(W-PL-PR), y0 - vv*sy);
+        if(i % 20 === 0) pub.trace.push([tt - t, vv]);
       }
       c.stroke();
       c.fillStyle = C.h;
@@ -486,6 +492,7 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
       c.textAlign = 'left'; c.fillText('now', PL, H - 8);
       c.textAlign = 'right'; c.fillText('time →', W-PR, H - 8);
     }
+    EM.publish(cv, pub);
   }, true);
 })();
 
@@ -541,7 +548,14 @@ var TAU = Math.PI*2;
     for(var b = 0; b <= 300; b++){ var xb = XS*b/300; c.lineTo(px(xb), py(Math.cos(xb + ph))); } c.stroke();
     c.setLineDash([]);
     c.strokeStyle = C.ink; c.lineWidth = 2.4; c.beginPath();
-    for(var d = 0; d <= 300; d++){ var xd = XS*d/300; c.lineTo(px(xd), py(Math.cos(xd + ph + th)*Math.cos(xd + ph))); } c.stroke();
+    var smp = [];
+    for(var d = 0; d <= 300; d++){
+      var xd = XS*d/300, vd = Math.cos(xd + ph + th), id = Math.cos(xd + ph);
+      c.lineTo(px(xd), py(vd*id));
+      if(d % 10 === 0) smp.push([xd, vd, id, vd*id]);
+    }
+    c.stroke();
+    EM.publish(cv, { th: th, ph: ph, samples: smp });
     c.strokeStyle = C.acc; c.lineWidth = 2;
     c.beginPath(); c.moveTo(L, py(0.5*Math.cos(th))); c.lineTo(W - R, py(0.5*Math.cos(th))); c.stroke();
     c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
@@ -581,10 +595,13 @@ var TAU = Math.PI*2;
     for(var i = 0; i <= 400; i++){ var z = ZM*i/400; c.lineTo(px(z), pyA(Math.exp(-al*z)*(0.5 + 0.5*Math.cos(2*TAU*z)))); }
     c.stroke(); c.globalAlpha = 1;
     c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
-    for(var j = 0; j <= 200; j++){ var z2 = ZM*j/200; c.lineTo(px(z2), pyA(Math.exp(-al*z2))); }
+    var smp = [];
+    for(var j = 0; j <= 200; j++){ var z2 = ZM*j/200, a2 = Math.exp(-al*z2); c.lineTo(px(z2), pyA(a2)); if(j % 10 === 0) smp.push([z2, a2]); }
     c.stroke();
     c.strokeStyle = C.h; c.lineWidth = 2.4; c.beginPath();
-    c.moveTo(px(0), pyD(0)); c.lineTo(px(ZM), pyD(20*al*ZM/Math.LN10)); c.stroke();
+    var dEnd = 20*al*ZM/Math.LN10;
+    c.moveTo(px(0), pyD(0)); c.lineTo(px(ZM), pyD(dEnd)); c.stroke();
+    EM.publish(cv, { al: al, zm: ZM, samples: smp, dbLine: [[0, 0], [ZM, dEnd]] });
     c.font = '11px ' + MONO; c.fillStyle = C.e; c.textAlign = 'right';
     c.fillText('1', L - 6, pyA(1) + 4); c.fillText('0', L - 6, pyA(0) + 4);
     EM.rich(c, [['e','n'], ['−αz','p']], px(0.25) + 8, pyA(Math.exp(-al*0.25)) + 22, 12, 'left');
@@ -601,8 +618,10 @@ var TAU = Math.PI*2;
 
 /* ---- two tones: crest against envelope ----
    omega(beta) is either v beta or sqrt(wc^2 + v^2 beta^2). The tones sit at
-   beta-bar (1 -/+ 1/16), so the envelope repeats every 8 carrier wavelengths
-   and the window is exactly one envelope period. */
+   beta-bar (1 -/+ 1/16), so the envelope's magnitude repeats every 8 carrier
+   wavelengths. Its sign alternates, though, so the sum itself repeats only
+   every 16: the window is those 16, two groups, and anything wrapped across
+   it lands on the same kind of point it left. */
 (function(){
   var cv = document.getElementById('grpfig');
   if(!cv) return;
@@ -622,7 +641,7 @@ var TAU = Math.PI*2;
     EM.fit(cv);
     var c = cv.getContext('2d'), W = cv._w, H = cv._h;
     c.clearRect(0, 0, W, H);
-    var L = 14, R = 14, T = 30, B = 20, ZW = 8;          /* window: 8 carrier wavelengths */
+    var L = 14, R = 14, T = 30, B = 20, ZW = 16;         /* window: 16 carrier wavelengths */
     var y0 = T + (H - T - B)/2, sy = (H - T - B)/2/2.15;
     function px(z){ return L + z/ZW*(W - L - R); }
     var tau = t*0.15;
@@ -639,20 +658,32 @@ var TAU = Math.PI*2;
     });
     c.setLineDash([]);
     c.strokeStyle = C.ink; c.lineWidth = 2; c.beginPath();
-    for(var j = 0; j <= 600; j++){ var z2 = ZW*j/600; c.lineTo(px(z2), y0 - f(z2)*sy); }
+    for(var j = 0; j <= 1200; j++){ var z2 = ZW*j/1200; c.lineTo(px(z2), y0 - f(z2)*sy); }
     c.stroke();
-    /* the envelope's peak moves at dw/dB; one crest at wb/bb */
+    /* The envelope's peak moves at dw/dB; a crest at wb/bb. A crest is
+       followed through its own group, from the node at the back (where it
+       appears) to the node at the front (where it vanishes), at offset o from
+       the peak. Wrapping it by the window used to be wrapping by 8, half the
+       sum's period, which put it on a trough every other pass. */
     var ze = ((dw/DB)*tau) % ZW; if(ze < 0) ze += ZW;
     c.fillStyle = C.acc; c.fillRect(px(ze) - 2, T - 4, 4, H - T - B + 8);
-    var zc = ((wb/bb)*tau) % ZW; if(zc < 0) zc += ZW;
-    c.fillStyle = C.e;
-    c.beginPath(); c.arc(px(zc), y0 - f(zc)*sy, 5.5, 0, TAU); c.fill();
+    var GW = ZW/2, o = (((wb/bb - dw/DB)*tau + GW/2) % GW + GW) % GW - GW/2;
+    var zc = ((ze + o) % ZW + ZW) % ZW;
     c.font = '11px ' + MONO; c.textAlign = 'center';
     c.fillStyle = C.ink2; c.fillText('envelope peak', Math.max(L + 40, Math.min(W - R - 40, px(ze))), T - 10);
     var yc = y0 - f(zc)*sy;
-    c.fillStyle = C.ink; c.fillText('crest', px(zc), f(zc) >= 0 ? yc - 11 : yc + 19);
+    c.fillStyle = C.e;
+    c.beginPath(); c.arc(px(zc), yc, 5.5, 0, TAU); c.fill();
+    c.fillStyle = C.ink;
+    /* over the bar the space above the dot belongs to "envelope peak": write beside it */
+    if(Math.abs(px(zc) - px(ze)) < 60){
+      var rt = px(zc) > W - R - 60;
+      c.textAlign = rt ? 'right' : 'left'; c.fillText('crest', px(zc) + (rt ? -10 : 10), yc + 4);
+    } else c.fillText('crest', px(zc), yc - 11);
     c.fillStyle = C.ink3; c.textAlign = 'right';
     c.fillText('z →', W - R, H - 5);
+    var smp = []; for(var q = 0; q <= 160; q++){ var zq = ZW*q/160; smp.push([zq, f(zq), env(zq)]); }
+    EM.publish(cv, { mode: mode, tau: tau, zw: ZW, b: [b1, b2], w: [w1, w2], ze: ze, zc: zc, fc: f(zc), samples: smp });
   }, true);
 })();
 </script>

@@ -161,11 +161,11 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
       <button id="typ">Shorted stub</button>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>SWR before</dt><dd id="m-swr">3.00</dd></div>
-      <div class="rd"><dt>travel d</dt><dd id="m-d">0.152&lambda;</dd></div>
-      <div class="rd"><dt>y there</dt><dd id="m-y">1 + j0.71</dd></div>
-      <div class="rd"><dt>stub length</dt><dd id="m-ls">0.152&lambda;</dd></div>
-      <div class="rd"><dt>y after stub</dt><dd id="m-tot">1.00 + j0.00</dd></div>
+      <div class="rd"><dt>SWR before</dt><dd id="m-swr">&mdash;</dd></div>
+      <div class="rd"><dt>travel d</dt><dd id="m-d">&mdash;</dd></div>
+      <div class="rd"><dt>y there</dt><dd id="m-y">&mdash;</dd></div>
+      <div class="rd"><dt>stub length</dt><dd id="m-ls">&mdash;</dd></div>
+      <div class="rd"><dt>y after stub</dt><dd id="m-tot">&mdash;</dd></div>
     </dl>
     <div class="btns">
       <button data-m="2,0">r = 2</button>
@@ -241,7 +241,7 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
     <figcaption class="cap">|&Gamma;| against frequency for the four single-shunt-stub designs of the same load, each computed by scaling every electrical length with frequency. the readouts give each design&rsquo;s travel d, stub length, and its band at |&Gamma;| &le; 0.2</figcaption>
   </figure>
 
-  <p class="t">The pattern is general: the design with the <b>shortest total length</b>, travel plus stub, holds its match over the widest band, often by a factor of two against the longest. Chapter 08's Foster theorem says why: a longer stub stores more energy for the same reactance and changes it faster with frequency. When the shortest design needs an awkwardly short stub, the next shortest is the usual compromise, and the choice between short and open is then settled by the board: a short needs a via, an open needs Δl subtracted.</p>
+  <p class="t">The pattern holds wherever matching is worth doing: the design with the <b>shortest total length</b>, travel plus stub, holds its match over the widest band, typically by a factor of two or more against the longest. Over the loads this figure can set, the only exceptions have an SWR below about 1.5, where every design already holds over a very wide band. Chapter 08's Foster theorem says why: a longer stub stores more energy for the same reactance and changes it faster with frequency. When the shortest design needs an awkwardly short stub, the next shortest is the usual compromise, and the choice between short and open is then settled by the board: a short needs a via, an open needs Δl subtracted.</p>
 </section>
 
 <section class="blk" id="dstub">
@@ -657,6 +657,7 @@ function solveStub(rL, xL, which, openStub){
       c.fillStyle = C.ink;
       c.beginPath(); c.arc(cx, cy, 6, 0, Math.PI*2); c.fill();
       c.fillText('already matched', cx, cy + 22);
+      EM.publish(cv, { r: rL, x: xL, matched: true });
       return;
     }
 
@@ -668,17 +669,25 @@ function solveStub(rL, xL, which, openStub){
 
     /* step 1: travel along the line, clockwise */
     var a0 = Math.atan2(g[1], g[0]);
+    /* screen angles (y down), used for the drawing and published as drawn */
+    var tA = -a0, tB = -a0 + 4*Math.PI*SOL.d;
     c.strokeStyle = C.e; c.lineWidth = 4.5; c.globalAlpha = .75;
-    c.beginPath(); c.arc(cx, cy, m*R, -a0, -a0 + 4*Math.PI*SOL.d, false); c.stroke();
+    c.beginPath(); c.arc(cx, cy, m*R, tA, tB, false); c.stroke();
     c.globalAlpha = 1;
 
     /* step 2: the stub, riding the g = 1 circle to the centre */
     var gd = SOL.gd;
     var ang0 = Math.atan2(gd[1], gd[0] + 0.5);     /* angle on the g=1 circle */
     var angEnd = 0;                                 /* the origin sits at angle 0 */
+    var ccw = gd[1] < 0;
+    /* published from the values the two arcs are drawn with, converted back
+       from screen angles (y down) to the chart's */
+    EM.publish(cv, { r: rL, x: xL, which: which, open: openStub, load: g, at: gd, d: SOL.d, b: SOL.b, ls: SOL.ls,
+                     travel: [-tA, -tB], target: [-0.5, 0, 0.5],
+                     stubArc: { from: -(-ang0), to: -(-angEnd), ccwOnScreen: ccw } });
     c.strokeStyle = C.h; c.lineWidth = 4.5; c.globalAlpha = .8;
     c.beginPath();
-    c.arc(cx - 0.5*R, cy, 0.5*R, -ang0, -angEnd, gd[1] < 0);
+    c.arc(cx - 0.5*R, cy, 0.5*R, -ang0, -angEnd, ccw);
     c.stroke(); c.globalAlpha = 1;
 
     /* markers */
@@ -894,13 +903,24 @@ function kinv(a){ return kd(k11(1, 0), a); }
 /* normalised impedance after a line of electrical length bl */
 function kline(z, bl){ var t = Math.tan(bl); return kd(ka(z, k11(0, t)), ka(k11(1, 0), km(k11(0, t), z))); }
 function kgam(z){ return kabs(kd(ks(z, k11(1, 0)), ka(z, k11(1, 0)))); }
+/* The contiguous band around f0 with fn(f) <= lim, as a fraction of f0. Walked
+   out in small steps and each edge then found by bisection: the walk alone
+   stopped up to a step short at each end, which moved the printed tenth of a
+   percent. A band that reaches the edge of the plot (0.005 f0 or fmax) is
+   marked open, and shown as "more than", rather than reported as if it ended
+   there. */
 function bandAt(fn, lim, fmax){
   if(fn(1) > lim) return null;
-  var lo = 1, hi = 1, st = 0.0005;
-  while(lo - st > 0.005 && fn(lo - st) <= lim) lo -= st;
-  while(hi + st < fmax && fn(hi + st) <= lim) hi += st;
-  return hi - lo;
+  var lo = 1, hi = 1, st = 0.0005, KLO = 0.005, nx;
+  while(lo > KLO){ nx = Math.max(KLO, lo - st); if(fn(nx) > lim) break; lo = nx; }
+  while(hi < fmax){ nx = Math.min(fmax, hi + st); if(fn(nx) > lim) break; hi = nx; }
+  var edge = function(a, b){ for(var i = 0; i < 60; i++){ var m = (a + b)/2; if(fn(m) <= lim) a = m; else b = m; } return a; };
+  var open = lo <= KLO || hi >= fmax;
+  if(lo > KLO) lo = edge(lo, Math.max(KLO, lo - st));
+  if(hi < fmax) hi = edge(hi, Math.min(fmax, hi + st));
+  return { frac: hi - lo, lo: lo, hi: hi, open: open };
 }
+function bandTxt(b){ return b === null ? '&mdash;' : (b.open ? '&gt; ' : '') + (100*b.frac).toFixed(1) + ' %'; }
 function plotFrame(c, C, W, H, L, R, T, B, YM, FM){
   c.strokeStyle = C.line2; c.lineWidth = 1;
   c.beginPath(); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.lineTo(W - R, H - B); c.stroke();
@@ -931,7 +951,14 @@ function plotFrame(c, C, W, H, L, R, T, B, YM, FM){
       if(isFinite(v) && isFinite(prev) && prev*v <= 0 && Math.abs(v - prev) < 1){
         var a = 0.5*(k - 1)/N + 1e-6, b = d;
         for(var it = 0; it < 60; it++){ var m = (a + b)/2; if(g(a)*g(m) <= 0) b = m; else a = m; }
-        var dd = (a + b)/2, bb = kinv(kline(zl, 2*Math.PI*dd)).i;
+        var dd = (a + b)/2, bb;
+        /* A load already on g = 1 is a root at d = 0, which the scan, starting
+           just after 0, first meets again at the far end: d = 0.5. That is the
+           same design plus a needless half wave of line, with a narrower band.
+           It is the root at the load. */
+        if(dd > 0.5 - 1e-7) dd = 0;
+        if(out.some(function(o){ return Math.abs(o.d - dd) < 1e-7; })){ prev = v; continue; }
+        bb = kinv(kline(zl, 2*Math.PI*dd)).i;
         [false, true].forEach(function(open){
           /* shorted: y = -j cot(bl) must be -j b, so cot(bl) = b; open: tan(bl) = -b */
           var bl = open ? Math.atan(-bb) : Math.atan2(1, bb);
@@ -955,10 +982,14 @@ function plotFrame(c, C, W, H, L, R, T, B, YM, FM){
     if(!ds.length){ host.innerHTML = '<div class="rd"><dt>no design</dt><dd>&mdash;</dd></div>'; return; }
     host.innerHTML = ds.map(function(D, i){
       var b = bandAt(function(f){ return resp(D, f); }, 0.2, FM);
+      D.band = b;
       return '<div class="rd"><dt style="white-space:normal"><i style="display:inline-block;width:14px;border-top:2.5px solid var(--' + COLS[i] +
         ');vertical-align:middle;margin-right:6px"></i>d ' + D.d.toFixed(3) + '&lambda;, ' + (D.open ? 'open ' : 'short ') +
-        D.ls.toFixed(3) + '&lambda;</dt><dd>' + (b === null ? '&mdash;' : (100*b).toFixed(1) + ' %') + '</dd></div>';
+        D.ls.toFixed(3) + '&lambda;</dt><dd>' + bandTxt(b) + '</dd></div>';
     }).join('');
+    EM.publish(cv, { r: r, x: x, designs: ds.map(function(D){
+      var sm = []; for(var k = 1; k <= 500; k += 25){ var f = FM*k/500; sm.push([f, resp(D, f)]); }
+      return { d: D.d, ls: D.ls, open: D.open, band: D.band, curve: sm }; }) });
   }
   document.getElementById('ch-r').addEventListener('input', function(){ r = +this.value; sync(); EM.redrawStatic(); });
   document.getElementById('ch-x').addEventListener('input', function(){ x = +this.value; sync(); EM.redrawStatic(); });
@@ -988,8 +1019,19 @@ function plotFrame(c, C, W, H, L, R, T, B, YM, FM){
   if(!cv) return;
   var g = 3, b = -1, GMAX = 2, T1 = 1;                    /* lambda/8 spacing: t = tan(pi/4) = 1 */
   function yAt(l){ return kline(k11(g, b), 2*Math.PI*l); } /* an admittance moves by the same rule */
+  /* the shortest line that brings g down to GMAX: walked to the first step
+     outside the region, then bisected, since the walk alone overshot by up to
+     a step and the readout prints three decimals */
   function escape(){
-    for(var l = 0; l <= 0.5; l += 0.0002){ var y = yAt(l); if(y.r <= GMAX) return { l: l, y: y }; }
+    var prev = 0;
+    for(var l = 0; l <= 0.5; l += 0.0002){
+      if(yAt(l).r <= GMAX){
+        var a = prev, b2 = l;
+        for(var i = 0; i < 60; i++){ var m = (a + b2)/2; if(yAt(m).r <= GMAX) b2 = m; else a = m; }
+        return { l: b2, y: yAt(b2) };
+      }
+      prev = l;
+    }
     return null;
   }
   function stubs(y){
@@ -1009,6 +1051,8 @@ function plotFrame(c, C, W, H, L, R, T, B, YM, FM){
     document.getElementById('es-g2').textContent = e.y.r.toFixed(3);
     var s = stubs(e.y);
     document.getElementById('es-s').textContent = s ? 'j' + f2(s.s1).replace('+', '') + ' / j' + f2(s.s2).replace('+', '') : '—';
+    var path = []; for(var k = 0; k <= 20; k++){ var q = yAt(e.l*k/20); path.push([q.r, q.i]); }
+    EM.publish(cv, { g: g, b: b, l: e.l, after: [e.y.r, e.y.i], stubs: s, path: path, gmax: GMAX });
   }
   document.getElementById('es-g').addEventListener('input', function(){ g = +this.value; sync(); EM.redrawStatic(); });
   document.getElementById('es-b').addEventListener('input', function(){ b = +this.value; sync(); EM.redrawStatic(); });
@@ -1079,11 +1123,15 @@ function plotFrame(c, C, W, H, L, R, T, B, YM, FM){
     document.getElementById('lq-rv').textContent = RL;
     document.getElementById('lq-qv').textContent = n.q.toFixed(1);
     var rows = [['one L, Q ' + qmin().toFixed(2), n.single, 'e'], ['two L in cascade, Q ' + n.qc.toFixed(2), n.cascade, 'h'], ['&pi;, Q ' + n.q.toFixed(2), n.pi, 'acc']];
-    document.getElementById('lq-ro').innerHTML = rows.map(function(rw){
+    var pub = { rl: RL, q: n.q, qmin: qmin(), qc: n.qc, nets: {} };
+    document.getElementById('lq-ro').innerHTML = rows.map(function(rw, i){
       var b = bandAt(function(f){ return gamma(rw[1], f); }, 0.2, FM);
+      var sm = []; for(var k = 1; k <= 500; k += 25){ var f = FM*k/500; sm.push([f, gamma(rw[1], f)]); }
+      pub.nets[['single', 'cascade', 'pi'][i]] = { parts: rw[1], band: b, curve: sm };
       return '<div class="rd"><dt style="white-space:normal"><i style="display:inline-block;width:14px;border-top:2.5px solid var(--' + rw[2] +
-        ');vertical-align:middle;margin-right:6px"></i>' + rw[0] + '</dt><dd>' + (b === null ? '&mdash;' : (100*b).toFixed(1) + ' %') + '</dd></div>';
+        ');vertical-align:middle;margin-right:6px"></i>' + rw[0] + '</dt><dd>' + bandTxt(b) + '</dd></div>';
     }).join('');
+    EM.publish(cv, pub);
   }
   document.getElementById('lq-r').addEventListener('input', function(){ RL = +this.value; sync(); EM.redrawStatic(); });
   document.getElementById('lq-q').addEventListener('input', function(){ Qp = +this.value; sync(); EM.redrawStatic(); });
@@ -1131,6 +1179,9 @@ function plotFrame(c, C, W, H, L, R, T, B, YM, FM){
     document.getElementById('bf-b').innerHTML = '|&Gamma;| &ge; ' + fm(bound(0.2));
     document.getElementById('bf-l').innerHTML = '|&Gamma;| = ' + fm(simple(0.2));
     document.getElementById('bf-c').innerHTML = '|&Gamma;| &ge; ' + fm(bound(0.5));
+    var bs = [], ss = [];
+    for(var k = 1; k <= 300; k += 10){ bs.push([k/300, bound(k/300)]); ss.push([k/300, simple(k/300)]); }
+    EM.publish(cv, { q: Q, bound: bs, simple: ss });
   }
   document.getElementById('bf-q').addEventListener('input', function(){ Q = +this.value; sync(); EM.redrawStatic(); });
   sync();

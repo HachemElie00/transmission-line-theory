@@ -78,6 +78,12 @@ setTimeout(function(){
    Site menu. Built here rather than written into fifteen files, so
    the contents only ever have to be edited in one place.
    --------------------------------------------------------------- */
+/* The bug report page works, but reports have nowhere to go until its
+   ENDPOINT is set, so for now nothing links to it: not the menus, not the
+   sidebar, not the footers, not search. Set this to true to put it back
+   everywhere at once. The page itself stays and opens if visited directly. */
+var REPORT_ON = false;
+
 var SITE_PAGES = [
   ['Start',     'index.html',             '',          'Contents'],
   ['Start',     'report.html',            '',          'Report a bug'],
@@ -96,6 +102,7 @@ var SITE_PAGES = [
   ['Chapters',  'smith-chart.html',       '10',        'The Smith chart'],
   ['Chapters',  'matching.html',          '11',        'Impedance matching']
 ];
+if(!REPORT_ON) SITE_PAGES = SITE_PAGES.filter(function(p){ return p[1] !== 'report.html'; });
 
 var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
   + ' fill="none" stroke="currentColor" stroke-width="1.15" stroke-linejoin="round">'
@@ -350,6 +357,7 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
   }
   function build(){
     var page = here();
+    if(!REPORT_ON) return;                             /* hidden for now; see REPORT_ON */
     if(page === 'report.html') return;                 /* not on the form itself */
     var foot = document.querySelector('footer.site');
     if(!foot || foot.querySelector('.fbug')) return;
@@ -834,6 +842,12 @@ var EM = (function(){
     active = null;
   }
   function redrawStatic(){ drawers.forEach(function(d){ if(!d.animated) safe(d); }); }
+  /* seek(cv, t): set the clock of the figure that owns cv and draw it now.
+     For the tests, like data-drawn: an animated figure's rare states (the
+     second pass of a wrapping marker) are otherwise a minute's wait away. */
+  function seek(cv, t){
+    drawers.forEach(function(d){ if(d.cvs.indexOf(cv) >= 0){ d.t = t; safe(d); } });
+  }
 
   var frame = 0;
   function loop(){
@@ -1211,8 +1225,21 @@ var EM = (function(){
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 
+  /* What a figure drew, published on its canvas as data-drawn so a test can
+     hold it against the theory (the workbench does the same). Numbers are
+     rounded to 1e-9 so the attribute is stable between identical renders,
+     and it is only written when it changes, since a write invalidates style. */
+  function publish(cv, data){
+    if(!cv) return;
+    var a = JSON.stringify(data, function(k, v){
+      return typeof v === 'number' ? Math.round(v*1e9)/1e9 : v; });
+    if(cv.getAttribute('data-drawn') !== a) cv.setAttribute('data-drawn', a);
+  }
+
   return {
     TAU: TAU, fit: fit, register: register, arrow: arrow, design: design, rich: rich,
+    publish: publish,
+    seek: seek,
     colors: function(){ return C; },
     redrawStatic: redrawStatic,
     setRunning: function(v){ running = v; },

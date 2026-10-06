@@ -45,7 +45,10 @@ function plain(html){
 function firstMatch(re, s){ const m = s.match(re); return m ? m[1] : ''; }
 
 function build(){
-  const pages = fs.readdirSync(SITE).filter(f => f.endsWith('.html')).sort();
+  /* the report page is left out while site.js keeps it unlinked (REPORT_ON) */
+  const reportOff = /var REPORT_ON = false;/.test(fs.readFileSync(path.join(SITE, 'assets', 'site.js'), 'utf8'));
+  const pages = fs.readdirSync(SITE).filter(f => f.endsWith('.html'))
+                  .filter(f => !(reportOff && f === 'report.html')).sort();
   const index = [];
 
   for (const file of pages){

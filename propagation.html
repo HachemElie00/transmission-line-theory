@@ -154,18 +154,18 @@
     <canvas id="linefig" style="height:260px"></canvas>
     <div class="rail">
       <div class="ctl"><label for="rp">R&prime; &Omega;/m</label><input type="range" id="rp" min="0" max="200" step="1" value="0"><output id="rpv">0</output></div>
-      <div class="ctl"><label for="gp">G&prime; mS/m</label><input type="range" id="gp" min="0" max="10" step="0.1" value="0"><output id="gpv">0.0</output></div>
+      <div class="ctl"><label for="gp">G&prime; mS/m</label><input type="range" id="gp" min="0" max="10" step="0.01" value="0"><output id="gpv">0.00</output></div>
     </div>
     <div class="rail" style="border-top:0;padding-top:0">
       <div class="ctl"><label for="lp">L&prime; nH/m</label><input type="range" id="lp" min="100" max="900" step="5" value="250"><output id="lpv">250</output></div>
       <div class="ctl"><label for="cp">C&prime; pF/m</label><input type="range" id="cp" min="40" max="400" step="2" value="100"><output id="cpv">100</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>&alpha;</dt><dd id="o-a">0.00</dd></div>
-      <div class="rd"><dt>&beta;</dt><dd id="o-b">31.4</dd></div>
-      <div class="rd"><dt>&lambda;</dt><dd id="o-l">20.0</dd></div>
-      <div class="rd"><dt>Z<sub>0</sub></dt><dd id="o-z">50.0</dd></div>
-      <div class="rd"><dt>u<sub>p</sub>/c</dt><dd id="o-u">0.67</dd></div>
+      <div class="rd"><dt>&alpha;</dt><dd id="o-a">&mdash;</dd></div>
+      <div class="rd"><dt>&beta;</dt><dd id="o-b">&mdash;</dd></div>
+      <div class="rd"><dt>&lambda;</dt><dd id="o-l">&mdash;</dd></div>
+      <div class="rd"><dt>Z<sub>0</sub></dt><dd id="o-z">&mdash;</dd></div>
+      <div class="rd"><dt>u<sub>p</sub>/c</dt><dd id="o-u">&mdash;</dd></div>
     </dl>
     <div class="btns">
       <button data-p="0,0,250,100">lossless 50 &#937;</button>
@@ -183,14 +183,14 @@
 
   <div class="tw"><table>
     <tr><th>Preset</th><th>What changes</th><th>What does not</th></tr>
-    <tr><td><b>same Z<sub>0</sub>, shorter &lambda;</b><br>both raised together</td><td>the product $L'C'$ doubles, so $\lambda$ halves to 10 cm &mdash; twice as many cycles in the metre</td><td>the ratio is unchanged, so $Z_0$ stays at 50 &Omega;</td></tr>
+    <tr><td><b>same Z<sub>0</sub>, shorter &lambda;</b><br>both raised together</td><td>the product $L'C'$ quadruples, so $\lambda$ halves to 10 cm &mdash; twice as many cycles in the metre</td><td>the ratio is unchanged, so $Z_0$ stays at 50 &Omega;</td></tr>
     <tr><td><b>same &lambda;, double Z<sub>0</sub></b><br>$L'$ up, $C'$ down</td><td>the ratio quadruples, so $Z_0$ doubles to 100 &Omega;</td><td>the product is unchanged, so the wave looks <i>identical</i> &mdash; same $\lambda$, same shape</td></tr>
     <tr><td><b>exaggerated loss</b></td><td>the envelope decays visibly, and $Z_0$ picks up a small phase angle</td><td>$\beta$ barely moves &mdash; low loss leaves the phase constant alone</td></tr>
   </table></div>
 
   <p class="t">That second preset is the important one, and it is the reason $Z_0$ is printed on the figure. <b>Nothing about the drawn wave changes</b> when you switch to it &mdash; same wavelength, same envelope, same everything &mdash; yet the line's impedance has doubled. $Z_0$ is invisible in a picture of $v(z)$ alone; it only reveals itself in the ratio of voltage to current, or in what happens when the wave meets a load.</p>
 
-  <p class="t">One honest note on the loss presets. Pick <b>real coax</b> and the envelope looks flat &mdash; because it is. Good cable loses well under a percent over a metre; you need hundreds of metres before attenuation is visible at this scale. The <b>exaggerated loss</b> preset uses values no real cable has, purely so that $\alpha$ does something you can see.</p>
+  <p class="t">One honest note on the loss presets. Pick <b>real coax</b> and the envelope looks flat &mdash; because over one metre it nearly is; the label in the corner gives what is left at the far end. It takes tens of metres before the decay is obvious at this scale. The <b>exaggerated loss</b> preset uses values no real cable has, purely so that $\alpha$ does something you can see.</p>
 </section>
 
 <section class="blk" id="dispersion">
@@ -253,10 +253,10 @@
       <div class="ctl"><label for="hv-g">G&prime; / Heaviside value</label><input type="range" id="hv-g" min="0" max="2" step="0.01" value="0"><output id="hv-gv">0.00</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>&alpha; at low f</dt><dd id="hv-a0">0.000</dd></div>
-      <div class="rd"><dt>&alpha; at high f</dt><dd id="hv-a1">0.250</dd></div>
-      <div class="rd"><dt>peak, 4 units on</dt><dd id="hv-pk">0.42</dd></div>
-      <div class="rd"><dt>width, 4 units on</dt><dd id="hv-w">1.30&times;</dd></div>
+      <div class="rd"><dt>&alpha; at low f</dt><dd id="hv-a0">&mdash;</dd></div>
+      <div class="rd"><dt>&alpha; at high f</dt><dd id="hv-a1">&mdash;</dd></div>
+      <div class="rd"><dt>peak, 4 units on</dt><dd id="hv-pk">&mdash;</dd></div>
+      <div class="rd"><dt>width, 4 units on</dt><dd id="hv-w">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">a gaussian pulse after travelling 0, 2 and 4 units of line, with L&prime; = C&prime; = 1 and R&prime; = 0.5, each scaled to its own peak and plotted against time measured from its own lossless arrival. each is computed by summing its spectrum through e<sup>&minus;&gamma;z</sup>. at a slider value of 1 the line satisfies R&prime;/L&prime; = G&prime;/C&prime; and the three shapes coincide</figcaption>
   </figure>
@@ -284,15 +284,15 @@
         </select></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>conductor</dt><dd id="lp-c">0.35 dB/m</dd></div>
-      <div class="rd"><dt>dielectric</dt><dd id="lp-dd">0.02 dB/m</dd></div>
-      <div class="rd"><dt>power left after 10 m</dt><dd id="lp-p">43 %</dd></div>
-      <div class="rd"><dt>the two equal at</dt><dd id="lp-x">164 GHz</dd></div>
+      <div class="rd"><dt>conductor</dt><dd id="lp-c">&mdash;</dd></div>
+      <div class="rd"><dt>dielectric</dt><dd id="lp-dd">&mdash;</dd></div>
+      <div class="rd"><dt>power left after 10 m</dt><dd id="lp-p">&mdash;</dd></div>
+      <div class="rd"><dt>the two equal at</dt><dd id="lp-x">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">the coax of chapter 03, a = 0.45 mm and b = 1.47 mm with smooth copper conductors, on logarithmic axes: the two attenuations and their sum. a real braided cable loses more than this idealised one, but by a factor, not a different slope</figcaption>
   </figure>
 
-  <p class="t">On a good coax dielectric the conductor dominates through the whole microwave range, and loss per metre roughly doubles for every factor of four in frequency. On FR-4 the dielectric takes over from a few tens of megahertz upward, its loss rising in proportion to frequency, which is why high-speed board design moves to lower-loss laminates long before the copper becomes the problem. In both cases a datasheet's dB per 100 m is this sum, measured.</p>
+  <p class="t">On a good coax dielectric the conductor dominates past 100 GHz, beyond any frequency coax is used at, and loss per metre roughly doubles for every factor of four in frequency. On FR-4 the dielectric takes over below 20 MHz, its loss rising in proportion to frequency, which is why high-speed board design moves to lower-loss laminates long before the copper becomes the problem. In both cases a datasheet's dB per 100 m is this sum, measured.</p>
 </section>
 
 <section class="blk" id="check">
@@ -383,7 +383,7 @@ function lineConstants(Rp, Gp, Lp, Cp, f){
   function sync(){
     read();
     document.getElementById('rpv').textContent = (+document.getElementById('rp').value).toFixed(0);
-    document.getElementById('gpv').textContent = (+document.getElementById('gp').value).toFixed(1);
+    document.getElementById('gpv').textContent = (+document.getElementById('gp').value).toFixed(2);
     document.getElementById('lpv').textContent = document.getElementById('lp').value;
     document.getElementById('cpv').textContent = document.getElementById('cp').value;
     var k = lineConstants(Rp, Gp, Lp, Cp, F);
@@ -449,10 +449,14 @@ function lineConstants(Rp, Gp, Lp, Cp, f){
     c.moveTo(L+.5, T2); c.lineTo(L+.5, H-B); c.stroke();
 
     c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
+    var smp = [];
     for(var q=0;q<=440;q++){
-      var z3 = q/440*zmax;
-      c.lineTo(px(z3), mid - env(z3)*Math.cos(t - k.b*z3)*sy);
+      var z3 = q/440*zmax, v3 = env(z3)*Math.cos(t - k.b*z3);
+      c.lineTo(px(z3), mid - v3*sy);
+      if(q % 20 === 0) smp.push([z3, v3]);
     }
+    EM.publish(cv, { R: Rp, G: Gp, nH: Lp*1e9, pF: Cp*1e12, a: k.a, b: k.b, z0: k.z0, t: t, samples: smp,
+                     left: k.a > 0.01 ? env(1) : null });
     c.stroke();
 
     /* a wavelength bracket, so a change in beta is unmissable */
@@ -500,7 +504,7 @@ function lineConstants(Rp, Gp, Lp, Cp, f){
     var c = cv.getContext('2d'), W = cv._w, H = cv._h;
     var L = 52, R = 52, T = 22, B = 40;
     c.clearRect(0,0,W,H);
-    var Rp = 0.1, Gp = 1e-6, Lp = 250e-9, Cp = 100e-12;
+    var Rp = 0.1, Gp = 1e-6, Lp = 250e-9, Cp = 100e-12, pubM = [], pubA = [];
     var f0 = 0, f1 = 10;                       /* log10 Hz */
     var zMax = 400, aMin = -50, aMax = 10;
     function px(lf){ return L + (lf-f0)/(f1-f0)*(W-L-R); }
@@ -524,6 +528,7 @@ function lineConstants(Rp, Gp, Lp, Cp, f){
       var lf = f0 + (i/280)*(f1-f0);
       var k = lineConstants(Rp, Gp, Lp, Cp, Math.pow(10, lf));
       c.lineTo(px(lf), pyM(Math.min(k.z0m, zMax)));
+      if(i % 7 === 0) pubM.push([lf, k.z0m]);
     }
     c.stroke();
 
@@ -533,6 +538,7 @@ function lineConstants(Rp, Gp, Lp, Cp, f){
       var lf2 = f0 + (j/280)*(f1-f0);
       var k2 = lineConstants(Rp, Gp, Lp, Cp, Math.pow(10, lf2));
       c.lineTo(px(lf2), pyA(k2.z0a));
+      if(j % 7 === 0) pubA.push([lf2, k2.z0a]);
     }
     c.stroke(); c.setLineDash([]);
 
@@ -561,6 +567,7 @@ function lineConstants(Rp, Gp, Lp, Cp, f){
     c.fillText('−45°', W-R+7, pyA(-45)+4);
     c.fillStyle = C.ink3; c.textAlign = 'center';
     c.fillText('frequency (log scale)', (L + W-R)/2, H-4);
+    EM.publish(cv, { R: Rp, G: Gp, nH: Lp*1e9, pF: Cp*1e12, mag: pubM, ang: pubA });
   }, false);
 })();
 
@@ -576,40 +583,64 @@ function lineConstants(Rp, Gp, Lp, Cp, f){
     var ar = R*g - w*w, ai = w*(g + R), m = Math.sqrt(Math.hypot(ar, ai)), th = Math.atan2(ai, ar)/2;
     return [m*Math.cos(th), m*Math.sin(th)];
   }
+  /* Each pulse's spectrum after z, weighted for Simpson's rule, and its value
+     at any time: the curve samples it, the readouts refine on it. With G' = 0
+     alpha grows as sqrt(w) from w = 0, a branch point Simpson's rule converges
+     on slowly (the pulse was off by 3e-5); integrating in u = sqrt(w), with
+     dw = 2u du, makes the integrand smooth. */
+  var UM = Math.sqrt(WM);
+  function spectrum(z, g){
+    var amp = [], ph = [], ws = [];
+    for(var k = 0; k <= NW; k++){
+      var u = UM*k/NW, w = u*u, G = gam(w, g), wt = (k === 0 || k === NW ? 1 : (k % 2 ? 4 : 2));
+      amp.push(wt*2*u*Math.exp(-w*w/2)*Math.exp(-G[0]*z)); ph.push(w*z - G[1]*z); ws.push(w);
+    }
+    return { amp: amp, ph: ph, w: ws };
+  }
+  function at(sp, t){
+    var s = 0;
+    for(var k = 0; k <= NW; k++) s += sp.amp[k]*Math.cos(sp.w[k]*t + sp.ph[k]);
+    return s*(UM/NW)/3/Math.PI;
+  }
+  var SPEC = [];
   function shapes(){
     var g = frac*R, out = [];
-    ZS.forEach(function(z){
-      var amp = [], ph = [];
-      for(var k = 0; k <= NW; k++){
-        var w = WM*k/NW, G = gam(w, g), wt = (k === 0 || k === NW ? 1 : (k % 2 ? 4 : 2));
-        amp.push(wt*Math.exp(-w*w/2)*Math.exp(-G[0]*z)); ph.push(w*z - G[1]*z);
-      }
+    SPEC = ZS.map(function(z){ return spectrum(z, g); });
+    SPEC.forEach(function(sp){
       var pts = [];
-      for(var i = 0; i <= 280; i++){
-        var t = T0 + (T1 - T0)*i/280, s = 0;
-        for(var k2 = 0; k2 <= NW; k2++) s += amp[k2]*Math.cos(WM*k2/NW*t + ph[k2]);
-        pts.push(s*(WM/NW)/3/Math.PI);
-      }
+      for(var i = 0; i <= 280; i++) pts.push(at(sp, T0 + (T1 - T0)*i/280));
       out.push(pts);
     });
     return out;
   }
-  function fwhm(p){
-    var pk = Math.max.apply(null, p), i0 = p.indexOf(pk), a = i0, b = i0;
-    while(a > 0 && p[a] > pk/2) a--;
-    while(b < p.length - 1 && p[b] > pk/2) b++;
-    return (b - a)*(T1 - T0)/280;
+  /* The peak, refined by golden section about the largest sample, and the
+     half-height width with each edge bisected. Both were read off the 0.05
+     sample grid, which moved the printed peak ratio in its third decimal
+     and the width ratio by up to a few hundredths. */
+  function peak(n){
+    var p = cache[n], i0 = p.indexOf(Math.max.apply(null, p)), dt = (T1 - T0)/280;
+    var a = T0 + (i0 - 1)*dt, b = T0 + (i0 + 1)*dt;
+    for(var it = 0; it < 60; it++){ var m1 = a + (b - a)/3, m2 = b - (b - a)/3; if(at(SPEC[n], m1) < at(SPEC[n], m2)) a = m1; else b = m2; }
+    var tp = (a + b)/2;
+    return { t: tp, v: at(SPEC[n], tp), i: i0 };
   }
-  var cache = null;
+  function fwhm(n){
+    var p = cache[n], pk = peak(n), half = pk.v/2, dt = (T1 - T0)/280, a = pk.i, b = pk.i;
+    while(a > 0 && p[a] > half) a--;
+    while(b < p.length - 1 && p[b] > half) b++;
+    var edge = function(inT, outT){ for(var it = 0; it < 60; it++){ var m = (inT + outT)/2; if(at(SPEC[n], m) > half) inT = m; else outT = m; } return (inT + outT)/2; };
+    return edge(T0 + b*dt - dt, T0 + b*dt) - edge(T0 + a*dt + dt, T0 + a*dt);
+  }
+  var cache = null, HV = null;
   function sync(){
     cache = shapes();
     var g = frac*R;
     document.getElementById('hv-gv').textContent = frac.toFixed(2);
     document.getElementById('hv-a0').textContent = Math.sqrt(R*g).toFixed(3);
     document.getElementById('hv-a1').textContent = ((R + g)/2).toFixed(3);
-    var p0 = Math.max.apply(null, cache[0]), p2 = Math.max.apply(null, cache[2]);
-    document.getElementById('hv-pk').textContent = (p2/p0).toFixed(3);
-    document.getElementById('hv-w').innerHTML = (fwhm(cache[2])/fwhm(cache[0])).toFixed(2) + '&times;';
+    HV = { pk: [peak(0).v, peak(1).v, peak(2).v], w: [fwhm(0), fwhm(1), fwhm(2)] };
+    document.getElementById('hv-pk').textContent = (HV.pk[2]/HV.pk[0]).toFixed(3);
+    document.getElementById('hv-w').innerHTML = (HV.w[2]/HV.w[0]).toFixed(2) + '&times;';
   }
   document.getElementById('hv-g').addEventListener('input', function(){ frac = +this.value; sync(); EM.redrawStatic(); });
   sync();
@@ -625,14 +656,17 @@ function lineConstants(Rp, Gp, Lp, Cp, f){
     c.beginPath(); c.moveTo(L, py(0) + .5); c.lineTo(W - Rr, py(0) + .5); c.stroke();
     c.strokeStyle = C.line; c.beginPath(); c.moveTo(px(0) + .5, T); c.lineTo(px(0) + .5, H - B); c.stroke();
     var cols = [C.ink3, C.e, C.h], dash = [[5, 4], [], []];
+    var pub = { frac: frac, peaks: HV.pk, widths: HV.w, shapes: [] };
     cache.forEach(function(p, n){
       var pk = Math.max.apply(null, p);
+      pub.shapes.push(p.filter(function(v, i){ return i % 10 === 0; }).map(function(v, i){ return [T0 + (T1 - T0)*i*10/280, v]; }));
       c.strokeStyle = cols[n]; c.lineWidth = n ? 2.4 : 1.6; c.setLineDash(dash[n]);
       c.beginPath();
       p.forEach(function(v, i){ c.lineTo(px(T0 + (T1 - T0)*i/280), py(v/pk)); });
       c.stroke(); c.setLineDash([]);
     });
     c.font = '11.5px ' + MONO; c.textAlign = 'left';
+    EM.publish(cv, pub);
     [['z = 0', C.ink3], ['z = 2', C.e], ['z = 4', C.h]].forEach(function(q, n){
       c.fillStyle = q[1]; c.fillText(q[0], W - Rr - 70, T + 14 + n*17);
     });
@@ -649,7 +683,8 @@ function lineConstants(Rp, Gp, Lp, Cp, f){
   var MU0 = 4e-7*Math.PI, A = 0.45e-3, B = 1.47e-3, SIG = 5.8e7, C0 = 299792458;
   var DIEL = [{ er: 2.25, td: 2e-4 }, { er: 4.4, td: 0.02 }], di = 0, lf = 9, X0 = 6, X1 = 11;
   var NPDB = 20/Math.LN10;
-  function z0(){ return 60/Math.sqrt(DIEL[di].er)*Math.log(B/A); }
+  /* eta0/(2 pi sqrt(er)) ln(b/a), with eta0 = mu0 c exactly rather than 120 pi */
+  function z0(){ return MU0*C0/(2*Math.PI*Math.sqrt(DIEL[di].er))*Math.log(B/A); }
   function ac(f){ return Math.sqrt(Math.PI*f*MU0/SIG)/(2*Math.PI)*(1/A + 1/B)/(2*z0()); }
   function ad(f){ return Math.PI*f*Math.sqrt(DIEL[di].er)/C0*DIEL[di].td; }     /* beta/2 tan(delta) */
   function fq(f){ return f >= 1e9 ? (f/1e9).toPrecision(3) + ' GHz' : (f/1e6).toPrecision(3) + ' MHz'; }
@@ -697,12 +732,16 @@ function lineConstants(Rp, Gp, Lp, Cp, f){
     c.textAlign = 'right'; c.fillText('frequency', W - R, H - 5);
     var series = [[ac, C.e, 'conductor', 2.2], [ad, C.h, 'dielectric', 2.2], [function(f){ return ac(f) + ad(f); }, C.ink, 'total', 2.8]];
     c.save(); c.beginPath(); c.rect(L, T, W - L - R, H - T - Bm); c.clip();
+    var pub = { diel: DIEL[di], f: Math.pow(10, lf), curves: [] };
     series.forEach(function(s){
       c.strokeStyle = s[1]; c.lineWidth = s[3]; c.beginPath();
-      for(var j = 0; j <= 200; j++){ var x = X0 + (X1 - X0)*j/200; c.lineTo(px(x), py(s[0](Math.pow(10, x))*NPDB)); }
+      var cs = [];
+      for(var j = 0; j <= 200; j++){ var x = X0 + (X1 - X0)*j/200, vj = s[0](Math.pow(10, x))*NPDB; c.lineTo(px(x), py(vj)); if(j % 10 === 0) cs.push([x, Math.log10(vj)]); }
+      pub.curves.push(cs);
       c.stroke();
     });
     c.restore();
+    EM.publish(cv, pub);
     /* names near the left end, where the conductor and dielectric curves are furthest apart */
     series.forEach(function(s, n){
       var x = X0 + 0.3, y = py(s[0](Math.pow(10, x))*NPDB) + (n === 2 ? -8 : 16);

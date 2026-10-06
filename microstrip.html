@@ -103,15 +103,15 @@
       <div class="ctl"><label for="er">&epsilon;<sub>r</sub></label><input type="range" id="er" min="1" max="12" step="0.1" value="4.4"><output id="erv">4.4</output></div>
     </div>
     <div class="rail" style="border-top:0;padding-top:0">
-      <div class="ctl"><label for="hh">h (mm)</label><input type="range" id="hh" min="0.1" max="3" step="0.05" value="1.6"><output id="hhv">1.60</output></div>
+      <div class="ctl"><label for="hh">h (mm)</label><input type="range" id="hh" min="0.1" max="3" step="0.01" value="1.6"><output id="hhv">1.60</output></div>
       <div class="ctl"><label for="fr">f (GHz)</label><input type="range" id="fr" min="0.1" max="10" step="0.1" value="2.4"><output id="frv">2.4</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>&epsilon;<sub>eff</sub></dt><dd id="m-ee">3.34</dd></div>
-      <div class="rd"><dt>Z<sub>0</sub></dt><dd id="m-z0">48.9</dd></div>
-      <div class="rd"><dt>W</dt><dd id="m-w">3.20</dd></div>
-      <div class="rd"><dt>&lambda;<sub>g</sub></dt><dd id="m-lg">68.4</dd></div>
-      <div class="rd"><dt>&lambda;<sub>g</sub>/4</dt><dd id="m-q">17.1</dd></div>
+      <div class="rd"><dt>&epsilon;<sub>eff</sub></dt><dd id="m-ee">&mdash;</dd></div>
+      <div class="rd"><dt>Z<sub>0</sub></dt><dd id="m-z0">&mdash;</dd></div>
+      <div class="rd"><dt>W</dt><dd id="m-w">&mdash;</dd></div>
+      <div class="rd"><dt>&lambda;<sub>g</sub></dt><dd id="m-lg">&mdash;</dd></div>
+      <div class="rd"><dt>&lambda;<sub>g</sub>/4</dt><dd id="m-q">&mdash;</dd></div>
     </dl>
     <div class="btns">
       <button data-m="2,4.4,1.6,2.4">FR-4, 50 &#937;-ish</button>
@@ -168,14 +168,14 @@
     </div>
     <dl class="readout">
       <div class="rd"><dt>&epsilon;<sub>eff</sub>, field solve</dt><dd id="fd-e1">&mdash;</dd></div>
-      <div class="rd"><dt>&epsilon;<sub>eff</sub>, Hammerstad</dt><dd id="fd-e2">3.34</dd></div>
+      <div class="rd"><dt>&epsilon;<sub>eff</sub>, Hammerstad</dt><dd id="fd-e2">&mdash;</dd></div>
       <div class="rd"><dt>Z<sub>0</sub>, field solve</dt><dd id="fd-z1">&mdash;</dd></div>
-      <div class="rd"><dt>Z<sub>0</sub>, Hammerstad</dt><dd id="fd-z2">48.9 &Omega;</dd></div>
+      <div class="rd"><dt>Z<sub>0</sub>, Hammerstad</dt><dd id="fd-z2">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">the potential in the cross-section, found by relaxing Laplace's equation on a grid ten cells per substrate thickness, inside a grounded box 16h wide and 8h tall; the curves are equipotentials at tenths of the track voltage. the solve runs as you watch and the readouts fill in when it has converged</figcaption>
   </figure>
 
-  <p class="t">The two routes agree to within about 2 % across the range, which is the size of Hammerstad's own stated accuracy plus the grid and the box. They share nothing but the geometry. A field solver of exactly this kind, refined, is what a commercial tool runs when the closed-form fits are no longer good enough.</p>
+  <p class="t">The two routes agree to within 3 % across the range, which is the size of Hammerstad's own stated accuracy plus the grid and the box; the largest gap is at the narrowest track, only three cells wide. They share nothing but the geometry. A field solver of exactly this kind, refined, is what a commercial tool runs when the closed-form fits are no longer good enough.</p>
 </section>
 
 <section class="blk" id="limits">
@@ -235,10 +235,10 @@
       <div class="ctl"><label for="oe-f">f (GHz)</label><input type="range" id="oe-f" min="0.5" max="10" step="0.1" value="2.4"><output id="oe-fv">2.4</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>&Delta;l</dt><dd id="oe-dl">0.63 mm</dd></div>
-      <div class="rd"><dt>&lambda;<sub>g</sub>/4</dt><dd id="oe-q">17.1 mm</dd></div>
-      <div class="rd"><dt>cut it to</dt><dd id="oe-cut">16.5 mm</dd></div>
-      <div class="rd"><dt>if uncorrected, resonates</dt><dd id="oe-err">3.6 % low</dd></div>
+      <div class="rd"><dt>&Delta;l</dt><dd id="oe-dl">&mdash;</dd></div>
+      <div class="rd"><dt>&lambda;<sub>g</sub>/4</dt><dd id="oe-q">&mdash;</dd></div>
+      <div class="rd"><dt>cut it to</dt><dd id="oe-cut">&mdash;</dd></div>
+      <div class="rd"><dt>if uncorrected, resonates</dt><dd id="oe-err">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">the end of an open stub seen from above, on 1.6 mm FR-4: the copper, and the extra length &Delta;l the fringing field adds beyond it, drawn to scale against the track width</figcaption>
   </figure>
@@ -457,9 +457,11 @@ function z0ms(er, wh){
 
     /* left (or top): cross-section drawn to the current W/h */
     var boxW = stack ? Math.min(W*0.72, 320) : Math.min(W*0.46, 320);
-    var hpx = 46, gy = stack ? 112 : H*0.66, sy = gy - hpx;
+    /* to scale at every width: a wide track shrinks the substrate's drawn
+       height rather than being clipped (it was, above W/h of about 5.7) */
+    var hpx = Math.min(46, boxW*0.82/wh), gy = stack ? 112 : H*0.66, sy = gy - hpx;
     var cx = stack ? W/2 : boxW/2;
-    var wpx = Math.max(4, Math.min(boxW*0.82, wh*hpx));
+    var wpx = wh*hpx;
     c.fillStyle = C.accfill; c.fillRect(cx - boxW*0.42, sy, boxW*0.84, hpx);
     c.strokeStyle = C.line2; c.lineWidth = 1; c.strokeRect(cx - boxW*0.42, sy, boxW*0.84, hpx);
     c.fillStyle = C.ink2;
@@ -495,10 +497,13 @@ function z0ms(er, wh){
     c.beginPath(); c.moveTo(L, py(50)); c.lineTo(W-R, py(50)); c.stroke();
     c.setLineDash([]);
     c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
+    var crv = [];
     for(var i=0;i<=200;i++){
-      var v = x0 + (i/200)*(x1-x0);
-      c.lineTo(px(v), py(Math.min(z0ms(er, v), y1)));
+      var v = x0 + (i/200)*(x1-x0), zv = z0ms(er, v);
+      c.lineTo(px(v), py(Math.min(zv, y1)));
+      if(i % 10 === 0) crv.push([v, zv]);
     }
+    EM.publish(cv, { wh: wh, er: er, h: h, f: f, ee: ee, z: z, drawn: wpx/hpx, curve: crv });
     c.stroke();
     c.fillStyle = C.h;
     c.beginPath(); c.arc(px(wh), py(Math.min(z, y1)), 5, 0, EM.TAU); c.fill();
@@ -556,9 +561,13 @@ function hexRGB(h){
   var wh = 2, er = 4.4, it = 0, res = null;
   var phi = new Float64Array(NX*NY), phiA = new Float64Array(NX*NY), fixed = new Uint8Array(NX*NY);
   var x0, x1;
+  /* The track is w nodes, each standing for one cell of width h/HC, so that
+     it is W wide. It used to be w + 1 nodes, a cell wider than W, which
+     lowered Z0 by about 2.5 %, and the charge was summed over an open
+     contour that dropped some of the flux and happened to undo most of it. */
   function build(){
     var w = Math.max(2, Math.round(wh*HC));
-    x0 = Math.round(NX/2 - w/2); x1 = x0 + w;
+    x0 = Math.round(NX/2 - w/2); x1 = x0 + w - 1;
     for(var j = 0; j < NY; j++) for(var i = 0; i < NX; i++){
       var k = j*NX + i, edge = (i === 0 || i === NX - 1 || j === 0 || j === NY - 1), tr = (j === HC && i >= x0 && i <= x1);
       fixed[k] = (edge || tr) ? 1 : 0;
@@ -579,16 +588,21 @@ function hexRGB(h){
       }
     }
   }
+  /* Gauss's law on the grid: the flux along every link leaving the block of
+     nodes [xa, xb] x [ya, yb] around the track, each weighted by the
+     permittivity of the link. On a converged solution the sum is the same for
+     any block that encloses the track and nothing else. */
   function charge(p, e){
     var xa = x0 - 5, xb = x1 + 5, ya = HC - 4, yb = HC + 4, Q = 0;
-    for(var i = xa; i < xb; i++){
-      Q += -(p[(yb + 1)*NX + i] - p[yb*NX + i]);
-      Q += -(p[(ya - 1)*NX + i] - p[ya*NX + i])*(ya <= HC ? e : 1);
+    var ev = function(j){ return j <= HC ? e : 1; };            /* the link from j - 1 to j */
+    var eh = function(j){ return j < HC ? e : (j === HC ? (e + 1)/2 : 1); };
+    for(var i = xa; i <= xb; i++){
+      Q += (p[yb*NX + i] - p[(yb + 1)*NX + i])*ev(yb + 1);
+      Q += (p[ya*NX + i] - p[(ya - 1)*NX + i])*ev(ya);
     }
-    for(var j = ya; j < yb; j++){
-      var eh = j < HC ? e : (j === HC ? (e + 1)/2 : 1);
-      Q += -(p[j*NX + xb + 1] - p[j*NX + xb])*eh;
-      Q += -(p[j*NX + xa - 1] - p[j*NX + xa])*eh;
+    for(var j = ya; j <= yb; j++){
+      Q += (p[j*NX + xb] - p[j*NX + xb + 1])*eh(j);
+      Q += (p[j*NX + xa] - p[j*NX + xa - 1])*eh(j);
     }
     return Q;                                   /* C' / eps0 */
   }
@@ -616,7 +630,7 @@ function hexRGB(h){
       it += PER;
       if(it >= MAXIT){
         var Cq = charge(phi, er), Ca = charge(phiA, 1), c0 = 299792458, e0 = 8.8541878128e-12;
-        res = { e: Cq/Ca, z: 1/(c0*e0*Math.sqrt(Cq*Ca)) };
+        res = { e: Cq/Ca, z: 1/(c0*e0*Math.sqrt(Cq*Ca)), cq: Cq, ca: Ca };
         sync();
       }
     }
@@ -626,6 +640,7 @@ function hexRGB(h){
     if(Math.abs(cv._h - want) > 1){ cv.style.height = want + 'px'; EM.fit(cv); }
     var c = cv.getContext('2d'), W = cv._w, H = cv._h;
     c.clearRect(0, 0, W, H);
+    EM.publish(cv, { wh: wh, er: er, hc: HC, nx: NX, ny: NY, track: [x0, x1], it: it, res: res });
     var sc = Math.min((W - 20)/NX, (H - 26)/NY), bw = NX*sc, bh = NY*sc, ox = (W - bw)/2, oy = (H - bh)/2 + 6;
     /* the potential as a wash from the background to the field colour */
     if(!img || img.width !== NX) img = c.createImageData(NX, NY);
@@ -660,7 +675,7 @@ function hexRGB(h){
     c.beginPath(); c.moveTo(ox, Y(HC)); c.lineTo(ox + bw, Y(HC)); c.stroke(); c.setLineDash([]);
     c.strokeStyle = C.ink2; c.lineWidth = 1; c.strokeRect(ox, oy, bw, bh);
     c.lineWidth = 4; c.beginPath(); c.moveTo(ox, oy + bh); c.lineTo(ox + bw, oy + bh); c.stroke();
-    c.fillStyle = C.ink2; c.fillRect(X(x0), Y(HC) - 3, X(x1) - X(x0), 5);
+    c.fillStyle = C.ink2; c.fillRect(X(x0) - sc/2, Y(HC) - 3, X(x1) - X(x0) + sc, 5);     /* w cells, W wide */
     c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'left';
     c.fillText('substrate', ox + 6, Y(HC) + 14);
     c.fillText('air', ox + 6, oy + 14);
@@ -677,7 +692,15 @@ function hexRGB(h){
     var wh = hamWH(50, er), e0 = hamE(wh, er), z = hamZ(wh, er), fp = z/(2*MU0*h), G = 0.6 + 0.009*z;
     return { e0: e0, f: function(f){ return er - (er - e0)/(1 + G*Math.pow(f/fp, 2)); } };
   }
-  function f5(L){ for(var f = 1e8; f < 1e12; f *= 1.005) if(L.f(f) > 1.05*L.e0) return f; return null; }
+  /* where eps_eff first passes 5 % above its static value: stepped out to
+     bracket it, then bisected (the 0.5 % step alone moved the third figure) */
+  function f5(L){
+    for(var a = 1e8, f = a; f < 1e12; a = f, f *= 1.005) if(L.f(f) > 1.05*L.e0){
+      for(var i = 0; i < 80; i++){ var m = Math.sqrt(a*f); if(L.f(m) > 1.05*L.e0) f = m; else a = m; }
+      return f;
+    }
+    return null;
+  }
   function sync(){
     document.getElementById('gs-ev').textContent = er.toFixed(1);
     document.getElementById('gs-ro').innerHTML = HS.map(function(h){
@@ -705,12 +728,15 @@ function hexRGB(h){
     c.fillText(er.toFixed(1), L - 6, py(er) + 4); c.fillText(e0.toFixed(2), L - 6, py(e0) + 4);
     c.textAlign = 'center';
     for(var g = 0; g <= 40; g += 10) c.fillText(g + (g ? ' GHz' : ''), px(g*1e9), H - B + 15);
+    var pub = { er: er, hs: HS, curves: [], f5: HS.map(function(h){ return f5(line(h)); }) };
     HS.forEach(function(h, n){
-      var Ln = line(h);
+      var Ln = line(h), cs = [];
+      pub.curves.push(cs);
       c.strokeStyle = C[COLS[n]]; c.lineWidth = 2.4; c.beginPath();
-      for(var j = 0; j <= 200; j++){ var f = FM*j/200; c.lineTo(px(f), py(Ln.f(f))); }
+      for(var j = 0; j <= 200; j++){ var f = FM*j/200, ef = Ln.f(f); c.lineTo(px(f), py(ef)); if(j % 10 === 0) cs.push([f/1e9, ef]); }
       c.stroke();
     });
+    EM.publish(cv, pub);
     /* each curve is named at its right-hand end, in the margin, so no label
        sits on a curve; labels closer than a line height are pushed apart */
     var tags = HS.map(function(h, n){ return { n: n, y: py(line(h).f(FM)) + 4, t: (h*1e3).toFixed(2) + ' mm' }; });
@@ -755,6 +781,7 @@ function hexRGB(h){
        the extension included, follows at the same scale */
     var hw = Math.min(34, H*0.18), s = 2*hw/Wmm;
     var cy = H/2 + 6, xe = Math.min(W*0.62, W - v.dl*s - 150), dls = v.dl*s;
+    EM.publish(cv, { wh: wh, f: fg, h: H_MM, er: ER, dl: v.dl, q: v.q, cut: v.cut, err: v.err, drawn: dls/(2*hw) });
     /* fringing beyond the end: arcs from the top edge round to the bottom edge */
     c.strokeStyle = C.e; c.lineWidth = 1.2; c.globalAlpha = 0.7;
     [0.35, 0.7, 1.05].forEach(function(k){

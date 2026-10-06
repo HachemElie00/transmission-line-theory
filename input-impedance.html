@@ -103,10 +103,10 @@
       <button id="zrun">Sweep</button>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>Z<sub>in</sub></dt><dd id="z-zin">25.0 + j0 &#937;</dd></div>
-      <div class="rd"><dt>|&Gamma;|</dt><dd id="z-gm">0.333</dd></div>
-      <div class="rd"><dt>SWR</dt><dd id="z-swr">2.00</dd></div>
-      <div class="rd"><dt>&beta;d</dt><dd id="z-bd">0&deg;</dd></div>
+      <div class="rd"><dt>Z<sub>in</sub></dt><dd id="z-zin">&mdash;</dd></div>
+      <div class="rd"><dt>|&Gamma;|</dt><dd id="z-gm">&mdash;</dd></div>
+      <div class="rd"><dt>SWR</dt><dd id="z-swr">&mdash;</dd></div>
+      <div class="rd"><dt>&beta;d</dt><dd id="z-bd">&mdash;</dd></div>
     </dl>
     <div class="btns">
       <button data-z="25,0">R<sub>L</sub> = Z<sub>0</sub>/2</button>
@@ -212,8 +212,8 @@
         </select></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>|&Gamma;<sub>in</sub>| after 2&lambda;</dt><dd id="sp-g2">0.479</dd></div>
-      <div class="rd"><dt>|&Gamma;<sub>in</sub>| &lt; 0.1 beyond</dt><dd id="sp-l1">12.5&lambda;</dd></div>
+      <div class="rd"><dt>|&Gamma;<sub>in</sub>| after 2&lambda;</dt><dd id="sp-g2">&mdash;</dd></div>
+      <div class="rd"><dt>|&Gamma;<sub>in</sub>| &lt; 0.1 beyond</dt><dd id="sp-l1">&mdash;</dd></div>
       <div class="rd"><dt>Z<sub>in</sub> after 2&lambda;</dt><dd id="sp-z2">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">&Gamma; at the input as the line lengthens from 0 to 4 wavelengths, on a 50 &Omega; line, and the input resistance and reactance over the same lengths. without loss the point would circle forever; with it, every turn is smaller</figcaption>
@@ -395,6 +395,7 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     document.getElementById('z-gm').textContent = m.toFixed(3);
     document.getElementById('z-swr').textContent = m >= 0.999 ? '∞' : ((1+m)/(1-m)).toFixed(2);
     document.getElementById('z-bd').innerHTML = Math.round(360*D) + '&deg;';
+    EM.publish(zp, { r: isOpen ? null : RL, x: XL, open: isOpen, d: D, gl: g, gd: gamAt(D), zin: zinAt(D) });
   }
   document.getElementById('zr').addEventListener('input', function(){ RL = +this.value; isOpen = false; sync(); });
   document.getElementById('zx').addEventListener('input', function(){ XL = +this.value; isOpen = false; sync(); });
@@ -490,6 +491,8 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     }
     trace(0, C.e);
     trace(1, C.h);
+    var tr = []; for(var q = 0; q <= 50; q++){ var dq = 0.5*q/50, zq = zinAt(dq); tr.push([dq, zq[0], zq[1]]); }
+    EM.publish(zt, { r: isOpen ? null : RL, x: XL, open: isOpen, trace: tr });
 
     var z = zinAt(D);
     c.strokeStyle = C.ink; c.lineWidth = 1; c.setLineDash([1,3]);
@@ -652,6 +655,8 @@ function zfmt(z, dp){
     document.getElementById('sp-l1').innerHTML = a < 1e-6 ? 'never' : (m <= 0.1 ? '0' : (Math.log(m/0.1)/(2*a)).toFixed(2) + '&lambda;');
     var z = zin(2);
     document.getElementById('sp-z2').textContent = cabs(z) > 1e5 ? '→ ∞' : zfmt(z);
+    var smp = []; for(var q = 0; q <= 80; q++){ var dq = DM*q/80, gq = gin(dq), zq = zin(dq); smp.push([dq, gq.r, gq.i, zq.r, zq.i]); }
+    EM.publish(cv, { db: dbl, load: li, samples: smp });
   }
   document.getElementById('sp-a').addEventListener('input', function(){ dbl = +this.value; sync(); EM.redrawStatic(); });
   document.getElementById('sp-l').addEventListener('change', function(){ li = +this.value; sync(); EM.redrawStatic(); });
@@ -729,6 +734,8 @@ function zfmt(z, dp){
     document.getElementById('sc-a').textContent = g.r.toFixed(4) + ' Np';
     document.getElementById('sc-b').textContent = deg(g.i);
     document.getElementById('sc-bt').textContent = deg(gl(fr).i);
+    var crv = []; for(var q = 1; q <= 60; q++){ var fq = FM*q/60, mq = meas(fq); crv.push([fq, cabs(mq.sc), cabs(mq.oc)]); }
+    EM.publish(cv, { f: fr, sc: [m.sc.r, m.sc.i], oc: [m.oc.r, m.oc.i], z0: [z0.r, z0.i], gl: [g.r, g.i], curves: crv });
   }
   document.getElementById('sc-f').addEventListener('input', function(){ fr = +this.value; sync(); EM.redrawStatic(); });
   sync();
@@ -782,7 +789,10 @@ function zfmt(z, dp){
     c.strokeStyle = C.line2;
     c.beginPath(); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.moveTo(L, py(0)); c.lineTo(W - R, py(0)); c.stroke();
     c.save(); c.beginPath(); c.rect(L, T, W - L - R, H - T - B); c.clip();
-    [[function(f){ return Math.tan(Math.PI/2*f); }, C.e], [function(f){ return -1/Math.tan(Math.PI/2*f); }, C.h]].forEach(function(q){
+    var pubF = {};
+    [[function(f){ return Math.tan(Math.PI/2*f); }, C.e, 'shorted'], [function(f){ return -1/Math.tan(Math.PI/2*f); }, C.h, 'open']].forEach(function(q){
+      var smp = []; for(var j = 1; j <= 100; j++){ var fj = FM*j/100; smp.push([fj, q[0](fj)]); }
+      pubF[q[2]] = smp;
       c.strokeStyle = q[1]; c.lineWidth = 2.4; c.beginPath();
       var prev = null;
       for(var k = 1; k <= 1000; k++){
@@ -793,6 +803,7 @@ function zfmt(z, dp){
       c.stroke();
     });
     c.restore();
+    EM.publish(cv, pubF);
     c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'right';
     c.fillText('+5', L - 6, py(5) + 8); c.fillText('0', L - 6, py(0) + 4); c.fillText('−5', L - 6, py(-5));
     c.textAlign = 'center';
@@ -816,9 +827,17 @@ function zfmt(z, dp){
   function qcurve(){
     var span = 8*al()/Math.PI, pk = 0, fp = 1, N = 4000;
     for(var k = 0; k <= N; k++){ var f = 1 - span + 2*span*k/N, v = z(f); if(v > pk){ pk = v; fp = f; } }
-    var lo = fp, hi = fp, step = span/N/4;
-    while(z(lo) > pk/Math.SQRT2) lo -= step;
-    while(z(hi) > pk/Math.SQRT2) hi += step;
+    /* refine the peak, then find each half-power edge by bisection: walking
+       out in steps stopped up to a step past the edge, and at low loss that
+       moved the printed decimal of Q */
+    var a = fp - 2*span/N, b = fp + 2*span/N;
+    for(var it = 0; it < 100; it++){ var m1 = a + (b - a)/3, m2 = b - (b - a)/3; if(z(m1) < z(m2)) a = m1; else b = m2; }
+    fp = (a + b)/2; pk = z(fp);
+    var lim = pk/Math.SQRT2, step = span/N, lo = fp, hi = fp;
+    while(z(lo - step) > lim) lo -= step;
+    while(z(hi + step) > lim) hi += step;
+    var edge = function(inside, outside){ for(var i = 0; i < 60; i++){ var mm = (inside + outside)/2; if(z(mm) > lim) inside = mm; else outside = mm; } return inside; };
+    lo = edge(lo, lo - step); hi = edge(hi, hi + step);
     return { q: fp/(hi - lo), pk: pk, lo: lo, hi: hi, fp: fp, span: span };
   }
   function sync(){
@@ -827,6 +846,8 @@ function zfmt(z, dp){
     document.getElementById('q-c').textContent = r.q.toFixed(1);
     document.getElementById('q-f').textContent = (2*Math.PI/(2*al())).toFixed(1);
     document.getElementById('q-p').textContent = r.pk.toFixed(1);
+    var smp = []; for(var q = 0; q <= 80; q++){ var fq = 0.92 + 0.16*q/80; smp.push([fq, z(fq)]); }
+    EM.publish(cv, { db: dbl, q: r.q, pk: r.pk, lo: r.lo, hi: r.hi, fp: r.fp, samples: smp });
   }
   document.getElementById('q-a').addEventListener('input', function(){ dbl = +this.value; sync(); EM.redrawStatic(); });
   sync();

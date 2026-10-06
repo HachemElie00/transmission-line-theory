@@ -86,11 +86,11 @@
       <div class="ctl"><label for="tol">worst |&Gamma;| you accept</label><input type="range" id="tol" min="0.05" max="0.5" step="0.01" value="0.2"><output id="tolv">0.20</output></div>
     </div>
     <dl class="readout">
-      <div class="rd"><dt>Z<sub>1</sub> needed</dt><dd id="q-z1">70.7</dd></div>
-      <div class="rd"><dt>SWR unmatched</dt><dd id="q-swr">2.00</dd></div>
-      <div class="rd"><dt>limit as SWR</dt><dd id="q-lim">1.50</dd></div>
-      <div class="rd"><dt>usable band</dt><dd id="q-band">0.61&ndash;1.39 f<sub>0</sub></dd></div>
-      <div class="rd"><dt>bandwidth</dt><dd id="q-bw">78 %</dd></div>
+      <div class="rd"><dt>Z<sub>1</sub> needed</dt><dd id="q-z1">&mdash;</dd></div>
+      <div class="rd"><dt>SWR unmatched</dt><dd id="q-swr">&mdash;</dd></div>
+      <div class="rd"><dt>limit as SWR</dt><dd id="q-lim">&mdash;</dd></div>
+      <div class="rd"><dt>usable band</dt><dd id="q-band">&mdash;</dd></div>
+      <div class="rd"><dt>bandwidth</dt><dd id="q-bw">&mdash;</dd></div>
     </dl>
     <div class="btns">
       <button data-r="100">100 &#937;</button>
@@ -218,9 +218,9 @@
   <figure class="fig">
     <canvas id="rcfig" class="static" style="height:260px"></canvas>
     <dl class="readout">
-      <div class="rd"><dt>loss at f<sub>c</sub>, both</dt><dd id="rc-c">3.01 dB</dd></div>
-      <div class="rd"><dt>stub version repeats every</dt><dd id="rc-p">4 f<sub>c</sub></dd></div>
-      <div class="rd"><dt>at 2f<sub>c</sub>, lumped / stubs</dt><dd id="rc-2">18.1 / &infin; dB</dd></div>
+      <div class="rd"><dt>loss at f<sub>c</sub>, both</dt><dd id="rc-c">&mdash;</dd></div>
+      <div class="rd"><dt>stub version repeats every</dt><dd id="rc-p">&mdash;</dd></div>
+      <div class="rd"><dt>at 2f<sub>c</sub>, lumped / stubs</dt><dd id="rc-2">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">a third-order maximally flat low-pass filter (series L, shunt C, series L, all of normalised value 1, 2, 1, between 1 &Omega; ends), as lumped components and as Richards stubs. both curves are computed by cascading the actual networks, not by mapping one response onto the other</figcaption>
   </figure>
@@ -234,7 +234,7 @@
   <figure class="fig">
     <canvas id="kufig" class="static" style="height:220px"></canvas>
     <dl class="readout">
-      <div class="rd"><dt>Z<sub>1</sub>, Z<sub>2</sub> tried</dt><dd>1.3, 0.7</dd></div>
+      <div class="rd"><dt>Z<sub>1</sub>, Z<sub>2</sub> tried</dt><dd id="ku-z">&mdash;</dd></div>
       <div class="rd"><dt>largest ABCD difference, 0 to 4f<sub>c</sub></dt><dd id="ku-d">&mdash;</dd></div>
     </dl>
     <figcaption class="cap">the identity above, read left to right as the two networks. every stub and unit element is &lambda;/8 at f<sub>c</sub>. the readout multiplies out both networks' ABCD matrices across the band and reports the largest disagreement, which is rounding error</figcaption>
@@ -323,14 +323,18 @@ function qwtGamma(RL, Z1, fr){
   if(!cv) return;
   var RL = 100, GM = 0.2, BAND = null;
 
-  /* the usable band: the contiguous run around f0 where |Gamma| stays under the
-     limit. Scanned outward from f0 so a stray dip elsewhere cannot widen it. */
+  /* The usable band, from the closed form in the derivation below: |Gamma|
+     reaches the limit where cos(theta_m) = Gm/sqrt(1 - Gm^2) * 2 sqrt(Z0 RL)/|RL - Z0|,
+     and the band is theta_m to pi - theta_m, f = (2/pi) theta. When that
+     cosine would exceed 1 the limit is never reached and the whole sweep
+     qualifies. It used to be scanned on a 0.0025 f0 grid, which moved the
+     printed second decimal of the edges. */
   function band(RL, Z1, GM){
-    if(qwtGamma(RL, Z1, 1) > GM) return null;
-    var N = 800, lo = 0, hi = 2, i;
-    for(i = N/2; i >= 0; i--){ if(qwtGamma(RL, Z1, i/N*2) > GM){ lo = (i+1)/N*2; break; } }
-    for(i = N/2; i <= N; i++){ if(qwtGamma(RL, Z1, i/N*2) > GM){ hi = (i-1)/N*2; break; } }
-    return [lo, hi];
+    if(RL === Z0) return [0, 2];
+    var k = GM/Math.sqrt(1 - GM*GM)*2*Math.sqrt(Z0*RL)/Math.abs(RL - Z0);
+    if(k >= 1) return [0, 2];
+    var thm = Math.acos(k);
+    return [2*thm/Math.PI, 2 - 2*thm/Math.PI];
   }
 
   function sync(){
@@ -355,6 +359,8 @@ function qwtGamma(RL, Z1, fr){
         BAND[0].toFixed(2) + '&ndash;' + BAND[1].toFixed(2) + ' f<sub>0</sub>';
       document.getElementById('q-bw').textContent = ((BAND[1]-BAND[0])*100).toFixed(0) + ' %';
     }
+    var crv = []; for(var q = 0; q <= 80; q++){ var fq = 2*q/80; crv.push([fq, qwtGamma(RL, Z1, fq)]); }
+    EM.publish(cv, { rl: RL, gm: GM, z1: Z1, band: BAND, curve: crv });
     EM.redrawStatic();
   }
   document.getElementById('rl').addEventListener('input', sync);
@@ -478,8 +484,11 @@ function qwtGamma(RL, Z1, fr){
       }
       c.stroke();
     }
-    curve(function(u){ return Math.tan(EM.TAU*u); }, C.e);
-    curve(function(u){ return -1/Math.tan(EM.TAU*u); }, C.h);
+    var fS = function(u){ return Math.tan(EM.TAU*u); }, fO = function(u){ return -1/Math.tan(EM.TAU*u); };
+    curve(fS, C.e);
+    curve(fO, C.h);
+    var smp = []; for(var q = 1; q < 40; q++){ var uq = 0.5*q/40; smp.push([uq, fS(uq), fO(uq)]); }
+    EM.publish(cv, { samples: smp });
 
     /* the lambda/8 markers */
     c.fillStyle = C.e;
@@ -569,14 +578,26 @@ function mm2(A, B){
     var lo = null, hi = null, st = 0.001;
     if(kind === 'taper'){
       /* scanning down from the top: the band is everything above the last excursion */
-      for(var f = FM; f > 0; f -= 0.002) if(exact(f) > GM){ lo = f + 0.002; break; }
+      for(var f = FM; f > 0; f -= 0.002) if(exact(f) > GM){
+        /* the edge between this excursion and the step above it, by bisection */
+        var a = f + 0.002, bb = f;
+        for(var i = 0; i < 60; i++){ var m = (a + bb)/2; if(exact(m) <= GM) a = m; else bb = m; }
+        lo = a; break;
+      }
       if(lo === null) lo = 0;
       return { lo: lo < FM ? lo : null, hi: lo < FM ? FM : null };
     }
     if(exact(1) > GM) return { lo: null, hi: null };
-    for(lo = 1; lo > 0 && exact(lo - st) <= GM; lo -= st);
-    for(hi = 1; hi < FM && exact(hi + st) <= GM; hi += st);
-    return { lo: lo, hi: hi };
+    var nx;
+    for(lo = 1; lo > 0; lo = nx){ nx = Math.max(0, lo - st); if(exact(Math.max(nx, 1e-9)) > GM) break; }
+    for(hi = 1; hi < FM; hi = nx){ nx = Math.min(FM, hi + st); if(exact(nx) > GM) break; }
+    /* each edge found by bisection: the walk alone stopped up to a step short */
+    var edge = function(a, b){ for(var i = 0; i < 60; i++){ var m = (a + b)/2; if(exact(m) <= GM) a = m; else b = m; } return a; };
+    /* an end of the sweep reached is an end of the plot, not of the band */
+    var openLo = lo <= 0, openHi = hi >= FM;
+    if(!openLo) lo = edge(lo, Math.max(0, lo - st));
+    if(!openHi) hi = edge(hi, Math.min(FM, hi + st));
+    return { lo: lo, hi: hi, open: openLo || openHi, whole: openLo && openHi };
   }
   function sync(){
     document.getElementById('mt-nv').textContent = N;
@@ -588,11 +609,20 @@ function mm2(A, B){
     } else {
       var z = sections(), gg = gammas();
       cells.push(['sections, &Omega;', z.map(function(v){ return v.toFixed(1); }).join(', ')]);
-      cells.push(['band at |&Gamma;| &le; 0.05', b.lo === null ? '&mdash;' : (100*(b.hi - b.lo)).toFixed(0) + ' %']);
+      cells.push(['band at |&Gamma;| &le; 0.05', b.lo === null ? '&mdash;' : b.whole ? 'whole sweep'
+                  : (b.open ? '&gt; ' : '') + (100*(b.hi - b.lo)).toFixed(0) + ' %']);
       if(kind === 'cheb' && !gg.cheb) cells.push(['note', 'mismatch below the ripple: binomial used']);
     }
-    var mx = 0; for(var f = 0.02; f <= FM; f += 0.005) mx = Math.max(mx, Math.abs(exact(f) - theory(f)));
+    /* the largest gap on a grid, then refined around it by golden section */
+    var dif = function(f){ return Math.abs(exact(f) - theory(f)); }, mx = 0, fm = 0.02;
+    for(var f = 0.02; f <= FM; f += 0.005){ var dv = dif(f); if(dv > mx){ mx = dv; fm = f; } }
+    var ga = Math.max(0.02, fm - 0.005), gb = Math.min(FM, fm + 0.005);
+    for(var it = 0; it < 80; it++){ var m1 = ga + (gb - ga)/3, m2 = gb - (gb - ga)/3; if(dif(m1) < dif(m2)) ga = m1; else gb = m2; }
+    mx = Math.max(mx, dif((ga + gb)/2));
     cells.push(['theory vs exact, worst', mx.toFixed(4)]);
+    var crv = []; for(var q = 1; q <= 60; q++){ var fq = FM*q/60; crv.push([fq, exact(fq), theory(fq)]); }
+    EM.publish(cv, { kind: kind, n: N, rl: RL, sections: kind === 'taper' ? null : sections(),
+                     gammas: kind === 'taper' ? null : gammas(), band: b, worst: mx, curve: crv });
     document.getElementById('mt-ro').innerHTML = cells.map(function(c){ return '<div class="rd"><dt>' + c[0] + '</dt><dd>' + c[1] + '</dd></div>'; }).join('');
   }
   document.getElementById('mt-k').addEventListener('change', function(){ kind = this.value; sync(); EM.redrawStatic(); });
@@ -647,13 +677,23 @@ function mm2(A, B){
   function db(v){ return -20*Math.log10(Math.max(v, 1e-12)); }
   (function sync(){
     document.getElementById('rc-c').textContent = db(s21(1, false)).toFixed(2) + ' / ' + db(s21(1, true)).toFixed(2) + ' dB';
-    /* the stub filter's response returns to zero loss once per period: find
-       where, beyond the stop at 2fc, the loss is smallest */
-    var per = null, best = Infinity;
-    for(var f = 2.5; f < 6; f += 0.0005){ var v = db(s21(f, true)); if(v < best){ best = v; per = f; } }
+    /* The stub filter repeats where every stub's own reactance returns to
+       zero, Omega = tan(pi f/4 fc) = 0, the first time beyond the stop at 2fc.
+       Found by bisection on that reactance (the series stub's, w G[0]), which
+       changes sign exactly once between 3fc and 5fc. Searching for the least
+       loss instead landed anywhere in a flat bottom: the loss grows only as
+       the sixth power of the offset. */
+    var react = function(f){ return Math.tan(Math.PI/4*f)*G[0]; };
+    var pa = 3, pb = 5, per = null;
+    if(react(pa)*react(pb) < 0){
+      for(var it = 0; it < 60; it++){ var pm = (pa + pb)/2; if(react(pa)*react(pm) <= 0) pb = pm; else pa = pm; }
+      per = (pa + pb)/2;
+    }
     document.getElementById('rc-p').innerHTML = per ? per.toFixed(2) + ' f<sub>c</sub>' : '&mdash;';
     var two = db(s21(2 - 1e-9, true));
     document.getElementById('rc-2').innerHTML = db(s21(2, false)).toFixed(1) + ' / ' + (two > 200 ? '&infin;' : two.toFixed(0)) + ' dB';
+    var crv = []; for(var q = 1; q <= 90; q++){ var fq = FM*q/90; crv.push([fq, db(s21(fq, false)), db(s21(fq, true))]); }
+    EM.publish(cv, { period: per, curve: crv });
   })();
 
   EM.register(function(C){
@@ -702,6 +742,8 @@ function mm2(A, B){
       worst = Math.max(worst, d);
     }
     document.getElementById('ku-d').textContent = worst.toExponential(1);
+    document.getElementById('ku-z').textContent = Z1 + ', ' + Z2;
+    EM.publish(cv, { z1: Z1, z2: Z2, n2: n2, worst: worst });
   })();
 
   EM.register(function(C){
