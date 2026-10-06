@@ -324,7 +324,7 @@ function lnetDesigns(r, x){
     }, want);
 
     const outcome = {};
-    for (const [want, label] of [['turning the point', 'point'], ['turning the grid', 'grid']]){
+    for (const [want, label] of [['impedance chart', 'point'], ['admittance chart', 'grid']]){
       await setMode(want);
       await p.waitForTimeout(200);
       await begin('shunt');
@@ -347,7 +347,7 @@ function lnetDesigns(r, x){
             'point d=' + outcome.point.d + ' ls=' + outcome.point.l1 +
             '   grid d=' + outcome.grid.d + ' ls=' + outcome.grid.l1);
 
-    await setMode('turning the point');   /* leave it as the default */
+    await setMode('impedance chart');   /* leave it as the default */
     await p.waitForTimeout(200);
   }
 

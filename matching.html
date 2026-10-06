@@ -146,7 +146,7 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
         <li><div>On this grid the short ($y \to \infty$) is the <b>left</b>-hand end of the axis, at $0$ on the scale, and the open is the right-hand end, at $0.25\lambda$. Go clockwise round the rim from the stub's end to the arc reading $-b$; the scale difference is the stub length.</div></li>
       </ol>
       <p>Both routes give the same $d$ and the same stub length. Turning the point shifts every scale reading by the same $\lambda/4$, and differences cancel it. The mistake to avoid is doing both: turning the point <i>and</i> reading an admittance grid applies the minus sign twice, and what you read is $z_L$ again.</p>
-      <p>The combined chart of chapter 10 prints both grids at once. Read $g$ and $b$ off the admittance family and leave the point where it is. The workbench does this with <b>y by: turning the grid</b>.</p>
+      <p>The combined chart of chapter 10 prints both grids at once. Read $g$ and $b$ off the admittance family and leave the point where it is. The workbench does this with <b>solve on: admittance chart</b>.</p>
     </div>
   </details>
 
@@ -365,7 +365,7 @@ canvas#match{display:block;width:100%;max-width:520px;height:auto;aspect-ratio:1
     <li><div><b>Shunt first</b> ($g_L &lt; 1$). Plot $z_L$ and turn it to $y_L$. The shunt element moves it along the printed circle through it, read as $g = g_L$. Follow that circle to the auxiliary circle and read the arc, $b_1$. The shunt element is $b_1 - b_L$.</div></li>
     <li><div>Turn back half a turn. The point lands on the circle marked $r = 1$. Read the arc, $x$. The series element is $-x$.</div></li>
   </ol>
-  <p class="t">The workbench's <a href="smith-tool.html#practice=1&amp;method=lnet">practice mode</a> draws the auxiliary circle and the circle the first element rides, for either order.</p>
+  <p class="t">The workbench works it the same way, half turns included, both when it shows a solution and in <a href="smith-tool.html#practice=1&amp;method=lnet">practice mode</a>, where it also draws the circle the first element rides.</p>
   <details class="deriv">
     <summary>On a combined chart &mdash; no half turns at all</summary>
     <div class="body">

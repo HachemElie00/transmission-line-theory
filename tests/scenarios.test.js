@@ -320,13 +320,24 @@ async function main(){
         bad(tag + ': attempt marker not where the built network puts it', sc,
             'drawn ' + JSON.stringify(state.drawn.att) + ' expected ' + exp.map(v => v.toFixed(4)));
       /* the filled point and the ring marks follow the DRAWN point */
-      const gL = gOfZ(C(sc.r, sc.x)), gD = rot(gL, -2*TAU*vals.d);
+      const gL = gOfZ(C(sc.r, sc.x));
+      let gD = rot(gL, -2*TAU*vals.d), gR = gL;
+      /* An L-network on the impedance chart does not travel: its marker is
+         where the element being added starts. Shunt first, unturned, with a
+         shunt element in place, that is the point the shunt element reached
+         (the series element starts there); the ring then has no sweep. The
+         turned route itself is walked step by step further down. */
+      if (sc.m === 'lnet' && sc.ymode === 'point' && sc.order === 'shunt' &&
+          Math.abs(vals.b1 || 0) > 1e-12 && sign > 0){
+        const yl = inv(C(sc.r, sc.x));
+        gD = gOfZ(inv(C(yl[0], yl[1] + vals.b1))); gR = gD;
+      }
       const pt = [sign*gD[0], sign*gD[1]];
       if (!near(state.drawn.pt, pt)) bad(tag + ': point not at the travelled position', sc,
             'drawn ' + JSON.stringify(state.drawn.pt));
       if (abs(gL) > 0.01 && state.drawn.ring){
         const [aL, aC] = state.drawn.ring;
-        if (Math.abs(angDiff(aL, arg([sign*gL[0], sign*gL[1]]))) > 1e-3 ||
+        if (Math.abs(angDiff(aL, arg([sign*gR[0], sign*gR[1]]))) > 1e-3 ||
             Math.abs(angDiff(aC, arg(pt))) > 1e-3)
           bad(tag + ': ring marks not at the drawn point', sc, JSON.stringify(state.drawn.ring));
       }
@@ -382,7 +393,8 @@ async function main(){
       sign = -1;
       check('turned', st, neutral, sign);
       if (!st.steps[0]) bad('turning did not tick step 1', sc);
-    } else if (st.rotVisible) bad('turn-to-y control shown where nothing turns', sc);
+    } else if (st.rotVisible !== (sc.m === 'lnet' && sc.ymode === 'point'))
+      bad(st.rotVisible ? 'turn-to-y control shown where nothing turns' : 'turn-to-y control missing', sc);
 
     /* travel */
     const vals = Object.assign({}, neutral, des);
@@ -576,6 +588,106 @@ async function main(){
   if (!near(dd.pt, [-gl[0], -gl[1]], 1e-4)) solvedFails.push('dstub point: point not turned to y');
   s.check('solved shunt view: turned to y on r = 1 by default, unturned on g = 1 with the grid',
           solvedFails.length === 0, solvedFails.length + ' cases, e.g. ' + solvedFails.slice(0, 2).join('  |  '));
+
+  /* ---- the L-network, worked by hand on the impedance chart ----
+     Chapter 11's route: the series element moves z, the shunt element moves
+     the turned point. Series first: x onto the auxiliary circle (r = 1 turned,
+     where g = 1), turn, b along the printed r = 1 to the centre. Shunt first:
+     turn to y_L, b along the printed circle through it onto the auxiliary
+     circle, turn back, x along r = 1. At every step the marker, the attempt,
+     the half turns and the guide circles are held against the theory, and
+     the steps must tick in order. Designs come from lib/tline, every distinct
+     one for every load. On the admittance chart the same designs must be
+     accepted with no turn at all. */
+  const TL = require('./lib/tline');
+  const lnFails = [];
+  const lf = (tag, why) => lnFails.push(tag + ': ' + why);
+  const circ = (D, tag) => (D.circles || []).find(k => k.tag === tag);
+  const onC = (q, c, r) => q && Math.abs(Math.hypot(q[0] - c[0], q[1] - c[1]) - r) < 1e-4;
+  const setOrder = async (want) => {
+    for (let k = 0; k < 2; k++){
+      const txt = await p.evaluate(() => (document.getElementById('p-order') || {}).textContent);
+      if (txt === want) return true;
+      await act([['click', 'p-order']]);
+    }
+    return false;
+  };
+  let lnRan = 0;
+  for (const [r, x] of LOADS){
+    const zL = TL.C(r, x), yL = TL.invc(zL), gL = gOfZ(C(r, x));
+    const des = [];
+    TL.lnet(zL).forEach(d => {
+      if (!des.some(e => Math.abs(e.xs - d.xs) < 1e-6 && Math.abs(e.bp - d.bp) < 1e-6)) des.push(d);
+    });
+    for (const d of des) for (const ymode of ['point', 'grid']){
+      const sf = d.order === 'series first';
+      const tag = ymode + ' r=' + r + ' x=' + x + ' ' + d.order + ' x=' + d.xs.toFixed(3) + ' b=' + d.bp.toFixed(3);
+      await setHash('r=' + r + '&x=' + x + '&method=lnet&practice=1&ymode=' + ymode +
+                    '&grid=' + (ymode === 'grid' ? 'zy' : 'z') + '&d=0');
+      if (!(await setOrder(sf ? 'series first' : 'shunt first'))){ lf(tag, 'cannot choose the order'); continue; }
+      lnRan++;
+      let st = await act([]);
+      const rotShown = await p.evaluate(() => !document.getElementById('prac-rot').hidden);
+      if (rotShown !== (ymode === 'point')) lf(tag, 'turn button ' + (rotShown ? 'shown' : 'hidden'));
+      if (!near(st.drawn.pt, gL) || !near(st.drawn.att, gL)) lf(tag, 'does not start on the load');
+      if ((st.drawn.turns || []).length) lf(tag, 'a half turn is drawn before any move');
+
+      if (ymode === 'grid'){
+        st = await act([['set', sf ? 'p-x1' : 'p-b1', sf ? d.xs : d.bp], ['set', sf ? 'p-b1' : 'p-x1', sf ? d.bp : d.xs]]);
+        if (!st.ok || !st.steps.every(Boolean)) lf(tag, 'design not accepted on the admittance chart');
+        if ((st.drawn.turns || []).length) lf(tag, 'a half turn on the admittance chart');
+        continue;
+      }
+
+      if (sf){
+        const zM = C(r, x + d.xs), gM = gOfZ(zM);
+        if (!circ(st.drawn, 'g = 1') || !near(circ(st.drawn, 'g = 1').c, [-0.5, 0])) lf(tag, 'auxiliary circle not at -0.5 before turning');
+        st = await act([['set', 'p-x1', d.xs]]);
+        if (!near(st.drawn.att, gM)) lf(tag, 'series x does not put the attempt at z_L + jx');
+        if (!onC(st.drawn.att, [-0.5, 0], 0.5)) lf(tag, 'series x does not land on the auxiliary circle');
+        /* a load on r = 1 needs no shunt element: x alone finishes it */
+        if (Math.abs(d.bp) > 1e-7 && !(st.steps[1] && !st.steps[2] && !st.steps[3])) lf(tag, 'after x the ticks are ' + st.steps);
+        st = await act([['click', 'b-rot']]);
+        const T1 = st.drawn.turns || [];
+        if (!(T1.length === 1 && near(T1[0][0], gM) && near(T1[0][1], [-gM[0], -gM[1]]))) lf(tag, 'turn not drawn through the point x reached: ' + JSON.stringify(T1));
+        if (!near(st.drawn.pt, [-gM[0], -gM[1]])) lf(tag, 'turned marker not at the turned point');
+        if (!onC(st.drawn.pt, [0.5, 0], 0.5)) lf(tag, 'turned point not on the printed r = 1');
+        if (!circ(st.drawn, 'g = 1') || !near(circ(st.drawn, 'g = 1').c, [0.5, 0])) lf(tag, 'g = 1 not the printed r = 1 once turned');
+        if (Math.abs(d.bp) > 1e-7 && !(st.steps[2] && !st.steps[3])) lf(tag, 'after the turn the ticks are ' + st.steps);
+        st = await act([['set', 'p-b1', d.bp]]);
+        if (!near(st.drawn.att, [0, 0], 1e-3)) lf(tag, 'shunt b does not reach the centre');
+      } else {
+        const yM = TL.add(yL, TL.C(0, d.bp)), zMc = TL.invc(yM), gM = gOfZ(C(zMc.re, zMc.im));
+        st = await act([['click', 'b-rot']]);
+        const T1 = st.drawn.turns || [];
+        if (!(T1.length === 1 && near(T1[0][0], gL) && near(T1[0][1], [-gL[0], -gL[1]]))) lf(tag, 'first turn not from z_L: ' + JSON.stringify(T1));
+        if (!near(st.drawn.pt, [-gL[0], -gL[1]])) lf(tag, 'turned marker not at y_L');
+        if (!circ(st.drawn, 'r = 1 turned') || !near(circ(st.drawn, 'r = 1 turned').c, [-0.5, 0])) lf(tag, 'auxiliary circle not at -0.5 in the turned view');
+        const gdash = circ(st.drawn, 'g = ' + (Math.abs(yL.re) < 5e-3 ? 0 : yL.re).toFixed(2));
+        if (!gdash || !near(gdash.c, [yL.re/(1 + yL.re), 0])) lf(tag, 'the circle b rides is not the printed r = g_L circle');
+        /* a load already on r = 1 is already where the shunt element must
+           put it: b = 0 does it, so that step is honestly ticked */
+        if (Math.abs(r - 1) > 1e-9 && !(st.steps[1] && !st.steps[2])) lf(tag, 'after turning the ticks are ' + st.steps);
+        st = await act([['set', 'p-b1', d.bp]]);
+        if (!near(st.drawn.att, [-gM[0], -gM[1]])) lf(tag, 'shunt b does not put the turned attempt at y_L + jb');
+        if (!onC(st.drawn.att, [-0.5, 0], 0.5)) lf(tag, 'shunt b does not land on the auxiliary circle');
+        if (!(st.steps[2] && !st.steps[3])) lf(tag, 'after b the ticks are ' + st.steps);
+        st = await act([['click', 'b-rot']]);
+        const T2 = st.drawn.turns || [];
+        if (!(T2.length === 1 && near(T2[0][0], [-gM[0], -gM[1]]) && near(T2[0][1], gM))) lf(tag, 'turn back not drawn from the turned point: ' + JSON.stringify(T2));
+        if (!near(st.drawn.pt, gM) || !onC(st.drawn.pt, [0.5, 0], 0.5)) lf(tag, 'after turning back the marker is not on r = 1 at z');
+        if (!(st.steps[3] && !st.steps[4])) lf(tag, 'after turning back the ticks are ' + st.steps);
+        st = await act([['set', 'p-x1', d.xs]]);
+        if (!near(st.drawn.att, [0, 0], 1e-3)) lf(tag, 'series x does not reach the centre');
+      }
+      if (!st.ok) lf(tag, 'finished design not accepted: ' + st.verdict);
+      if (!st.steps.every(Boolean)) lf(tag, 'finished, but the ticks are ' + st.steps);
+      st = await act([['click', 'b-rot']]);
+      if (!st.ok || !st.steps.every(Boolean)) lf(tag, 'turning after the match unticked something');
+    }
+  }
+  s.check('L-network on the impedance chart, worked by hand (' + lnRan + ' runs)', lnRan > 40 && lnFails.length === 0,
+          lnFails.length + ' cases, e.g. ' + lnFails.slice(0, 3).join('  |  '));
 
   /* ---- what the slider alone can reach ----
      A reader who never drags travels in the slider's steps. At 0.001 lambda

@@ -185,7 +185,17 @@ const nearestD = (arr, d) => {
       });
 
       /* -- L-network -- */
-      const il = T.lnet(zL);
+      /* One design per distinct circuit. When an element comes out zero the
+         two orders are the same network (a load on r = 1 needs only a series
+         element, whichever order it is called), and the page lists it once,
+         as "series element only" or "shunt element only". */
+      const il = [];
+      T.lnet(zL).forEach(t => {
+        if (Math.abs(t.xs) < 1e-7) t.xs = 0;
+        if (Math.abs(t.bp) < 1e-7) t.bp = 0;
+        t.label = t.bp === 0 ? 'series element only' : t.xs === 0 ? 'shunt element only' : t.order;
+        if (!il.some(u => Math.abs(u.xs - t.xs) < 1e-6 && Math.abs(u.bp - t.bp) < 1e-6)) il.push(t);
+      });
       if (got.lnet.length !== il.length)
         bad.push(['count lnet', got.lnet.length, il.length, rL, xL].join('  '));
       got.lnet.forEach(sol => {
@@ -193,7 +203,7 @@ const nearestD = (arr, d) => {
               ord = sol['order'];
         let best = Infinity, pick = null;
         il.forEach(t => {
-          if (t.order !== ord) return;
+          if (t.label !== ord) return;
           const e = Math.abs(t.bp - bp) + Math.abs(t.xs - xs);
           if (e < best) { best = e; pick = t; }
         });
