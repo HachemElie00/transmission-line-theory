@@ -141,7 +141,7 @@
 
   <figure class="fig">
     <canvas id="bcfig" class="static" style="height:280px"></canvas>
-    <figcaption class="cap">a pillbox across the surface sees only the normal components; a thin loop across it sees only the tangential ones. h is the height each shape spans across the surface; as h &rarr; 0 the side walls of the pillbox and the short ends of the loop vanish, and what is left is the boundary condition. the tangential H points the way n&#770; &times; H = J<sub>s</sub> requires</figcaption>
+    <figcaption class="cap">a pillbox across the surface, seen side on, sees only the normal components; a thin loop across it sees only the tangential ones. the arrows on the loop give the way round it, set by the right-hand rule about the current it encloses. h is the height each shape spans across the surface; as h &rarr; 0 the side walls of the pillbox and the short ends of the loop vanish, and what is left is the boundary condition. the tangential H points the way n&#770; &times; H = J<sub>s</sub> requires</figcaption>
   </figure>
 
   <p class="t">Inside a perfect conductor a time-varying field cannot exist: any electric field would drive an unlimited current, and with $\vE = 0$ inside, Faraday's law leaves $\partial\vB/\partial t = 0$ there too. Everything therefore happens on one side of the surface, and with $\hat{n}$ the normal pointing out of the conductor:</p>
@@ -448,6 +448,11 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
         c.strokeStyle = C.ink; c.lineWidth = 1.4; c.setLineDash([5, 4]);
         c.strokeRect(ox + 90, ys - 20, 64, 40); c.setLineDash([]);
         pub.box.shape = [ys - 20, ys + 20];
+        /* named, so the dashed outline reads as the surface Gauss's law is
+           applied to, seen side on, and not as a callout */
+        c.fillStyle = C.ink; c.font = '12px ' + MONO; c.textAlign = 'left';
+        c.fillText('pillbox, side on', ox + 176, ys - 26);
+        pub.box.label = 'pillbox, side on';
         c.strokeStyle = C.ink3; c.lineWidth = 1;
         c.beginPath(); c.moveTo(ox + 166, ys - 20); c.lineTo(ox + 166, ys + 20);
         c.moveTo(ox + 162, ys - 20); c.lineTo(ox + 170, ys - 20);
@@ -482,6 +487,19 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
         c.strokeStyle = C.ink; c.lineWidth = 1.4; c.setLineDash([5, 4]);
         c.strokeRect(ox + 100, ys - 12, 100, 24); c.setLineDash([]);
         pub.loop.shape = [ys - 12, ys + 12];
+        /* The loop's direction, by the right-hand rule about the enclosed
+           current: J_s out of the page runs it anticlockwise, so its top edge,
+           in the dielectric, runs the same way as H and the circulation is
+           H_t w = J_s w. The arrows say which way the loop is traversed. */
+        var ccw = JS_OUT ? 1 : -1;
+        c.fillStyle = C.ink;
+        [[ox + 150, ys - 12, -ccw], [ox + 150, ys + 12, ccw]].forEach(function(a){
+          c.beginPath(); c.moveTo(a[0] + 6*a[2], a[1]); c.lineTo(a[0] - 4*a[2], a[1] - 4.5); c.lineTo(a[0] - 4*a[2], a[1] + 4.5); c.closePath(); c.fill();
+        });
+        pub.loop.top = -ccw;                 /* +1: the top edge runs toward +x */
+        c.font = '12px ' + MONO; c.textAlign = 'center';
+        c.fillText('loop', ox + 150, ys - 19);
+        pub.loop.label = 'loop';
         c.strokeStyle = C.ink3; c.lineWidth = 1;
         c.beginPath(); c.moveTo(ox + 88, ys - 12); c.lineTo(ox + 88, ys + 12);
         c.moveTo(ox + 84, ys - 12); c.lineTo(ox + 92, ys - 12);

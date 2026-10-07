@@ -105,6 +105,34 @@ const wrapGap = (a, b) => { const d = Math.abs(a - b) % 0.5; return Math.min(d, 
         if (Math.abs(v) > 2e-3) bad('regimes: the triangles are zero crossings', id + ' at ' + z.toFixed(4) + ': ' + v);
       }
     }
+    /* the shaded band is the envelope, |1 + Gamma e^{-j 4 pi x}| */
+    for (const id of ['m0', 'm1', 'm2']){
+      const D = c[id], G = cmul([D.g, 0], cexp(D.ph*Math.PI/180));
+      for (const [x, e] of D.band || []){
+        const w = cmul(G, cexp(-2*TAU*x)), want = Math.hypot(1 + w[0], w[1]);
+        if (Math.abs(e - want) > 1e-6){ bad('regimes: the band is the envelope', id + ' at ' + x + ': ' + e + ' vs ' + want); break; }
+      }
+      if (!(D.band && D.band.length > 10)) bad('regimes: the band is the envelope', id + ': no band');
+    }
+    /* Each frame is drawn from scratch: along the row of triangles, away from
+       the ones drawn now, the canvas is exactly its own background. A faded
+       trail left ghost triangles there. No colour is assumed: the reference is
+       the canvas's own corner pixel, in every channel. */
+    for (const id of ['m0', 'm1', 'm2']){
+      const r = await p.evaluate(id => {
+        const cv = document.getElementById(id), D = JSON.parse(cv.getAttribute('data-drawn'));
+        const x = cv.getContext('2d'), k = cv.width/cv._w, img = x.getImageData(0, 0, cv.width, cv.height).data;
+        const at = (u, v) => { const i = 4*(Math.round(v*k)*cv.width + Math.round(u*k)); return img[i] + ',' + img[i+1] + ',' + img[i+2]; };
+        const bg = at(2, 2), L = 14, R = 14, B = 20, sx = (cv._w - L - R)/1.25;
+        let bad = 0, n = 0;
+        for (let u = L; u < cv._w - R; u += 3){
+          if (D.zeros.some(z => Math.abs(L + z*sx - u) < 7)) continue;
+          for (const v of [cv._h - B + 5, cv._h - B + 8]){ n++; if (at(u, v) !== bg) bad++; }
+        }
+        return { bad, n };
+      }, id);
+      if (r.bad || !r.n) bad('regimes: every frame drawn from scratch', id + ': ' + r.bad + ' of ' + r.n + ' samples off the background');
+    }
     /* travelling: the crossings march; full standing: they are pinned */
     const moved = (x, y) => x.zeros.length && y.zeros.length && Math.abs(x.zeros[0] - y.zeros[0]) > 1e-3;
     if (Math.abs(a.m0.t - c.m0.t) > 1e-3 && !moved(a.m0, c.m0)) bad('regimes: travelling crossings march', JSON.stringify([a.m0.zeros, c.m0.zeros]));
@@ -235,11 +263,19 @@ const wrapGap = (a, b) => { const d = Math.abs(a - b) % 0.5; return Math.min(d, 
     const kind = await text('bu-k');
     if (kind !== (m < 1e-9 ? 'travelling wave' : m > 0.999 ? 'full standing wave' : 'partial standing wave')) bad('build-up: steady-state word', tag + ': ' + kind);
     if (!printedOk(num(await text('bu-q')), Math.abs(GLv*ggv), 2)) bad('build-up: per-trip factor', tag);
+    /* the steady peak: the echoes summed as a geometric series, at its largest
+       on the line, (1 + |GL|)/|1 - Gg GL e^{-j 4 pi LN}| */
+    const ph = -4*Math.PI*LN, dr = 1 - ggv*GLv*Math.cos(ph), di = -ggv*GLv*Math.sin(ph);
+    const pkT = (1 + Math.abs(GLv))/Math.hypot(dr, di);
+    if (!printedOk(num(await text('bu-a')), pkT, 2) || Math.abs(D.peak - pkT) > 1e-4) bad('build-up: steady peak', tag + ': ' + await text('bu-a') + ' vs ' + pkT);
+    /* the scale is fixed: Gamma_g's effect on the size is not divided out */
+    if (D.scale !== 4 || D.clipped !== (pkT > 4)) bad('build-up: fixed scale', tag + ': ' + JSON.stringify([D.scale, D.clipped]));
   }
 
   const keys = ['main: envelope is |V|', 'main: the waves at this instant', 'main: the total stays inside the envelope',
+    'build-up: steady peak', 'build-up: fixed scale',
     'main: SWR readout', 'main: min and max marks', 'main: first min readout', 'main: first max readout', 'main: ZL readout',
-    'regimes: the triangles are zero crossings', 'regimes: travelling crossings march', 'regimes: standing nodes are pinned',
+    'regimes: the triangles are zero crossings', 'regimes: the band is the envelope', 'regimes: every frame drawn from scratch', 'regimes: travelling crossings march', 'regimes: standing nodes are pinned',
     'load: Gamma_L', 'load: envelope is |V|', 'load: Gamma at the probe, distance from -1', 'load: first max and min',
     'load: max and min readouts', 'load: real at the max and min (as claimed)', 'load: Z at a max and min',
     'load: the sentence says which comes first',

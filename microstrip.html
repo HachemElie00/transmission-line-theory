@@ -213,7 +213,7 @@
       <div class="ctl"><label for="gs-e">&epsilon;<sub>r</sub></label><input type="range" id="gs-e" min="2" max="12" step="0.1" value="4.4"><output id="gs-ev">4.4</output></div>
     </div>
     <dl class="readout" id="gs-ro"></dl>
-    <figcaption class="cap">&epsilon;<sub>eff</sub> against frequency for a 50 &Omega; track on three substrate thicknesses, the width in each case found from Hammerstad's synthesis. the readouts give the frequency at which &epsilon;<sub>eff</sub> has risen 5 % above its static value</figcaption>
+    <figcaption class="cap">how far &epsilon;<sub>eff</sub> has risen above its static value, against frequency, for a 50 &Omega; track on three substrate thicknesses, the width in each case found from Hammerstad's synthesis. the axes stay put as &epsilon;<sub>r</sub> changes; the upper dashed line is where every curve is heading, &epsilon;<sub>eff</sub> = &epsilon;<sub>r</sub>, and the dotted line is the 5 % rise whose frequency the readouts give</figcaption>
   </figure>
 
   <p class="t">Thickness is what matters: $f_p$ scales as $1/h$, so a substrate a sixth as thick disperses at six times the frequency. That is one reason millimetre-wave boards use thin substrates, and why the "few GHz" in the table above is a statement about 1.6 mm FR-4, not about microstrip in general.</p>
@@ -711,41 +711,62 @@ function hexRGB(h){
   document.getElementById('gs-e').addEventListener('input', function(){ er = +this.value; sync(); EM.redrawStatic(); });
   sync();
 
+  /* Plotted as the rise of eps_eff above its static value, in percent, on
+     axes that never move: the readouts are about that rise (where it passes
+     5 %), and with eps_eff itself on the y axis both ends of the axis followed
+     the slider, so the labels shuffled while the curves barely moved. The
+     static value is the same for all three thicknesses -- Hammerstad's W/h
+     for 50 ohms does not depend on h -- so one asymptote serves all three. */
+  var YMAX = 60;
   EM.register(function(C){
     EM.fit(cv);
     var c = cv.getContext('2d'), W = cv._w, H = cv._h;
     c.clearRect(0, 0, W, H);
-    var L = 44, R = 74, T = 28, B = 34, e0 = line(HS[0]).e0, Y0 = Math.floor(e0*10 - 1)/10, Y1 = er + 0.1*(er - Y0);
+    var L = 44, R = 74, T = 28, B = 34, e0 = line(HS[0]).e0, top = 100*(er/e0 - 1);
     function px(f){ return L + f/FM*(W - L - R); }
-    function py(v){ return (H - B) - (v - Y0)/(Y1 - Y0)*(H - T - B); }
-    c.strokeStyle = C.line2; c.lineWidth = 1;
+    function py(v){ return (H - B) - v/YMAX*(H - T - B); }
+    c.font = '11px ' + MONO;
+    /* grid every 10 % */
+    for(var y = 0; y <= YMAX; y += 10){
+      c.strokeStyle = C.line; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(L, py(y) + .5); c.lineTo(W - R, py(y) + .5); c.stroke();
+      c.fillStyle = C.ink3; c.textAlign = 'right'; c.fillText(y + ' %', L - 6, py(y) + 4);
+    }
+    c.strokeStyle = C.line2;
     c.beginPath(); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.lineTo(W - R, H - B); c.stroke();
+    /* the 5 % the readouts report */
+    c.strokeStyle = C.ink2; c.setLineDash([2, 3]);
+    c.beginPath(); c.moveTo(L, py(5)); c.lineTo(W - R, py(5)); c.stroke(); c.setLineDash([]);
+    c.fillStyle = C.ink2; c.textAlign = 'left'; c.fillText('5 % rise', L + 6, py(5) - 4);
+    /* where every curve is heading: eps_eff = eps_r */
     c.strokeStyle = C.ink3; c.setLineDash([4, 4]);
-    c.beginPath(); c.moveTo(L, py(er)); c.lineTo(W - R, py(er)); c.stroke(); c.setLineDash([]);
-    c.font = '11px ' + MONO; c.fillStyle = C.ink3; c.textAlign = 'left';
-    EM.rich(c, [['ε','n'], ['r','b']], L + 6, py(er) - 6, 11, 'left');
-    c.textAlign = 'right';
-    c.fillText(er.toFixed(1), L - 6, py(er) + 4); c.fillText(e0.toFixed(2), L - 6, py(e0) + 4);
+    c.beginPath(); c.moveTo(L, py(top)); c.lineTo(W - R, py(top)); c.stroke(); c.setLineDash([]);
+    c.fillStyle = C.ink3; c.textAlign = 'left';
+    EM.rich(c, [['ε','n'], ['eff','b'], [' = ε','n'], ['r','b']], L + 6, py(top) - 6, 11, 'left');
     c.textAlign = 'center';
     for(var g = 0; g <= 40; g += 10) c.fillText(g + (g ? ' GHz' : ''), px(g*1e9), H - B + 15);
-    var pub = { er: er, hs: HS, curves: [], f5: HS.map(function(h){ return f5(line(h)); }) };
+    var pub = { er: er, hs: HS, e0: e0, axis: [0, YMAX], top: top, curves: [], rise: [], f5: HS.map(function(h){ return f5(line(h)); }) };
     HS.forEach(function(h, n){
-      var Ln = line(h), cs = [];
-      pub.curves.push(cs);
+      var Ln = line(h), cs = [], rs = [];
+      pub.curves.push(cs); pub.rise.push(rs);
       c.strokeStyle = C[COLS[n]]; c.lineWidth = 2.4; c.beginPath();
-      for(var j = 0; j <= 200; j++){ var f = FM*j/200, ef = Ln.f(f); c.lineTo(px(f), py(ef)); if(j % 10 === 0) cs.push([f/1e9, ef]); }
+      for(var j = 0; j <= 200; j++){
+        var f = FM*j/200, ef = Ln.f(f), r = 100*(ef/e0 - 1);
+        c.lineTo(px(f), py(r));
+        if(j % 10 === 0){ cs.push([f/1e9, ef]); rs.push([f/1e9, r]); }
+      }
       c.stroke();
     });
     EM.publish(cv, pub);
     /* each curve is named at its right-hand end, in the margin, so no label
        sits on a curve; labels closer than a line height are pushed apart */
-    var tags = HS.map(function(h, n){ return { n: n, y: py(line(h).f(FM)) + 4, t: (h*1e3).toFixed(2) + ' mm' }; });
+    var tags = HS.map(function(h, n){ return { n: n, y: py(100*(line(h).f(FM)/e0 - 1)) + 4, t: (h*1e3).toFixed(2) + ' mm' }; });
     tags.sort(function(a, b){ return a.y - b.y; });
     for(var q = 1; q < tags.length; q++) tags[q].y = Math.max(tags[q].y, tags[q-1].y + 13);
     c.textAlign = 'left';
-    tags.forEach(function(g){ c.fillStyle = C[COLS[g.n]]; c.fillText(g.t, W - R + 6, g.y); });
+    tags.forEach(function(t2){ c.fillStyle = C[COLS[t2.n]]; c.fillText(t2.t, W - R + 6, t2.y); });
     c.fillStyle = C.ink3; c.textAlign = 'left';
-    EM.rich(c, [['ε','n'], ['eff','b']], 6, T - 12, 11, 'left');
+    EM.rich(c, [['rise of ε','n'], ['eff','b'], [' above its static value','n']], 6, T - 12, 11, 'left');
   }, false);
 })();
 

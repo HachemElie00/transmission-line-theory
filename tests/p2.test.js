@@ -164,11 +164,17 @@ const csqrt = z => { const m = Math.hypot(z[0], z[1]); return [Math.sqrt((m + z[
       if (D.sig !== sig || Math.abs(D.lf - lf) > 1e-12) { bad('skin: controls reach the figure', tag); break; }
       if (Math.abs(D.delta - delta) > 6e-10 + 1e-6*delta) bad('skin: delta = 1/Re(gamma)', tag + ': ' + D.delta + ' vs ' + delta);
       if (Math.abs(gam[1]*delta - 1) > 1e-6) bad('skin: one radian of phase per skin depth (as claimed)', tag);
-      for (const [z, v] of D.J){ const e = cmul([Math.exp(-z)*Math.cos(-z), Math.exp(-z)*Math.sin(-z)], [Math.cos(t), Math.sin(t)]);
-        if (Math.abs(v - e[0]) > 1e-8){ bad('skin: current density', tag + ' t ' + t + ' z ' + z); break; } }
-      for (const [z, v] of D.env) if (Math.abs(Math.abs(v) - Math.exp(-z)) > 1e-9){ bad('skin: envelope', tag); break; }
-      if (D.shade[0] !== 0 || D.shade[1] !== 1) bad('skin: first skin depth shaded', tag + ': ' + D.shade);
-      if (D.ticks.length !== 4 || D.ticks.some(([k, l]) => !sigOk(parseU(l), k*delta, 3))) bad('skin: depth ticks', tag + ': ' + JSON.stringify(D.ticks));
+      /* positions are physical depths, published in micrometres; J is the
+         phasor J0 e^{-gamma z} at this instant, gamma from the metal's own constants */
+      for (const [zu, v] of D.J){ const z = zu*1e-6; const e = cmul([Math.exp(-gam[0]*z)*Math.cos(-gam[1]*z), Math.exp(-gam[0]*z)*Math.sin(-gam[1]*z)], [Math.cos(t), Math.sin(t)]);
+        if (Math.abs(v - e[0]) > 1e-6){ bad('skin: current density', tag + ' t ' + t + ' z ' + z + ': ' + v + ' vs ' + e[0]); break; } }
+      for (const [zu, v] of D.env) if (Math.abs(Math.abs(v) - Math.exp(-gam[0]*zu*1e-6)) > 1e-6){ bad('skin: envelope', tag); break; }
+      if (Math.abs(D.shade[1]*1e-6 - delta) > 1e-6*delta + 1e-15 || D.shade[0] !== D.axis[0]) bad('skin: first skin depth shaded', tag + ': ' + D.shade);
+      /* one fixed axis for every setting, wide enough for every skin depth the
+         slider and the metal menu can reach -- the reason it exists */
+      if (D.axis[0] !== 0.1 || D.axis[1] !== 3e4 || !(delta*1e6 > D.axis[0] && delta*1e6 < D.axis[1])) bad('skin: fixed axis holds delta', tag + ': ' + D.axis);
+      if (D.ticks.length !== 6 || D.ticks.some(([zu, l], i) => Math.abs(zu*1e-6 - Math.pow(10, i - 7)) > 1e-9*Math.pow(10, i - 7) || !sigOk(parseU(l), zu*1e-6, 3))) bad('skin: depth ticks', tag + ': ' + JSON.stringify(D.ticks));
+      if (Math.abs(D.wire*1e-6 - A) > 1e-12) bad('skin: wire radius marked', tag + ': ' + D.wire);
     }
     if (!sigOk(parseU(await text('skfv')), f, 3)) bad('skin: frequency readout', tag + ': ' + await text('skfv'));
     if (!sigOk(parseU(await text('sk-d')), delta, 3)) bad('skin: delta readout', tag + ': ' + await text('sk-d'));
@@ -278,7 +284,7 @@ const csqrt = z => { const m = Math.hypot(z[0], z[1]); return [Math.sqrt((m + z[
     'ab: alpha/beta = tan 22.5 deg at the crossover (as claimed)', 'ab: alpha = beta below the crossover (as claimed)', 'ab: alpha flat, beta ~ f above it (as claimed)',
     'ab: sea water 84 Np/m, over 700 dB/m (as claimed)',
     'skin: controls reach the figure', 'skin: delta = 1/Re(gamma)', 'skin: one radian of phase per skin depth (as claimed)', 'skin: current density', 'skin: envelope',
-    'skin: first skin depth shaded', 'skin: depth ticks', 'skin: frequency readout', 'skin: delta readout', 'skin: R_s readout', 'skin: R\' readout',
+    'skin: first skin depth shaded', 'skin: fixed axis holds delta', 'skin: wire radius marked', 'skin: depth ticks', 'skin: frequency readout', 'skin: delta readout', 'skin: R_s readout', 'skin: R\' readout',
     'incidence: controls reach the figure', 'incidence: Gamma and tau from continuity', 'incidence: incident wave', 'incidence: reflected wave', 'incidence: the sum',
     'incidence: transmitted wave, lambda / sqrt(er)', 'incidence: nothing transmitted into a conductor', 'incidence: E continuous at the boundary',
     'incidence: null on a perfect conductor (as claimed)', 'incidence: envelope', 'incidence: denser medium, minimum at the boundary (as claimed)',

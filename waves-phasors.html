@@ -50,7 +50,7 @@
         <option value="-1">reverse (+&beta;z)</option>
       </select></div>
     </div>
-    <figcaption class="cap">the round marker and its drop line ride one crest, a point of constant phase; it moves at the phase velocity u<sub>p</sub> = &omega;/&beta;, one wavelength per period. the bracket spans one wavelength, between two neighbouring minima</figcaption>
+    <figcaption class="cap">the round marker and its drop line ride one crest, a point of constant phase; it moves at the phase velocity u<sub>p</sub> = &omega;/&beta;, one wavelength per period. &omega; is held fixed, so raising &beta; shortens the wavelength and slows the crest by the same factor. the bracket spans one wavelength, between two neighbouring minima</figcaption>
   </figure>
 
   <p class="t">Two periodicities, one wave. In <b>space</b> the pattern repeats every wavelength; in <b>time</b> it repeats every period. They are tied together by the speed:</p>
@@ -379,6 +379,10 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
       c.setLineDash([]);
       c.fillStyle = C.h;
       c.beginPath(); c.arc(px(zc), mid - sy, 5.5, 0, EM.TAU); c.fill();
+      /* named on the figure, not only in the caption: the dot is one crest */
+      var rt = px(zc) > W - R - 150;
+      c.fillStyle = C.ink2;
+      EM.rich(c, [['crest, at u','n'], ['p','b'], [' = ω/β','n']], px(zc) + (rt ? -11 : 11), mid - sy + 5, 12, rt ? 'right' : 'left');
     }
 
     /* wavelength bracket, from one minimum of the moving wave to the next.

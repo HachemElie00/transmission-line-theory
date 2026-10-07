@@ -151,6 +151,8 @@ function fieldSolve(wh, er){
     const f5s = D.hs.map((h, n) => {
       const fp = z/(2*MU0*h), ef = f => er - (er - e0)/(1 + G*(f/fp)*(f/fp));
       for (const [fg, v] of D.curves[n]) if (Math.abs(v - ef(fg*1e9)) > 1e-9){ bad('Getsinger: the curves', tag + ' h ' + h + ' at ' + fg); break; }
+      /* what is plotted: the rise above the static value, in percent */
+      for (const [fg, v] of D.rise[n]) if (Math.abs(v - 100*(ef(fg*1e9)/e0 - 1)) > 1e-7){ bad('Getsinger: the plotted rise', tag + ' h ' + h + ' at ' + fg); break; }
       let lo = 1e6, hi = 1e13;
       for (let i = 0; i < 200; i++){ const m = Math.sqrt(lo*hi); if (ef(m) > 1.05*e0) hi = m; else lo = m; }
       if (!sigOk(num(ro[n])*1e9, hi, 3)) bad('Getsinger: 5 % frequencies', tag + ' h ' + h + ': ' + ro[n] + ' vs ' + hi);
@@ -158,6 +160,9 @@ function fieldSolve(wh, er){
       return hi;
     });
     for (let n = 1; n < f5s.length; n++) if (Math.abs(f5s[n]*D.hs[n]/(f5s[0]*D.hs[0]) - 1) > 1e-9) bad('Getsinger: f5 scales as 1/h (as claimed)', tag);
+    /* the axes do not follow the slider, and hold everything drawn */
+    if (D.axis[0] !== 0 || D.axis[1] !== 60 || Math.abs(D.top - 100*(er/e0 - 1)) > 1e-7 || !(D.top < 60))
+      bad('Getsinger: fixed axes, asymptote at eps_r', tag + ': ' + JSON.stringify([D.axis, D.top]));
     if (er === 4.4){ const i16 = D.hs.indexOf(1.6e-3); if (i16 < 0 || f5s[i16] < 1e9 || f5s[i16] > 10e9) bad('Getsinger: a few GHz on 1.6 mm FR-4 (as claimed)', f5s[i16]); }
   }
 
@@ -182,7 +187,7 @@ function fieldSolve(wh, er){
     'Hammerstad: frequency moves only lambda_g (as claimed)', 'Hammerstad: the synthesis example (as printed)', 'Hammerstad: the 17 mm quarter wave (as printed)',
     'field: the solve finishes', 'field: the track is W wide', 'field: Gauss\'s law closes (reference)', 'field: eps_eff and Z0', 'field: readouts',
     'field: within 3 % of Hammerstad (as claimed)',
-    'Getsinger: controls reach the figure', 'Getsinger: the curves', 'Getsinger: 5 % frequencies', 'Getsinger: f5 scales as 1/h (as claimed)',
+    'Getsinger: controls reach the figure', 'Getsinger: the curves', 'Getsinger: the plotted rise', 'Getsinger: fixed axes, asymptote at eps_r', 'Getsinger: 5 % frequencies', 'Getsinger: f5 scales as 1/h (as claimed)',
     'Getsinger: a few GHz on 1.6 mm FR-4 (as claimed)',
     'open end: controls reach the figure', 'open end: values', 'open end: readouts', 'open end: drawn to scale'];
   for (const k of keys.concat(Object.keys(fails)).filter((k, i, a) => a.indexOf(k) === i)){

@@ -355,8 +355,9 @@
       <div class="rd"><dt>steady state</dt><dd id="bu-k">&mdash;</dd></div>
       <div class="rd"><dt>round trips so far</dt><dd id="bu-n">&mdash;</dd></div>
       <div class="rd"><dt>|&Gamma;<sub>g</sub>&Gamma;<sub>L</sub>| per trip</dt><dd id="bu-q">&mdash;</dd></div>
+      <div class="rd"><dt>peak / incident</dt><dd id="bu-a">&mdash;</dd></div>
     </dl>
-    <figcaption class="cap">a sinusoid switched on at the generator, on the right, travelling toward the load on the left, 1.25 wavelengths away. &Gamma;<sub>L</sub> = 0 leaves a pure travelling wave, |&Gamma;<sub>L</sub>| = 1 a full standing wave with true nulls, and anything between a partial standing wave. every echo is summed exactly. dashed: the steady-state envelope it settles into. the animation restarts after twelve transits</figcaption>
+    <figcaption class="cap">a sinusoid switched on at the generator, on the right, travelling toward the load on the left, 1.25 wavelengths away. &Gamma;<sub>L</sub> = 0 leaves a pure travelling wave, |&Gamma;<sub>L</sub>| = 1 a full standing wave with true nulls, and anything between a partial standing wave. every echo is summed exactly. dashed: the steady-state envelope it settles into. the vertical scale is fixed, the incident wave alone reaching a quarter of the way up: &Gamma;<sub>L</sub> sets the shape of the pattern, and with it the SWR; &Gamma;<sub>g</sub> never changes that shape, only how long the pattern takes to settle and how large it ends up, by 1/|1 + &Gamma;<sub>g</sub>&Gamma;<sub>L</sub>| on this 1.25-wavelength line. the animation restarts after twelve transits</figcaption>
   </figure>
 
   <p class="t">With a matched source the pattern is complete after a single round trip, since nothing re-reflects. With a strongly mismatched one it takes many, and on a lossless line with both ends reflecting totally it never settles at all: the steady state of the phasor analysis simply does not exist, and the line is a resonator. Every phasor result on this site describes the state after the echoes have died away, which on a real line is a few nanoseconds to a few microseconds after switch-on.</p>
@@ -548,17 +549,39 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
   [['m0',0],['m1',0.5],['m2',1]].forEach(function(pair){
     var cv = document.getElementById(pair[0]), gg = pair[1];
     if(!cv) return;
-    var fresh = true;
+    /* Every frame is drawn from scratch. These panels used to fade the last
+       frame by painting the background over it at 12 % instead of clearing
+       it, for a motion trail; in 8-bit colour that fade stalls a few levels
+       short of the background, and on the light theme it left a grey smear
+       over the whole sweep, the zero-crossing triangles included. Now the
+       envelope is drawn exactly, |1 + Gamma e^{j(phi - 2 beta x)}|, and the
+       trail is the wave at a few earlier instants, computed, not left over. */
     EM.register(function(C, t){
-      if(EM.fit(cv)) fresh = true;
+      EM.fit(cv);
       var c = cv.getContext('2d'), W = cv._w, H = cv._h;
       var L=14, R=14, T=14, B=20, y0 = T+(H-T-B)/2, sy = (H-T-B)/2/2.15;
       var sx = (W-L-R)/XL;
       function px(x){ return L + x*sx; }
-      if(fresh){ c.fillStyle = C.sunk; c.fillRect(0,0,W,H); fresh = false; }
-      else { c.globalAlpha = .12; c.fillStyle = C.sunk; c.fillRect(0,0,W,H); c.globalAlpha = 1; }
+      c.fillStyle = C.sunk; c.fillRect(0,0,W,H);
+      var band = [];
+      c.fillStyle = C.ink; c.globalAlpha = .08; c.beginPath();
+      for(var e1=0;e1<=200;e1++){ var xe = e1/200*XL, ev = envOf(xe, gg, ph*D2R); c.lineTo(px(xe), y0-ev*sy); if(e1 % 10 === 0) band.push([xe, ev]); }
+      for(var e2=200;e2>=0;e2--){ var xf = e2/200*XL; c.lineTo(px(xf), y0+envOf(xf, gg, ph*D2R)*sy); }
+      c.closePath(); c.fill(); c.globalAlpha = 1;
       c.strokeStyle = C.line2; c.lineWidth = 1; c.globalAlpha = .7;
       c.beginPath(); c.moveTo(L,y0+.5); c.lineTo(W-R,y0+.5); c.stroke(); c.globalAlpha = 1;
+      /* the fading trail, done cleanly: the wave a moment ago, and a moment
+         before that, each fainter, all computed from the clock and drawn on
+         the cleared frame -- nothing is left behind to accumulate */
+      var NG = 14, DT = 0.07;
+      c.strokeStyle = C.ink; c.lineWidth = 1.4;
+      for(var g = NG; g >= 1; g--){
+        c.globalAlpha = 0.32*(1 - g/(NG + 1));
+        c.beginPath();
+        for(var gi=0;gi<=100;gi++){ var gx = gi/100*XL; c.lineTo(px(gx), y0-tot(gx,t - g*DT,gg)*sy); }
+        c.stroke();
+      }
+      c.globalAlpha = 1;
       c.strokeStyle = C.ink; c.lineWidth = 1.9; c.beginPath();
       for(var i=0;i<=200;i++){ var x=i/200*XL; c.lineTo(px(x), y0-tot(x,t,gg)*sy); }
       c.stroke();
@@ -575,7 +598,7 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
         }
         prev = v;
       }
-      EM.publish(cv, { g: gg, ph: ph, t: t, zeros: zs });
+      EM.publish(cv, { g: gg, ph: ph, t: t, zeros: zs, band: band });
     }, true);
   });
 })();
@@ -1081,7 +1104,10 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
     var m = Math.abs(GL);
     document.getElementById('bu-s').textContent = m > 0.999 ? '∞' : ((1 + m)/(1 - m)).toFixed(2);
     document.getElementById('bu-k').textContent = m < 1e-9 ? 'travelling wave' : m > 0.999 ? 'full standing wave' : 'partial standing wave';
+    document.getElementById('bu-a').textContent = peak().toFixed(2);
   }
+  /* the largest the steady pattern gets anywhere on the line */
+  function peak(){ var p = 0; for(var k = 0; k <= 400; k++) p = Math.max(p, steady(LN*k/400)); return p; }
   document.getElementById('bu-g').addEventListener('input', function(){ gg = +this.value; sync(); });
   document.getElementById('bu-l').addEventListener('input', function(){ GL = +this.value; sync(); });
   sync();
@@ -1092,15 +1118,20 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
     c.clearRect(0, 0, W, H);
     var tt = (t*0.2) % (NT*LN + 1);
     document.getElementById('bu-n').textContent = Math.floor(tt/(2*LN));
-    var ymax = 0;
-    for(var k = 0; k <= 100; k++) ymax = Math.max(ymax, steady(LN*k/100));
-    ymax = Math.max(ymax, 1)*1.15;
-    var L = 16, R = 16, T = 18, B = 26, y0 = T + (H - T - B)/2, sy = (H - T - B)/2/ymax;
+    /* A fixed scale, in units of the incident wave. Scaled to its own steady
+       peak, as it once was, the figure divided out exactly what Gamma_g does
+       to the pattern -- its size -- and moving that slider changed nothing on
+       screen once the pattern had settled. What does not fit is clipped and
+       said so. */
+    var YS = 4, pk = peak();
+    var L = 16, R = 16, T = 18, B = 26, y0 = T + (H - T - B)/2, sy = (H - T - B)/2/YS;
     function px(l){ return L + l/LN*(W - L - R); }
     c.strokeStyle = C.line2; c.lineWidth = 1;
     c.beginPath(); c.moveTo(L, y0 + .5); c.lineTo(W - R, y0 + .5); c.stroke();
     c.strokeStyle = C.ink2; c.lineWidth = 3;
     c.beginPath(); c.moveTo(L, T - 4); c.lineTo(L, H - B + 4); c.moveTo(W - R, T - 4); c.lineTo(W - R, H - B + 4); c.stroke();
+    c.save();
+    c.beginPath(); c.rect(L, T - 6, W - L - R, H - T - B + 12); c.clip();
     c.strokeStyle = C.acc; c.lineWidth = 1.2; c.setLineDash([4, 4]);
     [1, -1].forEach(function(s){
       c.beginPath();
@@ -1111,8 +1142,13 @@ function tot(x,t,gg){ return inc(x,t) + ref(x,t,gg); }
     c.strokeStyle = C.ink; c.lineWidth = 2.4; c.beginPath();
     for(var j = 0; j <= 400; j++){ var l2 = LN*j/400; c.lineTo(px(l2), y0 - v(l2, tt)*sy); }
     var smp = []; for(var q = 0; q <= 50; q++){ var lq = LN*q/50; smp.push([lq, v(lq, tt), steady(lq)]); }
-    EM.publish(cv, { gl: GL, gg: gg, tt: tt, samples: smp });
+    EM.publish(cv, { gl: GL, gg: gg, tt: tt, scale: YS, peak: pk, clipped: pk > YS, samples: smp });
     c.stroke();
+    c.restore();
+    if(pk > YS){
+      c.font = '11px ' + MONO; c.fillStyle = C.ink2; c.textAlign = 'center';
+      c.fillText('the steady pattern peaks at ' + pk.toFixed(1) + ' times the incident wave, beyond the plot', (L + W - R)/2, T - 4);
+    }
     c.font = '11px ' + MONO; c.fillStyle = C.ink3;
     c.textAlign = 'left'; c.fillText('load', L + 6, H - 8);
     c.textAlign = 'right'; c.fillText('generator', W - R - 6, H - 8);

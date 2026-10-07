@@ -239,7 +239,7 @@
       <div class="rd"><dt>R<sub>s</sub> = 1/&sigma;&delta;</dt><dd id="sk-rs">&mdash;</dd></div>
       <div class="rd"><dt>R&prime;, a = 0.45 mm</dt><dd id="sk-rp">&mdash;</dd></div>
     </dl>
-    <figcaption class="cap">current density inside the metal against depth, at one instant and as its envelope e<sup>&minus;z/&delta;</sup>. depth is measured in skin depths, so the curve has the same shape for every metal and frequency; the row under each tick is that depth in metres for the current setting. the shaded strip is the first skin depth. the wire figure uses R&prime; = R<sub>s</sub>/2&pi;a, valid while &delta; is small against the radius a</figcaption>
+    <figcaption class="cap">current density inside the metal against depth, at one instant and as its envelope e<sup>&minus;z/&delta;</sup>. depth is on a logarithmic scale, the same for every metal and frequency, starting 0.1&nbsp;&micro;m below the surface. near the surface the current is nearly uniform; within a few skin depths it is gone, so the fall sits at about &delta; and moves toward the surface as the frequency rises, since &delta; &prop; 1/&radic;f. the shaded band is the first skin depth; the dashed line is the radius a of the wire in the R&prime; readout, R&prime; = R<sub>s</sub>/2&pi;a, valid while &delta; is small against a</figcaption>
   </figure>
 
   <p class="t">The surface resistance has a useful reading: $R_s$ is exactly the resistance per square of a slab of the metal <b>one skin depth thick</b> carrying uniform current. The real current decays smoothly rather than stopping at $\delta$, but it dissipates the same power. A conductor of perimeter $p$ therefore has a resistance per metre of $R_s/p$, and for coax that gives</p>
@@ -639,55 +639,74 @@ function fmtFreq(f){
   document.getElementById('skm').addEventListener('change', function(){ sig = +this.value; sync(); });
   sync();
 
+  /* Depth on a logarithmic axis in metres, the same axis for every metal and
+     frequency on the slider (0.1 um to 30 mm), so the skin depth visibly
+     moves: the current is nearly uniform near the surface and dies within a
+     few skin depths, so the fall sits at about delta and slides toward the
+     surface as delta = 1/sqrt(pi f mu sigma) shrinks. Measured in skin depths
+     instead, as it once was, the curve never changed at all. */
+  var Z0 = 1e-7, Z1 = 3e-2;
+  var DEC = [[1e-7, '0.1 µm'], [1e-6, '1 µm'], [1e-5, '10 µm'], [1e-4, '100 µm'], [1e-3, '1 mm'], [1e-2, '10 mm']];
   EM.register(function(C, t){
     EM.fit(cv);
     var c = cv.getContext('2d'), W = cv._w, H = cv._h;
     c.clearRect(0, 0, W, H);
-    var L = 46, R = 16, T = 18, B = 58, ZM = 5, SH = 1;   /* five skin depths across; the first shaded */
+    var L = 46, R = 16, T = 18, B = 44;
     var y0 = T + (H - T - B)/2, sy = (H - T - B)/2*0.92;
-    function px(z){ return L + z/ZM*(W - L - R); }
-    /* the metal, and the first skin depth */
+    var lz0 = Math.log10(Z0), lz1 = Math.log10(Z1);
+    function px(z){ return L + (Math.log10(z) - lz0)/(lz1 - lz0)*(W - L - R); }
+    var d = delta();
+    /* the metal, and the first skin depth (from where the plot starts) */
     c.fillStyle = C.ink2; c.globalAlpha = 0.08; c.fillRect(L, T, W - L - R, H - T - B);
-    c.globalAlpha = 0.16; c.fillRect(L, T, px(SH) - L, H - T - B); c.globalAlpha = 1;
+    c.globalAlpha = 0.16; c.fillRect(L, T, px(d) - L, H - T - B); c.globalAlpha = 1;
     c.strokeStyle = C.line2; c.lineWidth = 1;
     c.beginPath(); c.moveTo(L, y0 + .5); c.lineTo(W - R, y0 + .5); c.moveTo(L + .5, T); c.lineTo(L + .5, H - B); c.stroke();
-    var pub = { t: t, lf: lf, sig: sig, delta: delta(), shade: [0, SH], env: [], J: [], ticks: [] };
+    /* depths are published in micrometres: publish() rounds to 1e-9, which in
+       metres would be a few parts in a thousand of the smallest depths */
+    var UM = 1e6;
+    var pub = { t: t, lf: lf, sig: sig, delta: d, axis: [Z0*UM, Z1*UM], shade: [Z0*UM, d*UM], wire: A*UM, env: [], J: [], ticks: [] };
+    /* decades */
+    c.font = '11px ' + MONO2; c.textAlign = 'center';
+    DEC.forEach(function(q, i){
+      var x = px(q[0]);
+      c.strokeStyle = C.line; c.beginPath(); c.moveTo(x + .5, T); c.lineTo(x + .5, H - B); c.stroke();
+      c.fillStyle = C.ink3; c.textAlign = i === 0 ? 'left' : 'center';
+      c.fillText(q[1], i === 0 ? L - 2 : x, H - B + 15);
+      pub.ticks.push([q[0]*UM, q[1]]);
+    });
+    /* the wire radius the R' readout uses */
+    c.strokeStyle = C.ink2; c.lineWidth = 1; c.setLineDash([3, 3]);
+    c.beginPath(); c.moveTo(px(A) + .5, T); c.lineTo(px(A) + .5, H - B); c.stroke(); c.setLineDash([]);
+    c.fillStyle = C.ink2; c.textAlign = 'right';
+    c.fillText('wire radius a', px(A) - 4, H - B - 6);
     /* envelope */
+    var N = 400;
     c.strokeStyle = C.acc; c.lineWidth = 1.2; c.setLineDash([4, 4]);
     [1, -1].forEach(function(s){
       c.beginPath();
-      for(var i = 0; i <= 200; i++){
-        var z = ZM*i/200, v = s*Math.exp(-z);
+      for(var i = 0; i <= N; i++){
+        var z = Math.pow(10, lz0 + (lz1 - lz0)*i/N), v = s*Math.exp(-z/d);
         c.lineTo(px(z), y0 - v*sy);
-        if(i % 10 === 0) pub.env.push([z, v]);
+        if(i % 20 === 0) pub.env.push([z*UM, v]);
       }
       c.stroke();
     });
     c.setLineDash([]);
     /* the instantaneous current density */
     c.strokeStyle = C.e; c.lineWidth = 2.4; c.beginPath();
-    for(var j = 0; j <= 300; j++){
-      var z2 = ZM*j/300, v2 = Math.exp(-z2)*Math.cos(t - z2);
+    for(var j = 0; j <= 2*N; j++){
+      var z2 = Math.pow(10, lz0 + (lz1 - lz0)*j/(2*N)), v2 = Math.exp(-z2/d)*Math.cos(t - z2/d);
       c.lineTo(px(z2), y0 - v2*sy);
-      if(j % 6 === 0) pub.J.push([z2, v2]);
+      if(j % 16 === 0) pub.J.push([z2*UM, v2]);
     }
     c.stroke();
-    /* labels */
-    c.font = '11px ' + MONO2; c.fillStyle = C.ink3; c.textAlign = 'center';
-    /* the axis is in skin depths, so the curve is the same for every metal and
-       frequency; the second row puts the physical depth under each tick */
-    var dd = delta();
-    for(var k = 1; k <= 4; k++){
-      c.fillStyle = C.ink3; c.fillText(k + 'δ', px(k), H - B + 15);
-      c.fillStyle = C.ink2; c.fillText(len(k*dd), px(k), H - B + 29);
-      pub.ticks.push([k, len(k*dd)]);
-    }
-    c.fillStyle = C.ink3;
-    c.textAlign = 'left'; c.fillText('surface', L - 2, H - B + 15);
-    c.textAlign = 'right'; c.fillText('depth into the metal →', W - R, H - B + 47);
-    c.textAlign = 'left'; c.fillStyle = C.ink2;
-    EM.rich(c, [['δ = ' + len(delta()),'n']], px(1) + 6, T + 14, 12, 'left');
-    c.fillStyle = C.ink3;
+    /* delta, named where the shading ends */
+    c.fillStyle = C.ink;
+    c.textAlign = px(d) > W - R - 110 ? 'right' : 'left';
+    c.font = '12px ' + MONO2;
+    c.fillText('δ = ' + len(d), px(d) + (c.textAlign === 'right' ? -6 : 6), T + 14);
+    c.fillStyle = C.ink3; c.font = '11px ' + MONO2;
+    c.textAlign = 'right'; c.fillText('depth into the metal, log scale →', W - R, H - B + 31);
     EM.rich(c, [['J/J','n'], ['0','b']], 6, T + 4, 11, 'left');
     EM.publish(cv, pub);
   }, true);

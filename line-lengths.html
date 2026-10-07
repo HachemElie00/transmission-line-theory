@@ -758,16 +758,23 @@ function mm2(A, B){
     var rich = EM.rich;
     function rails(ox, oy, x0, x1){ c.strokeStyle = C.ink2; c.lineWidth = 2; c.beginPath(); c.moveTo(ox + x0, oy + 120); c.lineTo(ox + x1, oy + 120); c.stroke(); }
     function top(ox, oy, x0, x1){ c.strokeStyle = C.ink2; c.lineWidth = 2; c.beginPath(); c.moveTo(ox + x0, oy + 50); c.lineTo(ox + x1, oy + 50); c.stroke(); }
+    /* A unit element is a length of line, drawn as a box on each conductor.
+       The box is a component, not a highlight: it sits on a solid base so no
+       wire shows through it (the tint alone is translucent), and the wires
+       are drawn before it, so they end at its edges. */
     function ueBox(ox, oy, x0, x1, segs){
-      c.fillStyle = C.accfill; c.strokeStyle = C.acc; c.lineWidth = 1.6;
-      c.fillRect(ox + x0, oy + 44, x1 - x0, 12); c.strokeRect(ox + x0, oy + 44, x1 - x0, 12);
-      c.fillRect(ox + x0, oy + 114, x1 - x0, 12); c.strokeRect(ox + x0, oy + 114, x1 - x0, 12);
+      c.strokeStyle = C.acc; c.lineWidth = 1.6;
+      [44, 114].forEach(function(y){
+        c.fillStyle = C.sunk;    c.fillRect(ox + x0, oy + y, x1 - x0, 12);
+        c.fillStyle = C.accfill; c.fillRect(ox + x0, oy + y, x1 - x0, 12);
+        c.strokeRect(ox + x0, oy + y, x1 - x0, 12);
+      });
       c.fillStyle = C.acc; rich(c, segs, ox + (x0 + x1)/2, oy + 36, 12, 'center');
     }
     /* network 1: UE(Z1), then a shunt open stub (Z2) */
     function net1(ox, oy){
-      top(ox, oy, 0, 30); ueBox(ox, oy, 30, 140, [['UE, Z','n'], ['1','b']]); top(ox, oy, 140, 290);
       rails(ox, oy, 0, 290);
+      top(ox, oy, 0, 30); ueBox(ox, oy, 30, 140, [['UE, Z','n'], ['1','b']]); top(ox, oy, 140, 290);
       c.strokeStyle = C.h; c.lineWidth = 2.4; c.beginPath(); c.moveTo(ox + 215, oy + 50); c.lineTo(ox + 215, oy + 104); c.stroke();
       c.fillStyle = C.h; rich(c, [['open stub, Z','n'], ['2','b']], ox + 207, oy + 90, 12, 'right');
     }
@@ -777,8 +784,8 @@ function mm2(A, B){
       c.strokeStyle = C.h; c.lineWidth = 2.4;
       c.beginPath(); c.moveTo(ox + 50, oy + 50); c.lineTo(ox + 50, oy + 92); c.lineTo(ox + 90, oy + 92); c.lineTo(ox + 90, oy + 50); c.stroke();
       c.fillStyle = C.h; rich(c, [['shorted, Z','n'], ['1','b'], ['/n','n'], ['2','p']], ox + 70, oy + 108, 12, 'center');
-      ueBox(ox, oy, 150, 260, [['UE, Z','n'], ['2','b'], ['/n','n'], ['2','p']]); top(ox, oy, 260, 290);
       rails(ox, oy, 0, 290);
+      ueBox(ox, oy, 150, 260, [['UE, Z','n'], ['2','b'], ['/n','n'], ['2','p']]); top(ox, oy, 260, 290);
     }
     c.font = '20px ' + MONO; c.fillStyle = C.ink; c.textAlign = 'center';
     if(nar){ net1(15, 0); c.fillText('≡', 160, 168); net2(15, 170); }
