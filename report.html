@@ -106,7 +106,9 @@ var ENDPOINT = 'https://formspree.io/f/mbgddgqv';
   var form = document.getElementById('rep');
   if(!form) return;
 
-  var MAILTO = ['hachemelie00', 'gmail.com'].join('@');   /* never written whole: address harvesters read page source */
+  /* never written whole, and put into the link only when it is used: address
+     harvesters read page source and the DOM; a person clicking does not care */
+  var MAILTO = ['hachemelie00', 'gmail.com'].join('@');
   var STEPS  = document.getElementById('r-steps');
   var NOTE   = document.getElementById('r-note');
   var SEND   = document.getElementById('r-send');
@@ -281,10 +283,12 @@ var ENDPOINT = 'https://formspree.io/f/mbgddgqv';
     SEND.hidden = false;
   } else {
     MAIL.hidden = false;
-    syncMail();
-    form.addEventListener('input', syncMail);
-    form.addEventListener('change', syncMail);
   }
+  /* the link is filled in at the moment it is followed, so it carries the
+     report as it is then and the address is not sitting in the page */
+  ['pointerdown', 'focus', 'click', 'auxclick', 'contextmenu'].forEach(function(ev){
+    MAIL.addEventListener(ev, syncMail);
+  });
 
   form.addEventListener('submit', function(e){
     e.preventDefault();
@@ -309,7 +313,6 @@ var ENDPOINT = 'https://formspree.io/f/mbgddgqv';
     }).catch(function(){
       SEND.disabled = false;
       MAIL.hidden = false;
-      syncMail();
       say('That did not go through - you may be offline, or the form service may be down. '
         + 'Your report is still here: copy it, or email it with the button beside this one.', 'warn');
     });
