@@ -34,9 +34,28 @@ var CARRY = (function(){
   }catch(e){}
   return c;
 })();
+/* Served from the web, the contents page is the folder's address, and
+   "index.html" in the address bar is noise no other site shows. The links say
+   index.html because the offline copy needs it: a folder opened from disk is
+   a file listing, not the page. So over http(s) the address is tidied on
+   arrival, and links to it are tidied as they are followed (carryURL). */
+var WEB = location.protocol === 'http:' || location.protocol === 'https:';
+if(WEB && /\/index\.html$/i.test(location.pathname)){
+  try{
+    history.replaceState(history.state, '',
+      location.pathname.replace(/index\.html$/i, '') + location.search + location.hash);
+  }catch(e){}
+}
 function carryURL(href){
-  if(location.protocol !== 'file:') return href;
   var u;
+  if(WEB){
+    try{ u = new URL(href, location.href); }catch(e){ return href; }
+    if(u.origin !== location.origin || !/\/index\.html$/i.test(u.pathname)) return href;
+    u.pathname = u.pathname.replace(/index\.html$/i, '');
+    if(u.pathname === location.pathname && u.search === location.search) return href;   /* an anchor on this page */
+    return u.href;
+  }
+  if(location.protocol !== 'file:') return href;
   try{ u = new URL(href, location.href); }catch(e){ return href; }
   if(u.protocol !== 'file:' || !/\.html$/i.test(u.pathname)) return href;
   if(u.pathname === location.pathname) return href;   /* same page: an anchor, not a load */
@@ -53,7 +72,7 @@ function carryURL(href){
 /* Rewritten when a link is about to be followed, not at load, so it carries
    the choices as they are then. Listening on the document, these run after a
    link's own handlers (the report button rewrites its address the same way). */
-if(location.protocol === 'file:'){
+if(location.protocol === 'file:' || WEB){
   ['pointerdown', 'focusin', 'click', 'auxclick', 'contextmenu'].forEach(function(ev){
     document.addEventListener(ev, function(e){
       var a = e.target && e.target.closest && e.target.closest('a[href]');

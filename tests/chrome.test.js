@@ -179,6 +179,24 @@ const H = require('./lib/harness');
       return [before, a.getAttribute('href')];
     });
     s.check('http: links are not rewritten', h[0] === h[1] && !/tlt=/.test(h[1]), h.join(' -> '));
+
+    /* the contents page is the folder's address: "index.html" is tidied out
+       of the address bar on arrival and out of links as they are followed,
+       and following one still lands on the contents */
+    const toc = await p.evaluate(() => {
+      const a = [...document.querySelectorAll('a[href]')].find(x => x.getAttribute('href') === 'index.html');
+      if (!a) return null;
+      a.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      return a.getAttribute('href');
+    });
+    s.check('http: a link to the contents leads to the folder, not index.html', toc === srv.url, String(toc));
+    await Promise.all([p.waitForNavigation({ waitUntil: 'load' }),
+      p.evaluate(() => [...document.querySelectorAll('a[href]')].find(x => x.getAttribute('href') === location.origin + '/').click())]);
+    const land = await p.evaluate(() => ({ path: location.pathname, title: document.title, toc: !!document.querySelector('a[href="smith-tool.html"]') }));
+    s.check('http: following it lands on the contents', land.path === '/' && land.toc, JSON.stringify(land));
+    await p.goto(srv.url + 'index.html#x', { waitUntil: 'load' });
+    const tidy = await p.evaluate(() => location.pathname + location.hash);
+    s.check('http: /index.html is tidied to the folder, keeping the anchor', tidy === '/#x', tidy);
     await ctx.close();
   }
 
