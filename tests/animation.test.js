@@ -542,6 +542,18 @@ function leadEnd(pts, s){
     await H.setInput(q, 'i-r', 40); await q.waitForTimeout(150);
     s.check('changing the load turns it off', (await anim(q)) === null);
 
+    /* a hand-typed solved link with no d starts at the design's d, so the
+       marker is where the travel ends; a d in the link is kept */
+    for (const [h, want] of [['method=shunt', 'travel end'], ['method=shunt&d=0.1', 0.1], ['method=lnet', 0]]){
+      await openTool(q, h);
+      const o = await q.evaluate(() => { const D = JSON.parse(document.getElementById('chart').getAttribute('data-drawn'));
+        const tp = (D.paths || []).find(x => x.tag === 'travel');
+        return { pt: D.pt, end: tp ? tp.pts[tp.pts.length - 1] : null, slider: parseFloat(document.getElementById('i-d').value) }; });
+      const ok = want === 'travel end' ? (o.end && dist(o.pt, o.end) < TOL && o.slider > 0)
+                                       : Math.abs(o.slider - want) < 1e-9;
+      s.check('link "#' + h + '": d ' + (want === 'travel end' ? 'is the design’s, marker at the end of the travel' : 'is ' + want), ok, JSON.stringify(o));
+    }
+
     /* practice: hidden until "show me", then the same controls */
     await openTool(q, 'practice=1&method=shunt');
     s.check('strip hidden while practising', !(await vis()));

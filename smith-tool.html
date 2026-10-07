@@ -3969,7 +3969,7 @@ function sanitiseState(){
 function applyHash(h){
   h = String(h == null ? '' : h).replace(/^#/, '');
   if(!h) return false;
-  var touched = false;
+  var touched = false, hadD = false;
   h.split('&').forEach(function(pair){
     var i = pair.indexOf('=');
     if(i < 1) return;
@@ -3979,7 +3979,7 @@ function applyHash(h){
     try{ raw = decodeURIComponent(raw); }catch(e){ return; }
     if(spec[1] === 'n'){
       var v = parseFloat(raw);
-      if(isFinite(v)){ S[k] = v; touched = true; }
+      if(isFinite(v)){ S[k] = v; touched = true; if(k === 'd') hadD = true; }
     } else if(spec[1] === 'b'){
       S[k] = (raw === '1' || raw === 'true'); touched = true;
     } else {
@@ -3989,6 +3989,14 @@ function applyHash(h){
   if(touched) sanitiseState();
   /* a link carries the problem, never an attempt at it */
   if(touched && S.practice) resetAttempt();
+  /* A solved link with no distance in it starts where choosing the method
+     would: at the design's own d. Without this a hand-typed link drew the
+     travel to the stub but left the marker on the load. Copied links are
+     unaffected -- they omit d only when it is 0, which is then the design's. */
+  else if(touched && S.method && !hadD){
+    var sd = solve().sols[S.pick] || null;
+    S.d = (sd && sd.d != null) ? sd.d : 0;
+  }
   return touched;
 }
 

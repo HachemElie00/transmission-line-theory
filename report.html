@@ -118,7 +118,9 @@ var ENDPOINT = 'https://formspree.io/f/mbgddgqv';
   function fillPages(){
     var seen = {}, opt;
     opt = document.createElement('option');
-    opt.value = ''; opt.textContent = 'choose a page';
+    /* a prompt, not a page: shown until one is picked, never pickable itself */
+    opt.value = ''; opt.textContent = 'Which page?';
+    opt.disabled = opt.hidden = opt.selected = true;
     sel.appendChild(opt);
     (window.SITE_PAGES || []).forEach(function(p){
       if(p[1] === 'report.html') return;           /* not a place a bug happens */

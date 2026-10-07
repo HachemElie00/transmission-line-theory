@@ -152,6 +152,10 @@ const H = require('./lib/harness');
       page: document.getElementById('r-page').value,
       search: location.search
     }));
+    /* the first entry is a prompt, not a page: it cannot be chosen */
+    const ph = await p.evaluate(() => { const o = document.getElementById('r-page').options[0];
+      return { v: o.value, dis: o.disabled, hid: o.hidden, txt: o.textContent }; });
+    s.check('report: the page list opens with a prompt that cannot be picked', ph.v === '' && ph.dis && ph.hid, JSON.stringify(ph));
     s.check('file://: the report page keeps ?from= and gets the theme',
             r.th === 'dark' && r.page === d.file && /from=/.test(r.search) && !/tlt=/.test(r.search),
             JSON.stringify(r));
