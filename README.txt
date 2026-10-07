@@ -7,7 +7,9 @@ TO OPEN IT
 NO INTERNET NEEDED
   Everything this site uses - the equation renderer and the typefaces -
   is inside this folder. Nothing is fetched from the network, so it works
-  on a plane, in a basement, or during an outage. Keep the "assets"
+  on a plane, in a basement, or during an outage. The one exception is the
+  bug report page: its send button posts your report, and only when you
+  press it. Offline, copy the report instead. Keep the "assets"
   folder next to the HTML files or the maths and figures will not load.
 
 WHAT IS IN IT

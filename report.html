@@ -100,7 +100,7 @@
    ENDPOINT is the only line to edit. Empty means "no service configured yet",
    in which case the send button stays hidden and the page works by copy and by
    email, which need nothing at all. */
-var ENDPOINT = '';
+var ENDPOINT = 'https://formspree.io/f/mbgddgqv';
 
 (function(){
   var form = document.getElementById('rep');
@@ -188,7 +188,7 @@ var ENDPOINT = '';
     if(fullUrl) d.link = fullUrl;
     d.screen = window.innerWidth + ' x ' + window.innerHeight
              + ' css px, ratio ' + (window.devicePixelRatio || 1);
-    d.theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    d.theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
     d.browser = navigator.userAgent;
     return d;
   }

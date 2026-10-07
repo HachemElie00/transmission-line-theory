@@ -166,6 +166,35 @@ function stubArcBad(stub, sign, open, series, ls, need){
   return bad;
 }
 
+/* The grid circle highlighted with the stub arc: on the grid in view (Q = +1
+   for the printed impedance grid, -1 for the admittance overlay), every point
+   of it reads the value the stub must supply, it runs from that grid's
+   infinity point to the end of the rim arc, and it stays inside the disc. */
+function stubCircleBad(D, grid, need){
+  const path = (D.paths || []).find(q => q.tag === 'stub circle');
+  if (Math.abs(need) > 1e3) return path ? ['circle drawn for a stub at infinity'] : [];
+  if (!path) return ['no stub circle'];
+  if (!D.stub) return ['no stub arc to end on'];
+  const Q = grid === 'y' ? -1 : 1, pts = path.pts, bad = [];
+  if (dist(pts[0], [Q, 0]) > 1e-5) bad.push('starts at ' + pts[0] + ', not the grid\'s infinity point ' + Q);
+  const E = [Math.cos(D.stub[1]), Math.sin(D.stub[1])];
+  if (dist(pts[pts.length-1], E) > 1e-5) bad.push('ends at ' + pts[pts.length-1] + ', not the arc\'s end ' + E.map(v => v.toFixed(5)));
+  /* in the grid's own frame (Q p), Im w = need is the circle centre
+     (1, 1/need), radius 1/|need|, or the real axis for need = 0. Tested as
+     geometry, not by reading w: near the infinity point the reading magnifies
+     data-drawn's 1e-6 rounding past any sensible tolerance */
+  for (const p of pts){
+    if (Math.hypot(p[0], p[1]) > 1 + 1e-6){ bad.push('leaves the disc at ' + p); break; }
+    const g = [Q*p[0], Q*p[1]];
+    const off = Math.abs(need) < 1e-6 ? Math.abs(g[1]) : Math.abs(Math.hypot(g[0] - 1, g[1] - 1/need) - 1/Math.abs(need));
+    if (off > 1e-5){ bad.push('off the ' + need.toFixed(4) + ' circle by ' + off.toExponential(1) + ' at ' + p); break; }
+  }
+  /* and, away from infinity, what the grid reads there */
+  const mid = pts[Math.floor(pts.length/2)], wm = zOfGam([Q*mid[0], Q*mid[1]]);
+  if (dist(mid, [Q, 0]) > 0.2 && Math.abs(wm.im - need) > 1e-4*Math.max(1, Math.abs(need))) bad.push('reads ' + wm.im.toFixed(4) + ', stub gives ' + need.toFixed(4));
+  return bad;
+}
+
 /* a path: right ends, never off its circle */
 function pathBad(name, path, start, end, circ){
   if (!path) return [name + ' not drawn'];
@@ -216,8 +245,14 @@ function turnsBad(turns, want){
   const setup = (st) => p.evaluate(async ({ st, n }) => {
     const h = 'r=' + st.r + '&x=' + st.x + '&z0=50&f=1000&ee=1&practice=0&openStub=' +
               (st.open ? 1 : 0) + '&ymode=' + st.ymode + '&dd=' + (st.dd || 0.125) + '&nonce=' + n;
-    await new Promise(res => { window.addEventListener('hashchange', () => setTimeout(res, 0), { once: true });
-                               location.hash = h; });
+    /* a pending debounced replaceState from the last case can land between
+       the assignment and the hashchange event, and the page then reads the
+       OLD hash: retry until the URL carries this case's nonce */
+    for (let k = 0; k < 5; k++){
+      await new Promise(res => { window.addEventListener('hashchange', () => setTimeout(res, 0), { once: true });
+                                 location.hash = h; });
+      if (location.hash.indexOf('nonce=' + n) >= 0) break;
+    }
     const sel = document.getElementById('i-method');
     sel.value = st.m; sel.dispatchEvent(new Event('change', { bubbles: true }));
     return { cards: document.querySelectorAll('#sols [data-pick]').length,
@@ -295,6 +330,7 @@ function turnsBad(turns, want){
             sameAng(D.ring[1], Math.atan2(sign*gd[1], sign*gd[0]))) ? [] : ['ring marks at ' + D.ring]);
         if (d.d >= 5e-4) bad('ring label', t, fmtOk(D.ringTxt, 'd = #\u03bb', [d.d]) ? [] : ['ring says ' + D.ringTxt]);
         bad('stub arc', t, stubArcBad(D.stub, sign, open, series, d.ls, d.need));
+        bad('stub circle', t, stubCircleBad(D, wantGrid, d.need));
         bad('stub arc label', t, (d.ls > 0.02 ? fmtOk(D.stubTxt, 'stub #\u03bb from the ' + (open ? 'open' : 'short'), [d.ls])
                                               : D.stubTxt === undefined) ? [] : ['says ' + D.stubTxt]);
         bad('words round the chart', t, wordsTrue(D.words || {}, o.grid, sign, false));
@@ -513,6 +549,7 @@ function turnsBad(turns, want){
         bad('stub 2 path', t, approachBad('stub 2', s2));
         bad('marker', t, dist(D.pt, sc(sign, gL)) > TOL ? ['filled marker at ' + D.pt] : []);
         bad('stub arc', t, stubArcBad(D.stub, sign, open, false, d.ls2, d.b2));
+        bad('stub circle', t, stubCircleBad(D, sign < 0 ? 'z' : 'y', d.b2));
         bad('words round the chart', t, wordsTrue(D.words || {}, o.grid, sign, false));
         bad('card', t, (printedOk(b1P, d.b1, 3) && printedOk(firstNum(c['stub 1 length']), d.ls1, 3) &&
             printedOk(firstNum(c['stub 2 gives'].replace(/^b = /, '')), d.b2, 3) &&
@@ -546,8 +583,14 @@ function turnsBad(turns, want){
     const within = (v, want, tol) => Math.abs(v - want) <= tol;
     const ex = async (name, st, test) => {
       await p.evaluate(async ({ h, n }) => {
-        await new Promise(res => { window.addEventListener('hashchange', () => setTimeout(res, 0), { once: true });
-                                   location.hash = h + '&nonce=' + n; });
+        /* a pending debounced replaceState from the last case can land between
+       the assignment and the hashchange event, and the page then reads the
+       OLD hash: retry until the URL carries this case's nonce */
+    for (let k = 0; k < 5; k++){
+      await new Promise(res => { window.addEventListener('hashchange', () => setTimeout(res, 0), { once: true });
+                                 location.hash = h + '&nonce=' + n; });
+      if (location.hash.indexOf('nonce=' + n) >= 0) break;
+    }
       }, { h: 'z0=' + st.z0 + '&f=' + st.f + '&ee=1&r=' + st.r + '&x=' + st.x + '&practice=0&openStub=' +
               (st.open ? 1 : 0) + '&ymode=point&dd=' + (st.dd || 0.125), n: ++nonce });
       await p.evaluate(m => { const e = document.getElementById('i-method'); e.value = m;
@@ -662,7 +705,7 @@ function turnsBad(turns, want){
           JSON.stringify(counted));
   for (const k of ['grid in view', 'half turns', 'target circle', 'auxiliary circle', 'travel path',
                    'travel direction', 'travel lands on the target', 'stub path', 'marker', 'ring marks',
-                   'ring label', 'stub arc', 'stub arc label', 'words round the chart', 'readout at the stub',
+                   'ring label', 'stub arc', 'stub circle', 'stub arc label', 'words round the chart', 'readout at the stub',
                    'card', 'circuit', 'miniature circuit', 'picker', 'toggle label', 'transformer',
                    'transformer label', 'series path', 'shunt path', 'labels', 'design matches',
                    'forbidden circle', 'rotated circle', 'stub 1 path', 'spacing path', 'spacing direction',

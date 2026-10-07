@@ -19,6 +19,7 @@ const ALL = [
   ['practice', 'practice.test.js', []],
   ['scenarios','scenarios.test.js',[]],
   ['construction','construction.test.js',[]],
+  ['animation','animation.test.js',  []],
   ['chart',    'chart.test.js',    []],
   ['readouts', 'readouts.test.js', []],
   ['p1',       'p1.test.js',       []],

@@ -254,10 +254,14 @@ async function main(){
     const h = 'r=' + sc.r + '&x=' + sc.x + '&method=' + sc.m + '&practice=1' +
               '&openStub=' + (sc.open ? 1 : 0) + '&ymode=' + sc.ymode + '&grid=' + grid +
               '&dd=' + (sc.dd || 0.125) + '&d=0&nonce=' + n;
-    await new Promise(res => {
-      window.addEventListener('hashchange', () => setTimeout(res, 0), { once: true });
-      location.hash = h;
-    });
+    /* a pending debounced replaceState from the last case can land between
+       the assignment and the hashchange event, and the page then reads the
+       OLD hash: retry until the URL carries this case's nonce */
+    for (let k = 0; k < 5; k++){
+      await new Promise(res => { window.addEventListener('hashchange', () => setTimeout(res, 0), { once: true });
+                                 location.hash = h; });
+      if (location.hash.indexOf('nonce=' + n) >= 0) break;
+    }
   }, { sc, n: ++n });
 
   /* set a control and read back everything the chart and panel now say */
@@ -351,7 +355,25 @@ async function main(){
             Math.abs(angDiff(a1, arg([sign*own[0], sign*own[1]]))) > 1e-3)
           bad(tag + ': stub arc does not run from its end to its own input', sc,
               JSON.stringify(state.drawn.stub));
+        /* the grid circle highlighted with it: in the Gamma of the quantity the
+           stub adds (Gamma_z for series, Gamma_y = -Gamma_z for shunt), the
+           constant-imaginary-part circle of the stub's own value, from that
+           quantity's infinity point to the arc's end */
+        const shuntType = sc.m === 'shunt' || sc.m === 'dstub';
+        const zs = stubZ(ls, sc.open), w = shuntType ? inv(zs) : zs, v = w[1];
+        const path = (state.drawn.paths || []).find(q => q.tag === 'stub circle');
+        if (Math.abs(v) < 1e3){
+          const toW = P => shuntType ? [-sign*P[0], -sign*P[1]] : [sign*P[0], sign*P[1]];
+          const pts = path ? path.pts.map(toW) : [];
+          const off = g => Math.abs(v) < 1e-6 ? Math.abs(g[1]) : Math.abs(Math.hypot(g[0] - 1, g[1] - 1/v) - 1/Math.abs(v));
+          const end = path ? path.pts[path.pts.length - 1] : null;
+          if (!path || Math.hypot(pts[0][0] - 1, pts[0][1]) > 1e-5 || pts.some(g => off(g) > 1e-5) ||
+              Math.hypot(end[0] - Math.cos(a1), end[1] - Math.sin(a1)) > 1e-5)
+            bad(tag + ': stub circle is not the one its value is read on', sc, path ? JSON.stringify([path.pts[0], end]) : 'not drawn');
+        }
       }
+      if (!state.drawn.stub && (state.drawn.paths || []).some(q => q.tag === 'stub circle'))
+        bad(tag + ': stub circle without a stub', sc);
     };
 
     check('neutral', st, neutral, 1);
@@ -465,8 +487,10 @@ async function main(){
     'reaching the target did not tick the travel step',
     'half stub: attempt marker not where the built network puts it', 'half stub left the target circle',
     'half stub: stub arc does not run from its end to its own input',
+    'half stub: stub circle is not the one its value is read on',
     'finished: attempt marker not where the built network puts it',
     'finished: stub arc does not run from its end to its own input',
+    'finished: stub circle is not the one its value is read on',
     'finished design not accepted', 'finished, but a step is unticked',
     'finished, but the marker is not at the centre',
     'switching shorted/open undid a finished match', 'switching back undid it',
@@ -489,10 +513,14 @@ async function main(){
   const pickFails = [];
   const pk = (m, why) => pickFails.push(m + ': ' + why);
   const setHash = (h) => p.evaluate(async ({ h, n }) => {
-    await new Promise(res => {
-      window.addEventListener('hashchange', () => setTimeout(res, 0), { once: true });
-      location.hash = h + '&nonce=' + n;
-    });
+    /* a pending debounced replaceState from the last case can land between
+       the assignment and the hashchange event, and the page then reads the
+       OLD hash: retry until the URL carries this case's nonce */
+    for (let k = 0; k < 5; k++){
+      await new Promise(res => { window.addEventListener('hashchange', () => setTimeout(res, 0), { once: true });
+                                 location.hash = h + '&nonce=' + n; });
+      if (location.hash.indexOf('nonce=' + n) >= 0) break;
+    }
   }, { h, n: ++n });
   const pickState = () => p.evaluate(() => {
     const sel = document.getElementById('i-pick');

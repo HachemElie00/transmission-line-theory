@@ -55,6 +55,25 @@ canvas#chart{display:block;width:100%;height:min(1000px, 96vh);
   background:var(--sunk);touch-action:none;cursor:crosshair}
 /* the height above is only the starting value; sizeChart() replaces it with
    min(column width, height cap) so the box is never taller than it is wide */
+
+/* ---- the animated construction's strip, under the chart ----
+   Buttons beside the caption where there is room, above it where there is
+   not. The caption's min-height is set from the longest caption of the
+   design on show (animUI), so the strip, and the chart sized to leave room
+   for it, keep one height from step to step. */
+.anim{display:flex;align-items:flex-start;gap:6px 14px;flex-wrap:wrap;
+  padding:8px 12px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  background:var(--surface)}
+.anim[hidden]{display:none}
+.anim .abtns{display:flex;align-items:center;gap:4px;flex:none}
+.anim .abtns button{display:inline-grid;place-items:center;width:30px;height:28px;padding:0}
+.anim .abtns button svg{display:block}
+.anim .abtns select{height:28px;font-size:11.5px;margin-left:4px}
+.anim .acap{flex:1 1 300px;min-width:0;margin:0;padding-top:4px;font-size:13px;
+  line-height:1.5;color:var(--ink2)}
+.anim .acap b{font-family:var(--f-mono);font-size:10.5px;font-weight:500;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-right:9px}
+.wb:fullscreen .anim{width:100%;flex:none}
 canvas#nomo{display:block;width:100%;height:300px;background:var(--sunk)}
 canvas#resp{display:block;width:100%;height:230px;background:var(--sunk);
   border-top:1px solid var(--line)}
@@ -234,6 +253,24 @@ table.vals{width:100%;min-width:0;margin-top:11px;border-collapse:collapse;
     <div class="chartcol">
       <canvas id="chart" class="static" width="780" height="780"
               aria-label="Interactive Smith chart"></canvas>
+      <!-- The solved construction, a step at a time. Directly under the chart,
+           so the caption is read where the eye already is and nothing in the
+           panel moves down. Shown whenever a solution is drawn. -->
+      <div class="anim" id="anim" hidden>
+        <div class="abtns" role="group" aria-label="Step through the construction">
+          <button type="button" id="a-start" title="Back to the start" aria-label="Back to the start"></button>
+          <button type="button" id="a-back" title="Back a step" aria-label="Back a step"></button>
+          <button type="button" id="a-play" title="Play the next step" aria-label="Play the next step"></button>
+          <button type="button" id="a-next" title="Next step, drawn at once" aria-label="Next step, drawn at once"></button>
+          <button type="button" id="a-all" title="Play every step" aria-label="Play every step" aria-pressed="false"></button>
+          <select id="a-speed" aria-label="Speed" title="Speed">
+            <option value="0.5">0.5&times;</option>
+            <option value="1" selected>1&times;</option>
+            <option value="2">2&times;</option>
+          </select>
+        </div>
+        <p class="acap" id="a-cap" aria-live="polite"></p>
+      </div>
       <canvas id="nomo" class="static" width="900" height="246"
               aria-label="Radially scaled parameters"></canvas>
     </div>
@@ -1300,10 +1337,15 @@ function P0(u, v){ return [G.cx + u*G.R, G.cy - v*G.R]; }
    g = 1. The L-network turns only for its shunt element, so its view stays on
    z and the turned element is drawn with its own sign (see drawLnet). On the
    admittance chart nothing turns: the grid does instead. */
-function viewSign(){
+function viewSignFinal(){
   if(S.practice && !S.reveal) return S.prac.rotated ? -1 : 1;
   return (S.ymode === 'point' && (S.method === 'shunt' || S.method === 'dstub')) ? -1 : 1;
 }
+/* While the animated construction has not yet made its half turn, the chart
+   is still on z: ANIM_VS holds +1 for the length of one drawChart() call and
+   is 0 otherwise, so nothing outside the chart ever sees it. */
+var ANIM_VS = 0;
+function viewSign(){ return ANIM_VS || viewSignFinal(); }
 function P(u, v){ var s = viewSign(); return P0(s*u, s*v); }
 function rimPt(ang, rad){ return [G.cx + rad*Math.cos(ang), G.cy - rad*Math.sin(ang)]; }
 
@@ -1493,7 +1535,10 @@ function drawRings(c, C){
          different width stacked over this one band made the marker read as a
          different colour and thickness here than along the rest of its length.
          One marker, one colour, whole length. */
-      var gm = curG(), ma = Math.hypot(gm[0], gm[1]);
+      /* where the point is DRAWN: turned to y, half a turn from its z angle */
+      var gm = ANIM_PEN, ma;
+      if(!gm){ var gz = curG(ANIM_D), kz = viewSign(); gm = [kz*gz[0], kz*gz[1]]; }
+      ma = Math.hypot(gm[0], gm[1]);
       if(ma > 1e-6 && !G.nums){
         var aa = Math.atan2(gm[1], gm[0]);
         var t0 = rimPt(aa, B.r0), t1 = rimPt(aa, B.r1);
@@ -1641,6 +1686,30 @@ function headAt(c, pts, frac, col, sg){
   c.lineTo(b[0] - hh*Math.cos(ang+0.42), b[1] - hh*Math.sin(ang+0.42));
   c.closePath(); c.fill(); c.restore();
 }
+/* The first fraction s of a path, ending on an interpolated point. */
+function part(pts, s){
+  if(s >= 1) return pts;
+  var n = pts.length - 1, x = s*n, i = Math.floor(x), f = x - i, out = pts.slice(0, i + 1);
+  if(i < n && f > 0){
+    var a = pts[i], b = pts[i + 1];
+    out.push([a[0] + (b[0] - a[0])*f, a[1] + (b[1] - a[1])*f]);
+  }
+  return out;
+}
+/* One move of a construction, drawn as far as the animation has got (s, from
+   0 to 1). Whole, it is exactly polyline + headAt + labelPath as the static
+   view has always drawn it; part-way, the arrowhead rides the growing tip and
+   the name waits. o.sized: pts is already the part to draw (a travel arc,
+   which is recomputed for the distance gone rather than cut short). */
+function stagedMove(c, pts, s, o){
+  if(s <= 0) return;
+  var q = o.sized ? pts : part(pts, s);
+  polyline(c, q, o.col, o.w, o.dash, o.alpha, o.tag, o.sg);
+  if(s >= 1){
+    headAt(c, q, o.hf, o.col, o.sg);
+    if(o.label) labelPath(c, q, o.lf, o.label, o.col, o.sg);
+  } else headAt(c, q, 1, o.col, o.sg);
+}
 
 /* arc along a constant-|Gamma| circle, d wavelengths toward the generator */
 function travelPath(g0, d){
@@ -1673,13 +1742,49 @@ function pathG(g, b0, b1){
    physics -- the same reason data-disc exists. Each of the bugs it guards
    against left a perfectly drawn chart that meant the wrong thing. */
 var DRAWN = {};
-function drawStubArc(c, C, isOpen, ls){
+/* The grid circle the stub's value is read on: the constant-x (series) or
+   constant-b (shunt) circle through the end of the rim arc, from that end to
+   the grid's infinity point, so the arc's arrowhead visibly lands on a
+   labelled circle. Every such circle is tangent to the real axis at the
+   infinity point Q of the grid being read: Gamma = +1 on the printed
+   impedance grid (a series stub, or a shunt stub on the turned point), -1 on
+   the admittance overlay. Through E = e^(j a1) the circle has centre (Q, k)
+   with k = ((Ex - Q)^2 + Ey^2) / 2Ey; at Ey = 0 it is the real axis itself.
+   Drawn in display coordinates. */
+function drawStubCircle(c, C, a1){
+  var series = (S.method === 'series');
+  var Q = viewSign()*(series ? 1 : -1);
+  var E = [Math.cos(a1), Math.sin(a1)];
+  if(Math.hypot(E[0] - Q, E[1]) < 1e-3) return;        /* at infinity: no circle */
+  var pts = [], n = 90, i;
+  if(Math.abs(E[1]) < 1e-9){
+    for(i = 0; i <= n; i++){ var x = Q + (E[0] - Q)*i/n; pts.push([x, 0]); }
+  } else {
+    var k = ((E[0] - Q)*(E[0] - Q) + E[1]*E[1])/(2*E[1]), R = Math.abs(k);
+    var fq = Math.atan2(-k, 0), fe = Math.atan2(E[1] - k, E[0] - Q);
+    /* of the two arcs from Q to E, the one inside the disc */
+    var sweep = ((fe - fq) % TAU + TAU) % TAU, fm = fq + sweep/2;
+    if(Math.hypot(Q + R*Math.cos(fm), k + R*Math.sin(fm)) > 1) sweep -= TAU;
+    for(i = 0; i <= n; i++){ var f = fq + sweep*i/n; pts.push([Q + R*Math.cos(f), k + R*Math.sin(f)]); }
+    pts[n] = E;
+  }
+  polyline(c, pts, C.acc, Math.max(2, G.size*0.0035), [Math.max(2.5, G.size*0.006), Math.max(2.5, G.size*0.006)],
+           0.75, 'stub circle', 1);
+}
+/* s is how much of the arc the animation has grown, 1 (or omitted) for all of
+   it. The grid circle and the name wait for the arc to arrive. */
+function drawStubArc(c, C, isOpen, ls, s){
+  if(s == null) s = 1;
+  if(s <= 0) return;
   /* With the point turned to y, the grid is being read as admittance, where a
      short (y -> infinity) sits on the right and an open on the left: the stub
      starts from the opposite end of the diameter. */
+  var full = ls;
+  if(s < 1) ls = ls*s;
   var a0 = (isOpen ? 0 : Math.PI) + (viewSign() < 0 ? Math.PI : 0), rad = stubR();
   var a1 = a0 - 2*TAU*ls;
   DRAWN.stub = [a0, a1, ls];
+  if(s >= 1) drawStubCircle(c, C, a1);
   c.save();
   c.strokeStyle = C.acc; c.lineWidth = Math.max(3, G.size*0.006);
   c.setLineDash([Math.max(2.5, G.size*0.006), Math.max(2.5, G.size*0.006)]);
@@ -1703,7 +1808,7 @@ function drawStubArc(c, C, isOpen, ls){
      own length, measured from its own termination, so it starts at the short
      (or open) and not at the load. Set just inside the rim at the arc's middle,
      on a backdrop so the fine grid does not run through it. */
-  if(ls > 0.02 && G.size >= 440){
+  if(s >= 1 && full > 0.02 && G.size >= 440){
     var am = (a0 + a1)/2, pm = rimPt(am, G.R - Math.max(16, G.size*0.03));
     var txt = 'stub ' + n3(ls) + 'λ from the ' + (isOpen ? 'open' : 'short');
     DRAWN.stubTxt = txt;
@@ -1717,6 +1822,268 @@ function drawStubArc(c, C, isOpen, ls){
   }
   c.restore();
 }
+
+/* ===================== animated construction =====================
+   The solved construction, drawn a step at a time. The clock is ANIM.t, from
+   0 (the load and its circle only) to N (every step done); step i (0-based)
+   is drawn as far as clamp(t - i, 0, 1), eased. drawChart asks stage(id) for
+   each mark, and stage is 1 for everything whenever the animation is off --
+   so the static solved view IS the animation at t = N, by construction, not
+   a copy of it that could drift.
+
+   It never touches S. The slider, the link, the panel and every readout stay
+   on the finished design; only the chart moves. Anything that changes the
+   design (load, method, solution, convention, stub type, spacing, practice)
+   changes animKey() and turns the animation off at the next draw. Zoom, grids,
+   resizing and full screen do not. */
+var ANIM = { on:false, t:0, target:0, playing:false, all:false, speed:1, raf:0, last:0,
+             hold:0, rm:false, key:'', plan:null };
+/* per draw, like ANIM_VS: the travel distance drawn so far, and the point
+   while the view is part-way through its half turn (display Gamma) */
+var ANIM_D = null, ANIM_PEN = null;
+
+function animKey(){
+  return [S.method, S.pick, S.ymode, S.openStub, S.r, S.x, S.z0, S.dd,
+          S.practice, S.reveal].join('|');
+}
+function reducedMotion(){
+  try{ return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  catch(e){ return false; }
+}
+function ease(f){ return f <= 0 ? 0 : f >= 1 ? 1 : f*f*(3 - 2*f); }
+/* a signed value with a real minus sign, as the readouts print them */
+function sn(v){ var t = n2(v); return t.charAt(0) === '-' ? '−' + t.slice(1) : t; }
+
+/* The steps of the design on show, in the order chapter 11 lists them, each
+   with what it says. Every number is computed here from the solution. */
+function animPlan(){
+  if(!S.method || (S.practice && !S.reveal)) return null;
+  var res = solve(), sol = res.sols[S.pick];
+  if(!sol) return null;
+  var pt = viewSignFinal() < 0, lz = S.ymode === 'point';
+  var gL = zToG(S.r, S.x), yL = inv(S.r, S.x);
+  var term = S.openStub ? 'open' : 'short';
+  var steps = [];
+  /* "r = 1" is one thing to read: never broken at its spaces */
+  function nb(h){ return h.replace(/ = /g, '\u00a0=\u00a0'); }
+  function add(id, dur, cap){ steps.push({ id: id, dur: dur, cap: nb(cap) }); }
+  var base = 'Plot z<sub>L</sub> = ' + cpx(S.r, S.x) + ' and its constant-SWR circle, |&Gamma;| = ' +
+             n3(mag(gL)) + '.';
+  var turnCap = 'Turn the point half a turn round its circle: y<sub>L</sub> = ' + cpx(yL[0], yL[1]) +
+                ', opposite z<sub>L</sub>. From here the circles marked r read as g, the arcs marked x as b.';
+  var still = 5e-4;          /* a travel this short is no step */
+
+  if(S.method === 'shunt' || S.method === 'series'){
+    var se = sol.series, q = se ? 'x' : 'b';
+    if(pt) add('turn', 1400, turnCap);
+    if(sol.d > still)
+      add('travel', 2000, 'Travel ' + n3(sol.d) + 'λ toward the generator, clockwise, to ' +
+          (se ? 'the r = 1 circle' : pt ? 'the circle marked r = 1, read as g = 1' : 'the g = 1 circle') +
+          '. There ' + (se ? 'z' : 'y') + ' = ' + cpx(1, sol.line) + '.');
+    add('stubarc', 1800, 'Size the stub: from the ' + term + ', clockwise round the rim ' + n3(sol.ls) +
+        'λ, to where the rim reads ' + q + ' = ' + sn(sol.need) + ', what the stub must ' +
+        (se ? 'present' : 'add') + '.');
+    add('tocentre', 1600, 'Add the stub. It cancels ' + q + ', and the point moves along ' +
+        (se ? 'r = 1' : pt ? 'r = 1 (g = 1)' : 'g = 1') + ' to the centre: ' + (se ? 'z' : 'y') +
+        ' = 1, matched.' + (pt ? ' The centre is its own half turn, so z = 1 too.' : ''));
+  } else if(S.method === 'qwt'){
+    if(sol.d > still)
+      add('travel', 2000, 'Travel ' + n3(sol.d) + 'λ toward the generator to the voltage ' + sol.at +
+          ', on the real axis. There the line looks like a resistance: z = ' + sig(sol.zr) +
+          ', R = ' + sig(sol.zr*S.z0) + ' Ω.');
+    add('xfmr', 1500, 'Insert a quarter-wave section of Z<sub>1</sub> = √(Z<sub>0</sub>R) = ' +
+        sig(sol.z1*S.z0) + ' Ω there. It turns R into Z<sub>0</sub>: the centre.');
+  } else if(S.method === 'lnet'){
+    var has1 = sol.midIsZ ? sol.xs !== 0 : sol.bp !== 0;
+    var has2 = sol.midIsZ ? sol.bp !== 0 : sol.xs !== 0;
+    var xT = 'x = ' + sn(sol.xs), bT = 'b = ' + sn(sol.bp);
+    if(sol.midIsZ){
+      var ym = inv(sol.mid[0], sol.mid[1]);
+      if(has1 && !has2)
+        add('el1', 1600, 'A series element alone: it adds ' + xT + ' and carries z<sub>L</sub> along r = 1 to the centre: matched.');
+      else if(has1)
+        add('el1', 1600, 'Series element first (r<sub>L</sub> &lt; 1). It adds ' + xT +
+            ', carrying z<sub>L</sub> along its own circle, r = ' + n2(S.r) + ', to ' +
+            (lz ? 'the auxiliary circle (r = 1 turned half a turn, where g = 1)' : 'the g = 1 circle') +
+            '. There z = ' + cpx(sol.mid[0], sol.mid[1]) + '.');
+      if(lz && has2)
+        add('turn2', 1400, 'Turn ' + (has1 ? 'that point' : 'z<sub>L</sub>') + ' half a turn: y = ' +
+            cpx(ym[0], ym[1]) + ' lands on the circle marked r = 1, read as g = 1.');
+      if(has2)
+        add('el2', 1600, 'The shunt element adds ' + bT + ' and carries the point along g = 1 to the centre: matched.');
+    } else {
+      var zm = inv(sol.mid[0], sol.mid[1]);
+      if(lz && has1)
+        add('turn1', 1400, 'Turn z<sub>L</sub> half a turn: y<sub>L</sub> = ' + cpx(yL[0], yL[1]) + '.');
+      if(has1 && !has2)
+        add('el1', 1600, 'A shunt element alone: it adds ' + bT + ' and carries y<sub>L</sub> along ' +
+            (lz ? 'the circle marked r = 1, read as g = 1,' : 'g = 1') + ' to the centre: matched.');
+      else if(has1)
+        add('el1', 1600, 'Shunt element first (g<sub>L</sub> &lt; 1). It adds ' + bT + ', carrying y<sub>L</sub> along ' +
+            (lz ? 'the printed circle through it, read as g = ' + n2(yL[0]) + ', to the auxiliary circle'
+                : 'its own circle, g = ' + n2(yL[0]) + ', to the r = 1 circle') +
+            '. There y = ' + cpx(sol.mid[0], sol.mid[1]) + '.');
+      if(lz && has1 && has2)
+        add('turn2', 1400, 'Turn back half a turn: z = ' + cpx(zm[0], zm[1]) + ' lands on the circle marked r = 1.');
+      if(has2)
+        add('el2', 1600, 'The series element adds ' + xT + ' and carries the point along r = 1 to the centre: matched.');
+    }
+  } else if(S.method === 'dstub'){
+    if(pt) add('turn', 1400, turnCap);
+    add('target', 900, 'The target: ' + (pt ? 'the circle marked r = 1 (g = 1)' : 'the g = 1 circle') +
+        ' rotated toward the load by the spacing, ' + n3(S.dd) + 'λ or ' + n1(720*S.dd) +
+        '°. Inside the shaded disc, g &gt; ' + n2(res.gmax) + ', no stub 1 can reach it.');
+    add('stub1', 1600, 'Stub 1 adds b = ' + sn(sol.b1) + ' (' + n3(sol.ls1) + 'λ from the ' + term +
+        '): y<sub>L</sub> moves along its own circle, g = ' + n2(sol.g) + ', to the target, y = ' +
+        cpx(sol.g, sol.bmid) + '.');
+    add('spacing', 1800, 'Travel the spacing, ' + n3(S.dd) + 'λ, clockwise round the circle through that point. It lands on ' +
+        (pt ? 'r = 1 (g = 1)' : 'g = 1') + ': y = ' + cpx(sol.y2[0], sol.y2[1]) + '.');
+    add('stub2arc', 1800, 'Size stub 2: from the ' + term + ', clockwise round the rim ' + n3(sol.ls2) +
+        'λ, to where the rim reads b = ' + sn(sol.b2) + '.');
+    add('stub2', 1600, 'Stub 2 adds b = ' + sn(sol.b2) + ' and carries the point along ' +
+        (pt ? 'r = 1 (g = 1)' : 'g = 1') + ' to the centre: matched.');
+  }
+  if(!steps.length) return null;
+  return { base: nb(base), steps: steps };
+}
+
+/* the clock as drawn: with reduced motion the step being played appears
+   whole at once, and the clock only times how long it stays before the next
+   (in the pause between two steps, the one just finished) */
+function animT(){
+  if(!(ANIM.rm && ANIM.playing) || ANIM.hold > 0) return ANIM.t;
+  return Math.min(ANIM.target, Math.floor(ANIM.t + 1e-9) + 1);
+}
+function stepIndex(id){
+  var st = ANIM.plan ? ANIM.plan.steps : [];
+  for(var i = 0; i < st.length; i++) if(st[i].id === id) return i;
+  return -1;
+}
+function stage(id){
+  if(!ANIM.on || !ANIM.plan) return 1;
+  var i = stepIndex(id);
+  if(i < 0) return 1;
+  return ease(Math.max(0, Math.min(1, animT() - i)));
+}
+/* the step being shown: 0 before the first, k while step k grows or rests */
+function animStep(){ return ANIM.on ? Math.ceil(animT() - 1e-9) : 0; }
+
+function animStop(){
+  if(ANIM.raf) cancelAnimationFrame(ANIM.raf);
+  ANIM.raf = 0; ANIM.playing = false;
+}
+function animOff(){ animStop(); ANIM.on = false; ANIM.plan = null; }
+/* on, at the finished frame, for the design now showing; false if none */
+function animBegin(){
+  if(ANIM.on && ANIM.plan && ANIM.key === animKey()) return true;
+  var p = animPlan();
+  if(!p) return false;
+  ANIM.plan = p; ANIM.key = animKey(); ANIM.on = true; ANIM.t = p.steps.length;
+  return true;
+}
+function animGo(t){
+  animStop();
+  ANIM.t = Math.max(0, Math.min(ANIM.plan.steps.length, t));
+  drawChart();
+}
+function animPlay(all){
+  if(!animBegin()) return;
+  var N = ANIM.plan.steps.length;
+  if(ANIM.playing){
+    /* paused: with reduced motion, on the step that was showing whole */
+    if(ANIM.rm && ANIM.hold <= 0) ANIM.t = Math.min(N, Math.floor(ANIM.t + 1e-9) + 1);
+    animStop(); drawChart(); return;
+  }
+  if(ANIM.t >= N - 1e-9) ANIM.t = 0;
+  ANIM.target = all ? N : Math.min(N, Math.floor(ANIM.t + 1e-9) + 1);
+  ANIM.all = !!all;
+  ANIM.rm = reducedMotion();
+  ANIM.playing = true; ANIM.last = 0; ANIM.hold = 0;
+  ANIM.raf = requestAnimationFrame(animTick);
+  drawChart();
+}
+function animTick(now){
+  ANIM.raf = 0;
+  if(!ANIM.playing || !ANIM.on) return;
+  var dt = ANIM.last ? Math.min(100, now - ANIM.last) : 0;
+  ANIM.last = now;
+  if(ANIM.hold > 0) ANIM.hold -= dt;
+  else {
+    var st = ANIM.plan.steps, i = Math.min(st.length - 1, Math.floor(ANIM.t + 1e-9));
+    var before = ANIM.t;
+    ANIM.t = Math.min(ANIM.target, ANIM.t + dt*ANIM.speed/st[i].dur);
+    /* between the steps of a run-through, a pause on the finished step */
+    if(ANIM.t < ANIM.target && Math.floor(ANIM.t + 1e-9) > Math.floor(before + 1e-9)){
+      ANIM.t = Math.floor(ANIM.t + 1e-9);
+      ANIM.hold = 600/ANIM.speed;
+    }
+  }
+  if(ANIM.t >= ANIM.target - 1e-12){ ANIM.t = ANIM.target; ANIM.playing = false; }
+  drawChart();
+  if(ANIM.playing) ANIM.raf = requestAnimationFrame(animTick);
+}
+/* For the tests, like data-drawn: any instant, drawn at once. animSeek(null)
+   puts the static view back. */
+window.animSeek = function(t){
+  if(t == null){ animOff(); drawChart(); return true; }
+  if(!animBegin()) return false;
+  animGo(t);
+  return true;
+};
+
+/* The strip under the chart: the controls and what the step says. */
+var AICO = {
+  start: '<svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M6.2 2.2a3.9 3.9 0 1 1-3.9 3.9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6.2 0v4.4L3.6 2.2z" fill="currentColor"/></svg>',
+  back:  '<svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><rect x="1.5" y="2" width="1.7" height="8" fill="currentColor"/><path d="M10.5 2v8L4 6z" fill="currentColor"/></svg>',
+  play:  '<svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M3 1.5v9L10.5 6z" fill="currentColor"/></svg>',
+  pause: '<svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><rect x="2.5" y="2" width="2.5" height="8" fill="currentColor"/><rect x="7" y="2" width="2.5" height="8" fill="currentColor"/></svg>',
+  next:  '<svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M1.5 2v8L8 6z" fill="currentColor"/><rect x="8.8" y="2" width="1.7" height="8" fill="currentColor"/></svg>',
+  all:   '<svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M.8 2v8l5-4zM6.2 2v8l5-4z" fill="currentColor"/></svg>'
+};
+function setHTML(el, h){ if(el && el._h !== h){ el._h = h; el.innerHTML = h; } }
+function animUI(plan){
+  var strip = document.getElementById('anim');
+  if(!strip) return;
+  /* directly under the chart, above the export bar the shared runtime puts
+     there after the page has loaded */
+  if(cv.nextElementSibling !== strip) cv.parentNode.insertBefore(strip, cv.nextSibling);
+  var was = strip.hidden;
+  strip.hidden = !plan;
+  if(was !== strip.hidden) requestAnimationFrame(function(){ drawChart(); });
+  if(!plan) return;
+  var N = plan.steps.length, k = animStep(), cap = document.getElementById('a-cap');
+
+  /* The caption box keeps the height of the plan's longest caption, so the
+     strip -- and the chart, which is sized to leave room for it -- does not
+     change size from one step to the next. Measured once per design and width. */
+  var mk = capKey(plan) + '|' + strip.clientWidth;
+  if(cap._mk !== mk){
+    cap._mk = mk; cap.style.minHeight = '';
+    var hmax = 0;
+    [plan.base].concat(plan.steps.map(function(s){ return s.cap; })).forEach(function(t){
+      cap.innerHTML = '<b>' + N + ' of ' + N + '</b>' + t;
+      hmax = Math.max(hmax, cap.offsetHeight);
+    });
+    cap._h = null;
+    cap.style.minHeight = hmax + 'px';
+  }
+  var txt;
+  if(!ANIM.on) txt = '<b>' + N + ' steps</b>The construction, one step at a time.';
+  else if(k === 0) txt = '<b>start</b>' + plan.base;
+  else txt = '<b>' + k + ' of ' + N + '</b>' + plan.steps[k - 1].cap;
+  setHTML(cap, txt);
+
+  var pb = document.getElementById('a-play'), ab = document.getElementById('a-all');
+  var playing = ANIM.playing;
+  setHTML(pb, playing ? AICO.pause : AICO.play);
+  pb.setAttribute('aria-label', playing ? 'Pause' : 'Play the next step');
+  pb.title = pb.getAttribute('aria-label');
+  document.getElementById('a-back').disabled = ANIM.on && ANIM.t <= 0;
+  document.getElementById('a-next').disabled = ANIM.on && ANIM.t >= N;
+  ab.setAttribute('aria-pressed', playing && ANIM.all ? 'true' : 'false');
+}
+function plainText(h){ var d = document.createElement('div'); d.innerHTML = h; return d.textContent; }
+function capKey(plan){ return plan.base + plan.steps.map(function(s){ return s.cap; }).join(''); }
 
 /* ===================== main chart draw ===================== */
 
@@ -1735,7 +2102,10 @@ function sizeChart(){
   var full = !!(document.fullscreenElement || document.webkitFullscreenElement);
   var mast = full ? 0 : (parseFloat(getComputedStyle(document.documentElement)
                            .getPropertyValue('--mast-h')) || 0);
-  var cap = Math.min(1000, (window.innerHeight || 800) - mast - (full ? 20 : 24));
+  /* and the strip of animation controls under it, when it is showing */
+  var strip = document.getElementById('anim');
+  var sh = (strip && !strip.hidden) ? strip.offsetHeight : 0;
+  var cap = Math.min(1000, (window.innerHeight || 800) - mast - (full ? 20 : 24) - sh);
   var px = Math.round(Math.min(w, cap)) + 'px';
   if(cv.style.height !== px) cv.style.height = px;
 }
@@ -1757,6 +2127,21 @@ function centreWrap(c, text, x, y, maxW){
 
 function drawChart(){
   var C = EM.colors();
+  /* the animation's state for this one draw (see the animated construction) */
+  if(ANIM.on && ANIM.key !== animKey()) animOff();
+  ANIM_VS = 0; ANIM_D = null; ANIM_PEN = null;
+  if(ANIM.on){
+    var aSol = solve().sols[S.pick];
+    var sTurn = stage('turn');
+    if(stepIndex('turn') >= 0 && sTurn < 1){
+      ANIM_VS = 1;                       /* not turned yet: still on z */
+      if(sTurn > 0){                     /* turning: half a turn clockwise round the circle */
+        var gt = zToG(S.r, S.x), mt = mag(gt), at = Math.atan2(gt[1], gt[0]) - Math.PI*sTurn;
+        ANIM_PEN = [mt*Math.cos(at), mt*Math.sin(at)];
+      }
+    }
+    if(aSol && aSol.d != null && stage('travel') < 1) ANIM_D = aSol.d*stage('travel');
+  }
   sizeChart();
   EM.fit(cv);
   layout();
@@ -1832,14 +2217,34 @@ function drawChart(){
   }
   /* The half turn from z to y (or back), drawn as the diameter through the
      centre. It is a move on paper, so it is shown as one rather than happening
-     to the numbers unseen. g is where it starts, in display coordinates. */
-  function halfTurn(g){
-    var a = P0(g[0], g[1]), b = P0(-g[0], -g[1]);
-    rec('turns', [[g[0], g[1]], [-g[0], -g[1]]]);
+     to the numbers unseen. g is where it starts, in display coordinates.
+     Part-way through the animation (s < 1) the diameter is drawn as far as it
+     has got, and the point being turned rides its own circle round,
+     clockwise, half a turn. */
+  function halfTurn(g, s){
+    if(s == null) s = 1;
+    if(s <= 0) return;
+    var e = s >= 1 ? [-g[0], -g[1]] : [g[0]*(1 - 2*s), g[1]*(1 - 2*s)];
+    var a = P0(g[0], g[1]), b = P0(e[0], e[1]);
+    rec('turns', [[g[0], g[1]], e]);
     c.save();
     c.strokeStyle = C.ink3; c.globalAlpha = 0.6; c.lineWidth = 1.3/S.zoom;
     c.setLineDash([5/S.zoom, 4/S.zoom]);
     c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke();
+    c.restore();
+    if(s < 1){
+      var mg = Math.hypot(g[0], g[1]), ag = Math.atan2(g[1], g[0]) - Math.PI*s;
+      penAt([mg*Math.cos(ag), mg*Math.sin(ag)]);
+    }
+  }
+  /* the point a move is carrying, where the static view has no marker for it */
+  function penAt(gd){
+    var pp = P0(gd[0], gd[1]);
+    DRAWN.pen = [gd[0], gd[1]];
+    c.save();
+    c.beginPath(); c.arc(pp[0], pp[1], Math.max(4, G.size*0.0075)/S.zoom, 0, TAU);
+    c.fillStyle = C.acc; c.fill();
+    c.strokeStyle = C.sunk; c.lineWidth = 1.4/S.zoom; c.stroke();
     c.restore();
   }
 
@@ -1848,11 +2253,12 @@ function drawChart(){
      the impedance chart (turned view) the forbidden disc g > gmax becomes the
      printed r = gmax circle and the helper becomes the printed r = 1 circle
      rotated toward the load; on the admittance chart they are g circles. */
-  if(S.method === 'dstub' && res.gmax){
+  var sTg = stage('target');
+  if(S.method === 'dstub' && res.gmax && sTg > 0){
     var gm = res.gmax;
     circle(-gm/(1+gm), 0, 1/(1+gm), null, 'forbidden',
-           { col: C.warn, alpha: 0.55, w: 1.6, dash: [5,4], fill: 0.11 });
-    if(G.size >= 440){
+           { col: C.warn, alpha: 0.55*sTg, w: 1.6, dash: [5,4], fill: 0.11*sTg });
+    if(G.size >= 440 && sTg >= 1){
       var fc = P(-gm/(1+gm), 0), fr = G.R/(1+gm);
       c.save();
       c.font = Math.max(9, Math.min(11.5, G.size*0.0155)) + 'px ' + MONO;
@@ -1864,7 +2270,7 @@ function drawChart(){
        stub 1 must land */
     var ph = 2*TAU*S.dd;
     circle(-0.5*Math.cos(ph), -0.5*Math.sin(ph), 0.5, null, 'g = 1 rotated back',
-           { alpha: 0.45, w: 1.8, dash: [7,5] });
+           { alpha: 0.45*sTg, w: 1.8, dash: [7,5] });
   }
 
   /* --- L-network: the circles the construction runs on ---
@@ -1907,48 +2313,62 @@ function drawChart(){
 
   /* --- the construction --- */
   if(sol){
+    /* Each move is drawn as far as the animation has got: stage() is 1 for
+       all of them in the static view. */
+    var MV = function(tag, dash, hf, label, lf, sg, sized){
+      return { col: C.acc, w: 3.4, dash: dash, alpha: dash ? 1 : 0.95, tag: tag,
+               hf: hf, label: label, lf: lf, sg: sg, sized: sized };
+    };
+    /* a travel arc, recomputed for the distance gone so far */
+    var travelMove = function(g0, d, s, tag, label){
+      if(s <= 0) return;
+      stagedMove(c, travelPath(g0, s >= 1 ? d : d*s), s, MV(tag, null, 0.55, label, 0.5, null, true));
+    };
     if(S.method === 'dstub'){
       var yL0 = inv(S.r, S.x);
       var a1 = pathG(sol.g, yL0[1], sol.bmid);          /* stub 1 */
-      polyline(c, a1, C.acc, 3.4, null, 0.95, 'stub 1'); headAt(c, a1, 0.6, C.acc);
-      labelPath(c, a1, 0.5, 'stub 1', C.acc);
-      var a2 = travelPath(yToG(sol.g, sol.bmid), S.dd); /* the spacing */
-      polyline(c, a2, C.acc, 3.4, null, 0.95, 'spacing'); headAt(c, a2, 0.55, C.acc);
-      labelPath(c, a2, 0.5, 'd = ' + n3(S.dd) + 'λ', C.acc);
+      stagedMove(c, a1, stage('stub1'), MV('stub 1', null, 0.6, 'stub 1', 0.5));
+      travelMove(yToG(sol.g, sol.bmid), S.dd, stage('spacing'), 'spacing',   /* the spacing */
+                 'd = ' + n3(S.dd) + 'λ');
       var a3 = pathG(1, sol.y2[1], 0);                  /* stub 2 */
-      polyline(c, a3, C.acc, 3.4, [7,5], 1, 'stub 2'); headAt(c, a3, 0.7, C.acc);
-      labelPath(c, a3, 0.45, 'stub 2', C.acc);
-      drawStubArc(c, C, S.openStub, sol.ls2);
+      stagedMove(c, a3, stage('stub2'), MV('stub 2', [7,5], 0.7, 'stub 2', 0.45));
+      drawStubArc(c, C, S.openStub, sol.ls2, stage('stub2arc'));
     } else
     if(S.method === 'shunt' || S.method === 'series'){
       /* the circle you are aiming at, whole, so the target is unmistakable:
          r = 1 for a series stub; g = 1 for a shunt stub, which on the
-         impedance chart is the printed r = 1 read on the turned point */
-      circle(sol.series ? 0.5 : -0.5, 0, 0.5, null, sol.series ? 'r = 1' : 'g = 1',
+         impedance chart is the printed r = 1 read on the turned point. It is
+         placed with the finished view's sign, so it is already where it will
+         be while the animated point is still on z. */
+      circle(sol.series ? 0.5 : -0.5, 0, 0.5, viewSignFinal(), sol.series ? 'r = 1' : 'g = 1',
              { alpha: 0.22 });
-      var p1 = travelPath(gL, sol.d);
-      polyline(c, p1, C.acc, 3.4, null, 0.95, 'travel'); headAt(c, p1, 0.55, C.acc);
-      if(sol.d > 0.03) labelPath(c, p1, 0.5, 'd = ' + n3(sol.d) + 'λ', C.acc);
+      travelMove(gL, sol.d, stage('travel'), 'travel',
+                 sol.d > 0.03 ? 'd = ' + n3(sol.d) + 'λ' : null);
       var p2 = sol.series ? pathR(1, sol.line, 0) : pathG(1, sol.line, 0);
-      polyline(c, p2, C.acc, 3.4, [7,5], 1, 'stub'); headAt(c, p2, 0.72, C.acc);
-      labelPath(c, p2, 0.42, 'stub', C.acc);
-      drawStubArc(c, C, S.openStub, sol.ls);
+      stagedMove(c, p2, stage('tocentre'), MV('stub', [7,5], 0.72, 'stub', 0.42));
+      drawStubArc(c, C, S.openStub, sol.ls, stage('stubarc'));
     } else if(S.method === 'qwt'){
-      var q1 = travelPath(gL, sol.d);
-      polyline(c, q1, C.acc, 3.4, null, 0.95, 'travel'); headAt(c, q1, 0.55, C.acc);
-      if(sol.d > 0.03) labelPath(c, q1, 0.5, 'd = ' + n3(sol.d) + 'λ', C.acc);
-      var a = P(sol.g[0], sol.g[1]), b = P(0,0);
-      var qt = 'λ/4 of ' + sig(sol.z1*S.z0) + ' Ω';
-      rec('paths', { tag: 'transformer', pts: [[sol.g[0], sol.g[1]], [0, 0]] });
-      rec('labels', qt);
-      c.save(); c.setLineDash([6,4]); c.strokeStyle = C.acc; c.lineWidth = 2.4;
-      c.globalAlpha = 0.85;
-      c.beginPath(); c.moveTo(a[0],a[1]); c.lineTo(b[0],b[1]); c.stroke();
-      c.setLineDash([]); c.globalAlpha = 1;
-      c.font = Math.max(9, Math.min(12, G.size*0.0165)) + 'px ' + MONO;
-      c.fillStyle = C.acc; c.textAlign = 'center'; c.textBaseline = 'bottom';
-      c.fillText(qt, (a[0]+b[0])/2, a[1] - Math.max(7, G.size*0.012));
-      c.restore();
+      travelMove(gL, sol.d, stage('travel'), 'travel',
+                 sol.d > 0.03 ? 'd = ' + n3(sol.d) + 'λ' : null);
+      /* the transformer, drawn from the real point in to the centre */
+      var sX = stage('xfmr');
+      if(sX > 0){
+        var qe = sX >= 1 ? [0, 0] : [sol.g[0]*(1 - sX), sol.g[1]*(1 - sX)];
+        var a = P(sol.g[0], sol.g[1]), b = P(qe[0], qe[1]);
+        var qt = 'λ/4 of ' + sig(sol.z1*S.z0) + ' Ω';
+        rec('paths', { tag: 'transformer', pts: [[sol.g[0], sol.g[1]], qe] });
+        c.save(); c.setLineDash([6,4]); c.strokeStyle = C.acc; c.lineWidth = 2.4;
+        c.globalAlpha = 0.85;
+        c.beginPath(); c.moveTo(a[0],a[1]); c.lineTo(b[0],b[1]); c.stroke();
+        c.setLineDash([]); c.globalAlpha = 1;
+        if(sX >= 1){
+          rec('labels', qt);
+          c.font = Math.max(9, Math.min(12, G.size*0.0165)) + 'px ' + MONO;
+          c.fillStyle = C.acc; c.textAlign = 'center'; c.textBaseline = 'bottom';
+          c.fillText(qt, (a[0]+b[0])/2, a[1] - Math.max(7, G.size*0.012));
+        }
+        c.restore();
+      }
     } else if(S.method === 'lnet'){
       /* the sign of each element's move: on the impedance chart the shunt one
          is on the turned point; on the admittance chart nothing turns */
@@ -1960,26 +2380,22 @@ function drawChart(){
       if(sol.midIsZ){
         l1 = pathR(S.r, S.x, sol.mid[1]);            s1 = 1;    /* series, on z */
         l2 = pathG(1, -sol.mid[1]/S.r, 0);           s2 = sSh;  /* shunt, g = 1 */
-        if(lnetZ && has2) halfTurn(zToG(sol.mid[0], sol.mid[1]));
+        if(lnetZ && has2) halfTurn(zToG(sol.mid[0], sol.mid[1]), stage('turn2'));
       } else {
         var yL = inv(S.r, S.x);
         l1 = pathG(yL[0], yL[1], sol.mid[1]);        s1 = sSh;  /* shunt, g = g_L */
         l2 = pathR(1, -sol.mid[1]/sol.mid[0], 0);    s2 = 1;    /* series, r = 1 */
         if(lnetZ && has1){
           var gyL = yToG(yL[0], yL[1]), gym = yToG(sol.mid[0], sol.mid[1]);
-          halfTurn(gyL);                             /* z_L over to y_L */
-          if(has2) halfTurn([-gym[0], -gym[1]]);     /* y back over to z */
+          halfTurn(gyL, stage('turn1'));             /* z_L over to y_L */
+          if(has2) halfTurn([-gym[0], -gym[1]], stage('turn2'));   /* y back over to z */
         }
       }
       var n1t = sol.midIsZ ? 'series' : 'shunt', n2t = sol.midIsZ ? 'shunt' : 'series';
-      if(has1){
-        polyline(c, l1, C.acc, 3.4, null, 0.95, n1t, s1); headAt(c, l1, 0.6, C.acc, s1);
-        labelPath(c, l1, 0.5, sol.midIsZ ? 'series x' : 'shunt b', C.acc, s1);
-      }
-      if(has2){
-        polyline(c, l2, C.acc, 3.4, [7,5], 1, n2t, s2); headAt(c, l2, 0.7, C.acc, s2);
-        labelPath(c, l2, 0.45, sol.midIsZ ? 'shunt b' : 'series x', C.acc, s2);
-      }
+      if(has1) stagedMove(c, l1, stage('el1'),
+                          MV(n1t, null, 0.6, sol.midIsZ ? 'series x' : 'shunt b', 0.5, s1));
+      if(has2) stagedMove(c, l2, stage('el2'),
+                          MV(n2t, [7,5], 0.7, sol.midIsZ ? 'shunt b' : 'series x', 0.45, s2));
     }
   } else if(S.d > 0.0005 && m > 0.004){
     var pd = travelPath(gL, S.d);
@@ -1999,7 +2415,7 @@ function drawChart(){
   }
 
   /* --- markers --- */
-  var gC = curG(), kv = viewSign();
+  var gC = curG(ANIM_D), kv = viewSign();
   /* The L-network does not travel. Practising it, the filled marker is where
      the element being added starts from: series first, the load and then,
      once turned, the point the series element reached; shunt first, the load
@@ -2024,6 +2440,8 @@ function drawChart(){
     var rot = viewSign() < 0 ? Math.PI : 0;
     var angC = Math.atan2(gC[1], gC[0]) + rot;
     var angL = Math.atan2(gRef[1], gRef[0]) + rot;
+    /* part-way through the animated half turn: one mark, at the turning point */
+    if(ANIM_PEN) angL = angC = Math.atan2(ANIM_PEN[1], ANIM_PEN[0]);
     DRAWN.ring = [angL, angC];
     var moved = Math.abs(angC - angL) > 1e-4;
 
@@ -2035,6 +2453,8 @@ function drawChart(){
 
     if(S.rings && G.nums){
       var r0 = ringBase(), r1 = ringBase() + 3*G.h;
+      /* the radius the sweep is drawn at, published for the tests */
+      var rSw = r1 - G.h*0.5; DRAWN.sweepR = rSw;
       function ringMark(a, here){
         var t0 = rimPt(a, r0), t1 = rimPt(a, r1);
         c.save();
@@ -2057,7 +2477,7 @@ function drawChart(){
         c.strokeStyle = C.acc; c.globalAlpha = 0.35;
         c.lineWidth = G.h*0.9;
         c.beginPath();
-        c.arc(G.cx, G.cy, r1 - G.h*0.5, -angL, -angC, false);
+        c.arc(G.cx, G.cy, rSw, -angL, -angC, false);
         c.stroke(); c.restore();
       }
       if(moved) ringMark(angL, false);
@@ -2075,9 +2495,10 @@ function drawChart(){
         c.beginPath(); c.moveTo(G.cx, G.cy); c.lineTo(sL[0], sL[1]); c.stroke();
         c.restore();
         if(G.size >= 440){
-          var mid = angL - TAU*wrapHalf(S.d);          /* halfway round the clockwise travel */
+          var dRing = ANIM_D != null ? ANIM_D : S.d;   /* the animation's travel so far */
+          var mid = angL - TAU*wrapHalf(dRing);        /* halfway round the clockwise travel */
           var pm = rimPt(mid, G.R - Math.max(16, G.size*0.03));
-          var dt = 'd = ' + n3(wrapHalf(S.d)) + 'λ';
+          var dt = 'd = ' + n3(wrapHalf(dRing)) + 'λ';
           DRAWN.ringTxt = dt;
           c.save();
           c.font = Math.max(9, Math.min(11.5, G.size*0.0155)) + 'px ' + MONO;
@@ -2114,6 +2535,25 @@ function drawChart(){
      the point its first element reached. Shunt first, once turned back, the
      same diameter is the turn back from y to z. */
   var tz = null, back = false;
+  /* the animated view turn, part-way: the diameter drawn as far as the point
+     has turned, from z */
+  if(ANIM_PEN){
+    var tsA = stage('turn'), te = [gL[0]*(1 - 2*tsA), gL[1]*(1 - 2*tsA)];
+    var pzA = P0(gL[0], gL[1]), peA = P0(te[0], te[1]);
+    rec('turns', [[gL[0], gL[1]], te]);
+    c.save();
+    c.strokeStyle = C.ink3; c.globalAlpha = 0.5; c.lineWidth = 1.2*mk;
+    c.setLineDash([5*mk, 4*mk]);
+    c.beginPath(); c.moveTo(pzA[0], pzA[1]); c.lineTo(peA[0], peA[1]); c.stroke();
+    c.restore();
+    if(G.size >= 430){
+      c.save();
+      c.font = Math.max(9, Math.min(11.5, G.size*0.0155)) + 'px ' + MONO;
+      c.fillStyle = C.ink3; c.textAlign = 'center'; c.textBaseline = 'bottom';
+      c.fillText('z', pzA[0], pzA[1] - Math.max(9, G.size*0.016)*mk);
+      c.restore();
+    }
+  }
   if(kv < 0) tz = lnetPr ? gC : gL;
   else if(lnetPr && S.prac.order === 'shunt' && Math.abs(S.prac.b1) > 1e-12){
     tz = gC; back = true;
@@ -2139,8 +2579,8 @@ function drawChart(){
   }
 
   /* current point: filled */
-  var pc = P(gC[0], gC[1]);
-  DRAWN.pt = [kv*gC[0], kv*gC[1]];
+  var pc = ANIM_PEN ? P0(ANIM_PEN[0], ANIM_PEN[1]) : P(gC[0], gC[1]);
+  DRAWN.pt = ANIM_PEN ? [ANIM_PEN[0], ANIM_PEN[1]] : [kv*gC[0], kv*gC[1]];
   c.beginPath(); c.arc(pc[0], pc[1], Math.max(5, G.size*0.0095)*mk, 0, TAU);
   c.fillStyle = C.acc; c.fill();
   c.strokeStyle = C.sunk; c.lineWidth = 1.6*mk; c.stroke();
@@ -2201,6 +2641,17 @@ function drawChart(){
 
   drawDirections(c, C);
   c.restore();
+  /* the animation's instant: which steps, how far, the step shown and what
+     it says, so a test can hold any frame against the theory */
+  var aPlan = ANIM.on ? ANIM.plan : animPlan();
+  if(ANIM.on){
+    var ak = animStep(), aid = ak ? ANIM.plan.steps[ak - 1].id : null;
+    DRAWN.anim = { ids: ANIM.plan.steps.map(function(s){ return s.id; }), t: ANIM.t,
+                   step: ak, s: aid ? stage(aid) : 1, playing: ANIM.playing,
+                   cap: plainText(ak ? ANIM.plan.steps[ak - 1].cap : ANIM.plan.base) };
+  }
+  ANIM_VS = 0; ANIM_D = null; ANIM_PEN = null;
+  animUI(aPlan);
   var dAttr = JSON.stringify(DRAWN, function(k, v){
     return typeof v === 'number' ? Math.round(v*1e6)/1e6 : v; });
   if(cv.getAttribute('data-drawn') !== dAttr) cv.setAttribute('data-drawn', dAttr);
@@ -2243,9 +2694,10 @@ function lnetStart(){
   var zm = inv(yl[0], yl[1] + Pp.b1);
   return zToG(zm[0], zm[1]);
 }
-function curG(){
+function curG(d){
+  if(d == null) d = S.d;
   var gL = zToG(S.r, S.x), m = mag(gL), th = Math.atan2(gL[1], gL[0]);
-  var a = th - 2*TAU*S.d;
+  var a = th - 2*TAU*d;
   return [m*Math.cos(a), m*Math.sin(a)];
 }
 
@@ -2853,10 +3305,13 @@ function legend(){
   if(S.grid !== 'z') it(C.h, 'admittance grid  g, b');
   it(C.ink, 'constant-SWR circle (dashed)');
   if(S.method) it(C.acc, 'construction, clockwise');
-  if(S.method === 'shunt' || S.method === 'series')
+  if(S.method === 'shunt' || S.method === 'series'){
     it(C.acc, 'stub, in the outer band');
+    it(C.acc, 'the circle the stub’s value is read on (dotted)');
+  }
   if(S.method === 'dstub'){
     it(C.acc, 'stub 2, in the outer band');
+    it(C.acc, 'the circle stub 2’s value is read on (dotted)');
     it(C.acc, 'g = 1 rotated back by d (dashed)');
     it(C.warn, 'forbidden region');
   }
@@ -3902,6 +4357,37 @@ Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'), functio
       refresh();
       [60, 220, 500].forEach(function(t){ setTimeout(refresh, t); });
     });
+  });
+})();
+
+/* ---------- the animated construction's controls ----------
+   Play runs one step and stops on it, so the construction can be talked
+   through; the double arrow runs every step with a pause between. Back and
+   next jump a whole step, drawn at once. Any of them starts from the finished
+   drawing that was on show. */
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  if(!$('anim')) return;
+  $('a-start').innerHTML = AICO.start; $('a-back').innerHTML = AICO.back;
+  $('a-next').innerHTML = AICO.next;   $('a-all').innerHTML = AICO.all;
+  $('a-play').addEventListener('click', function(){ animPlay(false); });
+  $('a-all').addEventListener('click', function(){
+    /* playing: the first call pauses; a single step under way becomes a run */
+    if(ANIM.playing){ var was = ANIM.all; animPlay(true); if(was) return; }
+    animPlay(true);
+  });
+  $('a-start').addEventListener('click', function(){ if(animBegin()) animGo(0); });
+  $('a-back').addEventListener('click', function(){
+    if(!animBegin()) return;
+    animGo(Math.ceil(ANIM.t - 1e-9) - 1);
+  });
+  $('a-next').addEventListener('click', function(){
+    if(!animBegin()) return;
+    var N = ANIM.plan.steps.length;
+    animGo(ANIM.t >= N ? N : Math.floor(ANIM.t + 1e-9) + 1);
+  });
+  $('a-speed').addEventListener('change', function(){
+    ANIM.speed = parseFloat(this.value) || 1;
   });
 })();
 

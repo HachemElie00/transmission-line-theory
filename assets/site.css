@@ -17,11 +17,11 @@
 @font-face{font-family:"IBM Plex Sans Condensed";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/cond-700-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304-0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 
 /* ---- palette ----
-   Dark is the default. The base :root carries it and light is opt-in, applied
-   only when the theme switch sets data-theme="light". The OS preference is
-   deliberately not consulted: the site chooses dark, the reader overrides.
-   (To follow the OS again, wrap the light block in
-   @media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){ ... } }.)
+   Light is the default. The base :root carries it and dark is opt-in, applied
+   only when the theme switch sets data-theme="dark". The OS preference is
+   deliberately not consulted: the site chooses light, the reader overrides.
+   (To follow the OS again, wrap the dark block in
+   @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ ... } }.)
 
    Roles, and why they are split:
 
@@ -42,20 +42,6 @@
    Every colour here was checked for contrast against --sunk (the figure
    background) and for perceptual distance from the others; see tests. */
 :root{
-  color-scheme: dark;
-  --bg:#17181b; --surface:#1e1f23; --sunk:#111214; --raise:#26282d;
-  --ink:#e9e9ea; --ink2:#a1a3a8; --ink3:#73767c;
-  --line:#2e3035; --line2:#41444a;
-  --e:#5ba8f5; --h:#ff9a52; --acc:#ff5d78; --accfill:rgba(255,93,120,.16);
-  --z:#34c3a4;
-  --ui:#e0b45c; --uifill:rgba(224,180,92,.16);
-  --ok:#57c98a; --warn:#ff9a52;
-  --f-disp:"IBM Plex Sans Condensed",system-ui,sans-serif;
-  --f-body:"IBM Plex Sans",system-ui,sans-serif;
-  --f-mono:"IBM Plex Mono","IBM Plex Sans",ui-monospace,SFMono-Regular,monospace;
-  --col:min(100% - 40px, 880px);
-}
-:root[data-theme="light"]{
   color-scheme: light;
   --bg:#ececeb; --surface:#f8f8f7; --sunk:#e2e2e0; --raise:#ffffff;
   --ink:#191a1c; --ink2:#4f5155; --ink3:#7b7e84;
@@ -64,6 +50,20 @@
   --z:#0d7a6b;
   --ui:#8a6a16; --uifill:rgba(138,106,22,.16);
   --ok:#1f7a45; --warn:#c0531a;
+  --f-disp:"IBM Plex Sans Condensed",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono","IBM Plex Sans",ui-monospace,SFMono-Regular,monospace;
+  --col:min(100% - 40px, 880px);
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#17181b; --surface:#1e1f23; --sunk:#111214; --raise:#26282d;
+  --ink:#e9e9ea; --ink2:#a1a3a8; --ink3:#73767c;
+  --line:#2e3035; --line2:#41444a;
+  --e:#5ba8f5; --h:#ff9a52; --acc:#ff5d78; --accfill:rgba(255,93,120,.16);
+  --z:#34c3a4;
+  --ui:#e0b45c; --uifill:rgba(224,180,92,.16);
+  --ok:#57c98a; --warn:#ff9a52;
 }
 *{box-sizing:border-box}
 /* overflow-x:hidden forces the OTHER axis to compute as auto, which makes both
@@ -96,6 +96,11 @@ a{color:var(--ui)}
   border:1px solid var(--line);border-radius:4px;background:var(--surface);
   color:var(--ink2);cursor:pointer;padding:0}
 .themebtn:hover{border-color:var(--ink3);color:var(--ink)}
+/* the bug report: a link, sized and bordered like the theme switch beside it */
+.bugbtn{display:grid;place-items:center;width:32px;height:28px;flex:none;
+  border:1px solid var(--line);border-radius:4px;background:var(--surface);
+  color:var(--ink2);text-decoration:none}
+.bugbtn:hover,.bugbtn:focus-visible{border-color:var(--ink3);color:var(--ink)}
 .mast .nav{display:flex;gap:6px;flex:none}
 .mast .nav a{font-family:var(--f-mono);font-size:15px;line-height:1;color:var(--ink2);
   text-decoration:none;border:1px solid var(--line);border-radius:4px;
@@ -103,6 +108,20 @@ a{color:var(--ui)}
 .mast .nav a:hover{border-color:var(--ink3);color:var(--ink)}
 .mast .nav a.off{opacity:.3;pointer-events:none}
 @media (max-width:560px){.mast .ch{display:none}}
+/* On a phone the bar needed 475px before the report button and 521px after,
+   and html's overflow clip hid the excess: the hide-bar button and the
+   previous/next arrows were cut off without a trace. Under 560px the gaps
+   tighten and the arrows go -- every page ends with previous/next, and the
+   menu lists them all. Under 400px the wordmark takes two lines, which is
+   what lets the bar fit at 320px. */
+@media (max-width:560px){
+  .mast .in{gap:8px;padding-inline:10px}
+  .mast .nav{display:none}
+  .mast .sep ~ .sep{display:none}
+}
+@media (max-width:400px){
+  .mast a.home{white-space:normal;font-size:14.5px;line-height:1.1;max-width:9.5em}
+}
 
 /* chapter rail: the whole book across the bar, one click to anywhere */
 .mast .chrail{display:none;gap:2px;flex:none;flex-wrap:nowrap;white-space:nowrap}
@@ -118,26 +137,23 @@ a{color:var(--ui)}
 }
 
 /* ---- sidebar ----
-   Above 1180px the contents sit permanently down the left, the menu button
-   and the rail retire, and the reading column shifts right with the page. */
+   Hidden unless the reader has opened it: the menu button above 1180px shows
+   it and hides it again, and site.js puts .sb-on on <html> before first paint
+   only when the stored choice is "on". Hidden is the base rule, so a page
+   with no stored choice -- or one whose storage the browser keeps per file --
+   never flashes a sidebar it then removes. Shown, the contents sit down the
+   left, the rail retires, and the reading column shifts right. */
 .sidebar{display:none}
 @media (min-width:1180px){
-  body{padding-left:252px}
+  .sb-on body{padding-left:252px}
   /* the bar keeps the full width of the window so the button stays hard left,
      and the sidebar hangs below it */
-  .mast{margin-left:-252px;width:calc(100% + 252px)}
-  .sidebar{display:block;position:fixed;top:var(--mast-h,51px);left:0;bottom:0;width:252px;
+  .sb-on .mast{margin-left:-252px;width:calc(100% + 252px)}
+  .sb-on .sidebar{display:block;position:fixed;top:var(--mast-h,51px);left:0;bottom:0;width:252px;
     overflow-y:auto;overscroll-behavior:contain;z-index:30;
     background:var(--surface);border-right:1px solid var(--line);
-    padding:16px 12px 34px}
-  .mast .chrail{display:none}
-  .sidebar{padding-top:10px}
-
-  /* collapsed: the page reclaims the width and the bar goes back to normal */
-  .sb-off body{padding-left:0}
-  .sb-off .mast{margin-left:0;width:auto}
-  .sb-off .sidebar{display:none}
-  .sb-off .mast .chrail{display:flex}
+    padding:10px 12px 34px}
+  .sb-on .mast .chrail{display:none}
 }
 .sidebar .grp{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;
   text-transform:uppercase;color:var(--ink3);padding:16px 10px 5px}
@@ -165,11 +181,10 @@ a{color:var(--ui)}
 #sitemenu{position:absolute;top:calc(100% + 9px);left:0;z-index:40;
   width:min(90vw,330px);max-height:min(74vh,560px);overflow-y:auto;overscroll-behavior:contain;
   background:var(--raise);border:1px solid var(--line2);border-radius:7px;
-  box-shadow:0 14px 34px -8px rgba(0,0,0,.7);
+  box-shadow:0 14px 34px -10px rgba(0,0,0,.28),0 3px 9px -3px rgba(0,0,0,.18);
   padding:7px}
-/* the dark shadow is the default, as dark is; light needs the softer pair */
-:root[data-theme="light"] #sitemenu{
-  box-shadow:0 14px 34px -10px rgba(0,0,0,.28),0 3px 9px -3px rgba(0,0,0,.18)}
+/* the soft shadow is the default, as light is; dark needs the deeper one */
+:root[data-theme="dark"] #sitemenu{box-shadow:0 14px 34px -8px rgba(0,0,0,.7)}
 #sitemenu .grp{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;
   text-transform:uppercase;color:var(--ink3);padding:12px 10px 5px}
 #sitemenu .grp:first-child{padding-top:5px}
@@ -514,7 +529,7 @@ details.fold > summary:hover{color:var(--ui)}
     --accfill:rgba(143,15,42,.12); --ui:#6b5210; --uifill:rgba(107,82,16,.12);
     --ok:#17603a; --warn:#9c3f14;
   }
-  .sidebar, .mast, .totop, #sitemenu, .menuwrap, .figbar, .themebtn,
+  .sidebar, .mast, .totop, #sitemenu, .menuwrap, .figbar, .themebtn, .bugbtn,
   .pager, .chrail{display:none !important}
   body{padding-left:0 !important;font-size:11pt;background:#fff}
   .wrap{max-width:none;padding:0}
@@ -571,7 +586,6 @@ details.rdiag .rhint{padding:9px 13px 12px;margin:0}
 .rnote{margin-top:14px;font-size:13.5px;color:var(--ink2);min-height:1.2em}
 .rnote.ok{color:var(--ink)}
 .rnote.warn{color:var(--acc)}
-footer.site .fbug{display:block;margin-top:9px;font-family:var(--f-mono);font-size:12px}
 
 /* ---- wide-screen bleed ----
    The text column stays at a comfortable reading measure. The figures are the

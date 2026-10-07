@@ -127,8 +127,14 @@ function bandIndep(f, lim){
 
   let nonce = 0;
   const go = (h, method) => p.evaluate(async ({ h, n, method }) => {
-    await new Promise(res => { window.addEventListener('hashchange', () => setTimeout(res, 0), { once: true });
-                               location.hash = h + '&nonce=' + n; });
+    /* a pending debounced replaceState from the last case can land between
+       the assignment and the hashchange event, and the page then reads the
+       OLD hash: retry until the URL carries this case's nonce */
+    for (let k = 0; k < 5; k++){
+      await new Promise(res => { window.addEventListener('hashchange', () => setTimeout(res, 0), { once: true });
+                                 location.hash = h + '&nonce=' + n; });
+      if (location.hash.indexOf('nonce=' + n) >= 0) break;
+    }
     if (method !== undefined){
       const sel = document.getElementById('i-method');
       sel.value = method; sel.dispatchEvent(new Event('change', { bubbles: true }));

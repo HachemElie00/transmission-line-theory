@@ -8,13 +8,70 @@ var SB_KEY = 'tlt-sidebar', TH_KEY = 'tlt-theme', MB_KEY = 'tlt-mastbar';
 function thStored(){ try{ return localStorage.getItem(TH_KEY); }catch(e){ return null; } }
 function sbStored(){ try{ return localStorage.getItem(SB_KEY); }catch(e){ return null; } }
 function mbStored(){ try{ return localStorage.getItem(MB_KEY); }catch(e){ return null; } }
+
+/* Opened as local files, Firefox gives every file its own storage, so a theme
+   or sidebar chosen on one page was unknown to the next. There, and only
+   there, links within the site carry the three choices in ?tlt=theme.sidebar.bar
+   (see carryURL below); the page arriving saves them as its own and takes
+   them out of the address. Over http every page shares one storage and the
+   links are left alone. */
+var CARRY = (function(){
+  var c = {};
+  if(location.protocol !== 'file:') return c;
+  var m = /[?&]tlt=(light|dark)\.(on|off)\.(on|off)(?:&|$)/.exec(location.search);
+  if(!m) return c;
+  c.th = m[1]; c.sb = m[2]; c.mb = m[3];
+  try{
+    localStorage.setItem(TH_KEY, c.th);
+    localStorage.setItem(SB_KEY, c.sb);
+    localStorage.setItem(MB_KEY, c.mb);
+  }catch(e){}
+  try{
+    var q = location.search.replace(/^\?/, '').split('&')
+      .filter(function(p){ return p && p.indexOf('tlt=') !== 0; }).join('&');
+    history.replaceState(history.state, '',
+      location.pathname + (q ? '?' + q : '') + location.hash);
+  }catch(e){}
+  return c;
+})();
+function carryURL(href){
+  if(location.protocol !== 'file:') return href;
+  var u;
+  try{ u = new URL(href, location.href); }catch(e){ return href; }
+  if(u.protocol !== 'file:' || !/\.html$/i.test(u.pathname)) return href;
+  if(u.pathname === location.pathname) return href;   /* same page: an anchor, not a load */
+  var de = document.documentElement;
+  var v = (de.getAttribute('data-theme') === 'dark' ? 'dark' : 'light') + '.'
+        + (de.classList.contains('sb-on') ? 'on' : 'off') + '.'
+        + (de.classList.contains('mb-off') ? 'off' : 'on');
+  var q = u.search.replace(/^\?/, '').split('&')
+    .filter(function(p){ return p && p.indexOf('tlt=') !== 0; });
+  q.push('tlt=' + v);
+  u.search = '?' + q.join('&');
+  return u.href;
+}
+/* Rewritten when a link is about to be followed, not at load, so it carries
+   the choices as they are then. Listening on the document, these run after a
+   link's own handlers (the report button rewrites its address the same way). */
+if(location.protocol === 'file:'){
+  ['pointerdown', 'focusin', 'click', 'auxclick', 'contextmenu'].forEach(function(ev){
+    document.addEventListener(ev, function(e){
+      var a = e.target && e.target.closest && e.target.closest('a[href]');
+      if(!a || a.hasAttribute('download')) return;
+      var h = carryURL(a.getAttribute('href'));
+      if(h !== a.getAttribute('href')) a.setAttribute('href', h);
+    });
+  });
+}
+
 (function(){
-  var th = thStored();
+  var th = CARRY.th || thStored();
   if(th === 'light' || th === 'dark') document.documentElement.setAttribute('data-theme', th);
-  if(sbStored() === 'off') document.documentElement.classList.add('sb-off');
+  /* the sidebar is hidden unless the reader has chosen to show it */
+  if((CARRY.sb || sbStored()) === 'on') document.documentElement.classList.add('sb-on');
   /* the top bar, hidden the same way and just as early, so it never
      flashes in and then vanishes */
-  if(mbStored() === 'off') document.documentElement.classList.add('mb-off');
+  if((CARRY.mb || mbStored()) === 'off') document.documentElement.classList.add('mb-off');
   try{ if('scrollRestoration' in history) history.scrollRestoration = 'manual'; }catch(e){}
   var moved = false;
   ['wheel','touchstart','keydown','pointerdown'].forEach(function(ev){
@@ -82,11 +139,25 @@ setTimeout(function(){
    ENDPOINT is set, so for now nothing links to it: not the menus, not the
    sidebar, not the footers, not search. Set this to true to put it back
    everywhere at once. The page itself stays and opens if visited directly. */
-var REPORT_ON = false;
+var REPORT_ON = true;
+
+/* The bug, drawn once: the report page's entry in the contents (small) and
+   the report button in the masthead (larger). */
+function bugSvg(px){
+  return '<svg viewBox="0 0 16 16" width="' + px + '" height="' + px + '" aria-hidden="true"'
+    + ' fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"'
+    + ' stroke-linejoin="round">'
+    + '<path d="M6.1 3.6 5 1.9M9.9 3.6 11 1.9"/>'
+    + '<path d="M5.8 5.2a2.2 2 0 0 1 4.4 0z" fill="currentColor"/>'
+    + '<path d="M8 6.6c-2.1 0-3.2 1.6-3.2 3.7S6 14.3 8 14.3s3.2-1.9 3.2-4S10.1 6.6 8 6.6z"/>'
+    + '<path d="M8 6.8v7.3"/>'
+    + '<path d="M4.9 8.3 2.8 7.2M4.8 10.4H2.4M5.1 12.4 3 13.6'
+    + 'M11.1 8.3l2.1-1.1M11.2 10.4h2.4M10.9 12.4l2.1 1.2"/>'
+    + '</svg>';
+}
 
 var SITE_PAGES = [
   ['Start',     'index.html',             '',          'Contents'],
-  ['Start',     'report.html',            '',          'Report a bug'],
   ['Tools',     'smith-tool.html',        '\u2699',    'Smith chart workbench'],
   ['Prologue',  'prologue-maxwell.html',  'P1',        "Maxwell's equations"],
   ['Prologue',  'prologue-helmholtz.html','P2',        'The wave equation and Helmholtz'],
@@ -100,7 +171,9 @@ var SITE_PAGES = [
   ['Chapters',  'input-impedance.html',   '08',        'Input impedance'],
   ['Chapters',  'line-lengths.html',      '09',        'Line lengths and transformers'],
   ['Chapters',  'smith-chart.html',       '10',        'The Smith chart'],
-  ['Chapters',  'matching.html',          '11',        'Impedance matching']
+  ['Chapters',  'matching.html',          '11',        'Impedance matching'],
+  /* last, in a group of its own, and drawn as a bug rather than a book */
+  ['Feedback',  'report.html',            bugSvg(11),  'Report a bug']
 ];
 if(!REPORT_ON) SITE_PAGES = SITE_PAGES.filter(function(p){ return p[1] !== 'report.html'; });
 
@@ -129,7 +202,7 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
      behind a button. Same list, same source. */
   function buildSidebar(cur){
     if(document.querySelector('.sidebar')) return;
-    if(sbStored() === 'off') return;        /* nothing to build, so nothing flashes */
+    if(!document.documentElement.classList.contains('sb-on')) return;   /* hidden: nothing to build, nothing flashes */
     var aside = document.createElement('aside');
     aside.className = 'sidebar';
     aside.setAttribute('aria-label', 'Contents');
@@ -195,6 +268,7 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
     var rh = '', lastGroup = null;
     SITE_PAGES.forEach(function(pg){
       if(pg[0] === 'Start') return;                /* the wordmark already goes home */
+      if(pg[0] === 'Feedback') return;             /* the bug button already reports */
       if(lastGroup && pg[0] !== lastGroup) rh += '<span class="gap"></span>';
       lastGroup = pg[0];
       rh += '<a href="' + pg[1] + '" title="' + pg[3].replace(/"/g, '&quot;') + '"'
@@ -213,12 +287,12 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
     var MOON = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">'
       + '<path d="M13.4 10.3A5.8 5.8 0 0 1 6 2.8a5.9 5.9 0 1 0 7.4 7.5z"'
       + ' fill="currentColor"/></svg>';
-    /* Dark is the site default, so anything that is not an explicit "light"
-       is dark. The OS preference is not consulted here, and must not be: the
-       stylesheet does not consult it either, and a disagreement between the
-       two would put the wrong icon on the button. */
+    /* Light is the site default, so only an explicit "dark" is dark. The OS
+       preference is not consulted here, and must not be: the stylesheet does
+       not consult it either, and a disagreement between the two would put the
+       wrong icon on the button. */
     function isDark(){
-      return document.documentElement.getAttribute('data-theme') !== 'light';
+      return document.documentElement.getAttribute('data-theme') === 'dark';
     }
     var tb = document.createElement('button');
     tb.type = 'button'; tb.className = 'themebtn';
@@ -237,8 +311,11 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
     syncTheme();
     /* No prefers-color-scheme listener: the OS no longer decides the theme,
        so there is nothing for it to resync. */
+    /* the contents page and the report form have no previous/next arrows;
+       without the else the switch was never added to them at all */
     var navEl = bar.querySelector('.nav');
     if(navEl) bar.insertBefore(tb, navEl);
+    else bar.appendChild(tb);
 
     var sep = bar.querySelector('.sep');
     if(sep){
@@ -260,7 +337,7 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
       catch(e){ return false; }
     }
     function syncBtn(){
-      var off = document.documentElement.classList.contains('sb-off');
+      var off = !document.documentElement.classList.contains('sb-on');
       if(wide()){
         btn.setAttribute('aria-expanded', off ? 'false' : 'true');
         btn.setAttribute('aria-label', off ? 'Show the contents sidebar'
@@ -275,9 +352,9 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
       if(wide()){
         if(!panel.hidden) open(false);
         var de = document.documentElement;
-        var off = de.classList.toggle('sb-off');
-        try{ localStorage.setItem(SB_KEY, off ? 'off' : 'on'); }catch(err){}
-        if(!off) buildSidebar(cur);
+        var on = de.classList.toggle('sb-on');
+        try{ localStorage.setItem(SB_KEY, on ? 'on' : 'off'); }catch(err){}
+        if(on) buildSidebar(cur);
         syncBtn();
         window.dispatchEvent(new Event('resize'));   /* canvases re-measure */
       } else {
@@ -342,31 +419,47 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
 })();
 
 /* ---------------------------------------------------------------
-   The report link in every footer. Built here, not written into
-   fifteen files, for the same reason as everything else in this file.
+   The report button in the masthead, beside the theme switch: a square
+   button with a bug drawn in it. Built here, not written into fifteen
+   files, for the same reason as everything else in this file.
 
    It carries where the reader was: the file name, which preselects the
    page on the form, and the whole address including the hash. That hash
    is what makes a workbench report reproducible -- the chart's entire
-   state is encoded in it, so the link is the bug.
+   state is encoded in it, so the link is the bug. The address is read
+   when the button is used, not when the page loads: the workbench
+   rewrites its hash as the reader works, and a link taken at load would
+   carry the state the chart started in. (The footer sentence this
+   replaced had exactly that fault.)
    --------------------------------------------------------------- */
 (function(){
+  var BUG = bugSvg(15);
   function here(){
     var f = location.pathname.split('/').pop();
     return f || 'index.html';
   }
+  function target(){
+    return 'report.html?from=' + encodeURIComponent(here())
+         + '&u=' + encodeURIComponent(location.href);
+  }
   function build(){
-    var page = here();
-    if(!REPORT_ON) return;                             /* hidden for now; see REPORT_ON */
-    if(page === 'report.html') return;                 /* not on the form itself */
-    var foot = document.querySelector('footer.site');
-    if(!foot || foot.querySelector('.fbug')) return;
+    if(!REPORT_ON) return;                             /* see REPORT_ON */
+    if(here() === 'report.html') return;               /* not on the form itself */
+    var bar = document.querySelector('.mast .in');
+    if(!bar || bar.querySelector('.bugbtn')) return;
     var a = document.createElement('a');
-    a.className = 'fbug';
-    a.href = 'report.html?from=' + encodeURIComponent(page)
-           + '&u=' + encodeURIComponent(location.href);
-    a.textContent = 'Found a bug on this page? Report it.';
-    foot.appendChild(a);
+    a.className = 'bugbtn';
+    a.innerHTML = BUG;
+    a.title = 'Report a bug on this page';
+    a.setAttribute('aria-label', a.title);
+    a.href = target();
+    /* every way the link can be followed sees the address as it is now */
+    ['pointerdown', 'focus', 'click', 'auxclick', 'contextmenu'].forEach(function(ev){
+      a.addEventListener(ev, function(){ a.href = target(); });
+    });
+    var tb = bar.querySelector('.themebtn');
+    if(tb) bar.insertBefore(a, tb.nextSibling);
+    else bar.appendChild(a);
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build);
   else build();
@@ -606,7 +699,7 @@ var BOOK = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"'
       else if(ev.key === 'ArrowUp'){ ev.preventDefault(); move(-1); }
       else if(ev.key === 'Enter'){
         var a = list.querySelectorAll('a')[sel];
-        if(a){ ev.preventDefault(); location.href = a.getAttribute('href'); }
+        if(a){ ev.preventDefault(); location.href = carryURL(a.getAttribute('href')); }
       } else if(ev.key === 'Escape'){ ev.preventDefault(); close(); }
     });
 

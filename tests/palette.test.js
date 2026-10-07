@@ -64,8 +64,8 @@ const MIN_DE       = 25;    /* comfortable; below 18 is a failure           */
 const s = H.suite('palette');
 
 const themes = {
-  'dark (default)': block(':root{'),
-  'light'         : block(':root[data-theme="light"]{')
+  'light (default)': block(':root{'),
+  'dark'           : block(':root[data-theme="dark"]{')
 };
 
 for (const [name, t] of Object.entries(themes)){
@@ -122,10 +122,11 @@ const mg = fs.readFileSync(path.join(H.SITE, 'matching.html'), 'utf8');
 s.check('the orientation grid in matching.html uses --z',
         /strokeStyle = C\.z/.test(mg));
 
-/* Dark must be the default: the base :root carries the dark palette, and
-   nothing may reintroduce an OS-preference branch for colour. */
-s.check('base :root declares color-scheme: dark',
-        /:root\{[^}]*color-scheme:\s*dark/.test(CSS));
+/* Light must be the default: the base :root carries the light palette, and
+   nothing may reintroduce an OS-preference branch for colour. (Dark was the
+   default until 2026-10-06; Elie switched it.) */
+s.check('base :root declares color-scheme: light',
+        /:root\{[^}]*color-scheme:\s*light/.test(CSS));
 s.check('no prefers-color-scheme colour rule',
         !/@media\s*\(prefers-color-scheme[^)]*\)\s*\{[^}]*--[a-z]/.test(CSS));
 

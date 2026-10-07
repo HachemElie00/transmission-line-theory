@@ -59,8 +59,14 @@ const distTo = (p, L) => Math.abs(Math.hypot(p[0] - L[1][0], p[1] - L[1][1]) - L
 
   let nonce = 0;
   const show = (h) => p.evaluate(async ({ h, n }) => {
-    await new Promise(res => { window.addEventListener('hashchange', () => setTimeout(res, 0), { once: true });
-                               location.hash = h + '&nonce=' + n; });
+    /* a pending debounced replaceState from the last case can land between
+       the assignment and the hashchange event, and the page then reads the
+       OLD hash: retry until the URL carries this case's nonce */
+    for (let k = 0; k < 5; k++){
+      await new Promise(res => { window.addEventListener('hashchange', () => setTimeout(res, 0), { once: true });
+                                 location.hash = h + '&nonce=' + n; });
+      if (location.hash.indexOf('nonce=' + n) >= 0) break;
+    }
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     return JSON.parse(document.getElementById('chart').getAttribute('data-drawn') || '{}');
   }, { h, n: ++nonce });

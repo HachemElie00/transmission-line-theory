@@ -63,8 +63,14 @@ const WIDTHS = [1920, 1440, 1200, 1100, 900, 700, 390];
             if (n < 5) blank.push(c.id || '?');
           } catch (e) { /* tainted or zero-sized; the overflow check covers it */ }
         });
+        /* The masthead is checked on its own: html clips horizontal overflow,
+           so a bar wider than the screen never shows up in ovf above. On a
+           phone the hide-bar button and the arrows were cut off that way,
+           invisibly, until 2026-10-06. */
+        const bar = document.querySelector('.mast .in');
         return {
           ovf  : de.scrollWidth - de.clientWidth,
+          mast : bar ? bar.scrollWidth - bar.clientWidth : 0,
           head,
           blank,
           /* "all maths typeset" is only an invariant on a page that has maths.
@@ -78,7 +84,7 @@ const WIDTHS = [1920, 1440, 1200, 1100, 900, 700, 390];
         };
       });
 
-      if (r.ovf > 1 || r.head.length || r.blank.length || (r.math && !r.tex) || r.raw > 0 || errs.length)
+      if (r.ovf > 1 || r.mast > 1 || r.head.length || r.blank.length || (r.math && !r.tex) || r.raw > 0 || errs.length)
         bad.push(pg + ' ' + JSON.stringify(r) + (errs.length ? ' ' + errs[0] : ''));
 
       p.off('pageerror', onErr);
@@ -110,13 +116,17 @@ const WIDTHS = [1920, 1440, 1200, 1100, 900, 700, 390];
     for (const pg of pages){
       await p.goto(H.fileUrl(pg), { waitUntil: 'load' });
       await p.waitForTimeout(2200);
-      const r = await p.evaluate(() => ({
-        ovf: document.documentElement.scrollWidth - window.innerWidth,
-        layout: document.documentElement.clientWidth
-      }));
+      const r = await p.evaluate(() => {
+        const bar = document.querySelector('.mast .in');
+        return {
+          ovf: document.documentElement.scrollWidth - window.innerWidth,
+          mast: bar ? bar.scrollWidth - bar.clientWidth : 0,
+          layout: document.documentElement.clientWidth
+        };
+      });
       /* layout much wider than the screen means the viewport meta is missing
          or wrong, whatever the overflow number says */
-      if (r.ovf > 1 || r.layout > 420) bad.push(pg + ' ' + JSON.stringify(r));
+      if (r.ovf > 1 || r.mast > 1 || r.layout > 420) bad.push(pg + ' ' + JSON.stringify(r));
     }
 
     bad.forEach(x => s.note('FAIL ' + x));

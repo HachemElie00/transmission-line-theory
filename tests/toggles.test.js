@@ -22,6 +22,19 @@ const H = require('./lib/harness');
   const b = await H.launch();
   const ctx = await b.newContext({ viewport: { width: 1500, height: 1150 } });
   const p = await ctx.newPage();
+  /* Every canvas on the CPU from its first paint. Chromium starts a 2D canvas
+     on the GPU and moves it to the CPU once a script has read its pixels back
+     a few times -- which canvasHash and settle do. The two rasterisers place
+     anti-aliased edges differently, so a render taken before the move never
+     matched one taken after it: every line differed by a sub-pixel fringe.
+     That read for a long time as "the page's first paint is a one-off with
+     13% more lit pixels". It was the measurement, not the page; a reader never
+     reads the canvas back, so their renders never change rasteriser. */
+  await p.addInitScript(() => {
+    const g = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function(t, o){
+      return g.call(this, t, t === '2d' ? Object.assign({ willReadFrequently: true }, o) : o); };
+  });
   const errs = H.watchErrors(p);
   await p.goto(srv.url + 'smith-tool.html', { waitUntil: 'load' });
   /* 1500ms was not enough, and it failed in a way that looked like a site bug:
@@ -41,17 +54,7 @@ const H = require('./lib/harness');
     await p.waitForTimeout(400);
     if (await densePressed() === 'false'){ await p.click('#b-dense'); await p.waitForTimeout(400); }
 
-    /* One full cycle before measuring, so the baseline is a settled render.
-
-       The very first render of the page really is a one-off: in z mode it
-       carries about 13% more lit pixels than every render that follows, at
-       unchanged brightness, so extra faint minor lines rather than darker
-       ones. It never recurs once anything has been toggled. Only z showed it
-       because z is the default grid, and so the only mode whose first
-       measurement is also the page's first paint. */
-    let h = await H.settle(p, 'chart');
-    await p.click('#b-dense'); h = await H.settle(p, 'chart', h);
-    await p.click('#b-dense'); const on = await H.settle(p, 'chart', h);
+    const on = await H.settle(p, 'chart');
 
     await p.click('#b-dense');
     const off = await H.settle(p, 'chart', on);

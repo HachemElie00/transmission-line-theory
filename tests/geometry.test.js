@@ -60,14 +60,21 @@ const VIEWS = [[1500, 1150], [1280, 900], [900, 900], [390, 800]];
       const discR = parseFloat(chEl.getAttribute('data-disc'));
       const dl = chEl._w / 2 - discR, dr = chEl._w / 2 + discR;
 
+      /* "Drawn" means different from the canvas's own background, found as
+         its commonest colour. This used to be "brighter than 40", which is a
+         description of a dark background: when light became the default every
+         pixel qualified and the scale measured the full canvas width. */
       const ng = noEl.getContext('2d');
+      const all = ng.getImageData(0, 0, noEl.width, noEl.height).data, cnt = {};
+      for (let i = 0; i < all.length; i += 4*7){ const k = all[i] + ',' + all[i+1] + ',' + all[i+2]; cnt[k] = (cnt[k] || 0) + 1; }
+      const bg = Object.keys(cnt).sort((u, v) => cnt[v] - cnt[u])[0].split(',').map(Number);
       let sl = Infinity, sr = -1;
       for (let y = 0; y < noEl.height; y++){
         const rr = ng.getImageData(0, y, noEl.width, 1).data;
         let a = -1, bx = -1, n = 0;
         for (let x = 0; x < noEl.width; x++){
           const i = x * 4;
-          if (rr[i] > 40 || rr[i + 1] > 40 || rr[i + 2] > 40){ if (a < 0) a = x; bx = x; n++; }
+          if (Math.abs(rr[i] - bg[0]) > 40 || Math.abs(rr[i + 1] - bg[1]) > 40 || Math.abs(rr[i + 2] - bg[2]) > 40){ if (a < 0) a = x; bx = x; n++; }
         }
         if (n > noEl.width * 0.5){ if (a < sl) sl = a; if (bx > sr) sr = bx; }
       }
@@ -105,9 +112,17 @@ const VIEWS = [[1500, 1150], [1280, 900], [900, 900], [390, 800]];
      a wrong angle -- it reported zero degrees at every distance, which reads
      as "the sweep is not drawn at all". Differencing against the page's own
      unswept render makes the measurement independent of the palette. */
+  /* Where to look comes from the chart itself: data-drawn publishes the
+     centre (geo) and the radius the sweep is drawn at, in CSS px. This used
+     to be a fixed fraction of the canvas, 0.866 of its half-width. The rings
+     have fixed pixel widths, so that fraction only hits them at one chart
+     size: when the sidebar became hidden by default the chart grew from 778
+     to 982px and the probe landed in the gap inside the ring, measuring a few
+     degrees at every distance. */
   const RING = `(() => {
     const c = document.getElementById('chart'), g = c.getContext('2d');
-    const cx = c.width/2, cy = c.height/2, R = cx*0.866;
+    const D = JSON.parse(c.getAttribute('data-drawn')), k = c.width / c._w;
+    const cx = D.geo[0]*k, cy = D.geo[1]*k, R = D.sweepR*k;
     const out = [];
     for (let a = 0; a < 360; a += 3){
       const th = a*Math.PI/180;
