@@ -941,9 +941,13 @@ var EM = (function(){
   }
 
   /* register(fn, animated) - animated figures redraw every frame, static ones
-     redraw on resize, theme change and font load. */
+     redraw on resize, theme change and font load. animated = 'live' redraws
+     every frame too but has no clock (a sweep or solver driven by its own
+     controls), so it gets no pause button: pausing a clock it never reads
+     did nothing, and a button that does nothing reads as broken. */
   function register(fn, animated){
-    var d = { fn: fn, animated: !!animated, t: 0, paused: false, cvs: [] };
+    var d = { fn: fn, animated: !!animated, live: animated === 'live',
+              t: 0, paused: false, cvs: [] };
     drawers.push(d);
     if(!animated) requestAnimationFrame(function(){ safe(d); });
     return d;
@@ -1210,6 +1214,7 @@ var EM = (function(){
         seen++;
         var owners = ownersOf(cv);
         var animated = owners.some(function(o){ return o.animated; });
+        var clocked = owners.some(function(o){ return o.animated && !o.live; });
         /* .wb is the workbench, whose readouts sit outside the canvas's own box */
         var host = cv.closest ? (cv.closest('.fig, .wb') || cv.parentNode) : cv.parentNode;
         var name = pageName() + (cv.id ? '-' + slug(cv.id) : '-figure-' + seen);
@@ -1217,7 +1222,7 @@ var EM = (function(){
         var bar = document.createElement('div');
         bar.className = 'figbar';
 
-        if(animated){
+        if(clocked){
           var pb = document.createElement('button');
           pb.type = 'button';
           pb.setAttribute('data-play', '1');

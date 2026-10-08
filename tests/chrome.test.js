@@ -254,6 +254,35 @@ const H = require('./lib/harness');
     s.check('every figure has a toolbar, symbols not words, no stray pause buttons, none wedged between canvases',
             bad.length === 0, total + ' toolbars across the site');
 
+    /* A pause button must pause something. Three figures redrawn every frame
+       only so a Sweep button or a solver could advance had one, and it held a
+       clock they never read: pressed, nothing happened. Checked by behaviour:
+       playing, the figure moves; paused, it holds still. */
+    let nPlay = 0; const inert = [];
+    for (const pg of H.pages()){
+      await p.goto(H.fileUrl(pg), { waitUntil: 'load' });
+      await p.waitForTimeout(1500);
+      const r = await p.evaluate(async () => {
+        const wait = ms => new Promise(f => setTimeout(f, ms));
+        const out = [];
+        for (const b of document.querySelectorAll('.figbar [data-play]')){
+          const cvs = [].concat(...b._owners.map(o => o.cvs));
+          const snap = () => cvs.map(c => c.toDataURL()).join('|');
+          const a = snap(); await wait(400); const moves = snap() !== a;
+          b.click(); await wait(150);
+          const c = snap(); await wait(400); const holds = snap() === c;
+          b.click();
+          if (!moves || !holds) out.push(cvs.map(c => c.id || '?').join('+') +
+                                        (moves ? '' : ' does not move') + (holds ? '' : ' moves while paused'));
+        }
+        return { n: document.querySelectorAll('.figbar [data-play]').length, out };
+      });
+      nPlay += r.n;
+      r.out.forEach(x => inert.push(pg + ' ' + x));
+    }
+    inert.forEach(x => s.note('FAIL ' + x));
+    s.check('every pause button stops a figure that moves', inert.length === 0, nPlay + ' pause buttons');
+
     /* EM.rich draws real subscripts on canvas. It must hand the context back
        as it found it: it once left c.font at its last subscript size, and a
        figure sizing its next label from c.font shrank every label after it. */

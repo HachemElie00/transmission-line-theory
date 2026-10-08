@@ -680,7 +680,7 @@ function hexRGB(h){
     c.fillText('substrate', ox + 6, Y(HC) + 14);
     c.fillText('air', ox + 6, oy + 14);
     if(it < MAXIT){ c.textAlign = 'right'; c.fillStyle = C.ink2; c.fillText('solving ' + Math.round(100*it/MAXIT) + ' %', ox + bw - 6, oy + 14); }
-  }, true);
+  }, 'live');
 })();
 
 /* ---- Getsinger dispersion for a 50-ohm track on three thicknesses ---- */

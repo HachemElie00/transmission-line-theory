@@ -461,7 +461,7 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     var out = gl[0] < -0.02;
     c.textAlign = out ? 'right' : 'left';
     c.fillText('load', cx+Rr*gl[0] + (out ? -8 : 8), cy-Rr*gl[1]+4);
-  }, true);
+  }, 'live');
 
   EM.register(function(C){
     EM.fit(zt);
@@ -511,7 +511,7 @@ var MONO = 'IBM Plex Mono, IBM Plex Sans, monospace';
     c.fillStyle = C.h; c.fillText('X', L+22, T+11);
     c.fillStyle = C.ink3; c.textAlign = 'right';
     c.fillText('d/λ →  0.5', W-R, H-B+16);
-  }, true);
+  }, 'live');
 })();
 
 /* ---- collapsing the line into one impedance ---- */
